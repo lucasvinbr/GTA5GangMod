@@ -20,6 +20,7 @@ namespace GTA
             {
                 Wait(5000 + RandomUtil.CachedRandom.Next(15000));
                 TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
+                ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
                 if (curTurfZone != null)
                 {
                     if (curTurfZone.ownerGangName != "none" && GangManager.instance.GetGangByName(curTurfZone.ownerGangName) != null) //only spawn if there really is a gang in control here

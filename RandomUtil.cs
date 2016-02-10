@@ -55,5 +55,9 @@ namespace GTA
             return CachedRandom.Next(0, 2) == 0;
         }
 
+        public static T GetRandomElementFromList<T>(List<T> theList)
+        {
+            return theList[CachedRandom.Next(theList.Count)];
+        }
     }
 }

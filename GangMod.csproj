@@ -48,7 +48,9 @@
   <ItemGroup>
     <Compile Include="AmbientGangMemberSpawner.cs" />
     <Compile Include="Gang.cs" />
+    <Compile Include="GangAI.cs" />
     <Compile Include="GangWarManager.cs" />
+    <Compile Include="ModOptions.cs" />
     <Compile Include="UpdatedClass.cs" />
     <Compile Include="PotentialGangMember.cs" />
     <Compile Include="MenuScript.cs" />

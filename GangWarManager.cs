@@ -54,12 +54,13 @@ namespace GTA
                 this.curWarType = theWarType;
 
                 warBlip = World.CreateBlip(warZone.zoneBlipPosition);
+                warBlip.IsFlashing = true;
+                warBlip.Sprite = BlipSprite.Deathmatch;
+                warBlip.Color = BlipColor.Red;
+                
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Gang War");
                 Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
-                warBlip.IsFlashing = true;
-                warBlip.Color = BlipColor.Red;
-                warBlip.Sprite = BlipSprite.Deathmatch;
 
                 curTicksAwayFromBattle = 0;
 
@@ -76,8 +77,8 @@ namespace GTA
                 }
                 else
                 {
-                    waves = 2 + RandomUtil.CachedRandom.Next(2);
-                    UI.ShowSubtitle("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!");
+                    waves = 1 + RandomUtil.CachedRandom.Next(2);
+                    UI.Notify("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!", true);
                 }
 
                 return true;
@@ -139,8 +140,8 @@ namespace GTA
                         }
                         else
                         {
+                            enemyGang.TakeZone(warZone);
                             UI.ShowSubtitle("We've left our contested turf. It has been taken by the " + enemyGang.name + ".");
-
                         }
 
                         for (int i = 0; i < livingEnemies.Length; i++)
@@ -163,6 +164,7 @@ namespace GTA
                     }
                     else
                     {
+                        enemyGang.TakeZone(warZone);
                         UI.ShowSubtitle(warZone.zoneName + " has been taken by the " + enemyGang.name + "!");
                     }
                     
@@ -203,7 +205,7 @@ namespace GTA
                         if(curWarType == warType.attackingEnemy)
                         {
                             GangManager.instance.GetPlayerGang().TakeZone(warZone);
-                           
+                            UI.ShowSubtitle(warZone.zoneName + " is now ours!");
                         }
                         else
                         {

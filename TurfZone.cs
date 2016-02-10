@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 
 namespace GTA
@@ -20,6 +21,9 @@ namespace GTA
 
         public int value = 0;
 
+        [XmlIgnore]
+        private Blip myBlip;
+
         public TurfZone(string zoneName)
         {
             this.zoneName = zoneName;
@@ -30,6 +34,19 @@ namespace GTA
         {
             this.zoneName = "zone";
             this.ownerGangName = "none";
+        }
+
+        [XmlIgnore]
+        public Blip AttachedBlip
+        {
+            get
+            {
+                return myBlip;
+            }
+
+            set{
+                myBlip = value;
+            }
         }
     }
 }

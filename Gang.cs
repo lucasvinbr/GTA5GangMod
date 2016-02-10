@@ -23,12 +23,18 @@ namespace GTA
         //it's not really saved, so it is set up differently on every run (and reloading of scripts)
         public int relationGroupIndex;
 
-        //car stats
+        //car stats - the model
         public int gangVehicleHash = -1;
+
         //ped stats - acceptable model/texture/component combinations
         public List<PotentialGangMember> memberVariations = new List<PotentialGangMember>();
+        public int memberAccuracyLevel = 20;
+        public int memberHealth = 120;
+        public int memberArmor = 0;
 
         public List<WeaponHash> gangWeaponHashes = new List<WeaponHash>();
+        //the weapons the AI Gang will probably buy if they have enough cash
+        public List<WeaponHash> preferredWeaponHashes = new List<WeaponHash>();
 
         public Gang(string name, VehicleColor color, bool isPlayerOwned)
         {
@@ -36,21 +42,25 @@ namespace GTA
             this.color = color;
             this.isPlayerOwned = isPlayerOwned;
 
-            moneyAvailable = 0; //this isnt used if this is the player's gang - he'll use his own money instead
+            moneyAvailable = RandomUtil.CachedRandom.Next(100000, 200000); //this isnt used if this is the player's gang - he'll use his own money instead
 
             gangWeaponHashes.Add(WeaponHash.SNSPistol);
 
-            
         }
 
         public Gang()
         {
-            // this.name = "gang";
-            // this.color = VehicleColor.Blue;
-            // this.isPlayerOwned = false;
-           
+            
+        }
 
-           // gangWeaponHashes.Add(WeaponHash.Pistol);
+        public void SetPreferredWeapons()
+        {
+            for(int i = 0; i < RandomUtil.CachedRandom.Next(2, 5); i++)
+            {
+                preferredWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
+            }
+
+            GangManager.instance.SaveGangData();
         }
 
         public void TakeZone(TurfZone takenZone)

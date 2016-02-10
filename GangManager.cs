@@ -16,8 +16,11 @@ public class GangManager : Script
     PotentialGangMember pedToStore = null;
     List<SpawnedGangMember> livingMembers;
     List<SpawnedDrivingGangMember> livingDrivingMembers;
+    List<GangAI> enemyGangs;
     public GangData gangData;
     public static GangManager instance;
+
+    private int ticksSinceLastReward = 0;
 
     /*
     TODO
@@ -49,6 +52,8 @@ public class GangManager : Script
         this.Tick += onTick;
         instance = this;
 
+        new ModOptions(); //just start the options, we can call it by its instance later
+
         pedToStore = PersistenceHandler.LoadFromFile<PotentialGangMember>("testPedData");
         if (pedToStore == null)
         {
@@ -61,13 +66,19 @@ public class GangManager : Script
             gangData = new GangData();
 
             //setup test gangs
-            gangData.gangs.Add(new Gang("Your Gang", VehicleColor.BrushedGold, true));
-            gangData.gangs.Add(new Gang("baddies", VehicleColor.HotPink, false));
+            gangData.gangs.Add(new Gang("Player's Gang", VehicleColor.BrushedGold, true));
+            CreateNewEnemyGang();
+        }
 
+        if(gangData.gangs.Count == 1)
+        {
+            //we're alone.. add an enemy!
+            CreateNewEnemyGang();
         }
 
         livingMembers = new List<SpawnedGangMember>();
         livingDrivingMembers = new List<SpawnedDrivingGangMember>();
+        enemyGangs = new List<GangAI>();
 
         SetUpGangRelations();
     }
@@ -90,6 +101,10 @@ public class GangManager : Script
             {
                 World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                 World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+
+                //add this gang to the enemy gangs
+                //and start the AI for it
+                enemyGangs.Add(new GangAI(gangData.gangs[i]));
             }
         }
 
@@ -101,6 +116,42 @@ public class GangManager : Script
         }
     }
 
+    public void KillGang(GangAI aiWatchingTheGang)
+    {
+        UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
+        enemyGangs.Remove(aiWatchingTheGang);
+        gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
+        SaveGangData();
+    }
+
+    public Gang CreateNewEnemyGang()
+    {
+        //set gang name from options
+        string gangName = "Gang";
+        do
+        {
+            gangName = string.Concat(RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangFirstNames), " ",
+            RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
+        } while (GetGangByName(gangName) != null);
+
+        PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
+        PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandomUtil.CachedRandom.Next(9);
+
+        Gang newGang = new Gang(gangName, RandomUtil.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
+
+        for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
+        {
+            newGang.AddMemberVariation(PotentialGangMember.GetMemberFromPool(gangStyle, gangColor));
+        }
+
+        gangData.gangs.Add(newGang);
+
+        SaveGangData();
+        UI.Notify("The " + gangName + " have entered San Andreas!");
+
+        return newGang;
+    }
+
     public void SaveGangData()
     {
         PersistenceHandler.SaveToFile<GangData>(gangData, "GangData");
@@ -109,15 +160,6 @@ public class GangManager : Script
 
     private void onKeyUp(object sender, KeyEventArgs e)
     {
-        if (e.KeyCode == Keys.B)
-        {
-            if(e.Modifiers == Keys.Shift)
-            {
-                SpawnGangMember(GetPlayerGang(), World.GetNextPositionOnSidewalk
-               (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60))));
-            }
-        }
-
         if (e.KeyCode == Keys.H)
         {
             Ped[] playerGangMembers = GetSpawnedMembersOfGang(GetPlayerGang());
@@ -170,8 +212,59 @@ public class GangManager : Script
                 }
             }
         }
-    }
 
+        for(int i = 0; i < enemyGangs.Count; i++)
+        {
+            enemyGangs[i].ticksSinceLastUpdate++;
+            if (enemyGangs[i].ticksSinceLastUpdate >= enemyGangs[i].ticksBetweenUpdates)
+            {
+                enemyGangs[i].Update();
+                enemyGangs[i].ticksSinceLastUpdate = 0;
+
+                //lets also check if there aren't too many gangs around
+                //if there aren't, we might create a new one...
+                if(enemyGangs.Count < 7)
+                {
+                    if(RandomUtil.CachedRandom.Next(10) == 0)
+                    {
+                        Gang createdGang = CreateNewEnemyGang();
+                        enemyGangs.Add(new GangAI(createdGang));
+                    }
+                }
+            }
+        }
+
+        ticksSinceLastReward++;
+        if (ticksSinceLastReward >= ModOptions.instance.ticksBetweenTurfRewards)
+        {
+            ticksSinceLastReward = 0;
+            //each gang wins money according to the amount of owned zones and their values
+            for (int i = 0; i < enemyGangs.Count; i++)
+            {
+                TurfZone[] curGangZones = ZoneManager.instance.GetZonesControlledByGang(enemyGangs[i].watchedGang.name);
+                for(int j = 0; j < curGangZones.Length; j++)
+                {
+                    enemyGangs[i].watchedGang.moneyAvailable += (curGangZones[j].value + 1) * ModOptions.instance.baseRewardPerZoneOwned;
+                }
+            }
+
+            //this also counts for the player's gang
+            int rewardedCash = 0;
+            TurfZone[] playerZones = ZoneManager.instance.GetZonesControlledByGang(GetPlayerGang().name);
+            for (int i = 0; i < playerZones.Length; i++)
+            {
+                int zoneReward = (playerZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned;
+                Game.Player.Money += zoneReward;
+                rewardedCash += zoneReward;
+            }
+
+            if(rewardedCash != 0)
+            {
+                UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
+            }
+            
+        }
+    }
 
     #region getters
     public Gang GetGangByName(string name)
@@ -239,13 +332,18 @@ public class GangManager : Script
         if (ownerGang.memberVariations.Count > 0)
         {
             PotentialGangMember chosenMember =
-                ownerGang.memberVariations[RandomUtil.CachedRandom.Next(ownerGang.memberVariations.Count)];
+                RandomUtil.GetRandomElementFromList(ownerGang.memberVariations);
             Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
 
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, newPed, 1);
 
             Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 3, chosenMember.torsoDrawableIndex, chosenMember.torsoTextureIndex, pedPalette);
             Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 4, chosenMember.legsDrawableIndex, chosenMember.legsTextureIndex, pedPalette);
+
+            newPed.Accuracy = ownerGang.memberAccuracyLevel;
+            newPed.MaxHealth = ownerGang.memberHealth;
+            newPed.Health = ownerGang.memberHealth;
+            newPed.Armor = ownerGang.memberArmor;
 
             //set the blip
             newPed.AddBlip();

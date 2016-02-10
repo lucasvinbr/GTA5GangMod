@@ -102,6 +102,18 @@ namespace GTA
             return false;
         }
 
+        public static PotentialGangMember GetMemberFromPool(dressStyle style, memberColor color)
+        {
+            PotentialGangMember returnedMember;
+
+            do
+            {
+                returnedMember = MemberPool.memberList[RandomUtil.CachedRandom.Next(MemberPool.memberList.Count)];
+            } while (returnedMember.linkedColor != color || returnedMember.myStyle != style);
+
+            return returnedMember;
+        }
+
         [System.Serializable]
         public class PotentialMemberPool
         {

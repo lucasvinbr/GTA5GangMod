@@ -22,8 +22,13 @@ namespace GTA
 
         Ped closestPed;
         bool saveTorsoIndex = false, saveTorsoTex = false, saveLegIndex = false, saveLegTex = false;
+        bool inputFieldOpen = false;
         PotentialGangMember memberToSave = new PotentialGangMember();
         int memberStyle = 0, memberColor = 0;
+
+        int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost;
+
+        UIMenuItem healthButton, armorButton, accuracyButton;
 
         public MenuScript()
         {
@@ -36,7 +41,6 @@ namespace GTA
             menuPool.Add(memberMenu);
             AddSaveZoneButton();
             AddGangTakeoverButton();
-            AddBaddiesTakeoverButton();
             AddMemberToggles();
             AddMemberStyleChoices();
             AddSaveMemberButton();
@@ -44,6 +48,8 @@ namespace GTA
             AddRemovePlayerGangMemberButton();
             AddCallVehicleButton();
             AddRegisterVehicleButton();
+            AddRenameGangButton();
+            AddGangUpgradesMenu();
 
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
@@ -52,6 +58,7 @@ namespace GTA
 
             Tick += (o, e) => menuPool.ProcessMenus();
             this.KeyUp += onKeyUp;
+            this.Tick += onTick;
            
         }
 
@@ -64,6 +71,7 @@ namespace GTA
                 //numpad keys dont seem to go along well with shift
                 if (e.Modifiers == Keys.None && !menuPool.IsAnyMenuOpen())
                 {
+                    UpdateUpgradeCosts();
                     gangMenu.Visible = !gangMenu.Visible;
                 }
                 else if (e.Modifiers == Keys.Shift && !menuPool.IsAnyMenuOpen())
@@ -93,6 +101,40 @@ namespace GTA
 
             }
 
+        }
+
+        void onTick(object sender, EventArgs e)
+        {
+            if (inputFieldOpen)
+            {
+                int inputFieldSituation = Function.Call<int>(Hash.UPDATE_ONSCREEN_KEYBOARD);
+                if(inputFieldSituation == 1)
+                {
+                    string typedText = Function.Call<string>(Hash.GET_ONSCREEN_KEYBOARD_RESULT);
+                    ZoneManager.instance.GiveGangZonesToAnother(GangManager.instance.GetPlayerGang().name, typedText);
+                    GangManager.instance.GetPlayerGang().name = typedText;
+                    GangManager.instance.SaveGangData();
+
+                    UI.ShowSubtitle("Your gang is now known as the " + typedText);
+                    inputFieldOpen = false;
+                }
+                else if(inputFieldSituation == 2 || inputFieldSituation == 3)
+                {
+                    inputFieldOpen = false;
+                }
+            }
+        }
+
+        void UpdateUpgradeCosts()
+        {
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+            healthUpgradeCost = (playerGang.memberHealth + 20) * 20;
+            armorUpgradeCost = (playerGang.memberArmor + 20) * 50;
+            accuracyUpgradeCost = (playerGang.memberAccuracyLevel + 10) * 250;
+
+            healthButton.Text = "Upgrade Member Health - " + healthUpgradeCost.ToString();
+            armorButton.Text = "Upgrade Member Armor - " + armorUpgradeCost.ToString();
+            accuracyButton.Text = "Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString();
         }
 
         #region Zone Menu Stuff
@@ -180,39 +222,6 @@ namespace GTA
             };
         }
 
-        void AddBaddiesTakeoverButton()
-        {
-            UIMenuItem newButton = new UIMenuItem("(DEBUG) Make Baddies Gang as owner", "Makes the zone you are in become part of the selected gang's turf.");
-            zonesMenu.AddItem(newButton);
-            zonesMenu.OnItemSelect += (sender, item, index) =>
-            {
-                if (item == newButton)
-                {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
-                    TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
-                    if (curZone == null)
-                    {
-                        UI.ShowSubtitle("this zone isn't marked as takeable.");
-                    }
-                    else
-                    {
-                        if(curZone.ownerGangName != GangManager.instance.GetPlayerGang().name)
-                        {
-                            GangManager.instance.GetGangByName("baddies").TakeZone(curZone);
-                            UI.ShowSubtitle("this zone is baddies turf now!");
-                        }
-                        else
-                        {
-                            zonesMenu.Visible = !zonesMenu.Visible;
-                            if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName("baddies"), curZone, GangWarManager.warType.defendingFromEnemy))
-                            {
-                                UI.ShowSubtitle("A war is already in progress.");
-                            }
-                        }
-                    }
-                }
-            };
-        }
         #endregion
 
         #region register Member Stuff
@@ -495,13 +504,18 @@ namespace GTA
             gangMenu.AddItem(newButton);
             gangMenu.OnItemSelect += (sender, item, index) =>
             {
-                Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
-                    Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100, Game.Player.Character.Position, true, false);
-                if(spawnedVehicle != null)
+                if(item == newButton)
                 {
-                    spawnedVehicle.PlaceOnNextStreet();
-                    spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 10, 50);
+                    Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
+                   Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100, Game.Player.Character.Position, true, false);
+                    if (spawnedVehicle != null)
+                    {
+                        spawnedVehicle.PlaceOnNextStreet();
+                        spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 10, 50);
+                        gangMenu.Visible = !gangMenu.Visible;
+                    }
                 }
+               
             };
         }
 
@@ -511,21 +525,139 @@ namespace GTA
             gangMenu.AddItem(newButton);
             gangMenu.OnItemSelect += (sender, item, index) =>
             {
-                Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
-                if(curVehicle != null)
+                if(item == newButton)
                 {
-                    if (GangManager.instance.GetPlayerGang().SetGangCar(curVehicle))
+                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    if (curVehicle != null)
                     {
-                        UI.ShowSubtitle("Gang vehicle changed!");
+                        if (GangManager.instance.GetPlayerGang().SetGangCar(curVehicle))
+                        {
+                            UI.ShowSubtitle("Gang vehicle changed!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("That vehicle is already registered as the default for your gang.");
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("That vehicle is already registered as the default for your gang.");
+                        UI.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
-                else
+            };
+        }
+
+        void AddGangUpgradesMenu()
+        {
+            UIMenu upgradesMenu = menuPool.AddSubMenu(gangMenu, "Gang Upgrades Menu");
+
+            //upgrade buttons
+            healthButton = new UIMenuItem("Upgrade Member Health - " + healthUpgradeCost.ToString(), "Increases gang member starting and maximum health. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            armorButton = new UIMenuItem("Upgrade Member Armor - " + armorUpgradeCost.ToString(), "Increases gang member starting body armor. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            accuracyButton = new UIMenuItem("Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString(), "Increases gang member firing accuracy. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            upgradesMenu.AddItem(healthButton);
+            upgradesMenu.AddItem(armorButton);
+            upgradesMenu.AddItem(accuracyButton);
+
+            upgradesMenu.OnItemSelect += (sender, item, index) =>
+            {
+                Gang playerGang = GangManager.instance.GetPlayerGang();
+
+                if (item == healthButton)
                 {
-                    UI.ShowSubtitle("You are not inside a vehicle.");
+                    if(Game.Player.Money >= healthUpgradeCost)
+                    {
+                        if(playerGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
+                        {
+                            playerGang.memberHealth += 20;
+                            if(playerGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
+                            {
+                                playerGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
+                            }
+                            Game.Player.Money -= healthUpgradeCost;
+                            GangManager.instance.SaveGangData();
+                            UI.ShowSubtitle("Member health upgraded!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your members' health is at its maximum limit (it can be configured in the ModOptions file)");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                    }
+                }
+
+                if (item == armorButton)
+                {
+                    if (Game.Player.Money >= armorUpgradeCost)
+                    {
+                        if (playerGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
+                        {
+                            playerGang.memberArmor += 20;
+                            if (playerGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
+                            {
+                                playerGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
+                            }
+                            Game.Player.Money -= armorUpgradeCost;
+                            GangManager.instance.SaveGangData();
+                            UI.ShowSubtitle("Member armor upgraded!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your members' armor is at its maximum limit (it can be configured in the ModOptions file)");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                    }
+                }
+
+                if (item == accuracyButton)
+                {
+                    if (Game.Player.Money >= accuracyUpgradeCost)
+                    {
+                        if (playerGang.memberAccuracyLevel < 75)
+                        {
+                            playerGang.memberAccuracyLevel += 10;
+                            if (playerGang.memberAccuracyLevel > 75)
+                            {
+                                playerGang.memberAccuracyLevel = 75;
+                            }
+                            Game.Player.Money -= accuracyUpgradeCost;
+                            GangManager.instance.SaveGangData();
+                            UI.ShowSubtitle("Member accuracy upgraded!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your members' accuracy is at its maximum limit!");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                    }
+                }
+
+                UpdateUpgradeCosts();
+
+            };
+
+        }
+
+        void AddRenameGangButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Rename Gang", "Resets your gang's name.");
+            gangMenu.AddItem(newButton);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    gangMenu.Visible = !gangMenu.Visible;
+                    Function.Call(Hash.DISPLAY_ONSCREEN_KEYBOARD, false, "FMMC_KEY_TIP12N", "", "Gang Name", "", "", "", 30);
+                    inputFieldOpen = true;
                 }
             };
         }
