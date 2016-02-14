@@ -25,12 +25,13 @@ namespace GTA
 
         //car stats - the model
         public int gangVehicleHash = -1;
-
-        //ped stats - acceptable model/texture/component combinations
-        public List<PotentialGangMember> memberVariations = new List<PotentialGangMember>();
+        
         public int memberAccuracyLevel = 20;
         public int memberHealth = 120;
         public int memberArmor = 0;
+
+        //acceptable ped model/texture/component combinations
+        public List<PotentialGangMember> memberVariations = new List<PotentialGangMember>();
 
         public List<WeaponHash> gangWeaponHashes = new List<WeaponHash>();
         //the weapons the AI Gang will probably buy if they have enough cash
@@ -60,7 +61,7 @@ namespace GTA
                 preferredWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
             }
 
-            GangManager.instance.SaveGangData();
+            GangManager.instance.SaveGangData(false);
         }
 
         public void TakeZone(TurfZone takenZone)
@@ -85,7 +86,7 @@ namespace GTA
             }
 
             memberVariations.Add(newMember);
-            GangManager.instance.SaveGangData();
+            GangManager.instance.SaveGangData(isPlayerOwned);
             return true;
         }
 
@@ -120,6 +121,20 @@ namespace GTA
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// when an AI gang fights against another, this value is used to influence the outcome
+        /// </summary>
+        /// <returns></returns>
+        public int GetGangAIStrengthValue()
+        {
+            return moneyAvailable / 1000 +
+                ZoneManager.instance.GetZonesControlledByGang(name).Length * 100 +
+                ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price / 10 +
+                memberAccuracyLevel * 10 +
+                memberArmor +
+                memberHealth;
         }
 
     }

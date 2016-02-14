@@ -17,6 +17,8 @@ namespace GTA
         public int updatesWhileGoingToDest;
         public int updateLimitWhileGoing = 5;
 
+        static TaskSequence passengerSequence;
+
         public override void Update()
         {
             if (vehicleIAmDriving.IsAlive)
@@ -28,7 +30,7 @@ namespace GTA
                     watchedPed.MarkAsNoLongerNeeded();
                     for (int i = 0; i < myPassengers.Count; i++)
                     {
-                        myPassengers[i].Task.LeaveVehicle();
+                        myPassengers[i].Task.PerformSequence(passengerSequence);
                         myPassengers[i].MarkAsNoLongerNeeded();
                     }
 
@@ -39,6 +41,7 @@ namespace GTA
                 else
                 {
                     updatesWhileGoingToDest++;
+                    //give up, drop passengers and go away
                     if(updatesWhileGoingToDest > updateLimitWhileGoing)
                     {
                         //leave vehicle, everyone stops being important
@@ -46,7 +49,7 @@ namespace GTA
                         watchedPed.MarkAsNoLongerNeeded();
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            myPassengers[i].Task.LeaveVehicle();
+                            myPassengers[i].Task.PerformSequence(passengerSequence);
                             myPassengers[i].MarkAsNoLongerNeeded();
                         }
 
@@ -78,6 +81,12 @@ namespace GTA
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination)
         {
+            if(passengerSequence == null)
+            {
+                passengerSequence = new TaskSequence();
+                passengerSequence.AddTask.LeaveVehicle();
+                passengerSequence.AddTask.FightAgainstHatedTargets(80);
+            }
             this.watchedPed = watchedPed;
             this.vehicleIAmDriving = vehicleIAmDriving;
             this.destination = destination;

@@ -14,9 +14,17 @@ namespace GTA
 
         public ModOptions()
         {
-            instance = this;
+            if(instance == null)
+            {
+                instance = this;
+                LoadOptions();
+            }
+        }
+
+        public void LoadOptions()
+        {
             ModOptions loadedOptions = PersistenceHandler.LoadFromFile<ModOptions>("ModOptions");
-            if(loadedOptions != null)
+            if (loadedOptions != null)
             {
                 //get the loaded options
                 this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
@@ -25,6 +33,7 @@ namespace GTA
                 this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
+                this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
                 this.buyableWeapons = loadedOptions.buyableWeapons;
                 this.similarColors = loadedOptions.similarColors;
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
@@ -41,7 +50,13 @@ namespace GTA
         public int ticksBetweenTurfRewards = 50000;
         public int baseRewardPerZoneOwned = 500;
 
-        public float wantedFactorWhenInGangTurf = 0.4f;
+        /// <summary>
+        /// percentage sum, per zone owned, over the total reward received.
+        /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
+        /// </summary>
+        public float rewardMultiplierPerZone = 0.2f;
+
+        public float wantedFactorWhenInGangTurf = 0.2f;
 
         //XMLserializer does not like dictionaries
         [System.Serializable]

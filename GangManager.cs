@@ -22,18 +22,6 @@ public class GangManager : Script
 
     private int ticksSinceLastReward = 0;
 
-    /*
-    TODO
-    Gang turf and spawning is going to be controlled by zone.
-    since there seems to be no way to get all zones (and their "centers"),
-    we're going to have to place markers manually on them.
-    we should create a class that saves coordinates and the respective zone (a good excuse to explore the game world too).
-    then, if desired, blips with the respective gang's color should be shown
-    on each respective coordinate.
-    gang attacks should consider the closest (and more valuable maybe?) zones
-    */
-
-
     #region setup/save stuff
     [System.Serializable]
     public class GangData
@@ -121,7 +109,7 @@ public class GangManager : Script
         UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
         enemyGangs.Remove(aiWatchingTheGang);
         gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
-        SaveGangData();
+        SaveGangData(false);
     }
 
     public Gang CreateNewEnemyGang()
@@ -152,9 +140,9 @@ public class GangManager : Script
         return newGang;
     }
 
-    public void SaveGangData()
+    public void SaveGangData(bool notifySuccess = true)
     {
-        PersistenceHandler.SaveToFile<GangData>(gangData, "GangData");
+        PersistenceHandler.SaveToFile<GangData>(gangData, "GangData", notifySuccess);
     }
     #endregion
 
@@ -244,7 +232,9 @@ public class GangManager : Script
                 TurfZone[] curGangZones = ZoneManager.instance.GetZonesControlledByGang(enemyGangs[i].watchedGang.name);
                 for(int j = 0; j < curGangZones.Length; j++)
                 {
-                    enemyGangs[i].watchedGang.moneyAvailable += (curGangZones[j].value + 1) * ModOptions.instance.baseRewardPerZoneOwned;
+                    enemyGangs[i].watchedGang.moneyAvailable += (int) ((curGangZones[j].value + 1) * 
+                        ModOptions.instance.baseRewardPerZoneOwned * 
+                        (1 + ModOptions.instance.rewardMultiplierPerZone));
                 }
             }
 
@@ -365,10 +355,10 @@ public class GangManager : Script
             Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
 
 
-            //give weapons
-            foreach (WeaponHash wepHash in ownerGang.gangWeaponHashes)
+            //give a weapon
+            if(ownerGang.gangWeaponHashes.Count > 0)
             {
-                newPed.Weapons.Give(wepHash, 1000, true, true);
+                newPed.Weapons.Give(RandomUtil.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, true, true);
             }
 
             //set the relationship group

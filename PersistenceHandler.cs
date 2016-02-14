@@ -30,7 +30,7 @@ namespace GTA
             else return default(T);
         }
 
-        public static void SaveToFile<T>(T dataToSave, string fileName)
+        public static void SaveToFile<T>(T dataToSave, string fileName, bool notifyMsg = true)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(T));
             
@@ -44,8 +44,10 @@ namespace GTA
             StreamWriter writer = new StreamWriter(filePath);
             serializer.Serialize(writer, dataToSave);
             writer.Close();
-
-            UI.ShowSubtitle("saved at: " + filePath);
+            if (notifyMsg)
+            {
+                UI.ShowSubtitle("saved at: " + filePath);
+            }
         }
     }
 }

@@ -74,9 +74,9 @@ namespace GTA
             }
         }
 
-        public void SaveZoneData()
+        public void SaveZoneData(bool notifySuccess = true)
         {
-            PersistenceHandler.SaveToFile<TurfZoneData>(zoneData, "TurfZoneData");
+            PersistenceHandler.SaveToFile<TurfZoneData>(zoneData, "TurfZoneData", notifySuccess);
         }
 
         public void UpdateZoneData(TurfZone newTurfZone)
@@ -96,7 +96,7 @@ namespace GTA
 
             RefreshZoneBlips();
 
-            SaveZoneData();
+            SaveZoneData(false);
         }
 
         #endregion
@@ -115,7 +115,7 @@ namespace GTA
                     {
                         GiveGangZonesToAnother(currentZone.ownerGangName, "none");
                         currentZone.ownerGangName = "none";
-                        SaveZoneData();
+                        SaveZoneData(false);
                         zoneInfoMsg += " It isn't owned by any gang.";
                     }
                     else
@@ -221,7 +221,7 @@ namespace GTA
                 fromGangZones[i].ownerGangName = ToGang;
             }
 
-            SaveZoneData();
+            SaveZoneData(false);
         }
 
         public void UpdateZoneBlip(TurfZone targetZone)

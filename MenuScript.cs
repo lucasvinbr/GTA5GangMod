@@ -28,6 +28,9 @@ namespace GTA
 
         int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost;
 
+        Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> weaponEntries = 
+            new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
+
         UIMenuItem healthButton, armorButton, accuracyButton;
 
         public MenuScript()
@@ -50,6 +53,9 @@ namespace GTA
             AddRegisterVehicleButton();
             AddRenameGangButton();
             AddGangUpgradesMenu();
+            UpdateBuyableWeapons();
+            AddGangWeaponsMenu();
+            AddReloadOptionsButton();
 
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
@@ -72,6 +78,7 @@ namespace GTA
                 if (e.Modifiers == Keys.None && !menuPool.IsAnyMenuOpen())
                 {
                     UpdateUpgradeCosts();
+                    UpdateBuyableWeapons();
                     gangMenu.Visible = !gangMenu.Visible;
                 }
                 else if (e.Modifiers == Keys.Shift && !menuPool.IsAnyMenuOpen())
@@ -135,6 +142,25 @@ namespace GTA
             healthButton.Text = "Upgrade Member Health - " + healthUpgradeCost.ToString();
             armorButton.Text = "Upgrade Member Armor - " + armorUpgradeCost.ToString();
             accuracyButton.Text = "Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString();
+        }
+
+        void UpdateBuyableWeapons()
+        {
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+            List<ModOptions.BuyableWeapon> weaponsList = ModOptions.instance.buyableWeapons;
+
+            for(int i = 0; i < weaponsList.Count; i++)
+            {
+                if (weaponEntries.ContainsKey(weaponsList[i])){
+                    weaponEntries[weaponsList[i]].Checked = playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash);
+                }
+                else
+                {
+                    weaponEntries.Add(weaponsList[i], new UIMenuCheckboxItem
+                        (string.Concat(weaponsList[i].wepHash.ToString(), " - ", weaponsList[i].price.ToString()),
+                        playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash)));
+                }
+            }
         }
 
         #region Zone Menu Stuff
@@ -500,19 +526,32 @@ namespace GTA
 
         void AddCallVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Call Backup Vehicle", "Calls one of your gang's vehicles to your position. The vehicle drops its passengers and then leaves.");
+            UIMenuItem newButton = new UIMenuItem("Call Backup Vehicle", "Calls one of your gang's vehicles to your position. The vehicle drops its passengers and then leaves unless it is attacked.");
             gangMenu.AddItem(newButton);
             gangMenu.OnItemSelect += (sender, item, index) =>
             {
                 if(item == newButton)
                 {
-                    Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
-                   Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100, Game.Player.Character.Position, true, false);
-                    if (spawnedVehicle != null)
+                    Gang playergang = GangManager.instance.GetPlayerGang();
+                    if(ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
                     {
-                        spawnedVehicle.PlaceOnNextStreet();
-                        spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 10, 50);
-                        gangMenu.Visible = !gangMenu.Visible;
+                        Math.Vector3 destPos = World.GetNextPositionOnStreet(Game.Player.Character.Position);
+                        Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
+                   Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100, destPos, true, false);
+                        if (spawnedVehicle != null)
+                        {
+                            spawnedVehicle.PlaceOnNextStreet();
+                            spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 10, 50);
+                            gangMenu.Visible = !gangMenu.Visible;
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("You must register a vehicle for your gang before calling one.");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
                     }
                 }
                
@@ -647,6 +686,54 @@ namespace GTA
 
         }
 
+        void AddGangWeaponsMenu()
+        {
+            UIMenu weaponsMenu = menuPool.AddSubMenu(gangMenu, "Gang Weapons Menu");
+
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+
+            ModOptions.BuyableWeapon[] buyableWeaponsArray = weaponEntries.Keys.ToArray();
+            UIMenuCheckboxItem[] weaponCheckBoxArray = weaponEntries.Values.ToArray();
+
+            for (int i = 0; i < weaponCheckBoxArray.Length; i++)
+            {
+                weaponsMenu.AddItem(weaponCheckBoxArray[i]);
+            }
+
+            weaponsMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                for(int i = 0; i < buyableWeaponsArray.Length; i++)
+                {
+                    if(item == weaponEntries[buyableWeaponsArray[i]])
+                    {
+                        if (playerGang.gangWeaponHashes.Contains(buyableWeaponsArray[i].wepHash)){
+                            playerGang.gangWeaponHashes.Remove(buyableWeaponsArray[i].wepHash);
+                            GangManager.instance.SaveGangData();
+                            UI.ShowSubtitle("Weapon Removed!");
+                        }
+                        else
+                        {
+                            if(Game.Player.Money >= buyableWeaponsArray[i].price)
+                            {
+                                Game.Player.Money -= buyableWeaponsArray[i].price;
+                                playerGang.gangWeaponHashes.Add(buyableWeaponsArray[i].wepHash);
+                                GangManager.instance.SaveGangData();
+                                UI.ShowSubtitle("Weapon Bought!");
+                            }
+                            else
+                            {
+                                UI.ShowSubtitle("You don't have enough money to buy that weapon for your gang.");
+                            }
+                        }
+
+                        break;
+                    }
+                }
+
+                UpdateBuyableWeapons();
+            };
+        }
+
         void AddRenameGangButton()
         {
             UIMenuItem newButton = new UIMenuItem("Rename Gang", "Resets your gang's name.");
@@ -658,6 +745,21 @@ namespace GTA
                     gangMenu.Visible = !gangMenu.Visible;
                     Function.Call(Hash.DISPLAY_ONSCREEN_KEYBOARD, false, "FMMC_KEY_TIP12N", "", "Gang Name", "", "", "", 30);
                     inputFieldOpen = true;
+                }
+            };
+        }
+
+        void AddReloadOptionsButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
+            gangMenu.AddItem(newButton);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    ModOptions.instance.LoadOptions();
+                    UpdateBuyableWeapons();
+                    UpdateUpgradeCosts();
                 }
             };
         }

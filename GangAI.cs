@@ -50,7 +50,7 @@ namespace GTA
                                 watchedGang.memberAccuracyLevel = 75;
                             }
 
-                            GangManager.instance.SaveGangData();
+                            GangManager.instance.SaveGangData(false);
                         }
                         else
                         {
@@ -68,7 +68,7 @@ namespace GTA
                                 {
                                     watchedGang.moneyAvailable -= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price;
                                     watchedGang.gangWeaponHashes.Add(chosenWeapon);
-                                    GangManager.instance.SaveGangData();
+                                    GangManager.instance.SaveGangData(false);
                                 }
                             }
                         }
@@ -85,7 +85,7 @@ namespace GTA
                                 watchedGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
                             }
 
-                            GangManager.instance.SaveGangData();
+                            GangManager.instance.SaveGangData(false);
                         }
                         else
                         {
@@ -99,7 +99,7 @@ namespace GTA
                                     watchedGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
                                 }
 
-                                GangManager.instance.SaveGangData();
+                                GangManager.instance.SaveGangData(false);
                             }
                         }
                     }
@@ -136,9 +136,9 @@ namespace GTA
             else
             {
                 //take the turf from the other gang... or not, maybe we fail
-                //TODO consider gang general strength here
                 watchedGang.moneyAvailable -= 5000; //we attacked already, spend the money
-                if (RandomUtil.RandomBool())
+                if (watchedGang.GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 3) > 
+                    GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 3))
                 {
                     watchedGang.TakeZone(targetZone);
                 }
