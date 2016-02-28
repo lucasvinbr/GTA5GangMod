@@ -26,7 +26,9 @@ namespace GTA
                 {
                     if (curTurfZone.ownerGangName != "none" && GangManager.instance.GetGangByName(curTurfZone.ownerGangName) != null) //only spawn if there really is a gang in control here
                     {
+                        // also reduce police influence
                         Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
+                        Game.MaxWantedLevel = ModOptions.instance.maxWantedLevelInGangTurf;
                         GangManager.instance.SpawnGangMember
                        (GangManager.instance.GetGangByName
                        (curTurfZone.ownerGangName), World.GetNextPositionOnSidewalk
@@ -35,6 +37,7 @@ namespace GTA
                     else
                     {
                         Game.WantedMultiplier = 1;
+                        Game.MaxWantedLevel = 6;
                     }
 
                 }

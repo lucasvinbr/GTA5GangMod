@@ -65,13 +65,6 @@ namespace GTA
             {
                 zoneData = new TurfZoneData();
             }
-
-            for(int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                zoneData.zoneList[i].AttachedBlip = World.CreateBlip(zoneData.zoneList[i].zoneBlipPosition);
-                zoneData.zoneList[i].AttachedBlip.Sprite = BlipSprite.ArmWrestling;
-                UpdateZoneBlip(zoneData.zoneList[i]);
-            }
         }
 
         public void SaveZoneData(bool notifySuccess = true)
@@ -85,12 +78,8 @@ namespace GTA
             {
                 zoneData.zoneList.Add(newTurfZone);
             }
-           
-            if(newTurfZone.AttachedBlip == null)
-            {
-                newTurfZone.AttachedBlip = World.CreateBlip(newTurfZone.zoneBlipPosition);
-                newTurfZone.AttachedBlip.Sprite = BlipSprite.ArmWrestling;
-            }
+
+            CreateAttachedBlip(newTurfZone);
 
             newTurfZone.AttachedBlip.Position = newTurfZone.zoneBlipPosition;
 
@@ -164,6 +153,16 @@ namespace GTA
             }
         }
 
+        public void CreateAttachedBlip(TurfZone targetZone)
+        {
+            if(targetZone.AttachedBlip == null)
+            {
+                targetZone.AttachedBlip = World.CreateBlip(targetZone.zoneBlipPosition);
+                targetZone.AttachedBlip.Sprite = BlipSprite.ArmWrestling;
+            }
+           
+        }
+
         public void ChangeBlipDisplay()
         {
             curBlipDisplay++;
@@ -182,13 +181,20 @@ namespace GTA
                 case zoneBlipDisplay.none:
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {
-                        zoneData.zoneList[i].AttachedBlip.Scale = 0;
+                        //zoneData.zoneList[i].AttachedBlip.Scale = 0;
+                        if(zoneData.zoneList[i].AttachedBlip != null)
+                        {
+                            zoneData.zoneList[i].AttachedBlip.Remove();
+                            zoneData.zoneList[i].AttachedBlip = null;
+                        }
+                        
                     }
                     break;
                 case zoneBlipDisplay.allZones:
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {
-                        zoneData.zoneList[i].AttachedBlip.Scale = 1;
+                        //zoneData.zoneList[i].AttachedBlip.Scale = 1;
+                        CreateAttachedBlip(zoneData.zoneList[i]);
                         UpdateZoneBlip(zoneData.zoneList[i]);
                     }
                     break;
@@ -198,12 +204,18 @@ namespace GTA
                     {
                         if (i < 5)
                         {
-                            zoneData.zoneList[i].AttachedBlip.Scale = 1;
+                            //zoneData.zoneList[i].AttachedBlip.Scale = 1;
+                            CreateAttachedBlip(zoneData.zoneList[i]);
                             UpdateZoneBlip(zoneData.zoneList[i]);
                         }
                         else
                         {
-                            zoneData.zoneList[i].AttachedBlip.Scale = 0;
+                            //zoneData.zoneList[i].AttachedBlip.Scale = 0;
+                            if (zoneData.zoneList[i].AttachedBlip != null)
+                            {
+                                zoneData.zoneList[i].AttachedBlip.Remove();
+                                zoneData.zoneList[i].AttachedBlip = null;
+                            }
                         }
                     }
                     break;
@@ -226,30 +238,33 @@ namespace GTA
 
         public void UpdateZoneBlip(TurfZone targetZone)
         {
-            if(targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
+            if(targetZone.AttachedBlip != null)
             {
-                targetZone.AttachedBlip.Color = BlipColor.Green;
-            }
-            else if(targetZone.ownerGangName == "none")
-            {
-                targetZone.AttachedBlip.Color = BlipColor.White;
-            }
-            else
-            {
-                targetZone.AttachedBlip.Color = BlipColor.Red;
-            }
+                if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
+                {
+                    targetZone.AttachedBlip.Color = BlipColor.Green;
+                }
+                else if (targetZone.ownerGangName == "none")
+                {
+                    targetZone.AttachedBlip.Color = BlipColor.White;
+                }
+                else
+                {
+                    targetZone.AttachedBlip.Color = BlipColor.Red;
+                }
 
-            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            if(targetZone.ownerGangName != "none")
-            {
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf)"));
+                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+                if (targetZone.ownerGangName != "none")
+                {
+                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf)"));
+                }
+                else
+                {
+                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (neutral territory)"));
+                }
+
+                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, targetZone.AttachedBlip);
             }
-            else
-            {
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (neutral territory)"));
-            }
-            
-            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, targetZone.AttachedBlip);
         }
 
 

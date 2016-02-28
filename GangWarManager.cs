@@ -26,6 +26,8 @@ namespace GTA
 
         private int ticksBeforeAutoLose = 30000;
 
+        private int ticksSinceLastEnemyRetask = 0;
+
         public TurfZone warZone;
 
         public Gang enemyGang;
@@ -42,6 +44,7 @@ namespace GTA
         {
             instance = this;
             this.Tick += OnTick;
+            
         }
 
         public bool StartWar(Gang enemyGang, TurfZone warZone, warType theWarType)
@@ -63,6 +66,7 @@ namespace GTA
                 Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
                 curTicksAwayFromBattle = 0;
+                ticksSinceLastEnemyRetask = 0;
 
                 currentWave = 0;
 
@@ -78,6 +82,7 @@ namespace GTA
                 else
                 {
                     waves = 1 + RandomUtil.CachedRandom.Next(2);
+                    Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1);
                     UI.Notify("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!", true);
                 }
 
@@ -96,7 +101,6 @@ namespace GTA
             warBlip.Remove();
             isOccurring = false;
             Game.WantedMultiplier = 1;
-            AmbientGangMemberSpawner.instance.enabled = true;
         }
 
         void OnTick(object sender, EventArgs e)
@@ -111,19 +115,22 @@ namespace GTA
                             if (currentWave == 0)
                             {
                                 Game.WantedMultiplier = 0;
-                                AmbientGangMemberSpawner.instance.enabled = false;
                             }
                             //spawn the wave
                             for (int i = 0; i < baseMembersPerWave + currentWave * RandomUtil.CachedRandom.Next(5); i++)
                             {
                                 Ped spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, World.GetNextPositionOnSidewalk
                                       (World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100)), true);
-                                spawnedMember.Task.FightAgainst(Game.Player.Character);
+
+                                if (spawnedMember != null)
+                                {
+                                    spawnedMember.Task.FightAgainst(Game.Player.Character);
+                                }
+                                
                                 Wait(200);
                             }
 
                             livingEnemies = GangManager.instance.GetSpawnedMembersOfGang(enemyGang);
-
                             waveIsExhausted = true;
                       }
                 }
@@ -141,19 +148,24 @@ namespace GTA
                         else
                         {
                             enemyGang.TakeZone(warZone);
+                            GangManager.instance.GiveTurfRewardToGang(enemyGang);
                             UI.ShowSubtitle("We've left our contested turf. It has been taken by the " + enemyGang.name + ".");
                         }
 
-                        for (int i = 0; i < livingEnemies.Length; i++)
+                        if(livingEnemies != null)
                         {
-
-                            livingEnemies[i].MarkAsNoLongerNeeded();
-
+                            for (int i = 0; i < livingEnemies.Length; i++)
+                            {
+                                if(livingEnemies[i] != null)
+                                {
+                                    livingEnemies[i].MarkAsNoLongerNeeded();
+                                }
+                            }
                         }
+                       
                         EndWar();
                     }
                 }
-
 
                 if (!Game.Player.IsAlive)
                 {
@@ -161,18 +173,24 @@ namespace GTA
                     if (curWarType == warType.attackingEnemy)
                     {
                         UI.ShowSubtitle("We've lost this battle. They keep the turf.");
+                        enemyGang.moneyAvailable += 5000;
                     }
                     else
                     {
                         enemyGang.TakeZone(warZone);
                         UI.ShowSubtitle(warZone.zoneName + " has been taken by the " + enemyGang.name + "!");
+                        GangManager.instance.GiveTurfRewardToGang(enemyGang);
                     }
-                    
-                    for (int i = 0; i < livingEnemies.Length; i++)
+
+                    if (livingEnemies != null)
                     {
-                       
-                        livingEnemies[i].MarkAsNoLongerNeeded();
-                       
+                        for (int i = 0; i < livingEnemies.Length; i++)
+                        {
+                            if (livingEnemies[i] != null)
+                            {
+                                livingEnemies[i].MarkAsNoLongerNeeded();
+                            }
+                        }
                     }
                     EndWar();
                     return;
@@ -180,6 +198,23 @@ namespace GTA
 
                 if (waveIsExhausted)
                 {
+                    ticksSinceLastEnemyRetask++;
+
+                    if(ticksSinceLastEnemyRetask > 400)
+                    {
+                        if(curTicksAwayFromBattle == 0) //if we're around the warzone...
+                        {
+                            for (int i = 0; i < livingEnemies.Length; i++)
+                            {
+                                if (livingEnemies[i].IsAlive && !livingEnemies[i].IsInCombat)
+                                {
+                                    livingEnemies[i].Task.FightAgainst(Game.Player.Character);
+                                }
+                            }
+                        }
+                       
+                        ticksSinceLastEnemyRetask = 0;
+                    }
                     for(int i = 0; i < livingEnemies.Length; i++)
                     {
                         if (livingEnemies[i].IsDead)
@@ -198,18 +233,21 @@ namespace GTA
                         UI.ShowSubtitle("You've survived wave " + (currentWave + 1).ToString() + "!");
                         Wait(5000);
                         currentWave++;
+                        ticksSinceLastEnemyRetask = 0;
                         waveIsExhausted = false;
                     }
                     else
                     {
                         if(curWarType == warType.attackingEnemy)
                         {
-                            GangManager.instance.GetPlayerGang().TakeZone(warZone);
+                            Gang playerGang = GangManager.instance.GetPlayerGang();
+                            playerGang.TakeZone(warZone);
+                            GangManager.instance.GiveTurfRewardToGang(playerGang);
                             UI.ShowSubtitle(warZone.zoneName + " is now ours!");
                         }
                         else
                         {
-                            Game.Player.Money += 1500;
+                            Game.Player.Money += 2500;
                             UI.ShowSubtitle(warZone.zoneName + " remains ours!");
                         }
                        

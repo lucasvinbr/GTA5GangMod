@@ -32,22 +32,29 @@ namespace GTA
 
         public static void SaveToFile<T>(T dataToSave, string fileName, bool notifyMsg = true)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+
+                if (!Directory.Exists(Application.StartupPath + "/gangModData/"))
+                {
+                    Directory.CreateDirectory(Application.StartupPath + "/gangModData/");
+                }
+
+                string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
+
+                StreamWriter writer = new StreamWriter(filePath);
+                serializer.Serialize(writer, dataToSave);
+                writer.Close();
+                if (notifyMsg)
+                {
+                    UI.ShowSubtitle("saved at: " + filePath);
+                }
+            }catch(Exception e)
+            {
+                UI.Notify("an error occurred while trying to save gang mod data! error: " + e.ToString());
+            }
             
-            if (!Directory.Exists(Application.StartupPath + "/gangModData/"))
-            {
-                Directory.CreateDirectory(Application.StartupPath + "/gangModData/");
-            }
-
-            string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-
-            StreamWriter writer = new StreamWriter(filePath);
-            serializer.Serialize(writer, dataToSave);
-            writer.Close();
-            if (notifyMsg)
-            {
-                UI.ShowSubtitle("saved at: " + filePath);
-            }
         }
     }
 }

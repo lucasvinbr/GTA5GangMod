@@ -26,6 +26,10 @@ namespace GTA
             ModOptions loadedOptions = PersistenceHandler.LoadFromFile<ModOptions>("ModOptions");
             if (loadedOptions != null)
             {
+                possibleGangFirstNames.Clear();
+                possibleGangLastNames.Clear();
+                buyableWeapons.Clear();
+                similarColors.Clear();
                 //get the loaded options
                 this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
                 this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
@@ -37,6 +41,9 @@ namespace GTA
                 this.buyableWeapons = loadedOptions.buyableWeapons;
                 this.similarColors = loadedOptions.similarColors;
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
+                this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
+                this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
+                SaveOptions();
             }
             else
             {
@@ -57,6 +64,9 @@ namespace GTA
         public float rewardMultiplierPerZone = 0.2f;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
+        public int maxWantedLevelInGangTurf = 1;
+
+        public int spawnedMemberLimit = 12; //max number of living gang members at any time
 
         //XMLserializer does not like dictionaries
         [System.Serializable]
@@ -357,6 +367,14 @@ namespace GTA
                 VehicleColor.MetallicClassicGold,
                 VehicleColor.PureGold,
                 VehicleColor.MetallicGoldenBrown,
+            }
+           ),
+            new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
+                 VehicleColor.MatteGray,
+               VehicleColor.MatteLightGray,
+               VehicleColor.MetallicAnthraciteGray,
+               VehicleColor.MetallicSteelGray,
+               VehicleColor.WornSilverGray,
             }
            )
         };

@@ -30,8 +30,8 @@ namespace GTA
                     watchedPed.MarkAsNoLongerNeeded();
                     for (int i = 0; i < myPassengers.Count; i++)
                     {
-                        myPassengers[i].Task.PerformSequence(passengerSequence);
                         myPassengers[i].MarkAsNoLongerNeeded();
+                        myPassengers[i].Task.PerformSequence(passengerSequence);
                     }
 
                     vehicleIAmDriving.IsPersistent = false;
@@ -49,8 +49,8 @@ namespace GTA
                         watchedPed.MarkAsNoLongerNeeded();
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            myPassengers[i].Task.PerformSequence(passengerSequence);
                             myPassengers[i].MarkAsNoLongerNeeded();
+                            myPassengers[i].Task.PerformSequence(passengerSequence);
                         }
 
                         vehicleIAmDriving.IsPersistent = false;
@@ -85,6 +85,7 @@ namespace GTA
             {
                 passengerSequence = new TaskSequence();
                 passengerSequence.AddTask.LeaveVehicle();
+                passengerSequence.AddTask.Wait(1000);
                 passengerSequence.AddTask.FightAgainstHatedTargets(80);
             }
             this.watchedPed = watchedPed;

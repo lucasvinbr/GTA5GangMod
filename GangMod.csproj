@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GTA</RootNamespace>
-    <AssemblyName>SuperMod</AssemblyName>
+    <AssemblyName>GangMod</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -33,6 +33,9 @@
   <ItemGroup>
     <Reference Include="NativeUI">
       <HintPath>nativeUI\NativeUI.dll</HintPath>
+    </Reference>
+    <Reference Include="ScriptHookVDotNet">
+      <HintPath>..\GTAV Mods\ScriptHookDotNet\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -72,12 +75,6 @@
     <Compile Include="SpawnedGangMember.cs" />
     <Compile Include="TurfZone.cs" />
     <Compile Include="ZoneManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\scripthookvdotnet-dev\ScriptHookVDotNet.vcxproj">
-      <Project>{019193a7-50c0-444a-84ca-777595e702cd}</Project>
-      <Name>ScriptHookVDotNet</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

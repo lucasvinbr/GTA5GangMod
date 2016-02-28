@@ -130,8 +130,11 @@ namespace GTA
             else if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
             {
                 //start a war against the player!
-                watchedGang.moneyAvailable -= 2500;
-                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy);
+                if (RandomUtil.RandomBool())
+                {
+                    watchedGang.moneyAvailable -= 2500;
+                    GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy);
+                }
             }
             else
             {
@@ -141,6 +144,7 @@ namespace GTA
                     GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 3))
                 {
                     watchedGang.TakeZone(targetZone);
+                    GangManager.instance.GiveTurfRewardToGang(watchedGang);
                 }
 
             }

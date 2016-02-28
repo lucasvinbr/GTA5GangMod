@@ -104,42 +104,6 @@ public class GangManager : Script
         }
     }
 
-    public void KillGang(GangAI aiWatchingTheGang)
-    {
-        UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
-        enemyGangs.Remove(aiWatchingTheGang);
-        gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
-        SaveGangData(false);
-    }
-
-    public Gang CreateNewEnemyGang()
-    {
-        //set gang name from options
-        string gangName = "Gang";
-        do
-        {
-            gangName = string.Concat(RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangFirstNames), " ",
-            RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
-        } while (GetGangByName(gangName) != null);
-
-        PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
-        PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandomUtil.CachedRandom.Next(9);
-
-        Gang newGang = new Gang(gangName, RandomUtil.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
-
-        for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
-        {
-            newGang.AddMemberVariation(PotentialGangMember.GetMemberFromPool(gangStyle, gangColor));
-        }
-
-        gangData.gangs.Add(newGang);
-
-        SaveGangData();
-        UI.Notify("The " + gangName + " have entered San Andreas!");
-
-        return newGang;
-    }
-
     public void SaveGangData(bool notifySuccess = true)
     {
         PersistenceHandler.SaveToFile<GangData>(gangData, "GangData", notifySuccess);
@@ -206,17 +170,21 @@ public class GangManager : Script
             enemyGangs[i].ticksSinceLastUpdate++;
             if (enemyGangs[i].ticksSinceLastUpdate >= enemyGangs[i].ticksBetweenUpdates)
             {
-                enemyGangs[i].Update();
                 enemyGangs[i].ticksSinceLastUpdate = 0;
+                enemyGangs[i].Update();
 
                 //lets also check if there aren't too many gangs around
                 //if there aren't, we might create a new one...
-                if(enemyGangs.Count < 7)
+                if (enemyGangs.Count < 7)
                 {
                     if(RandomUtil.CachedRandom.Next(10) == 0)
                     {
                         Gang createdGang = CreateNewEnemyGang();
-                        enemyGangs.Add(new GangAI(createdGang));
+                        if(createdGang != null)
+                        {
+                            enemyGangs.Add(new GangAI(createdGang));
+                        }
+                        
                     }
                 }
             }
@@ -229,32 +197,87 @@ public class GangManager : Script
             //each gang wins money according to the amount of owned zones and their values
             for (int i = 0; i < enemyGangs.Count; i++)
             {
-                TurfZone[] curGangZones = ZoneManager.instance.GetZonesControlledByGang(enemyGangs[i].watchedGang.name);
-                for(int j = 0; j < curGangZones.Length; j++)
-                {
-                    enemyGangs[i].watchedGang.moneyAvailable += (int) ((curGangZones[j].value + 1) * 
-                        ModOptions.instance.baseRewardPerZoneOwned * 
-                        (1 + ModOptions.instance.rewardMultiplierPerZone));
-                }
+                GiveTurfRewardToGang(enemyGangs[i].watchedGang);
             }
 
             //this also counts for the player's gang
-            int rewardedCash = 0;
-            TurfZone[] playerZones = ZoneManager.instance.GetZonesControlledByGang(GetPlayerGang().name);
-            for (int i = 0; i < playerZones.Length; i++)
-            {
-                int zoneReward = (playerZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned;
-                Game.Player.Money += zoneReward;
-                rewardedCash += zoneReward;
-            }
-
-            if(rewardedCash != 0)
-            {
-                UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
-            }
-            
+            GiveTurfRewardToGang(GetPlayerGang());
         }
     }
+
+    #region gang general control stuff
+
+    public Gang CreateNewEnemyGang()
+    {
+        //set gang name from options
+        string gangName = "Gang";
+        do
+        {
+            gangName = string.Concat(RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangFirstNames), " ",
+            RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
+        } while (GetGangByName(gangName) != null);
+
+        PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
+        PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandomUtil.CachedRandom.Next(9);
+
+        Gang newGang = new Gang(gangName, RandomUtil.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
+
+        for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
+        {
+            newGang.AddMemberVariation(PotentialGangMember.GetMemberFromPool(gangStyle, gangColor));
+        }
+
+        gangData.gangs.Add(newGang);
+
+        SaveGangData();
+        UI.Notify("The " + gangName + " have entered San Andreas!");
+
+        return newGang;
+    }
+
+    public void KillGang(GangAI aiWatchingTheGang)
+    {
+        UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
+        enemyGangs.Remove(aiWatchingTheGang);
+        gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
+        SaveGangData(false);
+    }
+
+    public void GiveTurfRewardToGang(Gang targetGang)
+    {
+
+        TurfZone[] curGangZones = ZoneManager.instance.GetZonesControlledByGang(targetGang.name);
+        if (targetGang.isPlayerOwned)
+        {
+            if (curGangZones.Length > 0)
+            {
+                int rewardedCash = 0;
+
+                for (int i = 0; i < curGangZones.Length; i++)
+                {
+                    int zoneReward = (int)((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned *
+                    (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Length));
+                    Game.Player.Money += zoneReward;
+                    rewardedCash += zoneReward;
+                }
+
+                UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
+            }
+        }
+        else
+        {
+            for (int j = 0; j < curGangZones.Length; j++)
+            {
+                targetGang.moneyAvailable += (int)((curGangZones[j].value + 1) *
+                    ModOptions.instance.baseRewardPerZoneOwned *
+                    (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Length));
+            }
+
+        }
+
+    }
+
+    #endregion
 
     #region getters
     public Gang GetGangByName(string name)
@@ -398,7 +421,6 @@ public class GangManager : Script
                 {
                     if (livingMembers[i].watchedPed == null)
                     {
-                        UI.Notify("reuse");
                         livingMembers[i].watchedPed = newPed;
                         couldEnlistWithoutAdding = true;
                         break;
@@ -406,15 +428,29 @@ public class GangManager : Script
                 }
                 if (!couldEnlistWithoutAdding)
                 {
-                    UI.Notify("add new");
-                    livingMembers.Add(new SpawnedGangMember(newPed));
+                    if(livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
+                    {
+                        livingMembers.Add(new SpawnedGangMember(newPed));
+                    }
+                    else
+                    {
+                        newPed.Delete();
+                        return null;
+                    }
                 }
 
             }
             else
             {
-                UI.Notify("add new");
-                livingMembers.Add(new SpawnedGangMember(newPed));
+                if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
+                {
+                    livingMembers.Add(new SpawnedGangMember(newPed));
+                }
+                else
+                {
+                    newPed.Delete();
+                    return null;
+                }
             }
 
 
@@ -438,33 +474,49 @@ public class GangManager : Script
             }
 
             Ped driver = SpawnGangMember(ownerGang, spawnPos, true);
-            driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
-            
-            for (int i = 0; i < newVehicle.PassengerSeats; i++)
+            if(driver != null)
             {
-                SpawnGangMember(ownerGang, spawnPos, true).SetIntoVehicle(newVehicle, VehicleSeat.Any);
-            }
+                driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
+                Function.Call(Hash.SET_PED_STEERS_AROUND_OBJECTS, driver, true);
+                Function.Call(Hash.SET_PED_STEERS_AROUND_PEDS, driver, true);
+                Function.Call(Hash.SET_PED_STEERS_AROUND_VEHICLES, driver, true);
 
-            EnlistDrivingMember(driver, newVehicle, destPos);
+                for (int i = 0; i < newVehicle.PassengerSeats; i++)
+                {
+                    Ped passenger = SpawnGangMember(ownerGang, spawnPos, true);
+                    if(passenger != null)
+                    {
+                        passenger.SetIntoVehicle(newVehicle, VehicleSeat.Any);
+                    }
+                }
 
-            if (deactivatePersistent)
-            {
-                newVehicle.IsPersistent = false;
-            }
+                EnlistDrivingMember(driver, newVehicle, destPos);
 
-            newVehicle.AddBlip();
-            newVehicle.CurrentBlip.IsShortRange = true;
+                if (deactivatePersistent)
+                {
+                    newVehicle.IsPersistent = false;
+                }
 
-            if (ownerGang.isPlayerOwned)
-            {
-                newVehicle.CurrentBlip.Color = BlipColor.Green;
+                newVehicle.AddBlip();
+                newVehicle.CurrentBlip.IsShortRange = true;
+
+                if (ownerGang.isPlayerOwned)
+                {
+                    newVehicle.CurrentBlip.Color = BlipColor.Green;
+                }
+                else
+                {
+                    newVehicle.CurrentBlip.Color = BlipColor.Red;
+                }
+
+                return newVehicle;
             }
             else
             {
-                newVehicle.CurrentBlip.Color = BlipColor.Red;
+                newVehicle.Delete();
+                return null;
             }
-
-            return newVehicle;
+            
         }
 
         return null;
