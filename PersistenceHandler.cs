@@ -9,7 +9,7 @@ using GTA.Native;
 using System.Drawing;
 
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// This script controls all the saving and loading procedures called by the other scripts from this mod.

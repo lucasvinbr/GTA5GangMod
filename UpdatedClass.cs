@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// basically a class that requires updates every once in a while

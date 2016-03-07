@@ -7,8 +7,8 @@
     <ProjectGuid>{21CA7796-85B5-452C-8311-D189B26656D3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GTA</RootNamespace>
-    <AssemblyName>GangMod</AssemblyName>
+    <RootNamespace>GTA.GangAndTurfMod</RootNamespace>
+    <AssemblyName>GangAndTurfMod</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -53,6 +53,7 @@
     <Compile Include="Gang.cs" />
     <Compile Include="GangAI.cs" />
     <Compile Include="GangWarManager.cs" />
+    <Compile Include="ModCore.cs" />
     <Compile Include="ModOptions.cs" />
     <Compile Include="UpdatedClass.cs" />
     <Compile Include="PotentialGangMember.cs" />

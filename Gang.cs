@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// the Gang!
@@ -129,9 +129,9 @@ namespace GTA
         /// <returns></returns>
         public int GetGangAIStrengthValue()
         {
-            return moneyAvailable / 1000 +
-                ZoneManager.instance.GetZonesControlledByGang(name).Length * 100 +
-                ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price / 10 +
+            return moneyAvailable / 10000 +
+                ZoneManager.instance.GetZonesControlledByGang(name).Length * 50 +
+                ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price / 20 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
                 memberHealth;

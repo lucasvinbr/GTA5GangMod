@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// a zone that can be taken over by a gang.

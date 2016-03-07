@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     public class GangAI : UpdatedClass
     {
@@ -41,13 +41,13 @@ namespace GTA
                     if (RandomUtil.RandomBool())
                     {
                         //since we've got some extra cash, lets upgrade our members!
-                        if (RandomUtil.RandomBool() && watchedGang.memberAccuracyLevel < 75)
+                        if (RandomUtil.RandomBool() && watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                         {
                             watchedGang.moneyAvailable -= (watchedGang.memberAccuracyLevel + 10) * 250;
                             watchedGang.memberAccuracyLevel += 10;
-                            if (watchedGang.memberAccuracyLevel > 75)
+                            if (watchedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                             {
-                                watchedGang.memberAccuracyLevel = 75;
+                                watchedGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
                             }
 
                             GangManager.instance.SaveGangData(false);
@@ -108,13 +108,16 @@ namespace GTA
             else
             {
                 //we may be running low on cash
-                //do we have any turf?
+                //do we have any turf? is any war going on?
                 //if not, we no longer exist
-                TurfZone[] myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
-
-                if (myZones.Length == 0)
+                if (!GangWarManager.instance.isOccurring)
                 {
-                    GangManager.instance.KillGang(this);
+                    TurfZone[] myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
+
+                    if (myZones.Length == 0)
+                    {
+                        GangManager.instance.KillGang(this);
+                    }
                 }
             }
         }
@@ -140,8 +143,11 @@ namespace GTA
             {
                 //take the turf from the other gang... or not, maybe we fail
                 watchedGang.moneyAvailable -= 5000; //we attacked already, spend the money
-                if (watchedGang.GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 3) > 
-                    GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 3))
+                int myAttackValue = watchedGang.GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20),
+                    theirDefenseValue = GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20);
+
+                if (myAttackValue > 
+                    theirDefenseValue)
                 {
                     watchedGang.TakeZone(targetZone);
                     GangManager.instance.GiveTurfRewardToGang(watchedGang);
@@ -153,7 +159,7 @@ namespace GTA
         public GangAI(Gang watchedGang)
         {
             this.watchedGang = watchedGang;
-            ticksBetweenUpdates = RandomUtil.CachedRandom.Next(25000, 35000);
+            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangAIUpdates + RandomUtil.CachedRandom.Next(100);
         }
     }
 }

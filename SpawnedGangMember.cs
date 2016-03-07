@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     public class SpawnedGangMember : UpdatedClass
     {
@@ -13,8 +13,12 @@ namespace GTA
 
         public override void Update()
         {
-
-            if (RandomUtil.RandomBool() || Game.Player.IsTargetting(watchedPed))
+            if (watchedPed.IsInAir || watchedPed.IsPlayer)
+            {
+                return;
+            }
+            if ((RandomUtil.CachedRandom.Next(10) <= 7 || Game.Player.IsTargetting(watchedPed)) &&
+                !watchedPed.IsInCombat)
             {
                 watchedPed.Task.FightAgainstHatedTargets(100);
             }
@@ -24,7 +28,11 @@ namespace GTA
                 foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
                     (GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup)))
                 {
-                    member.Task.FightAgainstHatedTargets(200);
+                    if (!member.IsInCombat && !member.IsInAir)
+                    {
+                        member.Task.FightAgainstHatedTargets(200);
+                    }
+                    
                 }
             }
             else
@@ -59,7 +67,7 @@ namespace GTA
         public SpawnedGangMember(Ped watchedPed)
         {
             this.watchedPed = watchedPed;
-            this.ticksBetweenUpdates = 600;
+            this.ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates;
         }
 
     }

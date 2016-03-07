@@ -8,13 +8,13 @@ using NativeUI;
 using System.Windows.Forms;
 
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// the nativeUI-implementing class
     /// -------------thanks to the NativeUI developers!-------------
     /// </summary>
-    class MenuScript : Script
+    class MenuScript
     {
 
         MenuPool menuPool;
@@ -51,6 +51,7 @@ namespace GTA
             AddRemovePlayerGangMemberButton();
             AddCallVehicleButton();
             AddRegisterVehicleButton();
+            AddCallParatrooperButton();
             AddRenameGangButton();
             AddGangUpgradesMenu();
             UpdateBuyableWeapons();
@@ -60,58 +61,53 @@ namespace GTA
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
             memberMenu.RefreshIndex();
-
-
-            Tick += (o, e) => menuPool.ProcessMenus();
-            this.KeyUp += onKeyUp;
-            this.Tick += onTick;
            
         }
 
-        
-
-        private void onKeyUp(object sender, KeyEventArgs e)
+        #region menu opening methods
+        public void OpenGangMenu()
         {
-            if (e.KeyCode == Keys.B)
+            if (!menuPool.IsAnyMenuOpen())
             {
-                //numpad keys dont seem to go along well with shift
-                if (e.Modifiers == Keys.None && !menuPool.IsAnyMenuOpen())
-                {
-                    UpdateUpgradeCosts();
-                    UpdateBuyableWeapons();
-                    gangMenu.Visible = !gangMenu.Visible;
-                }
-                else if (e.Modifiers == Keys.Shift && !menuPool.IsAnyMenuOpen())
-                {
-                    closestPed = World.GetClosestPed(Game.Player.Character.Position + Game.Player.Character.ForwardVector * 6.0f, 5.5f);
-                    if (closestPed != null)
-                    {
-                        UI.ShowSubtitle("ped selected!");
-                        World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
-                        memberMenu.Visible = !memberMenu.Visible;
-                    }
-                    else
-                    {
-                        UI.ShowSubtitle("couldn't find a ped in front of you!");
-                    }
-
-                }
+                UpdateUpgradeCosts();
+                UpdateBuyableWeapons();
+                gangMenu.Visible = !gangMenu.Visible;
             }
-            else if (e.KeyCode == Keys.N)
-            {
-                //numpad keys dont seem to go along well with shift
-                if (e.Modifiers == Keys.Shift && !menuPool.IsAnyMenuOpen())
-                {
-                    ZoneManager.instance.OutputCurrentZoneInfo();
-                    zonesMenu.Visible = !zonesMenu.Visible;
-                }
-
-            }
-
         }
 
-        void onTick(object sender, EventArgs e)
+        public void OpenPedRegistrationMenu()
         {
+            if (!menuPool.IsAnyMenuOpen())
+            {
+                closestPed = World.GetClosestPed(Game.Player.Character.Position + Game.Player.Character.ForwardVector * 6.0f, 5.5f);
+                if (closestPed != null)
+                {
+                    UI.ShowSubtitle("ped selected!");
+                    World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
+                    memberMenu.Visible = !memberMenu.Visible;
+                }
+                else
+                {
+                    UI.ShowSubtitle("couldn't find a ped in front of you!");
+                }
+            }
+        }
+
+        public void OpenZoneMenu()
+        {
+            if (!menuPool.IsAnyMenuOpen())
+            {
+                ZoneManager.instance.OutputCurrentZoneInfo();
+                zonesMenu.Visible = !zonesMenu.Visible;
+            }
+        }
+        #endregion
+
+
+        public void Tick()
+        {
+            menuPool.ProcessMenus();
+
             if (inputFieldOpen)
             {
                 int inputFieldSituation = Function.Call<int>(Hash.UPDATE_ONSCREEN_KEYBOARD);
@@ -546,7 +542,7 @@ namespace GTA
                         }
                         else
                         {
-                            UI.ShowSubtitle("You must register a vehicle for your gang before calling one.");
+                            UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
                         }
                     }
                     else
@@ -583,6 +579,39 @@ namespace GTA
                         UI.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
+            };
+        }
+
+        void AddCallParatrooperButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Call paratrooper members", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
+            gangMenu.AddItem(newButton);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    Gang playergang = GangManager.instance.GetPlayerGang();
+                    if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                    {
+                        Math.Vector3 destPos = Game.Player.Character.Position;
+                        Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
+                   Game.Player.Character.Position + Math.Vector3.WorldUp * 50);
+                        if (spawnedPed != null)
+                        {
+                            spawnedPed.Task.ParachuteTo(destPos);
+                            gangMenu.Visible = !gangMenu.Visible;
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("There are too many gang members around or you haven't registered any member.");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+                    }
+                }
+
             };
         }
 
@@ -658,12 +687,12 @@ namespace GTA
                 {
                     if (Game.Player.Money >= accuracyUpgradeCost)
                     {
-                        if (playerGang.memberAccuracyLevel < 75)
+                        if (playerGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                         {
                             playerGang.memberAccuracyLevel += 10;
-                            if (playerGang.memberAccuracyLevel > 75)
+                            if (playerGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                             {
-                                playerGang.memberAccuracyLevel = 75;
+                                playerGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
                             }
                             Game.Player.Money -= accuracyUpgradeCost;
                             GangManager.instance.SaveGangData();
@@ -671,7 +700,7 @@ namespace GTA
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your members' accuracy is at its maximum limit!");
+                            UI.ShowSubtitle("Your members' accuracy is at its maximum limit (it can be configured in the ModOptions file)");
                         }
                     }
                     else

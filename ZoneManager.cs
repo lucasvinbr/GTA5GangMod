@@ -7,12 +7,12 @@ using GTA.Native;
 using GTA.Math;
 using System.Windows.Forms;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// this script deals with gangs taking over zones. it also allows adding new zones to be taken
     /// </summary>
-    public class ZoneManager : Script
+    public class ZoneManager
     {
         
         public enum zoneBlipDisplay
@@ -23,20 +23,6 @@ namespace GTA
         }
 
         public zoneBlipDisplay curBlipDisplay = zoneBlipDisplay.none;
-
-        private void onKeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.N)
-            {
-                if (e.Modifiers == Keys.None)
-                {
-                    OutputCurrentZoneInfo();
-                }else if(e.Modifiers == Keys.Control)
-                {
-                    ChangeBlipDisplay();
-                }
-            }
-        }
 
         #region setup/save stuff
 
@@ -58,7 +44,6 @@ namespace GTA
         public ZoneManager()
         {
             instance = this;
-            this.KeyUp += onKeyUp;
 
             zoneData = PersistenceHandler.LoadFromFile<TurfZoneData>("TurfZoneData");
             if (zoneData == null)

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     [System.Serializable]
     public class ModOptions
@@ -26,20 +26,19 @@ namespace GTA
             ModOptions loadedOptions = PersistenceHandler.LoadFromFile<ModOptions>("ModOptions");
             if (loadedOptions != null)
             {
-                possibleGangFirstNames.Clear();
-                possibleGangLastNames.Clear();
-                buyableWeapons.Clear();
-                similarColors.Clear();
                 //get the loaded options
                 this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
                 this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
-                this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
-                this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
-                this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
-                this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
-                this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
                 this.buyableWeapons = loadedOptions.buyableWeapons;
                 this.similarColors = loadedOptions.similarColors;
+                this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
+                this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
+                this.maxGangMemberAccuracy = loadedOptions.maxGangMemberAccuracy;
+                this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
+                this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
+                this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
+                this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
+                this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
@@ -47,14 +46,23 @@ namespace GTA
             }
             else
             {
+                SetListsDefaultValues();
                 PersistenceHandler.SaveToFile(this, "ModOptions");
             }
         }
 
+        public void SaveOptions()
+        {
+            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions");
+        }
+
         public int maxGangMemberHealth = 400;
         public int maxGangMemberArmor = 100;
+        public int maxGangMemberAccuracy = 75;
 
         public int ticksBetweenTurfRewards = 50000;
+        public int ticksBetweenGangAIUpdates = 30000;
+        public int ticksBetweenGangMemberAIUpdates = 600;
         public int baseRewardPerZoneOwned = 500;
 
         /// <summary>
@@ -66,7 +74,15 @@ namespace GTA
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
 
-        public int spawnedMemberLimit = 12; //max number of living gang members at any time
+        public int spawnedMemberLimit = 20; //max number of living gang members at any time
+
+        public List<BuyableWeapon> buyableWeapons;
+
+        public List<string> possibleGangFirstNames;
+
+        public List<string> possibleGangLastNames;
+
+        public List<GangColorTranslation> similarColors;
 
         //XMLserializer does not like dictionaries
         [System.Serializable]
@@ -132,7 +148,10 @@ namespace GTA
             return null;
         }
 
-        public  List<BuyableWeapon> buyableWeapons = new List<BuyableWeapon>()
+
+        public void SetListsDefaultValues()
+        {
+            buyableWeapons = new List<BuyableWeapon>()
         {
             new BuyableWeapon(WeaponHash.AdvancedRifle, 20000),
             new BuyableWeapon(WeaponHash.APPistol, 5000),
@@ -169,8 +188,7 @@ namespace GTA
             new BuyableWeapon(WeaponHash.VintagePistol, 5000)
         };
 
-
-        public List<string> possibleGangFirstNames = new List<string>
+            possibleGangFirstNames = new List<string>
         {
             "Rocket",
             "Magic",
@@ -219,7 +237,7 @@ namespace GTA
             "Epic"
         };
 
-        public List<string> possibleGangLastNames = new List<string>
+            possibleGangLastNames = new List<string>
         {
             "League",
             "Sword",
@@ -237,8 +255,6 @@ namespace GTA
             "Ghosts",
             "Dealers",
             "People",
-            "Men",
-            "Women",
             "Tigers",
             "Triad",
             "Watchers",
@@ -270,7 +286,7 @@ namespace GTA
             "Fighters",
         };
 
-        public List<GangColorTranslation> similarColors = new List<GangColorTranslation>
+            similarColors = new List<GangColorTranslation>
         {
             new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
                  VehicleColor.BrushedBlackSteel,
@@ -378,10 +394,7 @@ namespace GTA
             }
            )
         };
-
-        public void SaveOptions()
-        {
-            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions");
         }
+                
     }
 }

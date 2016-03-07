@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
+using GTA.Math;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     class GangWarManager : Script
     {
@@ -73,16 +74,23 @@ namespace GTA
                 waveIsExhausted = false;
 
                 isOccurring = true;
+
+                int gangStrengthBonus = enemyGang.GetGangAIStrengthValue() / 10000;
+                if(gangStrengthBonus > 4)
+                {
+                    gangStrengthBonus = 4;
+                }
+
                 if (theWarType == warType.attackingEnemy)
                 {
-                    waves = warZone.value + RandomUtil.CachedRandom.Next(2);
+                    waves = warZone.value + RandomUtil.CachedRandom.Next(gangStrengthBonus);
                     UI.ShowSubtitle("The " + enemyGang.name + " are coming!");
                     Wait(4000);
                 }
                 else
                 {
                     waves = 1 + RandomUtil.CachedRandom.Next(2);
-                    Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1);
+                    Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     UI.Notify("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!", true);
                 }
 
@@ -166,8 +174,8 @@ namespace GTA
                         EndWar();
                     }
                 }
-
-                if (!Game.Player.IsAlive)
+                //if their leader is dead...
+                if (!Game.Player.IsAlive && !GangManager.instance.hasChangedBody)
                 {
                     //the war ends
                     if (curWarType == warType.attackingEnemy)
@@ -200,19 +208,28 @@ namespace GTA
                 {
                     ticksSinceLastEnemyRetask++;
 
-                    if(ticksSinceLastEnemyRetask > 400)
+                    if(ticksSinceLastEnemyRetask > 1000)
                     {
-                        if(curTicksAwayFromBattle == 0) //if we're around the warzone...
+                        for (int i = 0; i < livingEnemies.Length; i++)
                         {
-                            for (int i = 0; i < livingEnemies.Length; i++)
+                            if (livingEnemies[i].IsAlive)
                             {
-                                if (livingEnemies[i].IsAlive && !livingEnemies[i].IsInCombat)
+                                //sometimes we just spawn far away from the warzone and from the player!
+                                //lets parachute close to the player then
+                                if (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) > 250 &&
+                                    World.GetDistance(livingEnemies[i].Position, World.GetNextPositionOnSidewalk
+                                    (World.GetNextPositionOnStreet(warZone.zoneBlipPosition))) > 250)
                                 {
-                                    livingEnemies[i].Task.FightAgainst(Game.Player.Character);
+                                    UI.Notify("relocated an enemy");
+                                    livingEnemies[i].Position = World.GetNextPositionOnSidewalk
+                                    (World.GetNextPositionOnStreet(Game.Player.Character.Position)) + RandomUtil.RandomDirection(true) * RandomUtil.CachedRandom.Next(5, 20) +
+                                        Vector3.WorldUp * RandomUtil.CachedRandom.Next(50, 101);
+                                    livingEnemies[i].Task.ParachuteTo(Game.Player.Character.Position);
                                 }
+                                if (!livingEnemies[i].IsInAir) livingEnemies[i].Task.FightAgainst(Game.Player.Character);
                             }
                         }
-                       
+                        
                         ticksSinceLastEnemyRetask = 0;
                     }
                     for(int i = 0; i < livingEnemies.Length; i++)

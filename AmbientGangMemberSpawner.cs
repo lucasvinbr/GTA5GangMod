@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     class AmbientGangMemberSpawner : Script
     {
@@ -15,7 +15,7 @@ namespace GTA
 
         void OnTick(object sender, EventArgs e)
         {
-            Wait(5000 + RandomUtil.CachedRandom.Next(15000));
+            Wait(4000 + RandomUtil.CachedRandom.Next(2000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             //lets try to spawn the current zone's corresponding gang members!
@@ -33,6 +33,9 @@ namespace GTA
                        (GangManager.instance.GetGangByName
                        (curTurfZone.ownerGangName), World.GetNextPositionOnSidewalk
                                (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60))));
+
+                        Wait(1000 + RandomUtil.CachedRandom.Next(3000000) / GangManager.instance.GetGangByName
+                       (curTurfZone.ownerGangName).GetGangAIStrengthValue());
                     }
                     else
                     {

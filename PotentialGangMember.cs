@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// a potential gang member is a ped with preset model variations and a color to which he is linked.

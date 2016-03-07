@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using GTA.Math;
 using GTA.Native;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     class SpawnedDrivingGangMember : UpdatedClass
     {
@@ -26,12 +26,19 @@ namespace GTA
                 if (vehicleIAmDriving.Position.DistanceTo(destination) < 15)
                 {
                     //leave vehicle, everyone stops being important
-                    watchedPed.Task.LeaveVehicle();
-                    watchedPed.MarkAsNoLongerNeeded();
+                    if (!watchedPed.IsPlayer)
+                    {
+                        watchedPed.Task.LeaveVehicle();
+                        watchedPed.MarkAsNoLongerNeeded();
+                    }
+                   
                     for (int i = 0; i < myPassengers.Count; i++)
                     {
-                        myPassengers[i].MarkAsNoLongerNeeded();
-                        myPassengers[i].Task.PerformSequence(passengerSequence);
+                        if (myPassengers[i].IsPlayer)
+                        {
+                            myPassengers[i].MarkAsNoLongerNeeded();
+                            myPassengers[i].Task.PerformSequence(passengerSequence);
+                        }
                     }
 
                     vehicleIAmDriving.IsPersistent = false;
@@ -45,12 +52,19 @@ namespace GTA
                     if(updatesWhileGoingToDest > updateLimitWhileGoing)
                     {
                         //leave vehicle, everyone stops being important
-                        watchedPed.Task.LeaveVehicle();
-                        watchedPed.MarkAsNoLongerNeeded();
+                        if (!watchedPed.IsPlayer)
+                        {
+                            watchedPed.Task.LeaveVehicle();
+                            watchedPed.MarkAsNoLongerNeeded();
+                        }
+
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            myPassengers[i].MarkAsNoLongerNeeded();
-                            myPassengers[i].Task.PerformSequence(passengerSequence);
+                            if (myPassengers[i].IsPlayer)
+                            {
+                                myPassengers[i].MarkAsNoLongerNeeded();
+                                myPassengers[i].Task.PerformSequence(passengerSequence);
+                            }
                         }
 
                         vehicleIAmDriving.IsPersistent = false;

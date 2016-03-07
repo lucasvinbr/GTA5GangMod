@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GTA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// just a few useful methods for getting random stuff
