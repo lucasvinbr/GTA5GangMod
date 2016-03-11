@@ -130,6 +130,13 @@ namespace GTA.GangAndTurfMod
                 watchedGang.moneyAvailable -= 10000;
                 watchedGang.TakeZone(targetZone);
             }
+            else if(GangManager.instance.GetGangByName(targetZone.ownerGangName) == null)
+            {
+                ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
+                //this zone is neutral, lets just take it
+                watchedGang.moneyAvailable -= 10000;
+                watchedGang.TakeZone(targetZone);
+            }
             else if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
             {
                 //start a war against the player!

@@ -43,7 +43,7 @@ namespace GTA.GangAndTurfMod
             this.color = color;
             this.isPlayerOwned = isPlayerOwned;
 
-            moneyAvailable = RandomUtil.CachedRandom.Next(100000, 200000); //this isnt used if this is the player's gang - he'll use his own money instead
+            moneyAvailable = RandomUtil.CachedRandom.Next(60000, 100000); //this isnt used if this is the player's gang - he'll use his own money instead
 
             gangWeaponHashes.Add(WeaponHash.SNSPistol);
 

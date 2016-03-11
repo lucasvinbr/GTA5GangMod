@@ -34,7 +34,7 @@ namespace GTA.GangAndTurfMod
                    
                     for (int i = 0; i < myPassengers.Count; i++)
                     {
-                        if (myPassengers[i].IsPlayer)
+                        if (!myPassengers[i].IsPlayer)
                         {
                             myPassengers[i].MarkAsNoLongerNeeded();
                             myPassengers[i].Task.PerformSequence(passengerSequence);
@@ -60,7 +60,7 @@ namespace GTA.GangAndTurfMod
 
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            if (myPassengers[i].IsPlayer)
+                            if (!myPassengers[i].IsPlayer)
                             {
                                 myPassengers[i].MarkAsNoLongerNeeded();
                                 myPassengers[i].Task.PerformSequence(passengerSequence);

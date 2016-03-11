@@ -57,6 +57,7 @@ namespace GTA.GangAndTurfMod
                     zoneManagerScript.OutputCurrentZoneInfo();
                 }else if (e.Modifiers == Keys.Shift)
                 {
+                    zoneManagerScript.OutputCurrentZoneInfo();
                     menuScript.OpenZoneMenu();
                 }else if(e.Modifiers == Keys.Control)
                 {

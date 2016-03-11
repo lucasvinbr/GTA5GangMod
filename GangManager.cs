@@ -153,7 +153,7 @@ namespace GTA.GangAndTurfMod
                     //if there aren't, we might create a new one...
                     if (enemyGangs.Count < 7)
                     {
-                        if (RandomUtil.CachedRandom.Next(15) == 0)
+                        if (RandomUtil.CachedRandom.Next(enemyGangs.Count * 2) == 0)
                         {
                             Gang createdGang = CreateNewEnemyGang();
                             if (createdGang != null)
@@ -182,19 +182,31 @@ namespace GTA.GangAndTurfMod
 
             if (hasChangedBody)
             {
-                
+
+                if (!theOriginalPed.IsAlive)
+                {
+                    RestorePlayerBody();
+                    Game.Player.Character.Kill();
+                }
+
+                if(Game.Player.Character.Health > 4000 && Game.Player.Character.Health != 4900)
+                {
+                    Game.Player.Character.Armor -= (4900 - Game.Player.Character.Health);
+                }
+
                 Game.Player.Character.Health = 5000;
+
                 if (Game.Player.Character.Armor <= 0) //dead!
                 {
-                    if (Game.Player.Character.IsRagdoll && Game.Player.IsInvincible)
+                    if (!(Game.Player.Character.IsRagdoll) && Game.Player.IsInvincible)
                     {
-                        Game.Player.Character.Euphoria.SmartFall.Start();
+                        Game.Player.Character.Euphoria.ShotFallToKnees.Start();
                     }
                     else
                     {
                         Game.Player.IsInvincible = true;
                         Game.Player.Character.CanRagdoll = true;
-                        Game.Player.Character.Euphoria.ShotFallToKnees.Start();
+                        Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
                         Game.Player.IgnoredByEveryone = true;
                     }
                     
@@ -205,7 +217,7 @@ namespace GTA.GangAndTurfMod
 
         #region gang general control stuff
 
-        public Gang CreateNewEnemyGang()
+        public Gang CreateNewEnemyGang(bool notifyMsg = true)
         {
             //set gang name from options
             string gangName = "Gang";
@@ -228,7 +240,11 @@ namespace GTA.GangAndTurfMod
             gangData.gangs.Add(newGang);
 
             SaveGangData();
-            UI.Notify("The " + gangName + " have entered San Andreas!");
+            if (notifyMsg)
+            {
+                UI.Notify("The " + gangName + " have entered San Andreas!");
+            }
+            
 
             return newGang;
         }
@@ -238,6 +254,11 @@ namespace GTA.GangAndTurfMod
             UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
             enemyGangs.Remove(aiWatchingTheGang);
             gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
+            if(enemyGangs.Count == 0)
+            {
+                //create a new gang right away... but do it silently to not demotivate the player too much
+                CreateNewEnemyGang(false);
+            }
             SaveGangData(false);
         }
 
@@ -290,7 +311,7 @@ namespace GTA.GangAndTurfMod
                         if (playerGangMembers[i].IsAlive)
                         {
                             theOriginalPed = Game.Player.Character;
-                            theOriginalPed.IsInvincible = true;
+                            //theOriginalPed.IsInvincible = true;
                             hasChangedBody = true;
                             TakePedBody(playerGangMembers[i]);
                         }
@@ -309,6 +330,7 @@ namespace GTA.GangAndTurfMod
             targetPed.Task.ClearAllImmediately();
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
             targetPed.Armor += targetPed.Health;
+            targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
             Game.Player.CanControlCharacter = true;
         }

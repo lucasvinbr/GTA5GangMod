@@ -106,10 +106,28 @@ namespace GTA.GangAndTurfMod
         {
             PotentialGangMember returnedMember;
 
+            int attempts = 0;
             do
             {
                 returnedMember = MemberPool.memberList[RandomUtil.CachedRandom.Next(MemberPool.memberList.Count)];
-            } while (returnedMember.linkedColor != color || returnedMember.myStyle != style);
+                attempts++;
+            } while ((returnedMember.linkedColor != color || returnedMember.myStyle != style) && attempts < 1000);
+
+            if(returnedMember.linkedColor != color || returnedMember.myStyle != style)
+            {
+                //we couldnt find one randomly.
+                //lets try to find one the straightforward way then
+                for(int i = 0; i < MemberPool.memberList.Count; i++)
+                {
+                    returnedMember = MemberPool.memberList[i];
+                    if (returnedMember.linkedColor == color && returnedMember.myStyle == style)
+                    {
+                        return returnedMember;
+                    }
+                }
+
+                UI.Notify("failed to find a potential member of style " + style.ToString() + " and color " + color.ToString());
+            }
 
             return returnedMember;
         }

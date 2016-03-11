@@ -63,7 +63,7 @@ namespace GTA.GangAndTurfMod
                 warBlip.Color = BlipColor.Red;
                 
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Gang War");
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Gang War (versus " + enemyGang.name + ")");
                 Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
                 curTicksAwayFromBattle = 0;
@@ -215,16 +215,17 @@ namespace GTA.GangAndTurfMod
                             if (livingEnemies[i].IsAlive)
                             {
                                 //sometimes we just spawn far away from the warzone and from the player!
-                                //lets parachute close to the player then
+                                //lets spawn again, close to the player, then
                                 if (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) > 250 &&
                                     World.GetDistance(livingEnemies[i].Position, World.GetNextPositionOnSidewalk
                                     (World.GetNextPositionOnStreet(warZone.zoneBlipPosition))) > 250)
                                 {
-                                    UI.Notify("relocated an enemy");
-                                    livingEnemies[i].Position = World.GetNextPositionOnSidewalk
-                                    (World.GetNextPositionOnStreet(Game.Player.Character.Position)) + RandomUtil.RandomDirection(true) * RandomUtil.CachedRandom.Next(5, 20) +
-                                        Vector3.WorldUp * RandomUtil.CachedRandom.Next(50, 101);
-                                    livingEnemies[i].Task.ParachuteTo(Game.Player.Character.Position);
+                                    do
+                                    {
+                                        livingEnemies[i].Position = World.GetNextPositionOnSidewalk
+                                      (World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100));
+                                    } while (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) < 10);
+
                                 }
                                 if (!livingEnemies[i].IsInAir) livingEnemies[i].Task.FightAgainst(Game.Player.Character);
                             }

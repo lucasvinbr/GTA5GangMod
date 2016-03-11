@@ -584,7 +584,7 @@ namespace GTA.GangAndTurfMod
 
         void AddCallParatrooperButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Call paratrooper members", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
+            UIMenuItem newButton = new UIMenuItem("Call parachuting member", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
             gangMenu.AddItem(newButton);
             gangMenu.OnItemSelect += (sender, item, index) =>
             {
