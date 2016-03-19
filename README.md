@@ -12,3 +12,5 @@ ScriptHookV: http://www.dev-c.com/gtav/scripthookv/
 ScriptHookDotNet: https://github.com/crosire/scripthookvdotnet/releases
 
 NativeUI: https://github.com/Guad/NativeUI/releases
+
+Contributions are welcome! Please create a new branch and make a pull request if you'd like to contribute.
