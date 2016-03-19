@@ -1,3 +1,5 @@
+Downloads are here: https://github.com/lucasvinbr/GTA5GangMod/releases
+
 # GTA5GangMod
 a mod that tries to create a gang and turf system similar to that of Gta San Andreas.
 
