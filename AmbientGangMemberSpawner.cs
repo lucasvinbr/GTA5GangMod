@@ -8,7 +8,11 @@ namespace GTA.GangAndTurfMod
 {
     class AmbientGangMemberSpawner : Script
     {
-
+        public string gangName{
+            get{
+                return "luquinhas boladao";
+            }
+        }
         public bool enabled = true;
         public static AmbientGangMemberSpawner instance;
 
