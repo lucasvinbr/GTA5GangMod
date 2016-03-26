@@ -30,7 +30,7 @@ namespace GTA.GangAndTurfMod
                 foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
                     (pedGang))
                 {
-                    if (!member.IsInCombat && !member.IsInAir)
+                    if (!member.IsInCombat && !member.IsInAir && !member.IsPlayer)
                     {
                         member.Task.FightAgainstHatedTargets(200);
                     }
@@ -66,10 +66,15 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public void ResetUpdateInterval()
+        {
+            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates;
+        }
+
         public SpawnedGangMember(Ped watchedPed)
         {
             this.watchedPed = watchedPed;
-            this.ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates;
+            ResetUpdateInterval();
         }
 
     }

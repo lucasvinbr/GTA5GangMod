@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 
+
 namespace GTA.GangAndTurfMod
 {
     [System.Serializable]
@@ -34,6 +35,7 @@ namespace GTA.GangAndTurfMod
                 this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
                 this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
                 this.maxGangMemberAccuracy = loadedOptions.maxGangMemberAccuracy;
+                this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
@@ -46,7 +48,8 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                SetListsDefaultValues();
+                SetWeaponListDefaultValues();
+                SetNameListsDefaultValues();
                 PersistenceHandler.SaveToFile(this, "ModOptions");
             }
         }
@@ -59,6 +62,8 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberHealth = 400;
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 75;
+
+        public bool emptyZoneDuringWar = true;
 
         public int ticksBetweenTurfRewards = 50000;
         public int ticksBetweenGangAIUpdates = 30000;
@@ -148,8 +153,40 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
+        /// <summary>
+        /// resets all values, except for the first and last gang names and the color translations
+        /// </summary>
+        public void SetAllValuesToDefault()
+        {
+            maxGangMemberHealth = 400;
+            maxGangMemberArmor = 100;
+            maxGangMemberAccuracy = 75;
 
-        public void SetListsDefaultValues()
+            emptyZoneDuringWar = true;
+
+            ticksBetweenTurfRewards = 50000;
+            ticksBetweenGangAIUpdates = 30000;
+            ticksBetweenGangMemberAIUpdates = 600;
+            baseRewardPerZoneOwned = 500;
+
+       
+            rewardMultiplierPerZone = 0.2f;
+
+            wantedFactorWhenInGangTurf = 0.2f;
+            maxWantedLevelInGangTurf = 1;
+
+            spawnedMemberLimit = 20;
+
+            buyableWeapons.Clear();
+
+            SetWeaponListDefaultValues();
+
+            SaveOptions();
+
+            GangManager.instance.ResetGangUpdateIntervals();
+        }
+
+        public void SetWeaponListDefaultValues()
         {
             buyableWeapons = new List<BuyableWeapon>()
         {
@@ -187,6 +224,11 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.SNSPistol, 900),
             new BuyableWeapon(WeaponHash.VintagePistol, 5000)
         };
+        }
+
+
+        public void SetNameListsDefaultValues()
+        {
 
             possibleGangFirstNames = new List<string>
         {

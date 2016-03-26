@@ -19,7 +19,6 @@ namespace GTA.GangAndTurfMod
 
         MenuPool menuPool;
         UIMenu zonesMenu, gangMenu, memberMenu;
-
         Ped closestPed;
         bool saveTorsoIndex = false, saveTorsoTex = false, saveLegIndex = false, saveLegTex = false;
         bool inputFieldOpen = false;
@@ -42,6 +41,7 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(zonesMenu);
             menuPool.Add(gangMenu);
             menuPool.Add(memberMenu);
+            
             AddSaveZoneButton();
             AddGangTakeoverButton();
             AddMemberToggles();
@@ -57,11 +57,18 @@ namespace GTA.GangAndTurfMod
             UpdateBuyableWeapons();
             AddGangWeaponsMenu();
             AddReloadOptionsButton();
+            AddResetOptionsButton();
 
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
             memberMenu.RefreshIndex();
-           
+
+            //add mouse click as another "select" button
+            menuPool.SetKey(UIMenu.MenuControls.Select, Control.PhoneSelect);
+            InstructionalButton clickButton = new InstructionalButton(Control.PhoneSelect, "Select");
+            zonesMenu.AddInstructionalButton(clickButton);
+            gangMenu.AddInstructionalButton(clickButton);
+            memberMenu.AddInstructionalButton(clickButton);
         }
 
         #region menu opening methods
@@ -114,11 +121,19 @@ namespace GTA.GangAndTurfMod
                 if(inputFieldSituation == 1)
                 {
                     string typedText = Function.Call<string>(Hash.GET_ONSCREEN_KEYBOARD_RESULT);
-                    ZoneManager.instance.GiveGangZonesToAnother(GangManager.instance.GetPlayerGang().name, typedText);
-                    GangManager.instance.GetPlayerGang().name = typedText;
-                    GangManager.instance.SaveGangData();
+                    if(typedText != "none")
+                    {
+                        ZoneManager.instance.GiveGangZonesToAnother(GangManager.instance.GetPlayerGang().name, typedText);
+                        GangManager.instance.GetPlayerGang().name = typedText;
+                        GangManager.instance.SaveGangData();
 
-                    UI.ShowSubtitle("Your gang is now known as the " + typedText);
+                        UI.ShowSubtitle("Your gang is now known as the " + typedText);
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("That name is not allowed, sorry!");
+                    }
+                    
                     inputFieldOpen = false;
                 }
                 else if(inputFieldSituation == 2 || inputFieldSituation == 3)
@@ -157,6 +172,7 @@ namespace GTA.GangAndTurfMod
                         playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash)));
                 }
             }
+
         }
 
         #region Zone Menu Stuff
@@ -626,6 +642,7 @@ namespace GTA.GangAndTurfMod
             upgradesMenu.AddItem(healthButton);
             upgradesMenu.AddItem(armorButton);
             upgradesMenu.AddItem(accuracyButton);
+            upgradesMenu.RefreshIndex();
 
             upgradesMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -729,6 +746,8 @@ namespace GTA.GangAndTurfMod
                 weaponsMenu.AddItem(weaponCheckBoxArray[i]);
             }
 
+            weaponsMenu.RefreshIndex();
+
             weaponsMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
                 for(int i = 0; i < buyableWeaponsArray.Length; i++)
@@ -737,6 +756,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (playerGang.gangWeaponHashes.Contains(buyableWeaponsArray[i].wepHash)){
                             playerGang.gangWeaponHashes.Remove(buyableWeaponsArray[i].wepHash);
+                            Game.Player.Money += buyableWeaponsArray[i].price;
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Weapon Removed!");
                         }
@@ -787,6 +807,22 @@ namespace GTA.GangAndTurfMod
                 if (item == newButton)
                 {
                     ModOptions.instance.LoadOptions();
+                    GangManager.instance.ResetGangUpdateIntervals();
+                    UpdateBuyableWeapons();
+                    UpdateUpgradeCosts();
+                }
+            };
+        }
+
+        void AddResetOptionsButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Reset Mod Options to Defaults", "Resets all the options in the ModOptions file back to the default values (except the possible gang first and last names). The new options take effect immediately.");
+            gangMenu.AddItem(newButton);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    ModOptions.instance.SetAllValuesToDefault();
                     UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
                 }

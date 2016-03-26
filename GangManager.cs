@@ -147,7 +147,7 @@ namespace GTA.GangAndTurfMod
                     //if there aren't, we might create a new one...
                     if (enemyGangs.Count < 7)
                     {
-                        if (RandomUtil.CachedRandom.Next(enemyGangs.Count * 2) == 0)
+                        if (RandomUtil.CachedRandom.Next(enemyGangs.Count) == 0)
                         {
                             Gang createdGang = CreateNewEnemyGang();
                             if (createdGang != null)
@@ -316,6 +316,23 @@ namespace GTA.GangAndTurfMod
 
             }
 
+        }
+
+        /// <summary>
+        /// when the player asks to reset mod options, we must reset these update intervals because they
+        /// may have changed
+        /// </summary>
+        public void ResetGangUpdateIntervals()
+        {
+            for(int i = 0; i < enemyGangs.Count; i++)
+            {
+                enemyGangs[i].ResetUpdateInterval();
+            }
+
+            for (int i = 0; i < livingMembers.Count; i++)
+            {
+                livingMembers[i].ResetUpdateInterval();
+            }
         }
 
         #endregion

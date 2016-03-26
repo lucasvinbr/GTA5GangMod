@@ -118,6 +118,13 @@ namespace GTA.GangAndTurfMod
                 if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName)
                 {
                     curTicksAwayFromBattle = 0;
+
+                    if (ModOptions.instance.emptyZoneDuringWar)
+                    {
+                        Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+                        Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+                    }
+                    
                     if (currentWave <= waves && !waveIsExhausted)
                     {
                             if (currentWave == 0)

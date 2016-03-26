@@ -163,10 +163,15 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public void ResetUpdateInterval()
+        {
+            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangAIUpdates + RandomUtil.CachedRandom.Next(100);
+        }
+
         public GangAI(Gang watchedGang)
         {
             this.watchedGang = watchedGang;
-            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangAIUpdates + RandomUtil.CachedRandom.Next(100);
+            ResetUpdateInterval();
         }
     }
 }
