@@ -15,7 +15,6 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangManager
     {
-        PotentialGangMember pedToStore = null;
         List<SpawnedGangMember> livingMembers;
         List<SpawnedDrivingGangMember> livingDrivingMembers;
         List<GangAI> enemyGangs;
@@ -26,6 +25,7 @@ namespace GTA.GangAndTurfMod
 
         public bool hasChangedBody = false;
         private Ped theOriginalPed;
+        private int profitWhileChangedBody = 0;
 
         #region setup/save stuff
         [System.Serializable]
@@ -45,18 +45,12 @@ namespace GTA.GangAndTurfMod
 
             new ModOptions(); //just start the options, we can call it by its instance later
 
-            pedToStore = PersistenceHandler.LoadFromFile<PotentialGangMember>("testPedData");
-            if (pedToStore == null)
-            {
-                pedToStore = new PotentialGangMember();
-            }
-
             gangData = PersistenceHandler.LoadFromFile<GangData>("GangData");
             if (gangData == null)
             {
                 gangData = new GangData();
 
-                //setup test gangs
+                //setup gangs
                 gangData.gangs.Add(new Gang("Player's Gang", VehicleColor.BrushedGold, true));
                 CreateNewEnemyGang();
             }
@@ -183,10 +177,18 @@ namespace GTA.GangAndTurfMod
             if (hasChangedBody)
             {
 
+                if(Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
+                {
+                    UI.ShowSubtitle("Your member has been arrested!");
+                    RestorePlayerBody();
+                    return;
+                }
+
                 if (!theOriginalPed.IsAlive)
                 {
                     RestorePlayerBody();
                     Game.Player.Character.Kill();
+                    return;
                 }
 
                 if(Game.Player.Character.Health > 4000 && Game.Player.Character.Health != 4900)
@@ -237,6 +239,18 @@ namespace GTA.GangAndTurfMod
                 newGang.AddMemberVariation(PotentialGangMember.GetMemberFromPool(gangStyle, gangColor));
             }
 
+            //relations...
+            newGang.relationGroupIndex = World.AddRelationshipGroup(gangName);
+
+            World.SetRelationshipBetweenGroups(Relationship.Hate, newGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
+            World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, newGang.relationGroupIndex);
+
+            for (int i = 0; i < gangData.gangs.Count; i++)
+            {
+                World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, newGang.relationGroupIndex);
+                World.SetRelationshipBetweenGroups(Relationship.Hate, newGang.relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+            }
+
             gangData.gangs.Add(newGang);
 
             SaveGangData();
@@ -276,7 +290,15 @@ namespace GTA.GangAndTurfMod
                     {
                         int zoneReward = (int)((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned *
                         (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Length));
-                        Game.Player.Money += zoneReward;
+                        if (hasChangedBody)
+                        {
+                            profitWhileChangedBody += zoneReward;
+                        }
+                        else
+                        {
+                            Game.Player.Money += zoneReward;
+                        }
+                        
                         rewardedCash += zoneReward;
                     }
 
@@ -394,6 +416,9 @@ namespace GTA.GangAndTurfMod
             hasChangedBody = false;
             Game.Player.CanControlCharacter = true;
             theOriginalPed.IsInvincible = false;
+
+            Game.Player.Money += profitWhileChangedBody;
+            profitWhileChangedBody = 0;
             
             if (oldPed.IsInvincible) //means he's dead
             {
@@ -670,7 +695,6 @@ namespace GTA.GangAndTurfMod
                 {
                     if (livingDrivingMembers[i].watchedPed == null)
                     {
-                        UI.Notify("reuse driver");
                         livingDrivingMembers[i].watchedPed = pedToEnlist;
                         livingDrivingMembers[i].vehicleIAmDriving = vehicleDriven;
                         livingDrivingMembers[i].destination = destPos;
@@ -682,7 +706,6 @@ namespace GTA.GangAndTurfMod
                 }
                 if (!couldEnlistWithoutAdding)
                 {
-                    UI.Notify("add new drivet");
                     SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos);
                     newDriver.SetWatchedPassengers();
                     livingDrivingMembers.Add(newDriver);
@@ -691,7 +714,6 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                UI.Notify("add new driver");
                 SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos);
                 newDriver.SetWatchedPassengers();
                 livingDrivingMembers.Add(newDriver);

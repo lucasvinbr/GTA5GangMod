@@ -25,8 +25,10 @@ namespace GTA.GangAndTurfMod
 
             if (watchedPed.IsInCombat)
             {
+                Gang pedGang = GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup);
+                if (pedGang != null)
                 foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
-                    (GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup)))
+                    (pedGang))
                 {
                     if (!member.IsInCombat && !member.IsInAir)
                     {

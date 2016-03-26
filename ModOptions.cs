@@ -234,14 +234,14 @@ namespace GTA.GangAndTurfMod
             "New Wave",
             "Nihilist",
             "Legendary",
-            "Epic"
+            "Epic",
+            "Crazy"
         };
 
             possibleGangLastNames = new List<string>
         {
             "League",
             "Sword",
-            "Landers",
             "Vice",
             "Gang",
             "Eliminators",
@@ -281,8 +281,6 @@ namespace GTA.GangAndTurfMod
             "Company",
             "Friends",
             "Monsters",
-            "Girls",
-            "Guys",
             "Fighters",
         };
 
