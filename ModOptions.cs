@@ -67,7 +67,7 @@ namespace GTA.GangAndTurfMod
 
         public int ticksBetweenTurfRewards = 50000;
         public int ticksBetweenGangAIUpdates = 30000;
-        public int ticksBetweenGangMemberAIUpdates = 600;
+        public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 500;
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace GTA.GangAndTurfMod
 
             ticksBetweenTurfRewards = 50000;
             ticksBetweenGangAIUpdates = 30000;
-            ticksBetweenGangMemberAIUpdates = 600;
+            ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 500;
 
        

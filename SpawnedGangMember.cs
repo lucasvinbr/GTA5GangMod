@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GTA.Native;
 
 namespace GTA.GangAndTurfMod
 {
@@ -17,7 +18,7 @@ namespace GTA.GangAndTurfMod
             {
                 return;
             }
-            if ((RandomUtil.CachedRandom.Next(10) <= 7 || Game.Player.IsTargetting(watchedPed)) &&
+            if ((RandomUtil.RandomBool() || Game.Player.IsTargetting(watchedPed)) &&
                 !watchedPed.IsInCombat)
             {
                 watchedPed.Task.FightAgainstHatedTargets(100);

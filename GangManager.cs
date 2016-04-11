@@ -86,11 +86,11 @@ namespace GTA.GangAndTurfMod
                 {
                     World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
-
                     //add this gang to the enemy gangs
                     //and start the AI for it
                     enemyGangs.Add(new GangAI(gangData.gangs[i]));
                 }
+
             }
 
             //and the relations themselves
@@ -114,6 +114,13 @@ namespace GTA.GangAndTurfMod
                 if (livingMembers[i].watchedPed != null)
                 {
                     livingMembers[i].ticksSinceLastUpdate++;
+                    if (livingMembers[i].watchedPed.IsFleeing)
+                    {
+                        //why are you running?
+                        //UI.Notify("no coward");
+                        Function.Call(Hash.REMOVE_ALL_SHOCKING_EVENTS, true);
+                        livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
+                    }
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
                         livingMembers[i].Update();
@@ -578,16 +585,18 @@ namespace GTA.GangAndTurfMod
 
                     newPed.NeverLeavesGroup = true;
 
-                    //Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
-                    //Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 1); //average combat ability
-                    //Function.Call(Hash.SET_PED_FLEE_ATTRIBUTES, newPed, 0, false); //clears the flee attributes?
-
-                    //Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is 17 and 46 is unknown
-                    //Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 17, true); 
-                    //Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
-
                     newPed.BlockPermanentEvents = true;
+
+                    Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
+                    Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 1); //average combat ability
+                    Function.Call(Hash.SET_PED_FLEE_ATTRIBUTES, newPed, 0, 0); //clears the flee attributes?
+
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
+                    Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
+                   
                     newPed.CanSwitchWeapons = true;
+                    newPed.AlwaysKeepTask = true;
 
 
                     //enlist this new gang member in the spawned list!

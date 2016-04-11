@@ -127,27 +127,33 @@ namespace GTA.GangAndTurfMod
                     
                     if (currentWave <= waves && !waveIsExhausted)
                     {
-                            if (currentWave == 0)
-                            {
-                                Game.WantedMultiplier = 0;
-                            }
-                            //spawn the wave
-                            for (int i = 0; i < baseMembersPerWave + currentWave * RandomUtil.CachedRandom.Next(5); i++)
-                            {
-                                Ped spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, World.GetNextPositionOnSidewalk
-                                      (World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100)), true);
+                        if (currentWave == 0)
+                        {
+                            Game.WantedMultiplier = 0;
+                        }
+                        //spawn the wave
+                        for (int i = 0; i < baseMembersPerWave + currentWave * RandomUtil.CachedRandom.Next(5); i++)
+                        {
+                        Vector3 spawnPos = World.GetNextPositionOnSidewalk
+                            (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100)));
+                        if (World.GetDistance(Game.Player.Character.Position, spawnPos) > 120)
+                        {
+                            // UI.Notify("too far");
+                            spawnPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 90);
+                        }
+                        Ped spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos, true);
 
-                                if (spawnedMember != null)
-                                {
-                                    spawnedMember.Task.FightAgainst(Game.Player.Character);
-                                }
+                            if (spawnedMember != null)
+                            {
+                                spawnedMember.Task.FightAgainst(Game.Player.Character);
+                            }
                                 
-                                Wait(200);
-                            }
+                            Wait(200);
+                        }
 
-                            livingEnemies = GangManager.instance.GetSpawnedMembersOfGang(enemyGang);
-                            waveIsExhausted = true;
-                      }
+                        livingEnemies = GangManager.instance.GetSpawnedMembersOfGang(enemyGang);
+                        waveIsExhausted = true;
+                    }
                 }
                 else
                 {
