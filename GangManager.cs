@@ -23,6 +23,7 @@ namespace GTA.GangAndTurfMod
 
         private int ticksSinceLastReward = 0;
 
+        public bool fightingEnabled = true;
         public bool hasChangedBody = false;
         private Ped theOriginalPed;
         private int profitWhileChangedBody = 0;
@@ -119,7 +120,7 @@ namespace GTA.GangAndTurfMod
                         //why are you running?
                         //UI.Notify("no coward");
                         Function.Call(Hash.REMOVE_ALL_SHOCKING_EVENTS, true);
-                        livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
+                        if(fightingEnabled) livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
                     }
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
@@ -440,6 +441,7 @@ namespace GTA.GangAndTurfMod
             hasChangedBody = false;
             Game.Player.CanControlCharacter = true;
             theOriginalPed.IsInvincible = false;
+            theOriginalPed.Task.ClearAllImmediately();
 
             Game.Player.Money += profitWhileChangedBody;
             profitWhileChangedBody = 0;

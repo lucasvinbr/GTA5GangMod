@@ -19,12 +19,12 @@ namespace GTA.GangAndTurfMod
                 return;
             }
             if ((RandomUtil.RandomBool() || Game.Player.IsTargetting(watchedPed)) &&
-                !watchedPed.IsInCombat)
+                !watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
             {
                 watchedPed.Task.FightAgainstHatedTargets(100);
             }
 
-            if (watchedPed.IsInCombat)
+            if (watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
             {
                 Gang pedGang = GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup);
                 if (pedGang != null)
@@ -43,7 +43,7 @@ namespace GTA.GangAndTurfMod
                 if (watchedPed.RelationshipGroup == GangManager.instance.GetPlayerGang().relationGroupIndex)
                 {
 
-                    if (!watchedPed.IsInCombat)
+                    if (!watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
                     {
                         //help the player if he's in trouble and we're not
                         foreach (Ped ped in World.GetNearbyPeds(Game.Player.Character.Position, 100))

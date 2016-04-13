@@ -80,6 +80,7 @@ namespace GTA.GangAndTurfMod
                         }
                         else
                         {
+                            playerGangMembers[i].Task.ClearAll();
                             Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
                             UI.Notify("A member has joined your group");
                         }

@@ -56,6 +56,7 @@ namespace GTA.GangAndTurfMod
             AddGangUpgradesMenu();
             UpdateBuyableWeapons();
             AddGangWeaponsMenu();
+            AddEnableFightingToggle();
             AddReloadOptionsButton();
             AddResetOptionsButton();
 
@@ -241,14 +242,22 @@ namespace GTA.GangAndTurfMod
                             if (Game.Player.Money >= 5000)
                             {
                                 zonesMenu.Visible = !zonesMenu.Visible;
-                                if(!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(curZone.ownerGangName), curZone, GangWarManager.warType.attackingEnemy))
+                                if (GangManager.instance.fightingEnabled)
                                 {
-                                    UI.ShowSubtitle("A war is already in progress.");
+                                    if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(curZone.ownerGangName), curZone, GangWarManager.warType.attackingEnemy))
+                                    {
+                                        UI.ShowSubtitle("A war is already in progress.");
+                                    }
+                                    else
+                                    {
+                                        Game.Player.Money -= 5000;
+                                    }
                                 }
                                 else
                                 {
-                                    Game.Player.Money -= 5000;
+                                    UI.ShowSubtitle("Gang Fights must be enabled in order to start a war!");
                                 }
+                                
                             }
                             else
                             {
@@ -795,6 +804,29 @@ namespace GTA.GangAndTurfMod
                     Function.Call(Hash.DISPLAY_ONSCREEN_KEYBOARD, false, "FMMC_KEY_TIP12N", "", "Gang Name", "", "", "", 30);
                     inputFieldOpen = true;
                 }
+            };
+        }
+
+        void AddEnableFightingToggle()
+        {
+            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", true, "If checked, members from different gangs will attack each other (including the player). Gang wars also won't happen.");
+
+            gangMenu.AddItem(fightingToggle);
+            gangMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == fightingToggle)
+                {
+                    if (!GangWarManager.instance.isOccurring)
+                    {
+                        GangManager.instance.fightingEnabled = checked_;
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("There's a war going on, this option can't be changed now.");
+                        fightingToggle.Checked = !checked_;
+                    }
+                }
+
             };
         }
 

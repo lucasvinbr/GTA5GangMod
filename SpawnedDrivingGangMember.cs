@@ -17,8 +17,6 @@ namespace GTA.GangAndTurfMod
         public int updatesWhileGoingToDest;
         public int updateLimitWhileGoing = 5;
 
-        static TaskSequence passengerSequence;
-
         public override void Update()
         {
             if (vehicleIAmDriving.IsAlive)
@@ -37,7 +35,7 @@ namespace GTA.GangAndTurfMod
                         if (!myPassengers[i].IsPlayer)
                         {
                             myPassengers[i].MarkAsNoLongerNeeded();
-                            myPassengers[i].Task.PerformSequence(passengerSequence);
+                            myPassengers[i].Task.LeaveVehicle();
                         }
                     }
 
@@ -63,7 +61,7 @@ namespace GTA.GangAndTurfMod
                             if (!myPassengers[i].IsPlayer)
                             {
                                 myPassengers[i].MarkAsNoLongerNeeded();
-                                myPassengers[i].Task.PerformSequence(passengerSequence);
+                                myPassengers[i].Task.LeaveVehicle();
                             }
                         }
 
@@ -95,13 +93,6 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination)
         {
-            if(passengerSequence == null)
-            {
-                passengerSequence = new TaskSequence();
-                passengerSequence.AddTask.LeaveVehicle();
-                passengerSequence.AddTask.Wait(1000);
-                passengerSequence.AddTask.FightAgainstHatedTargets(80);
-            }
             this.watchedPed = watchedPed;
             this.vehicleIAmDriving = vehicleIAmDriving;
             this.destination = destination;

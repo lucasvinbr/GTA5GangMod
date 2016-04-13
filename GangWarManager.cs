@@ -221,7 +221,7 @@ namespace GTA.GangAndTurfMod
                 {
                     ticksSinceLastEnemyRetask++;
 
-                    if(ticksSinceLastEnemyRetask > 1000)
+                    if(ticksSinceLastEnemyRetask > 750)
                     {
                         for (int i = 0; i < livingEnemies.Length; i++)
                         {
@@ -229,15 +229,20 @@ namespace GTA.GangAndTurfMod
                             {
                                 //sometimes we just spawn far away from the warzone and from the player!
                                 //lets spawn again, close to the player, then
-                                if (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) > 250 &&
+                                if (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) > 150 &&
                                     World.GetDistance(livingEnemies[i].Position, World.GetNextPositionOnSidewalk
-                                    (World.GetNextPositionOnStreet(warZone.zoneBlipPosition))) > 250)
+                                    (World.GetNextPositionOnStreet(warZone.zoneBlipPosition))) > 150)
                                 {
                                     do
                                     {
-                                        livingEnemies[i].Position = World.GetNextPositionOnSidewalk
-                                      (World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100));
-                                    } while (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) < 10);
+                                        Vector3 relocatePos = World.GetNextPositionOnSidewalk
+                                            (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100)));
+                                        if (World.GetDistance(Game.Player.Character.Position, relocatePos) > 120)
+                                        {
+                                            relocatePos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 90);
+                                        }
+                                        livingEnemies[i].Position = relocatePos;
+                                    } while (World.GetDistance(livingEnemies[i].Position, Game.Player.Character.Position) < 10); //spawn closer, but not too close
 
                                 }
                                 if (!livingEnemies[i].IsInAir) livingEnemies[i].Task.FightAgainst(Game.Player.Character);
