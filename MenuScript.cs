@@ -30,7 +30,7 @@ namespace GTA.GangAndTurfMod
         Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> weaponEntries = 
             new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
 
-        UIMenuItem healthButton, armorButton, accuracyButton;
+        UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton;
 
         public MenuScript()
         {
@@ -156,6 +156,12 @@ namespace GTA.GangAndTurfMod
             accuracyButton.Text = "Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString();
         }
 
+        void UpdateTakeOverBtnText()
+        {
+            takeZoneButton.Description = "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $" +
+                ModOptions.instance.costToTakeNeutralTurf.ToString() + ". If it belongs to another gang, a battle will begin, for half that price.";
+        }
+
         void UpdateBuyableWeapons()
         {
             Gang playerGang = GangManager.instance.GetPlayerGang();
@@ -205,11 +211,13 @@ namespace GTA.GangAndTurfMod
 
         void AddGangTakeoverButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Take current zone", "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $10000. If it belongs to another gang, a battle will begin, for a price of $5000.");
-            zonesMenu.AddItem(newButton);
+            takeZoneButton = new UIMenuItem("Take current zone",
+                "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $" +
+                ModOptions.instance.costToTakeNeutralTurf.ToString() +". If it belongs to another gang, a battle will begin, for half that price.");
+            zonesMenu.AddItem(takeZoneButton);
             zonesMenu.OnItemSelect += (sender, item, index) =>
             {
-                if (item == newButton)
+                if (item == takeZoneButton)
                 {
                     string curZoneName = World.GetZoneName(Game.Player.Character.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
@@ -221,9 +229,9 @@ namespace GTA.GangAndTurfMod
                     {
                        if(curZone.ownerGangName == "none")
                         {
-                            if (Game.Player.Money >= 10000)
+                            if (Game.Player.Money >= ModOptions.instance.costToTakeNeutralTurf)
                             {
-                                Game.Player.Money -= 10000;
+                                Game.Player.Money -= ModOptions.instance.costToTakeNeutralTurf;
                                 GangManager.instance.GetPlayerGang().TakeZone(curZone);
                                 UI.ShowSubtitle("This zone is " + GangManager.instance.GetPlayerGang().name + " turf now!");
                             }
@@ -239,7 +247,7 @@ namespace GTA.GangAndTurfMod
                                 UI.ShowSubtitle("Your gang already owns this zone.");
                             }
                             else
-                            if (Game.Player.Money >= 5000)
+                            if (Game.Player.Money >= ModOptions.instance.costToTakeNeutralTurf / 2)
                             {
                                 zonesMenu.Visible = !zonesMenu.Visible;
                                 if (GangManager.instance.fightingEnabled)
@@ -250,7 +258,7 @@ namespace GTA.GangAndTurfMod
                                     }
                                     else
                                     {
-                                        Game.Player.Money -= 5000;
+                                        Game.Player.Money -= ModOptions.instance.costToTakeNeutralTurf / 2;
                                     }
                                 }
                                 else
@@ -842,6 +850,7 @@ namespace GTA.GangAndTurfMod
                     GangManager.instance.ResetGangUpdateIntervals();
                     UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
+                    UpdateTakeOverBtnText();
                 }
             };
         }
@@ -857,6 +866,7 @@ namespace GTA.GangAndTurfMod
                     ModOptions.instance.SetAllValuesToDefault();
                     UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
+                    UpdateTakeOverBtnText();
                 }
             };
         }

@@ -194,7 +194,7 @@ namespace GTA.GangAndTurfMod
                     if (curWarType == warType.attackingEnemy)
                     {
                         UI.ShowSubtitle("We've lost this battle. They keep the turf.");
-                        enemyGang.moneyAvailable += 5000;
+                        enemyGang.moneyAvailable += ModOptions.instance.costToTakeNeutralTurf;
                     }
                     else
                     {
@@ -283,7 +283,7 @@ namespace GTA.GangAndTurfMod
                         }
                         else
                         {
-                            Game.Player.Money += 2500;
+                            Game.Player.Money += ModOptions.instance.costToTakeNeutralTurf / 2;
                             UI.ShowSubtitle(warZone.zoneName + " remains ours!");
                         }
                        

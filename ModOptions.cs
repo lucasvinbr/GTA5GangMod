@@ -41,6 +41,7 @@ namespace GTA.GangAndTurfMod
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
                 this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
+                this.costToTakeNeutralTurf = loadedOptions.costToTakeNeutralTurf;
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
@@ -75,6 +76,8 @@ namespace GTA.GangAndTurfMod
         /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
         /// </summary>
         public float rewardMultiplierPerZone = 0.2f;
+
+        public int costToTakeNeutralTurf = 10000;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
@@ -153,6 +156,19 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
+        public PotentialGangMember.memberColor TranslateVehicleToMemberColor(VehicleColor vehColor)
+        {
+            for(int i = 0; i < similarColors.Count; i++)
+            {
+                if (similarColors[i].vehicleColors.Contains(vehColor))
+                {
+                    return similarColors[i].baseColor;
+                }
+            }
+
+            return PotentialGangMember.memberColor.white;
+        }
+
         /// <summary>
         /// resets all values, except for the first and last gang names and the color translations
         /// </summary>
@@ -168,6 +184,8 @@ namespace GTA.GangAndTurfMod
             ticksBetweenGangAIUpdates = 30000;
             ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 500;
+
+            costToTakeNeutralTurf = 10000;
 
        
             rewardMultiplierPerZone = 0.2f;

@@ -317,7 +317,15 @@ namespace GTA.GangAndTurfMod
 
         public TurfZone GetRandomZone()
         {
-            return zoneData.zoneList[RandomUtil.CachedRandom.Next(0, zoneData.zoneList.Count)];
+            if(zoneData.zoneList.Count > 0)
+            {
+                return zoneData.zoneList[RandomUtil.CachedRandom.Next(0, zoneData.zoneList.Count)];
+            }
+            else
+            {
+                return null;
+            }
+            
         }
 
        

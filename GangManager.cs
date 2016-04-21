@@ -85,6 +85,11 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
+                    //lets also check if we don't have any member variation, which could be a problem
+                    if(gangData.gangs[i].memberVariations.Count == 0)
+                    {
+                        GetMembersForGang(gangData.gangs[i]);
+                    }
                     World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
                     //add this gang to the enemy gangs
@@ -229,6 +234,11 @@ namespace GTA.GangAndTurfMod
 
         public Gang CreateNewEnemyGang(bool notifyMsg = true)
         {
+            if(PotentialGangMember.MemberPool.memberList.Count <= 0)
+            {
+                UI.Notify("Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs");
+                return null;
+            }
             //set gang name from options
             string gangName = "Gang";
             do
@@ -237,15 +247,11 @@ namespace GTA.GangAndTurfMod
                 RandomUtil.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
             } while (GetGangByName(gangName) != null);
 
-            PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
             PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandomUtil.CachedRandom.Next(9);
 
             Gang newGang = new Gang(gangName, RandomUtil.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
 
-            for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
-            {
-                newGang.AddMemberVariation(PotentialGangMember.GetMemberFromPool(gangStyle, gangColor));
-            }
+            GetMembersForGang(newGang);
 
             //relations...
             newGang.relationGroupIndex = World.AddRelationshipGroup(gangName);
@@ -269,6 +275,25 @@ namespace GTA.GangAndTurfMod
             
 
             return newGang;
+        }
+
+        public void GetMembersForGang(Gang targetGang)
+        {
+            PotentialGangMember.memberColor gangColor = ModOptions.instance.TranslateVehicleToMemberColor(targetGang.color);
+            PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
+            for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
+            {
+                PotentialGangMember newMember = PotentialGangMember.GetMemberFromPool(gangStyle, gangColor);
+                if (newMember != null)
+                {
+                    targetGang.AddMemberVariation(newMember);
+                }
+                else
+                {
+                    break;
+                }
+
+            }
         }
 
         public void KillGang(GangAI aiWatchingTheGang)

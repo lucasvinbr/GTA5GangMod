@@ -106,6 +106,12 @@ namespace GTA.GangAndTurfMod
         {
             PotentialGangMember returnedMember;
 
+            if(MemberPool.memberList.Count <= 0)
+            {
+                UI.Notify("GTA5GangNTurfMod Warning: empty/bad memberpool file! Enemy gangs won't spawn");
+                return null;
+            }
+
             int attempts = 0;
             do
             {
