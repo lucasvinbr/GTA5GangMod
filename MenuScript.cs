@@ -41,9 +41,11 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(zonesMenu);
             menuPool.Add(gangMenu);
             menuPool.Add(memberMenu);
-            
-            AddSaveZoneButton();
+
             AddGangTakeoverButton();
+            AddSaveZoneButton();
+            AddZoneCircleButton();
+            
             AddMemberToggles();
             AddMemberStyleChoices();
             AddSaveMemberButton();
@@ -207,6 +209,25 @@ namespace GTA.GangAndTurfMod
                 }
             };
 
+        }
+
+        void AddZoneCircleButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("New Zone Circle", "Create a new map circle to represent this zone's boundaries.");
+            zonesMenu.AddItem(newButton);
+            zonesMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                    TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
+
+                    ZoneManager.instance.AddNewCircleBlip(Game.Player.Character.Position, curZone);
+                    
+                    ZoneManager.instance.UpdateZoneData(curZone);
+                    UI.ShowSubtitle("Zone Data Updated!");
+                }
+            };
         }
 
         void AddGangTakeoverButton()

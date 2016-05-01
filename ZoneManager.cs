@@ -37,6 +37,26 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        [System.Serializable]
+        public class AreaBlip
+        {
+            public Math.Vector3 position;
+            public float radius;
+
+            public AreaBlip()
+            {
+                radius = 100;
+                position = Math.Vector3.Zero;
+            }
+
+            public AreaBlip(Math.Vector3 position, float radius)
+            {
+                this.position = position;
+                this.radius = radius;
+            }
+
+        }
+
         public static ZoneManager instance;
         TurfZoneData zoneData;
 
@@ -49,6 +69,17 @@ namespace GTA.GangAndTurfMod
             if (zoneData == null)
             {
                 zoneData = new TurfZoneData();
+            }
+
+            for(int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                List<AreaBlip> zoneCircleList = zoneData.zoneList[i].zoneCircles;
+                for (int j = 0; j < zoneCircleList.Count; j++)
+                {
+                    Blip circleBlip = World.CreateBlip(zoneCircleList[j].position, zoneCircleList[j].radius);
+                    circleBlip.Alpha = 50; //TODO add mod option to control alpha!
+                    zoneData.zoneList[i].myCircleBlips.Add(circleBlip);
+                }
             }
         }
 
@@ -138,6 +169,8 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        #region blip related methods
+
         public void CreateAttachedBlip(TurfZone targetZone)
         {
             if(targetZone.AttachedBlip == null)
@@ -148,10 +181,33 @@ namespace GTA.GangAndTurfMod
            
         }
 
+        public void AddNewCircleBlip(Vector3 position, TurfZone targetZone)
+        {
+            if(targetZone != null)
+            {
+                Blip newCircleBlip = World.CreateBlip(position, 100);
+                newCircleBlip.Alpha = 50;
+                targetZone.myCircleBlips.Add(newCircleBlip);
+                if (targetZone.zoneCircles == null) targetZone.zoneCircles = new List<AreaBlip>();
+                targetZone.zoneCircles.Add(new AreaBlip(position, 100));
+            }
+        }
+
         public void ChangeBlipDisplay()
         {
             curBlipDisplay++;
             if(curBlipDisplay > zoneBlipDisplay.allZones)
+            {
+                curBlipDisplay = zoneBlipDisplay.none;
+            }
+
+            RefreshZoneBlips();
+        }
+
+        public void ChangeBlipDisplay(zoneBlipDisplay desiredDisplayType)
+        {
+            curBlipDisplay = desiredDisplayType;
+            if (curBlipDisplay > zoneBlipDisplay.allZones)
             {
                 curBlipDisplay = zoneBlipDisplay.none;
             }
@@ -210,20 +266,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void GiveGangZonesToAnother(string FromGang, string ToGang)
-        {
-            TurfZone[] fromGangZones = GetZonesControlledByGang(FromGang);
-            for(int i = 0; i < fromGangZones.Length; i++)
-            {
-                fromGangZones[i].ownerGangName = ToGang;
-            }
-
-            SaveZoneData(false);
-        }
-
         public void UpdateZoneBlip(TurfZone targetZone)
         {
-            if(targetZone.AttachedBlip != null)
+            if (targetZone.AttachedBlip != null)
             {
                 if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
                 {
@@ -252,7 +297,18 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        #endregion
 
+        public void GiveGangZonesToAnother(string FromGang, string ToGang)
+        {
+            TurfZone[] fromGangZones = GetZonesControlledByGang(FromGang);
+            for(int i = 0; i < fromGangZones.Length; i++)
+            {
+                fromGangZones[i].ownerGangName = ToGang;
+            }
+
+            SaveZoneData(false);
+        }
 
         #region getters
 

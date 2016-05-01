@@ -100,7 +100,6 @@ namespace GTA.GangAndTurfMod
                     gangManagerScript.RespawnIfPossible();
                 }
             }
-
         }
         
     }

@@ -19,10 +19,15 @@ namespace GTA.GangAndTurfMod
 
         public Math.Vector3 zoneBlipPosition;
 
+        public List<ZoneManager.AreaBlip> zoneCircles;
+
         public int value = 0;
 
         [XmlIgnore]
         private Blip myBlip;
+
+        [XmlIgnore]
+        public List<Blip> myCircleBlips = new List<Blip>();
 
         public TurfZone(string zoneName)
         {
@@ -48,5 +53,7 @@ namespace GTA.GangAndTurfMod
                 myBlip = value;
             }
         }
+
+        
     }
 }
