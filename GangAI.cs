@@ -141,7 +141,7 @@ namespace GTA.GangAndTurfMod
             else if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
             {
                 //start a war against the player!
-                if (RandomUtil.RandomBool() && GangManager.instance.fightingEnabled)
+                if (RandomUtil.RandomBool() && GangManager.instance.fightingEnabled && GangManager.instance.warAgainstPlayerEnabled)
                 {
                     watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 4;
                     GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy);

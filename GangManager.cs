@@ -23,8 +23,11 @@ namespace GTA.GangAndTurfMod
 
         private int ticksSinceLastReward = 0;
 
-        public bool fightingEnabled = true;
+        public bool fightingEnabled = true, warAgainstPlayerEnabled = true;
+
+
         public bool hasChangedBody = false;
+        public bool hasDiedWithChangedBody = false;
         private Ped theOriginalPed;
         private int profitWhileChangedBody = 0;
 
@@ -73,10 +76,17 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         void SetUpGangRelations()
         {
+
+            int copHash = Function.Call<int>(Hash.GET_HASH_KEY, "COP");
+            
+
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
                 gangData.gangs[i].relationGroupIndex = World.AddRelationshipGroup(gangData.gangs[i].name);
+                //gangs aren't the biggest fans of cops
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, 5, copHash, gangData.gangs[i].relationGroupIndex);
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, 5, gangData.gangs[i].relationGroupIndex, copHash);
                 //if the player owns this gang, we love him
                 if (gangData.gangs[i].isPlayerOwned)
                 {
@@ -92,6 +102,7 @@ namespace GTA.GangAndTurfMod
                     }
                     World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    
                     //add this gang to the enemy gangs
                     //and start the AI for it
                     enemyGangs.Add(new GangAI(gangData.gangs[i]));
@@ -124,8 +135,21 @@ namespace GTA.GangAndTurfMod
                     {
                         //why are you running?
                         //UI.Notify("no coward");
-                        Function.Call(Hash.REMOVE_ALL_SHOCKING_EVENTS, true);
-                        if(fightingEnabled) livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
+                        Function.Call(Hash.SET_IGNORE_LOW_PRIORITY_SHOCKING_EVENTS, Game.Player, true);
+                        Function.Call(Hash.SET_ALL_RANDOM_PEDS_FLEE, Game.Player, false);
+                        //Function.Call(Hash.REMOVE_ALL_SHOCKING_EVENTS, true);
+                        if (fightingEnabled)
+                        {
+                            if(livingMembers[i].watchedPed.RelationshipGroup == GetPlayerGang().relationGroupIndex)
+                            {
+                                livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
+                            }
+                            else
+                            {
+                                livingMembers[i].watchedPed.Task.FightAgainst(Game.Player.Character);
+                            }
+                                
+                        }
                     }
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
@@ -213,13 +237,13 @@ namespace GTA.GangAndTurfMod
 
                 if (Game.Player.Character.Armor <= 0) //dead!
                 {
-                    if (!(Game.Player.Character.IsRagdoll) && Game.Player.IsInvincible)
+                    if (!(Game.Player.Character.IsRagdoll) && hasDiedWithChangedBody)
                     {
                         Game.Player.Character.Euphoria.ShotFallToKnees.Start();
                     }
                     else
                     {
-                        Game.Player.IsInvincible = true;
+                        hasDiedWithChangedBody = true;
                         Game.Player.Character.CanRagdoll = true;
                         Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
                         Game.Player.IgnoredByEveryone = true;
@@ -413,6 +437,7 @@ namespace GTA.GangAndTurfMod
         /// <param name="theBody"></param>
         void DiscardDeadBody(Ped theBody)
         {
+            hasDiedWithChangedBody = false;
             theBody.IsInvincible = false;
             theBody.Health = 0;
             theBody.MarkAsNoLongerNeeded();
@@ -426,7 +451,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void RespawnIfPossible()
         {
-            if (Game.Player.Character.IsRagdoll && Game.Player.Character.IsInvincible)
+            if (Game.Player.Character.IsRagdoll && hasDiedWithChangedBody)
             {
                 Ped oldPed = Game.Player.Character;
 
@@ -465,13 +490,12 @@ namespace GTA.GangAndTurfMod
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
             hasChangedBody = false;
             Game.Player.CanControlCharacter = true;
-            theOriginalPed.IsInvincible = false;
             theOriginalPed.Task.ClearAllImmediately();
 
             Game.Player.Money += profitWhileChangedBody;
             profitWhileChangedBody = 0;
             
-            if (oldPed.IsInvincible) //means he's dead
+            if (hasDiedWithChangedBody)
             {
                 oldPed.IsInvincible = false;
                 oldPed.Health = 0;
@@ -484,7 +508,9 @@ namespace GTA.GangAndTurfMod
                 oldPed.Health = oldPed.Armor + 100;
                 oldPed.RelationshipGroup = GetPlayerGang().relationGroupIndex;
                 oldPed.Task.FightAgainstHatedTargets(80);
-            }            
+            }
+
+            hasDiedWithChangedBody = false;
         }
 
         #endregion
@@ -623,7 +649,7 @@ namespace GTA.GangAndTurfMod
                     Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
                    
                     newPed.CanSwitchWeapons = true;
-                    newPed.AlwaysKeepTask = true;
+                    //newPed.AlwaysKeepTask = true;
 
 
                     //enlist this new gang member in the spawned list!
@@ -677,7 +703,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public Vehicle SpawnGangVehicle(Gang ownerGang, GTA.Math.Vector3 spawnPos, GTA.Math.Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false)
+        public Vehicle SpawnGangVehicle(Gang ownerGang, GTA.Math.Vector3 spawnPos, GTA.Math.Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
         {
             if (ownerGang.gangVehicleHash != -1)
             {
@@ -693,9 +719,6 @@ namespace GTA.GangAndTurfMod
                 if (driver != null)
                 {
                     driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
-                    Function.Call(Hash.SET_PED_STEERS_AROUND_OBJECTS, driver, true);
-                    Function.Call(Hash.SET_PED_STEERS_AROUND_PEDS, driver, true);
-                    Function.Call(Hash.SET_PED_STEERS_AROUND_VEHICLES, driver, true);
 
                     for (int i = 0; i < newVehicle.PassengerSeats; i++)
                     {
@@ -706,7 +729,7 @@ namespace GTA.GangAndTurfMod
                         }
                     }
 
-                    EnlistDrivingMember(driver, newVehicle, destPos);
+                    EnlistDrivingMember(driver, newVehicle, destPos, playerIsDest);
 
                     if (deactivatePersistent)
                     {
@@ -738,7 +761,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, GTA.Math.Vector3 destPos)
+        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, GTA.Math.Vector3 destPos, bool playerIsDest = false)
         {
             //enlist this new gang member in the spawned list!
             if (livingDrivingMembers.Count > 0)
@@ -753,13 +776,14 @@ namespace GTA.GangAndTurfMod
                         livingDrivingMembers[i].destination = destPos;
                         livingDrivingMembers[i].updatesWhileGoingToDest = 0;
                         livingDrivingMembers[i].SetWatchedPassengers();
+                        livingDrivingMembers[i].playerAsDest = playerIsDest;
                         couldEnlistWithoutAdding = true;
                         break;
                     }
                 }
                 if (!couldEnlistWithoutAdding)
                 {
-                    SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos);
+                    SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, playerIsDest);
                     newDriver.SetWatchedPassengers();
                     livingDrivingMembers.Add(newDriver);
                 }

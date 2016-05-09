@@ -14,14 +14,15 @@ namespace GTA.GangAndTurfMod
     /// the nativeUI-implementing class
     /// -------------thanks to the NativeUI developers!-------------
     /// </summary>
-    class MenuScript
+    public class MenuScript
     {
 
         MenuPool menuPool;
-        UIMenu zonesMenu, gangMenu, memberMenu;
+        UIMenu zonesMenu, gangMenu, memberMenu, gangOptionsSubMenu, 
+            modSettingsSubMenu;
         Ped closestPed;
         bool saveTorsoIndex = false, saveTorsoTex = false, saveLegIndex = false, saveLegTex = false;
-        bool inputFieldOpen = false;
+        
         PotentialGangMember memberToSave = new PotentialGangMember();
         int memberStyle = 0, memberColor = 0;
 
@@ -30,7 +31,29 @@ namespace GTA.GangAndTurfMod
         Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> weaponEntries = 
             new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
 
-        UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton;
+        Dictionary<VehicleColor, UIMenuItem> carColorEntries =
+            new Dictionary<VehicleColor, UIMenuItem>();
+
+        UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton,
+            openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn;
+
+        public enum desiredInputType
+        {
+            none,
+            enterGangName,
+            changeKeyBinding
+        }
+
+        public enum changeableKeyBinding
+        {
+            GangMenuBtn,
+            ZoneMenuBtn,
+            MindControlBtn,
+            AddGroupBtn,
+        }
+
+        public desiredInputType curInputType = desiredInputType.none;
+        public changeableKeyBinding targetKeyBindToChange = changeableKeyBinding.AddGroupBtn;
 
         public MenuScript()
         {
@@ -44,7 +67,7 @@ namespace GTA.GangAndTurfMod
 
             AddGangTakeoverButton();
             AddSaveZoneButton();
-            AddZoneCircleButton();
+            //AddZoneCircleButton();
             
             AddMemberToggles();
             AddMemberStyleChoices();
@@ -52,15 +75,12 @@ namespace GTA.GangAndTurfMod
             AddNewPlayerGangMemberButton();
             AddRemovePlayerGangMemberButton();
             AddCallVehicleButton();
-            AddRegisterVehicleButton();
             AddCallParatrooperButton();
-            AddRenameGangButton();
-            AddGangUpgradesMenu();
+            AddRegisterVehicleButton();
+
             UpdateBuyableWeapons();
-            AddGangWeaponsMenu();
-            AddEnableFightingToggle();
-            AddReloadOptionsButton();
-            AddResetOptionsButton();
+            AddGangOptionsSubMenu();
+            AddModSettingsSubMenu();
 
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
@@ -118,7 +138,7 @@ namespace GTA.GangAndTurfMod
         {
             menuPool.ProcessMenus();
 
-            if (inputFieldOpen)
+            if (curInputType == desiredInputType.enterGangName)
             {
                 int inputFieldSituation = Function.Call<int>(Hash.UPDATE_ONSCREEN_KEYBOARD);
                 if(inputFieldSituation == 1)
@@ -136,12 +156,12 @@ namespace GTA.GangAndTurfMod
                     {
                         UI.ShowSubtitle("That name is not allowed, sorry!");
                     }
-                    
-                    inputFieldOpen = false;
+
+                    curInputType = desiredInputType.none;
                 }
                 else if(inputFieldSituation == 2 || inputFieldSituation == 3)
                 {
-                    inputFieldOpen = false;
+                    curInputType = desiredInputType.none;
                 }
             }
         }
@@ -184,6 +204,25 @@ namespace GTA.GangAndTurfMod
 
         }
 
+        void FillCarColorEntries()
+        {
+            foreach(ModOptions.GangColorTranslation colorList in ModOptions.instance.similarColors)
+            {
+                for(int i = 0; i < colorList.vehicleColors.Count; i++)
+                {
+                    carColorEntries.Add(colorList.vehicleColors[i], new UIMenuItem(colorList.vehicleColors[i].ToString(), "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change."));
+                }
+            }
+        }
+
+        public void RefreshKeyBindings()
+        {
+            openGangMenuBtn.Text = "Gang Control Key - " + ModOptions.instance.openGangMenuKey.ToString();
+            openZoneMenuBtn.Text = "Zone Control Key - " + ModOptions.instance.openZoneMenuKey.ToString();
+            addToGroupBtn.Text = "Add or Remove Member from Group - " + ModOptions.instance.addToGroupKey.ToString();
+            mindControlBtn.Text = "Take Control of Member - " + ModOptions.instance.mindControlKey.ToString();
+        }
+
         #region Zone Menu Stuff
 
         void AddSaveZoneButton()
@@ -211,24 +250,24 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        void AddZoneCircleButton()
-        {
-            UIMenuItem newButton = new UIMenuItem("New Zone Circle", "Create a new map circle to represent this zone's boundaries.");
-            zonesMenu.AddItem(newButton);
-            zonesMenu.OnItemSelect += (sender, item, index) =>
-            {
-                if (item == newButton)
-                {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
-                    TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
+        //void AddZoneCircleButton()
+        //{
+        //    UIMenuItem newButton = new UIMenuItem("New Zone Circle", "Create a new map circle to represent this zone's boundaries.");
+        //    zonesMenu.AddItem(newButton);
+        //    zonesMenu.OnItemSelect += (sender, item, index) =>
+        //    {
+        //        if (item == newButton)
+        //        {
+        //            string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+        //            TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
 
-                    ZoneManager.instance.AddNewCircleBlip(Game.Player.Character.Position, curZone);
+        //            ZoneManager.instance.AddNewCircleBlip(Game.Player.Character.Position, curZone);
                     
-                    ZoneManager.instance.UpdateZoneData(curZone);
-                    UI.ShowSubtitle("Zone Data Updated!");
-                }
-            };
-        }
+        //            ZoneManager.instance.UpdateZoneData(curZone);
+        //            UI.ShowSubtitle("Zone Data Updated!");
+        //        }
+        //    };
+        //}
 
         void AddGangTakeoverButton()
         {
@@ -572,7 +611,7 @@ namespace GTA.GangAndTurfMod
         }
         #endregion
 
-        #region Gang Control stuff
+        #region Gang Control Stuff
 
         void AddCallVehicleButton()
         {
@@ -585,14 +624,26 @@ namespace GTA.GangAndTurfMod
                     Gang playergang = GangManager.instance.GetPlayerGang();
                     if(ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
                     {
-                        Math.Vector3 destPos = World.GetNextPositionOnStreet(Game.Player.Character.Position);
+                        Math.Vector3 destPos = Game.Player.Character.Position;
+
+                        Math.Vector3 spawnPos = World.GetNextPositionOnStreet(destPos + RandomUtil.RandomDirection(true) * 80);
+
                         Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
-                   Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 100, destPos, true, false);
+                                spawnPos, destPos, true, false, true);
                         if (spawnedVehicle != null)
                         {
                             spawnedVehicle.PlaceOnNextStreet();
-                            spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 10, 50);
+                            if (World.GetDistance(Game.Player.Character.Position, spawnedVehicle.Position) > 220)
+                            {
+                                //UI.Notify("too far");
+                                spawnedVehicle.Position = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60);
+                            }
+                            spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
+                            Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
+
                             gangMenu.Visible = !gangMenu.Visible;
+
+                            UI.ShowSubtitle("A vehicle is on its way!", 1000);
                         }
                         else
                         {
@@ -669,9 +720,21 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddGangOptionsSubMenu()
+        {
+            gangOptionsSubMenu = menuPool.AddSubMenu(gangMenu, "Gang Customization/Upgrades Menu");
+
+            AddGangUpgradesMenu();
+            AddGangWeaponsMenu();
+            AddSetCarColorMenu();
+            AddRenameGangButton();
+
+            gangOptionsSubMenu.RefreshIndex();
+        }
+
         void AddGangUpgradesMenu()
         {
-            UIMenu upgradesMenu = menuPool.AddSubMenu(gangMenu, "Gang Upgrades Menu");
+            UIMenu upgradesMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Upgrades...");
 
             //upgrade buttons
             healthButton = new UIMenuItem("Upgrade Member Health - " + healthUpgradeCost.ToString(), "Increases gang member starting and maximum health. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
@@ -772,7 +835,7 @@ namespace GTA.GangAndTurfMod
 
         void AddGangWeaponsMenu()
         {
-            UIMenu weaponsMenu = menuPool.AddSubMenu(gangMenu, "Gang Weapons Menu");
+            UIMenu weaponsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Weapons Menu");
 
             Gang playerGang = GangManager.instance.GetPlayerGang();
 
@@ -821,27 +884,83 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddSetCarColorMenu()
+        {
+            FillCarColorEntries();
+
+            UIMenu carColorsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Vehicle Colors Menu");
+
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+
+            VehicleColor[] carColorsArray = carColorEntries.Keys.ToArray();
+            UIMenuItem[] colorButtonsArray = carColorEntries.Values.ToArray();
+
+            for (int i = 0; i < colorButtonsArray.Length; i++)
+            {
+                carColorsMenu.AddItem(colorButtonsArray[i]);
+            }
+
+            carColorsMenu.RefreshIndex();
+
+            carColorsMenu.OnIndexChange += (sender, index) =>
+            {
+                Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
+                if (playerVehicle != null)
+                {
+                    playerVehicle.PrimaryColor = carColorsArray[index];
+                }
+            };
+          
+            carColorsMenu.OnItemSelect += (sender, item, checked_) =>
+            {
+                for (int i = 0; i < carColorsArray.Length; i++)
+                {
+                    if (item == carColorEntries[carColorsArray[i]])
+                    {
+                        playerGang.color = carColorsArray[i];
+                        GangManager.instance.SaveGangData(false);
+                        UI.ShowSubtitle("Gang vehicle color changed!");
+                        break;
+                    }
+                }
+
+            };
+        }
+
         void AddRenameGangButton()
         {
             UIMenuItem newButton = new UIMenuItem("Rename Gang", "Resets your gang's name.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            gangOptionsSubMenu.AddItem(newButton);
+            gangOptionsSubMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
                 {
-                    gangMenu.Visible = !gangMenu.Visible;
+                    gangOptionsSubMenu.Visible = !gangOptionsSubMenu.Visible;
                     Function.Call(Hash.DISPLAY_ONSCREEN_KEYBOARD, false, "FMMC_KEY_TIP12N", "", "Gang Name", "", "", "", 30);
-                    inputFieldOpen = true;
+                    curInputType = desiredInputType.enterGangName;
                 }
             };
         }
 
+        void AddModSettingsSubMenu()
+        {
+            modSettingsSubMenu = menuPool.AddSubMenu(gangMenu, "Mod Settings Menu");
+
+            AddEnableFightingToggle();
+            AddEnableWarVersusPlayerToggle();
+            AddKeyBindingMenu();
+            AddReloadOptionsButton();
+            AddResetOptionsButton();
+           
+            modSettingsSubMenu.RefreshIndex();
+        }
+
         void AddEnableFightingToggle()
         {
-            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", true, "If checked, members from different gangs will attack each other (including the player). Gang wars also won't happen.");
+            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", true, "If unchecked, members from different gangs won't attack each other (including the player). Gang wars also won't happen.");
 
-            gangMenu.AddItem(fightingToggle);
-            gangMenu.OnCheckboxChange += (sender, item, checked_) =>
+            modSettingsSubMenu.AddItem(fightingToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
                 if (item == fightingToggle)
                 {
@@ -859,11 +978,65 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddEnableWarVersusPlayerToggle()
+        {
+            UIMenuCheckboxItem warToggle = new UIMenuCheckboxItem("Enemy gangs can attack your turf?", true, "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
+
+            modSettingsSubMenu.AddItem(warToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == warToggle)
+                {
+                    GangManager.instance.warAgainstPlayerEnabled = checked_;
+                }
+
+            };
+        }
+
+        void AddKeyBindingMenu()
+        {
+            UIMenu bindingsMenu = menuPool.AddSubMenu(modSettingsSubMenu, "Key Bindings...");
+
+            //the buttons
+            openGangMenuBtn = new UIMenuItem("Gang Control Key - " + ModOptions.instance.openGangMenuKey.ToString(), "The key used to open the Gang/Mod Menu. Used with shift to open the Member Registration Menu. Default is B.");
+            openZoneMenuBtn = new UIMenuItem("Zone Control Key - " + ModOptions.instance.openZoneMenuKey.ToString(), "The key used to check the current zone's name and ownership. Used with shift to open the Zone Menu and with control to toggle zone blip display modes. Default is N.");
+            addToGroupBtn = new UIMenuItem("Add or Remove Member from Group - " + ModOptions.instance.addToGroupKey.ToString(), "The key used to add/remove the targeted friendly gang member to/from your group. Members of your group will follow you. Default is H.");
+            mindControlBtn = new UIMenuItem("Take Control of Member - " + ModOptions.instance.mindControlKey.ToString(), "The key used to take control of the targeted friendly gang member. Pressing this key while already in control of a member will restore protagonist control. Default is J.");
+            bindingsMenu.AddItem(openGangMenuBtn);
+            bindingsMenu.AddItem(openZoneMenuBtn);
+            bindingsMenu.AddItem(addToGroupBtn);
+            bindingsMenu.AddItem(mindControlBtn);
+            bindingsMenu.RefreshIndex();
+
+            bindingsMenu.OnItemSelect += (sender, item, index) =>
+            {
+                UI.ShowSubtitle("Press the new key for this command.");
+                curInputType = desiredInputType.changeKeyBinding;
+
+                if (item == openGangMenuBtn)
+                {
+                    targetKeyBindToChange = changeableKeyBinding.GangMenuBtn;
+                }
+                if (item == openZoneMenuBtn)
+                {
+                    targetKeyBindToChange = changeableKeyBinding.ZoneMenuBtn;
+                }
+                if (item == addToGroupBtn)
+                {
+                    targetKeyBindToChange = changeableKeyBinding.AddGroupBtn;
+                }
+                if (item == mindControlBtn)
+                {
+                    targetKeyBindToChange = changeableKeyBinding.MindControlBtn;
+                }
+            };
+        }
+
         void AddReloadOptionsButton()
         {
             UIMenuItem newButton = new UIMenuItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            modSettingsSubMenu.AddItem(newButton);
+            modSettingsSubMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
                 {
@@ -879,8 +1052,8 @@ namespace GTA.GangAndTurfMod
         void AddResetOptionsButton()
         {
             UIMenuItem newButton = new UIMenuItem("Reset Mod Options to Defaults", "Resets all the options in the ModOptions file back to the default values (except the possible gang first and last names). The new options take effect immediately.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            modSettingsSubMenu.AddItem(newButton);
+            modSettingsSubMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
                 {

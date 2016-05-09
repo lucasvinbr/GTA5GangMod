@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
-
+using System.Windows.Forms;
 
 namespace GTA.GangAndTurfMod
 {
@@ -28,6 +28,10 @@ namespace GTA.GangAndTurfMod
             if (loadedOptions != null)
             {
                 //get the loaded options
+                this.addToGroupKey = loadedOptions.addToGroupKey;
+                this.mindControlKey = loadedOptions.mindControlKey;
+                this.openGangMenuKey = loadedOptions.openGangMenuKey;
+                this.openZoneMenuKey = loadedOptions.openZoneMenuKey;
                 this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
                 this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
                 this.buyableWeapons = loadedOptions.buyableWeapons;
@@ -42,6 +46,7 @@ namespace GTA.GangAndTurfMod
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
                 this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
                 this.costToTakeNeutralTurf = loadedOptions.costToTakeNeutralTurf;
+                this.rewardForTakingEnemyTurf = loadedOptions.rewardForTakingEnemyTurf;
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
@@ -59,6 +64,11 @@ namespace GTA.GangAndTurfMod
         {
             PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions");
         }
+
+        public Keys openGangMenuKey = Keys.B,
+            openZoneMenuKey = Keys.N,
+            mindControlKey = Keys.J,
+            addToGroupKey = Keys.H;
 
         public int maxGangMemberHealth = 400;
         public int maxGangMemberArmor = 100;
@@ -78,6 +88,7 @@ namespace GTA.GangAndTurfMod
         public float rewardMultiplierPerZone = 0.2f;
 
         public int costToTakeNeutralTurf = 10000;
+        public int rewardForTakingEnemyTurf = 10000;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
@@ -169,11 +180,62 @@ namespace GTA.GangAndTurfMod
             return PotentialGangMember.memberColor.white;
         }
 
+        public void SetKey(MenuScript.changeableKeyBinding keyToChange, Keys newKey)
+        {
+            if(newKey == Keys.Escape || newKey == Keys.ShiftKey ||
+                newKey == Keys.Insert || newKey == Keys.ControlKey)
+            {
+                UI.ShowSubtitle("That key can't be used because some settings would become unaccessible due to conflicts.");
+                return;
+            }
+
+            //verify if this key isn't being used by the other commands from this mod
+            //if not, set the chosen key as the new one for the command!
+            List<Keys> curKeys = new List<Keys>();
+            
+            curKeys.Add(openGangMenuKey);
+            curKeys.Add(openZoneMenuKey);
+            curKeys.Add(mindControlKey);
+            curKeys.Add(addToGroupKey);
+
+            if (curKeys.Contains(newKey))
+            {
+                UI.ShowSubtitle("That key is already being used by this mod's commands.");
+                return;
+            }
+            else
+            {
+                switch (keyToChange)
+                {
+                    case MenuScript.changeableKeyBinding.AddGroupBtn:
+                        addToGroupKey = newKey;
+                        break;
+                    case MenuScript.changeableKeyBinding.GangMenuBtn:
+                        openGangMenuKey = newKey;
+                        break;
+                    case MenuScript.changeableKeyBinding.MindControlBtn:
+                        mindControlKey = newKey;
+                        break;
+                    case MenuScript.changeableKeyBinding.ZoneMenuBtn:
+                        openZoneMenuKey = newKey;
+                        break;
+                }
+
+                UI.ShowSubtitle("Key changed!");
+                SaveOptions();
+            }
+        }
+
         /// <summary>
         /// resets all values, except for the first and last gang names and the color translations
         /// </summary>
         public void SetAllValuesToDefault()
         {
+            openGangMenuKey = Keys.B;
+            openZoneMenuKey = Keys.N;
+            mindControlKey = Keys.J;
+            addToGroupKey = Keys.H;
+
             maxGangMemberHealth = 400;
             maxGangMemberArmor = 100;
             maxGangMemberAccuracy = 75;
@@ -186,8 +248,8 @@ namespace GTA.GangAndTurfMod
             baseRewardPerZoneOwned = 500;
 
             costToTakeNeutralTurf = 10000;
+            rewardForTakingEnemyTurf = 10000;
 
-       
             rewardMultiplierPerZone = 0.2f;
 
             wantedFactorWhenInGangTurf = 0.2f;

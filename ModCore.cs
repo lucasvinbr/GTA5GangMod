@@ -19,7 +19,6 @@ namespace GTA.GangAndTurfMod
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
-
         public ModCore()
         {
             gangManagerScript = new GangManager();
@@ -38,68 +37,84 @@ namespace GTA.GangAndTurfMod
 
         private void onKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.B)
+            if(menuScript.curInputType == MenuScript.desiredInputType.changeKeyBinding)
             {
-                //numpad keys dont seem to go along well with shift
-                if (e.Modifiers == Keys.None)
+                if(e.KeyCode != Keys.Enter)
                 {
-                    menuScript.OpenGangMenu();
-                }
-                else if (e.Modifiers == Keys.Shift)
-                {
-                    menuScript.OpenPedRegistrationMenu();
+                    ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
+                    menuScript.curInputType = MenuScript.desiredInputType.none;
+                    menuScript.RefreshKeyBindings();
                 }
             }
-            else if (e.KeyCode == Keys.N)
+            else
             {
-                if(e.Modifiers == Keys.None)
+                if (e.KeyCode == ModOptions.instance.openGangMenuKey)
                 {
-                    zoneManagerScript.OutputCurrentZoneInfo();
-                }else if (e.Modifiers == Keys.Shift)
-                {
-                    zoneManagerScript.OutputCurrentZoneInfo();
-                    menuScript.OpenZoneMenu();
-                }else if(e.Modifiers == Keys.Control)
-                {
-                    zoneManagerScript.ChangeBlipDisplay();
-                }
-
-            }else if(e.KeyCode == Keys.H)
-            {
-                Ped[] playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
-                for (int i = 0; i < playerGangMembers.Length; i++)
-                {
-                    if (Game.Player.IsTargetting(playerGangMembers[i]))
+                    //numpad keys dont seem to go along well with shift
+                    if (e.Modifiers == Keys.None)
                     {
-                        int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
-
-                        if (playerGangMembers[i].IsInGroup)
-                        {
-                            Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                            UI.Notify("A member has left your group");
-                        }
-                        else
-                        {
-                            playerGangMembers[i].Task.ClearAll();
-                            Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
-                            UI.Notify("A member has joined your group");
-                        }
-                        break;
+                        menuScript.OpenGangMenu();
+                    }
+                    else if (e.Modifiers == Keys.Shift)
+                    {
+                        menuScript.OpenPedRegistrationMenu();
                     }
                 }
-
-            }
-            else if (e.KeyCode == Keys.J)
-            {
-                gangManagerScript.TryBodyChange();
-            }
-            else if (e.KeyCode == Keys.Space)
-            {
-                if (gangManagerScript.hasChangedBody)
+                else if (e.KeyCode == ModOptions.instance.openZoneMenuKey)
                 {
-                    gangManagerScript.RespawnIfPossible();
+                    if (e.Modifiers == Keys.None)
+                    {
+                        zoneManagerScript.OutputCurrentZoneInfo();
+                    }
+                    else if (e.Modifiers == Keys.Shift)
+                    {
+                        zoneManagerScript.OutputCurrentZoneInfo();
+                        menuScript.OpenZoneMenu();
+                    }
+                    else if (e.Modifiers == Keys.Control)
+                    {
+                        zoneManagerScript.ChangeBlipDisplay();
+                    }
+
+                }
+                else if (e.KeyCode == ModOptions.instance.addToGroupKey)
+                {
+                    Ped[] playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
+                    for (int i = 0; i < playerGangMembers.Length; i++)
+                    {
+                        if (Game.Player.IsTargetting(playerGangMembers[i]))
+                        {
+                            int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
+
+                            if (playerGangMembers[i].IsInGroup)
+                            {
+                                Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
+                                UI.Notify("A member has left your group");
+                            }
+                            else
+                            {
+                                playerGangMembers[i].Task.ClearAll();
+                                Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
+                                UI.Notify("A member has joined your group");
+                            }
+                            break;
+                        }
+                    }
+
+                }
+                else if (e.KeyCode == ModOptions.instance.mindControlKey)
+                {
+                    gangManagerScript.TryBodyChange();
+                }
+                else if (e.KeyCode == Keys.Space)
+                {
+                    if (gangManagerScript.hasChangedBody)
+                    {
+                        gangManagerScript.RespawnIfPossible();
+                    }
                 }
             }
+            
         }
         
     }

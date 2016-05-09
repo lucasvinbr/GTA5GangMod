@@ -18,16 +18,24 @@ namespace GTA.GangAndTurfMod
     {
         public static T LoadFromFile<T>(string fileName)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-            string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-            if (File.Exists(filePath))
+            try
             {
-                FileStream readStream = new FileStream(filePath, FileMode.Open);
-                T loadedData = (T)serializer.Deserialize(readStream);
-                readStream.Close();
-                return loadedData;
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
+                if (File.Exists(filePath))
+                {
+                    FileStream readStream = new FileStream(filePath, FileMode.Open);
+                    T loadedData = (T)serializer.Deserialize(readStream);
+                    readStream.Close();
+                    return loadedData;
+                }
+                else return default(T);
             }
-            else return default(T);
+            catch (Exception e)
+            {
+                UI.Notify("an error occurred when trying to load xml file " + fileName + "! error: " + e.ToString());
+                return default(T);
+            }
         }
 
         public static void SaveToFile<T>(T dataToSave, string fileName, bool notifyMsg = true)

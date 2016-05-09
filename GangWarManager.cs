@@ -278,7 +278,7 @@ namespace GTA.GangAndTurfMod
                         {
                             Gang playerGang = GangManager.instance.GetPlayerGang();
                             playerGang.TakeZone(warZone);
-                            GangManager.instance.GiveTurfRewardToGang(playerGang);
+                            Game.Player.Character.Money += ModOptions.instance.rewardForTakingEnemyTurf;
                             UI.ShowSubtitle(warZone.zoneName + " is now ours!");
                         }
                         else
