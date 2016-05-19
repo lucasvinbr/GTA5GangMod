@@ -18,12 +18,13 @@ namespace GTA.GangAndTurfMod
             {
                 return;
             }
-            if ((RandomUtil.RandomBool() || Game.Player.IsTargetting(watchedPed)) &&
+            if (((RandomUtil.RandomBool() && ModOptions.instance.gangMemberAggressiveness != 
+                ModOptions.gangMemberAggressivenessMode.defensive) || Game.Player.IsTargetting(watchedPed)) &&
                 !watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
             {
                 watchedPed.Task.FightAgainstHatedTargets(100);
             }
-
+            //call for aid of nearby friendly members
             if (watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
             {
                 Gang pedGang = GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup);
@@ -62,6 +63,14 @@ namespace GTA.GangAndTurfMod
 
             if (!watchedPed.IsAlive)
             {
+                if (GangWarManager.instance.isOccurring)
+                {
+                    if(watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
+                    {
+                        //enemy down
+                        GangWarManager.instance.OnEnemyDeath();
+                    }
+                }
                 watchedPed.CurrentBlip.Remove();
                 this.watchedPed = null;
             }

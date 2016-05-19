@@ -77,16 +77,11 @@ namespace GTA.GangAndTurfMod
         void SetUpGangRelations()
         {
 
-            int copHash = Function.Call<int>(Hash.GET_HASH_KEY, "COP");
-            
-
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
                 gangData.gangs[i].relationGroupIndex = World.AddRelationshipGroup(gangData.gangs[i].name);
-                //gangs aren't the biggest fans of cops
-                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, 5, copHash, gangData.gangs[i].relationGroupIndex);
-                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, 5, gangData.gangs[i].relationGroupIndex, copHash);
+                
                 //if the player owns this gang, we love him
                 if (gangData.gangs[i].isPlayerOwned)
                 {
@@ -115,6 +110,22 @@ namespace GTA.GangAndTurfMod
             {
                 World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[i + 1].relationGroupIndex);
                 World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i + 1].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+            }
+
+            //all gangs hate cops if set to very aggressive
+            SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.gangMemberAggressivenessMode.veryAgressive);
+        }
+
+        public void SetCopRelations(bool hate)
+        {
+            int copHash = Function.Call<int>(Hash.GET_HASH_KEY, "COP");
+            int relationLevel = 3; //neutral
+            if (hate) relationLevel = 5; //hate
+
+            for (int i = 0; i < gangData.gangs.Count; i++)
+            {
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, copHash, gangData.gangs[i].relationGroupIndex);
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, gangData.gangs[i].relationGroupIndex, copHash);
             }
         }
 
@@ -649,6 +660,7 @@ namespace GTA.GangAndTurfMod
                     Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
                    
                     newPed.CanSwitchWeapons = true;
+                    newPed.CanWrithe = false; //no early dying
                     //newPed.AlwaysKeepTask = true;
 
 

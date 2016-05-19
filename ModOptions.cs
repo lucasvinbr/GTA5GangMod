@@ -28,6 +28,7 @@ namespace GTA.GangAndTurfMod
             if (loadedOptions != null)
             {
                 //get the loaded options
+                this.gangMemberAggressiveness = loadedOptions.gangMemberAggressiveness;
                 this.addToGroupKey = loadedOptions.addToGroupKey;
                 this.mindControlKey = loadedOptions.mindControlKey;
                 this.openGangMenuKey = loadedOptions.openGangMenuKey;
@@ -60,9 +61,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SaveOptions()
+        public void SaveOptions(bool notifyMsg = true)
         {
-            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions");
+            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions", notifyMsg);
         }
 
         public Keys openGangMenuKey = Keys.B,
@@ -70,11 +71,21 @@ namespace GTA.GangAndTurfMod
             mindControlKey = Keys.J,
             addToGroupKey = Keys.H;
 
+        public enum gangMemberAggressivenessMode
+        {
+            veryAgressive,
+            agressive,
+            defensive
+        }
+
+        public gangMemberAggressivenessMode gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
+
         public int maxGangMemberHealth = 400;
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 75;
 
         public bool emptyZoneDuringWar = true;
+        public int baseNumKillsBeforeWarVictory = 25;
 
         public int ticksBetweenTurfRewards = 50000;
         public int ticksBetweenGangAIUpdates = 30000;
@@ -226,6 +237,16 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public void SetMemberAggressiveness(gangMemberAggressivenessMode newMode)
+        {
+            gangMemberAggressiveness = newMode;
+            //makes everyone hate cops if set to very aggressive
+            GangManager.instance.SetCopRelations(newMode == gangMemberAggressivenessMode.veryAgressive);
+            MenuScript.instance.aggOption.Index = (int)newMode;
+
+            SaveOptions(false);
+        }
+
         /// <summary>
         /// resets all values, except for the first and last gang names and the color translations
         /// </summary>
@@ -235,6 +256,8 @@ namespace GTA.GangAndTurfMod
             openZoneMenuKey = Keys.N;
             mindControlKey = Keys.J;
             addToGroupKey = Keys.H;
+
+            gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
 
             maxGangMemberHealth = 400;
             maxGangMemberArmor = 100;
@@ -281,6 +304,8 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CombatMG, 22000),
             new BuyableWeapon(WeaponHash.CombatPDW, 20500),
             new BuyableWeapon(WeaponHash.CombatPistol, 5000),
+            new BuyableWeapon(WeaponHash.CompactRifle, 17500),
+            new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 21000),
             new BuyableWeapon(WeaponHash.GrenadeLauncher, 28000),
             new BuyableWeapon(WeaponHash.Gusenberg, 10000),
             new BuyableWeapon(WeaponHash.HeavyPistol, 4000),
@@ -297,11 +322,13 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Pistol50, 3000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 10000),
             new BuyableWeapon(WeaponHash.Railgun, 50000),
+            new BuyableWeapon(WeaponHash.Revolver, 8000),
             new BuyableWeapon(WeaponHash.RPG, 32000),
             new BuyableWeapon(WeaponHash.SawnOffShotgun, 8000),
             new BuyableWeapon(WeaponHash.SMG, 11000),
             new BuyableWeapon(WeaponHash.SniperRifle, 23000),
             new BuyableWeapon(WeaponHash.SNSPistol, 900),
+            new BuyableWeapon(WeaponHash.SpecialCarbine, 23000),
             new BuyableWeapon(WeaponHash.VintagePistol, 5000)
         };
         }

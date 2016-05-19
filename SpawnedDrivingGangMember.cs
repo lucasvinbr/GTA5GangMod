@@ -25,27 +25,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (vehicleIAmDriving.Position.DistanceTo(destination) < 20)
                 {
-                    //leave vehicle, everyone stops being important
-                    if (!watchedPed.IsPlayer)
-                    {
-                        watchedPed.Task.ClearAll();
-                        watchedPed.Task.LeaveVehicle();
-                        watchedPed.MarkAsNoLongerNeeded();
-                    }
-                   
-                    for (int i = 0; i < myPassengers.Count; i++)
-                    {
-                        if (!myPassengers[i].IsPlayer)
-                        {
-                            myPassengers[i].MarkAsNoLongerNeeded();
-                            myPassengers[i].Task.ClearAll();
-                            myPassengers[i].Task.LeaveVehicle();
-                        }
-                    }
-                    vehicleIAmDriving.CurrentBlip.Remove();
-                    vehicleIAmDriving.IsPersistent = false;
-                    vehicleIAmDriving = null;
-                    watchedPed = null;
+                    EveryoneLeaveVehicle();
                 }
                 else
                 {
@@ -56,25 +36,7 @@ namespace GTA.GangAndTurfMod
                     //give up, drop passengers and go away
                     if(updatesWhileGoingToDest > updateLimitWhileGoing)
                     {
-                        //leave vehicle, everyone stops being important
-                        if (!watchedPed.IsPlayer)
-                        {
-                            watchedPed.Task.LeaveVehicle();
-                            watchedPed.MarkAsNoLongerNeeded();
-                        }
-
-                        for (int i = 0; i < myPassengers.Count; i++)
-                        {
-                            if (!myPassengers[i].IsPlayer)
-                            {
-                                myPassengers[i].MarkAsNoLongerNeeded();
-                                myPassengers[i].Task.LeaveVehicle();
-                            }
-                        }
-                        vehicleIAmDriving.CurrentBlip.Remove();
-                        vehicleIAmDriving.IsPersistent = false;
-                        vehicleIAmDriving = null;
-                        watchedPed = null;
+                        EveryoneLeaveVehicle();
                     }
                     else
                     {
@@ -101,6 +63,33 @@ namespace GTA.GangAndTurfMod
                 watchedPed = null;
             }
             
+        }
+
+        public void EveryoneLeaveVehicle()
+        {
+            //leave vehicle, everyone stops being important
+            if (!watchedPed.IsPlayer)
+            {
+                watchedPed.Task.ClearAll();
+                watchedPed.Task.LeaveVehicle();
+                Function.Call(Hash.RESET_PED_LAST_VEHICLE, watchedPed);
+                watchedPed.MarkAsNoLongerNeeded();
+            }
+
+            for (int i = 0; i < myPassengers.Count; i++)
+            {
+                if (!myPassengers[i].IsPlayer)
+                {
+                    myPassengers[i].MarkAsNoLongerNeeded();
+                    myPassengers[i].Task.ClearAll();
+                    myPassengers[i].Task.LeaveVehicle();
+                    Function.Call(Hash.RESET_PED_LAST_VEHICLE, myPassengers[i]);
+                }
+            }
+            vehicleIAmDriving.CurrentBlip.Remove();
+            vehicleIAmDriving.IsPersistent = false;
+            vehicleIAmDriving = null;
+            watchedPed = null;
         }
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool playerAsDest = false)

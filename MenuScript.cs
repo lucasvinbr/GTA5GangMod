@@ -37,6 +37,8 @@ namespace GTA.GangAndTurfMod
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton,
             openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn;
 
+        public UIMenuListItem aggOption;
+
         public enum desiredInputType
         {
             none,
@@ -55,8 +57,11 @@ namespace GTA.GangAndTurfMod
         public desiredInputType curInputType = desiredInputType.none;
         public changeableKeyBinding targetKeyBindToChange = changeableKeyBinding.AddGroupBtn;
 
+        public static MenuScript instance;
+
         public MenuScript()
         {
+            instance = this;
             zonesMenu = new UIMenu("Gang Mod", "Zone Controls");
             memberMenu = new UIMenu("Gang Mod", "Gang Member Registration Controls");
             gangMenu = new UIMenu("Gang Mod", "Gang Controls");
@@ -85,6 +90,8 @@ namespace GTA.GangAndTurfMod
             zonesMenu.RefreshIndex();
             gangMenu.RefreshIndex();
             memberMenu.RefreshIndex();
+
+            aggOption.Index = (int)ModOptions.instance.gangMemberAggressiveness;
 
             //add mouse click as another "select" button
             menuPool.SetKey(UIMenu.MenuControls.Select, Control.PhoneSelect);
@@ -946,6 +953,8 @@ namespace GTA.GangAndTurfMod
         {
             modSettingsSubMenu = menuPool.AddSubMenu(gangMenu, "Mod Settings Menu");
 
+            AddMemberAggressivenessControl();
+            AddEnableAmbientSpawnToggle();
             AddEnableFightingToggle();
             AddEnableWarVersusPlayerToggle();
             AddKeyBindingMenu();
@@ -954,6 +963,27 @@ namespace GTA.GangAndTurfMod
            
             modSettingsSubMenu.RefreshIndex();
         }
+
+        void AddMemberAggressivenessControl()
+        { 
+            List<dynamic> aggModes = new List<dynamic>
+            { 
+                "V. Aggressive",
+                "Aggressive",
+                "Defensive"
+            };
+
+            aggOption = new UIMenuListItem("Member Aggressiveness", aggModes,(int) ModOptions.instance.gangMemberAggressiveness, "This controls how aggressive members from all gangs will be. Very aggressive members will shoot at cops and other gangs on sight, aggressive members will shoot only at other gangs on sight and defensive members will only shoot when one of them is attacked or aimed at."); 
+            modSettingsSubMenu.AddItem(aggOption);
+            modSettingsSubMenu.OnListChange += (sender, item, index) => 
+            { 
+                if (item == aggOption) 
+                {
+                    ModOptions.instance.SetMemberAggressiveness((ModOptions.gangMemberAggressivenessMode)index);
+                } 
+            }; 
+     } 
+
 
         void AddEnableFightingToggle()
         {
@@ -988,6 +1018,21 @@ namespace GTA.GangAndTurfMod
                 if (item == warToggle)
                 {
                     GangManager.instance.warAgainstPlayerEnabled = checked_;
+                }
+
+            };
+        }
+
+        void AddEnableAmbientSpawnToggle()
+        {
+            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient member spawning?", true, "If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.");
+
+            modSettingsSubMenu.AddItem(spawnToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == spawnToggle)
+                {
+                    AmbientGangMemberSpawner.instance.enabled = checked_;
                 }
 
             };

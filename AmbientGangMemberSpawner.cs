@@ -25,7 +25,9 @@ namespace GTA.GangAndTurfMod
                 TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
                 if (curTurfZone != null)
                 {
-                    if (curTurfZone.ownerGangName != "none" && GangManager.instance.GetGangByName(curTurfZone.ownerGangName) != null) //only spawn if there really is a gang in control here
+                    Gang curGang = GangManager.instance.GetGangByName(curTurfZone.ownerGangName);
+                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang == curGang) return; //we want enemies of this gang to spawn only when close to the war
+                    if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
                         // also reduce police influence
                         Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
@@ -41,8 +43,7 @@ namespace GTA.GangAndTurfMod
                                 spawnPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 40);
                             }
                             GangManager.instance.SpawnGangMember
-                           (GangManager.instance.GetGangByName
-                           (curTurfZone.ownerGangName), spawnPos);
+                           (curGang, spawnPos);
                         }
 
                         Wait(1000 + RandomUtil.CachedRandom.Next(3000000) / GangManager.instance.GetGangByName
