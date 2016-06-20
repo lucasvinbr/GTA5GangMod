@@ -23,9 +23,9 @@ namespace GTA.GangAndTurfMod
 
         public warType curWarType = warType.attackingEnemy;
 
-        private int curTicksAwayFromBattle = 0;
+        private int curTicksAwayFromBattle = 0, ticksSinceLastCarSpawn = 0;
 
-        private int ticksBeforeAutoLose = 30000;
+        private int ticksBeforeAutoLose = 30000, minTicksBetweenCarSpawns = 1000;
 
         public TurfZone warZone;
 
@@ -39,7 +39,6 @@ namespace GTA.GangAndTurfMod
         {
             instance = this;
             this.Tick += OnTick;
-            
         }
 
         public bool StartWar(Gang enemyGang, TurfZone warZone, warType theWarType)
@@ -64,7 +63,7 @@ namespace GTA.GangAndTurfMod
 
                 currentEnemyCasualties = 0;
                 casualtiesForEnemyDefeat = waves + ModOptions.instance.baseNumKillsBeforeWarVictory + 
-                    RandomUtil.CachedRandom.Next(ModOptions.instance.baseNumKillsBeforeWarVictory / 2);
+                    RandomUtil.CachedRandom.Next(ModOptions.instance.baseNumKillsBeforeWarVictory / 6);
 
                 isOccurring = true;
 
@@ -105,6 +104,24 @@ namespace GTA.GangAndTurfMod
             Game.WantedMultiplier = 1;
         }
 
+        /// <summary>
+        /// spawns a vehicle that has the player as destination
+        /// </summary>
+        public void SpawnEnemyAngryVehicle()
+        {
+            Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
+
+            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(enemyGang,
+                    spawnPos, GangManager.instance.FindGoodSpawnPointForCar(), true, false, true);
+            if (spawnedVehicle != null)
+            {
+                spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 25, 100);
+                Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
+
+                ticksSinceLastCarSpawn = RandomUtil.CachedRandom.Next(-minTicksBetweenCarSpawns, 0);
+            }
+        }
+
         public void OnEnemyDeath()
         {
             //check if the player was in or near the warzone when the death happened 
@@ -121,11 +138,13 @@ namespace GTA.GangAndTurfMod
                         playerGang.TakeZone(warZone);
                         Game.Player.Character.Money += ModOptions.instance.rewardForTakingEnemyTurf;
                         UI.ShowSubtitle(warZone.zoneName + " is now ours!");
+                        Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
                     }
                     else
                     {
                         Game.Player.Money += ModOptions.instance.costToTakeNeutralTurf / 2;
                         UI.ShowSubtitle(warZone.zoneName + " remains ours!");
+                        Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
                     }
 
                     EndWar();
@@ -142,6 +161,7 @@ namespace GTA.GangAndTurfMod
         {
             if (isOccurring)
             {
+                ticksSinceLastCarSpawn++;
                 if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName)
                 {
                     curTicksAwayFromBattle = 0;
@@ -152,16 +172,15 @@ namespace GTA.GangAndTurfMod
                         Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
                         Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
                     }
-                    
-                    if (GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Length < ModOptions.instance.spawnedMemberLimit / 3)
+
+                    if (ticksSinceLastCarSpawn >= minTicksBetweenCarSpawns)
                     {
-                        Vector3 spawnPos = World.GetNextPositionOnSidewalk
-                           (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60)));
-                        if (World.GetDistance(Game.Player.Character.Position, spawnPos) > 120)
-                        {
-                            // UI.Notify("too far");
-                            spawnPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 90);
-                        }
+                        SpawnEnemyAngryVehicle();
+                    }
+
+                    if (GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Length < ModOptions.instance.spawnedMemberLimit / 2)
+                    {
+                        Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
                         Ped spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos);
 
                         if (spawnedMember != null)

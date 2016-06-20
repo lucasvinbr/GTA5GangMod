@@ -23,12 +23,12 @@ namespace GTA.GangAndTurfMod
         //it's not really saved, so it is set up differently on every run (and reloading of scripts)
         public int relationGroupIndex;
 
-        //car stats - the model
-        public int gangVehicleHash = -1;
-        
         public int memberAccuracyLevel = 20;
         public int memberHealth = 120;
         public int memberArmor = 0;
+
+        //car stats - the models
+        public List<PotentialGangVehicle> carVariations = new List<PotentialGangVehicle>();
 
         //acceptable ped model/texture/component combinations
         public List<PotentialGangMember> memberVariations = new List<PotentialGangMember>();
@@ -109,18 +109,42 @@ namespace GTA.GangAndTurfMod
             return false;
         }
 
-        public bool SetGangCar(Vehicle newVehicleType)
+        public bool AddGangCar(PotentialGangVehicle newVehicleType)
         {
-            if (newVehicleType.Model.Hash != gangVehicleHash)
+            for(int i = 0; i < carVariations.Count; i++)
             {
-                gangVehicleHash = newVehicleType.Model.Hash;
-                GangManager.instance.SaveGangData();
-                return true;
+                if (newVehicleType.modelHash != carVariations[i].modelHash)
+                {
+                    continue;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            else
+
+            carVariations.Add(newVehicleType);
+            GangManager.instance.SaveGangData();
+            return true;
+        }
+
+        public bool RemoveGangCar(PotentialGangVehicle sadVehicle)
+        {
+            for (int i = 0; i < carVariations.Count; i++)
             {
-                return false;
+                if (sadVehicle.modelHash != carVariations[i].modelHash)
+                {
+                    continue;
+                }
+                else
+                {
+                    carVariations.Remove(carVariations[i]);
+                    GangManager.instance.SaveGangData();
+                    return true;
+                }
             }
+
+            return false;
         }
 
         /// <summary>
@@ -129,12 +153,35 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public int GetGangAIStrengthValue()
         {
+            int weaponValue = 200;
+            if(gangWeaponHashes.Count > 0)
+            {
+                weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price;
+            }
             return moneyAvailable / 10000 +
                 ZoneManager.instance.GetZonesControlledByGang(name).Length * 50 +
-                ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price / 20 +
+                weaponValue / 20 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
                 memberHealth;
+        }
+
+        public WeaponHash GetDriveByGunFromOwnedGuns()
+        {
+            List<WeaponHash> possibleGuns = new List<WeaponHash>();
+            for(int i = 0; i < gangWeaponHashes.Count; i++)
+            {
+                if (ModOptions.instance.driveByWeapons.Contains(gangWeaponHashes[i]))
+                {
+                    possibleGuns.Add(gangWeaponHashes[i]);
+                }
+            }
+
+            if (possibleGuns.Count > 0)
+            {
+                return RandomUtil.GetRandomElementFromList(possibleGuns);
+            }
+            else return WeaponHash.Bottle;
         }
 
     }

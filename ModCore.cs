@@ -57,7 +57,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else if (e.Modifiers == Keys.Shift)
                     {
-                        menuScript.OpenPedRegistrationMenu();
+                        menuScript.OpenContextualRegistrationMenu();
                     }
                 }
                 else if (e.KeyCode == ModOptions.instance.openZoneMenuKey)

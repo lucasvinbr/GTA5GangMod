@@ -29,28 +29,47 @@ namespace GTA.GangAndTurfMod
             {
                 //get the loaded options
                 this.gangMemberAggressiveness = loadedOptions.gangMemberAggressiveness;
+
                 this.addToGroupKey = loadedOptions.addToGroupKey;
                 this.mindControlKey = loadedOptions.mindControlKey;
                 this.openGangMenuKey = loadedOptions.openGangMenuKey;
                 this.openZoneMenuKey = loadedOptions.openZoneMenuKey;
+
                 this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
                 this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
                 this.buyableWeapons = loadedOptions.buyableWeapons;
                 this.similarColors = loadedOptions.similarColors;
+
                 this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
                 this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
                 this.maxGangMemberAccuracy = loadedOptions.maxGangMemberAccuracy;
+
                 this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
+                this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
+
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
+
                 this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
+
                 this.costToTakeNeutralTurf = loadedOptions.costToTakeNeutralTurf;
                 this.rewardForTakingEnemyTurf = loadedOptions.rewardForTakingEnemyTurf;
+                this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
+                this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
+                this.ticksCooldownBackupCar = loadedOptions.ticksCooldownBackupCar;
+                this.ticksCooldownParachutingMember = loadedOptions.ticksCooldownParachutingMember;
+
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
+
+                this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
+                this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
+                this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
+                this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
+                this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
                 SaveOptions();
             }
             else
@@ -70,6 +89,22 @@ namespace GTA.GangAndTurfMod
             openZoneMenuKey = Keys.N,
             mindControlKey = Keys.J,
             addToGroupKey = Keys.H;
+
+        public List<WeaponHash> driveByWeapons = new List<WeaponHash>()
+        {
+            WeaponHash.APPistol,
+            WeaponHash.CombatPistol,
+            WeaponHash.HeavyPistol,
+            WeaponHash.MachinePistol,
+            WeaponHash.MarksmanPistol,
+            WeaponHash.Pistol,
+            WeaponHash.Pistol50,
+            WeaponHash.Revolver,
+            WeaponHash.SawnOffShotgun,
+            WeaponHash.SNSPistol,
+            WeaponHash.VintagePistol,
+            WeaponHash.MicroSMG
+        };
 
         public enum gangMemberAggressivenessMode
         {
@@ -100,11 +135,21 @@ namespace GTA.GangAndTurfMod
 
         public int costToTakeNeutralTurf = 10000;
         public int rewardForTakingEnemyTurf = 10000;
+        public int costToCallBackupCar = 900;
+        public int costToCallParachutingMember = 250;
+        public int ticksCooldownBackupCar = 1000;
+        public int ticksCooldownParachutingMember = 600;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
 
-        public int spawnedMemberLimit = 20; //max number of living gang members at any time
+        public int spawnedMembersBeforeAmbientGenStops = 20;
+        public int spawnedMemberLimit = 30; //max number of living gang members at any time
+        public int minDistanceMemberSpawnFromPlayer = 50;
+        public int maxDistanceMemberSpawnFromPlayer = 130;
+        public int minDistanceCarSpawnFromPlayer = 80;
+        public int maxDistanceCarSpawnFromPlayer = 190;
+
 
         public List<BuyableWeapon> buyableWeapons;
 
@@ -191,6 +236,26 @@ namespace GTA.GangAndTurfMod
             return PotentialGangMember.memberColor.white;
         }
 
+        public int GetAcceptableMemberSpawnDistance()
+        {
+            if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
+            {
+                maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 1;
+                SaveOptions(false);
+            }
+            return RandomUtil.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
+        }
+
+        public int GetAcceptableCarSpawnDistance()
+        {
+            if(maxDistanceCarSpawnFromPlayer <= minDistanceCarSpawnFromPlayer)
+            {
+                maxDistanceCarSpawnFromPlayer = minDistanceCarSpawnFromPlayer + 1;
+                SaveOptions(false);
+            }
+            return RandomUtil.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
+        }
+
         public void SetKey(MenuScript.changeableKeyBinding keyToChange, Keys newKey)
         {
             if(newKey == Keys.Escape || newKey == Keys.ShiftKey ||
@@ -264,21 +329,31 @@ namespace GTA.GangAndTurfMod
             maxGangMemberAccuracy = 75;
 
             emptyZoneDuringWar = true;
+            baseNumKillsBeforeWarVictory = 25;
 
             ticksBetweenTurfRewards = 50000;
             ticksBetweenGangAIUpdates = 30000;
             ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 500;
 
+            rewardMultiplierPerZone = 0.2f;
+
             costToTakeNeutralTurf = 10000;
             rewardForTakingEnemyTurf = 10000;
-
-            rewardMultiplierPerZone = 0.2f;
+            costToCallBackupCar = 900;
+            costToCallParachutingMember = 250;
+            ticksCooldownBackupCar = 1000;
+            ticksCooldownParachutingMember = 600;
 
             wantedFactorWhenInGangTurf = 0.2f;
             maxWantedLevelInGangTurf = 1;
 
-            spawnedMemberLimit = 20;
+            spawnedMembersBeforeAmbientGenStops = 20;
+            spawnedMemberLimit = 30; //max number of living gang members at any time
+            minDistanceMemberSpawnFromPlayer = 50;
+            maxDistanceMemberSpawnFromPlayer = 130;
+            minDistanceCarSpawnFromPlayer = 80;
+            maxDistanceCarSpawnFromPlayer = 190;
 
             buyableWeapons.Clear();
 

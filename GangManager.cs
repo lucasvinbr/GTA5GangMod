@@ -7,6 +7,7 @@ using GTA;
 using System.Windows.Forms;
 using GTA.Native;
 using System.Drawing;
+using GTA.Math;
 
 namespace GTA.GangAndTurfMod
 {
@@ -25,6 +26,11 @@ namespace GTA.GangAndTurfMod
 
         public bool fightingEnabled = true, warAgainstPlayerEnabled = true;
 
+        /// <summary>
+        /// the number of currently alive members.
+        /// (the number of entries in LivingMembers isn't the same as this)
+        /// </summary>
+        public int livingMembersCount = 0;
 
         public bool hasChangedBody = false;
         public bool hasDiedWithChangedBody = false;
@@ -137,6 +143,7 @@ namespace GTA.GangAndTurfMod
 
         public void Tick()
         {
+            //tick living members...
             for (int i = 0; i < livingMembers.Count; i++)
             {
                 if (livingMembers[i].watchedPed != null)
@@ -170,6 +177,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
+            //tick living driving members...
             for (int i = 0; i < livingDrivingMembers.Count; i++)
             {
                 if (livingDrivingMembers[i].watchedPed != null && livingDrivingMembers[i].vehicleIAmDriving != null)
@@ -183,6 +191,21 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
+            TickGangs();
+
+            if (hasChangedBody)
+            {
+                TickMindControl();
+            }
+        }
+
+        #region gang general control stuff
+
+        /// <summary>
+        /// this controls the gang AI decisions and rewards for the player and AI gangs
+        /// </summary>
+        void TickGangs()
+        {
             for (int i = 0; i < enemyGangs.Count; i++)
             {
                 enemyGangs[i].ticksSinceLastUpdate++;
@@ -221,51 +244,7 @@ namespace GTA.GangAndTurfMod
                 //this also counts for the player's gang
                 GiveTurfRewardToGang(GetPlayerGang());
             }
-
-            if (hasChangedBody)
-            {
-
-                if(Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
-                {
-                    UI.ShowSubtitle("Your member has been arrested!");
-                    RestorePlayerBody();
-                    return;
-                }
-
-                if (!theOriginalPed.IsAlive)
-                {
-                    RestorePlayerBody();
-                    Game.Player.Character.Kill();
-                    return;
-                }
-
-                if(Game.Player.Character.Health > 4000 && Game.Player.Character.Health != 4900)
-                {
-                    Game.Player.Character.Armor -= (4900 - Game.Player.Character.Health);
-                }
-
-                Game.Player.Character.Health = 5000;
-
-                if (Game.Player.Character.Armor <= 0) //dead!
-                {
-                    if (!(Game.Player.Character.IsRagdoll) && hasDiedWithChangedBody)
-                    {
-                        Game.Player.Character.Euphoria.ShotFallToKnees.Start();
-                    }
-                    else
-                    {
-                        hasDiedWithChangedBody = true;
-                        Game.Player.Character.CanRagdoll = true;
-                        Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
-                        Game.Player.IgnoredByEveryone = true;
-                    }
-                    
-                    //RestorePlayerBody();
-                }
-            }
         }
-
-        #region gang general control stuff
 
         public Gang CreateNewEnemyGang(bool notifyMsg = true)
         {
@@ -406,6 +385,52 @@ namespace GTA.GangAndTurfMod
         #endregion
 
         #region gang member mind control
+
+        /// <summary>
+        /// the addition to the tick methods when the player is in control of a member
+        /// </summary>
+        void TickMindControl()
+        {
+            if (Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
+            {
+                UI.ShowSubtitle("Your member has been arrested!");
+                RestorePlayerBody();
+                return;
+            }
+
+            if (!theOriginalPed.IsAlive)
+            {
+                RestorePlayerBody();
+                Game.Player.Character.Kill();
+                return;
+            }
+
+            if (Game.Player.Character.Health > 4000 && Game.Player.Character.Health != 4900)
+            {
+                Game.Player.Character.Armor -= (4900 - Game.Player.Character.Health);
+            }
+
+            Game.Player.Character.Health = 5000;
+
+            if (Game.Player.Character.Armor <= 0) //dead!
+            {
+                if (!(Game.Player.Character.IsRagdoll) && hasDiedWithChangedBody)
+                {
+                    Game.Player.Character.Euphoria.ShotFallToKnees.Start();
+                }
+                else
+                {
+                    hasDiedWithChangedBody = true;
+                    Game.Player.CanControlCharacter = false;
+                    Game.Player.Character.CanRagdoll = true;
+                    Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
+                    Game.Player.IgnoredByEveryone = true;
+                }
+
+                //RestorePlayerBody();
+            }
+        }
+
         public void TryBodyChange()
         {
             if (!hasChangedBody)
@@ -436,6 +461,7 @@ namespace GTA.GangAndTurfMod
         {
             targetPed.Task.ClearAllImmediately();
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
+            Game.Player.MaxArmor = targetPed.Armor + targetPed.Health;
             targetPed.Armor += targetPed.Health;
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
@@ -462,7 +488,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void RespawnIfPossible()
         {
-            if (Game.Player.Character.IsRagdoll && hasDiedWithChangedBody)
+            if (hasDiedWithChangedBody)
             {
                 Ped oldPed = Game.Player.Character;
 
@@ -482,7 +508,7 @@ namespace GTA.GangAndTurfMod
 
                 //lets parachute if no one is around
                 Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
-                   Game.Player.Character.Position + Math.Vector3.WorldUp * 70);
+                   Game.Player.Character.Position + Vector3.WorldUp * 70);
                 if (spawnedPed != null)
                 {
                     TakePedBody(spawnedPed);
@@ -499,6 +525,8 @@ namespace GTA.GangAndTurfMod
             Ped oldPed = Game.Player.Character;
             //return to original body
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
+            Game.Player.MaxArmor = 100;
+            if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             hasChangedBody = false;
             Game.Player.CanControlCharacter = true;
             theOriginalPed.Task.ClearAllImmediately();
@@ -515,7 +543,6 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                oldPed.MarkAsNoLongerNeeded();
                 oldPed.Health = oldPed.Armor + 100;
                 oldPed.RelationshipGroup = GetPlayerGang().relationGroupIndex;
                 oldPed.Task.FightAgainstHatedTargets(80);
@@ -584,11 +611,91 @@ namespace GTA.GangAndTurfMod
 
             return returnedList.ToArray();
         }
+
         #endregion
 
         #region spawner methods
-        public Ped SpawnGangMember(Gang ownerGang, GTA.Math.Vector3 spawnPos, bool isImportant = false, bool deactivatePersistent = false)
+
+        /// <summary>
+        /// a good spawn point is one that is not too close and not too far from the player (according to the Mod Options)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindGoodSpawnPointForMember()
         {
+            Vector3 chosenPos = Vector3.Zero;
+            Vector3 playerPos = Game.Player.Character.Position;
+
+            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
+                          ModOptions.instance.GetAcceptableMemberSpawnDistance()));
+            float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+            while (distFromPlayer > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceMemberSpawnFromPlayer)
+            {
+                // UI.Notify("too far"); or too close
+                chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 
+                    ModOptions.instance.GetAcceptableMemberSpawnDistance());
+                distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+            }
+
+            return chosenPos;
+        }
+
+        public Vector3 FindGoodSpawnPointForCar()
+        {
+            Vector3 chosenPos = Vector3.Zero;
+            Vector3 playerPos = Game.Player.Character.Position;
+
+            chosenPos = World.GetNextPositionOnStreet
+                          (Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
+                          ModOptions.instance.GetAcceptableCarSpawnDistance());
+            float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+
+            while (distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer)
+            {
+                // UI.Notify("too far"); or too close
+                //just spawn it then, don't mind being on the street because the player might be on the mountains or the desert
+                chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
+                    ModOptions.instance.GetAcceptableCarSpawnDistance());
+                distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+            }
+
+            return chosenPos;
+        }
+
+        /// <summary>
+        /// makes a few attempts to place the target vehicle on a street.
+        /// if it fails, the vehicle is returned to its original position
+        /// </summary>
+        /// <param name="targetVehicle"></param>
+        /// <param name="originalPos"></param>
+        public void TryPlaceVehicleOnStreet(Vehicle targetVehicle, Vector3 originalPos)
+        {
+            targetVehicle.PlaceOnNextStreet();
+            int attemptsPlaceOnStreet = 0;
+            float distFromPlayer = World.GetDistance(Game.Player.Character.Position, targetVehicle.Position);
+            while((distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer) && attemptsPlaceOnStreet < 3)
+            {
+                targetVehicle.Position = FindGoodSpawnPointForCar();
+                targetVehicle.PlaceOnNextStreet();
+                distFromPlayer = World.GetDistance(Game.Player.Character.Position, targetVehicle.Position);
+            }
+
+            if(attemptsPlaceOnStreet >= 3 || (distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer))
+            {
+                targetVehicle.Position = originalPos;
+            }
+        }
+
+        public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false)
+        {
+            if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit)
+            {
+                //don't start spawning, we're on the limit already
+                return null;
+            }
             if (ownerGang.memberVariations.Count > 0)
             {
                 PotentialGangMember chosenMember =
@@ -629,7 +736,11 @@ namespace GTA.GangAndTurfMod
                     //give a weapon
                     if (ownerGang.gangWeaponHashes.Count > 0)
                     {
-                        newPed.Weapons.Give(RandomUtil.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, true, true);
+                        newPed.Weapons.Give(ownerGang.GetDriveByGunFromOwnedGuns(), 1000, true, true); //it's a sidearm... or a bottle hahaha
+                        if(ownerGang.gangWeaponHashes.Count > 0)
+                        {
+                            newPed.Weapons.Give(RandomUtil.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, true, true);
+                        }
                     }
 
                     //set the relationship group
@@ -709,17 +820,24 @@ namespace GTA.GangAndTurfMod
                     return null;
                 }
 
+                livingMembersCount++;
                 return newPed;
             }
 
             return null;
         }
 
-        public Vehicle SpawnGangVehicle(Gang ownerGang, GTA.Math.Vector3 spawnPos, GTA.Math.Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
+        public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
         {
-            if (ownerGang.gangVehicleHash != -1)
+            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit)
             {
-                Vehicle newVehicle = World.CreateVehicle(ownerGang.gangVehicleHash, spawnPos);
+                //don't start spawning, we're on the limit already
+                return null;
+            }
+
+            if (ownerGang.carVariations.Count > 0)
+            {
+                Vehicle newVehicle = World.CreateVehicle(RandomUtil.GetRandomElementFromList(ownerGang.carVariations).modelHash, spawnPos);
                 newVehicle.PrimaryColor = ownerGang.color;
 
                 if (!isImportant)
@@ -732,7 +850,10 @@ namespace GTA.GangAndTurfMod
                 {
                     driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
 
-                    for (int i = 0; i < newVehicle.PassengerSeats; i++)
+                    int passengerCount = newVehicle.PassengerSeats;
+                    if (destPos == Vector3.Zero && passengerCount > 4) passengerCount = 4; //limit ambient passengers in order to have less impact in ambient spawning
+
+                    for (int i = 0; i < passengerCount; i++)
                     {
                         Ped passenger = SpawnGangMember(ownerGang, spawnPos, true);
                         if (passenger != null)
@@ -773,7 +894,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, GTA.Math.Vector3 destPos, bool playerIsDest = false)
+        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool playerIsDest = false)
         {
             //enlist this new gang member in the spawned list!
             if (livingDrivingMembers.Count > 0)
@@ -803,7 +924,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos);
+                SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, playerIsDest);
                 newDriver.SetWatchedPassengers();
                 livingDrivingMembers.Add(newDriver);
             }

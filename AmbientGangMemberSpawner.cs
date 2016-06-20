@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GTA.Math;
+using GTA.Native;
 
 namespace GTA.GangAndTurfMod
 {
@@ -27,27 +28,43 @@ namespace GTA.GangAndTurfMod
                 {
                     Gang curGang = GangManager.instance.GetGangByName(curTurfZone.ownerGangName);
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang == curGang) return; //we want enemies of this gang to spawn only when close to the war
+                                                                                                                     
+                    // also reduce police influence
+                    Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
+                    Game.MaxWantedLevel = ModOptions.instance.maxWantedLevelInGangTurf;
+
                     if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
-                        // also reduce police influence
-                        Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
-                        Game.MaxWantedLevel = ModOptions.instance.maxWantedLevelInGangTurf;
-                        Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
-                        if((playerVehicle != null && playerVehicle.Speed < 10) || playerVehicle == null)
+                        if (GangManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
-                            Vector3 spawnPos = World.GetNextPositionOnSidewalk
-                              (World.GetNextPositionOnStreet((Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60)));
-                            if (World.GetDistance(Game.Player.Character.Position, spawnPos) > 85)
+                            Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
+                            if ((playerVehicle != null && playerVehicle.Speed < 70) || playerVehicle == null)
                             {
-                                // UI.Notify("too far");
-                                spawnPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 40);
+                                Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
+                                Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
+                                if(newMember != null)
+                                {
+                                    newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
+                                }
                             }
-                            GangManager.instance.SpawnGangMember
-                           (curGang, spawnPos);
-                        }
+                            if (RandomUtil.CachedRandom.Next(0, 5) < 3)
+                            {
+                                Wait(100 + RandomUtil.CachedRandom.Next(300));
+                                Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
+                                GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
+                                if (spawnedVehicle != null)
+                                {
+                                    GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
+                                    Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
+                                    if(driver != null) //if, for some reason, we don't have a driver, do nothing
+                                    {
+                                        driver.Task.CruiseWithVehicle(spawnedVehicle, 20, (int) DrivingStyle.Rushed);
+                                    }
+                                }
+                            }
 
-                        Wait(1000 + RandomUtil.CachedRandom.Next(3000000) / GangManager.instance.GetGangByName
-                       (curTurfZone.ownerGangName).GetGangAIStrengthValue());
+                            Wait(1000 + RandomUtil.CachedRandom.Next(3000000) / curGang.GetGangAIStrengthValue());
+                        }
                     }
                     else
                     {

@@ -18,7 +18,7 @@ namespace GTA.GangAndTurfMod
     {
 
         MenuPool menuPool;
-        UIMenu zonesMenu, gangMenu, memberMenu, gangOptionsSubMenu, 
+        UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
             modSettingsSubMenu;
         Ped closestPed;
         bool saveTorsoIndex = false, saveTorsoTex = false, saveLegIndex = false, saveLegTex = false;
@@ -35,7 +35,9 @@ namespace GTA.GangAndTurfMod
             new Dictionary<VehicleColor, UIMenuItem>();
 
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton,
-            openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn;
+            openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, paraBackupBtn;
+
+        private int ticksSinceLastCarBkp = 5000, ticksSinceLastParaBkp = 5000;
 
         public UIMenuListItem aggOption;
 
@@ -64,11 +66,13 @@ namespace GTA.GangAndTurfMod
             instance = this;
             zonesMenu = new UIMenu("Gang Mod", "Zone Controls");
             memberMenu = new UIMenu("Gang Mod", "Gang Member Registration Controls");
+            carMenu = new UIMenu("Gang Mod", "Gang Vehicle Registration Controls");
             gangMenu = new UIMenu("Gang Mod", "Gang Controls");
             menuPool = new MenuPool();
             menuPool.Add(zonesMenu);
             menuPool.Add(gangMenu);
             menuPool.Add(memberMenu);
+            menuPool.Add(carMenu);
 
             AddGangTakeoverButton();
             AddSaveZoneButton();
@@ -81,7 +85,9 @@ namespace GTA.GangAndTurfMod
             AddRemovePlayerGangMemberButton();
             AddCallVehicleButton();
             AddCallParatrooperButton();
-            AddRegisterVehicleButton();
+            AddSaveVehicleButton();
+            AddRegisterPlayerVehicleButton();
+            AddRemovePlayerVehicleButton();
 
             UpdateBuyableWeapons();
             AddGangOptionsSubMenu();
@@ -99,6 +105,9 @@ namespace GTA.GangAndTurfMod
             zonesMenu.AddInstructionalButton(clickButton);
             gangMenu.AddInstructionalButton(clickButton);
             memberMenu.AddInstructionalButton(clickButton);
+
+            ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
+            ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
         }
 
         #region menu opening methods
@@ -112,21 +121,30 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void OpenPedRegistrationMenu()
+        public void OpenContextualRegistrationMenu()
         {
             if (!menuPool.IsAnyMenuOpen())
             {
-                closestPed = World.GetClosestPed(Game.Player.Character.Position + Game.Player.Character.ForwardVector * 6.0f, 5.5f);
-                if (closestPed != null)
+                if(Game.Player.Character.CurrentVehicle == null)
                 {
-                    UI.ShowSubtitle("ped selected!");
-                    World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
-                    memberMenu.Visible = !memberMenu.Visible;
+                    closestPed = World.GetClosestPed(Game.Player.Character.Position + Game.Player.Character.ForwardVector * 6.0f, 5.5f);
+                    if (closestPed != null)
+                    {
+                        UI.ShowSubtitle("ped selected!");
+                        World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
+                        memberMenu.Visible = !memberMenu.Visible;
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("couldn't find a ped in front of you!");
+                    }
                 }
                 else
                 {
-                    UI.ShowSubtitle("couldn't find a ped in front of you!");
+                    UI.ShowSubtitle("vehicle selected!");
+                    carMenu.Visible = !carMenu.Visible;
                 }
+                
             }
         }
 
@@ -171,6 +189,14 @@ namespace GTA.GangAndTurfMod
                     curInputType = desiredInputType.none;
                 }
             }
+
+            //countdown for next backups
+            ticksSinceLastCarBkp++;
+            if (ticksSinceLastCarBkp > ModOptions.instance.ticksCooldownBackupCar)
+                ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
+            ticksSinceLastParaBkp++;
+            if (ticksSinceLastParaBkp > ModOptions.instance.ticksCooldownParachutingMember)
+                ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
         }
 
         void UpdateUpgradeCosts()
@@ -346,7 +372,7 @@ namespace GTA.GangAndTurfMod
 
         #endregion
 
-        #region register Member Stuff
+        #region register Member/Vehicle Stuff
 
         void AddMemberToggles()
         {
@@ -616,74 +642,25 @@ namespace GTA.GangAndTurfMod
                 }
             };
         }
-        #endregion
 
-        #region Gang Control Stuff
-
-        void AddCallVehicleButton()
+        void AddSaveVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Call Backup Vehicle", "Calls one of your gang's vehicles to your position. The vehicle drops its passengers and then leaves unless it is attacked.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            UIMenuItem newButton = new UIMenuItem("Register vehicle as usable by AI Gangs", "Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.");
+            carMenu.AddItem(newButton);
+            carMenu.OnItemSelect += (sender, item, index) =>
             {
-                if(item == newButton)
-                {
-                    Gang playergang = GangManager.instance.GetPlayerGang();
-                    if(ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
-                    {
-                        Math.Vector3 destPos = Game.Player.Character.Position;
-
-                        Math.Vector3 spawnPos = World.GetNextPositionOnStreet(destPos + RandomUtil.RandomDirection(true) * 80);
-
-                        Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
-                                spawnPos, destPos, true, false, true);
-                        if (spawnedVehicle != null)
-                        {
-                            spawnedVehicle.PlaceOnNextStreet();
-                            if (World.GetDistance(Game.Player.Character.Position, spawnedVehicle.Position) > 220)
-                            {
-                                //UI.Notify("too far");
-                                spawnedVehicle.Position = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 60);
-                            }
-                            spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
-                            Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
-
-                            gangMenu.Visible = !gangMenu.Visible;
-
-                            UI.ShowSubtitle("A vehicle is on its way!", 1000);
-                        }
-                        else
-                        {
-                            UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
-                        }
-                    }
-                    else
-                    {
-                        UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
-                    }
-                }
-               
-            };
-        }
-
-        void AddRegisterVehicleButton()
-        {
-            UIMenuItem newButton = new UIMenuItem("Register Gang Vehicle", "Makes the vehicle type you are driving become the default type used by your gang.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
-            {
-                if(item == newButton)
+                if (item == newButton)
                 {
                     Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
                     if (curVehicle != null)
                     {
-                        if (GangManager.instance.GetPlayerGang().SetGangCar(curVehicle))
+                        if (PotentialGangVehicle.AddVehicleAndSavePool(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            UI.ShowSubtitle("Gang vehicle changed!");
+                            UI.ShowSubtitle("Vehicle added to pool!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That vehicle is already registered as the default for your gang.");
+                            UI.ShowSubtitle("That vehicle has already been added to the pool.");
                         }
                     }
                     else
@@ -694,34 +671,165 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        void AddCallParatrooperButton()
+        void AddRegisterPlayerVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Call parachuting member", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            UIMenuItem newButton = new UIMenuItem("Register as Gang Vehicle", "Makes the vehicle type you are driving become one of the default types used by your gang.");
+            carMenu.AddItem(newButton);
+            carMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
                 {
-                    Gang playergang = GangManager.instance.GetPlayerGang();
-                    if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    if (curVehicle != null)
                     {
-                        Math.Vector3 destPos = Game.Player.Character.Position;
-                        Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
-                   Game.Player.Character.Position + Math.Vector3.WorldUp * 50);
-                        if (spawnedPed != null)
+                        if (GangManager.instance.GetPlayerGang().AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            spawnedPed.Task.ParachuteTo(destPos);
-                            gangMenu.Visible = !gangMenu.Visible;
+                            UI.ShowSubtitle("Gang vehicle added!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("There are too many gang members around or you haven't registered any member.");
+                            UI.ShowSubtitle("That vehicle is already registered for your gang.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+                        UI.ShowSubtitle("You are not inside a vehicle.");
                     }
+                }
+            };
+        }
+
+        void AddRemovePlayerVehicleButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Remove Vehicle Type for your Gang", "Removes the vehicle type you are driving from the possible vehicle types for your gang.");
+            carMenu.AddItem(newButton);
+            carMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    if (curVehicle != null)
+                    {
+                        if (GangManager.instance.GetPlayerGang().RemoveGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
+                        {
+                            UI.ShowSubtitle("Gang vehicle removed!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("That vehicle is not registered for your gang.");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You are not inside a vehicle.");
+                    }
+                }
+            };
+        }
+
+        #endregion
+
+        #region Gang Control Stuff
+
+        void AddCallVehicleButton()
+        {
+            carBackupBtn = new UIMenuItem("Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")", "Calls one of your gang's vehicles to your position. All passengers leave the vehicle once it arrives.");
+            gangMenu.AddItem(carBackupBtn);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if(item == carBackupBtn)
+                {
+                    if(ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
+                    {
+                        UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
+                        return;
+                    }
+                    if(Game.Player.Money >= ModOptions.instance.costToCallBackupCar)
+                    {
+                        Gang playergang = GangManager.instance.GetPlayerGang();
+                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                        {
+                            Math.Vector3 destPos = Game.Player.Character.Position;
+
+                            Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
+
+                            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
+                                    spawnPos, destPos, true, false, true);
+                            if (spawnedVehicle != null)
+                            {
+                                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnPos);
+                                spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
+                                Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
+
+                                gangMenu.Visible = !gangMenu.Visible;
+                                ticksSinceLastCarBkp = 0;
+                                Game.Player.Money -= ModOptions.instance.costToCallBackupCar;
+                                UI.ShowSubtitle("A vehicle is on its way!", 1000);
+                            }
+                            else
+                            {
+                                UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
+                            }
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallBackupCar.ToString() + " to call a vehicle!");
+                    }
+                    
+                }
+               
+            };
+        }
+
+        void AddCallParatrooperButton()
+        {
+            paraBackupBtn = new UIMenuItem("Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
+            gangMenu.AddItem(paraBackupBtn);
+            gangMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == paraBackupBtn)
+                {
+                    if(ticksSinceLastParaBkp < ModOptions.instance.ticksCooldownParachutingMember)
+                    {
+                        UI.ShowSubtitle("You must wait before calling for parachuting backup again! (This is configurable)");
+                        return;
+                    }
+
+                    if (Game.Player.Money >= ModOptions.instance.costToCallParachutingMember)
+                    {
+                        Gang playergang = GangManager.instance.GetPlayerGang();
+                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                        {
+                            Math.Vector3 destPos = Game.Player.Character.Position;
+                            Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
+                       Game.Player.Character.Position + Math.Vector3.WorldUp * 50);
+                            if (spawnedPed != null)
+                            {
+                                spawnedPed.Task.ParachuteTo(destPos);
+                                ticksSinceLastParaBkp = 0;
+                                Game.Player.Money -= ModOptions.instance.costToCallParachutingMember;
+                                gangMenu.Visible = !gangMenu.Visible;
+                            }
+                            else
+                            {
+                                UI.ShowSubtitle("There are too many gang members around or you haven't registered any member.");
+                            }
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallParachutingMember.ToString() + " to call a parachuting member!");
+                    }
+                   
                 }
 
             };
@@ -1089,6 +1197,8 @@ namespace GTA.GangAndTurfMod
                     GangManager.instance.ResetGangUpdateIntervals();
                     UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
+                    carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
+                    paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
                     UpdateTakeOverBtnText();
                 }
             };

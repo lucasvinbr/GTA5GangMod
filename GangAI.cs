@@ -173,6 +173,19 @@ namespace GTA.GangAndTurfMod
         {
             this.watchedGang = watchedGang;
             ResetUpdateInterval();
+            //do we have vehicles?
+            if(this.watchedGang.carVariations.Count == 0)
+            {
+                //get some vehicles!
+                for(int i = 0; i < RandomUtil.CachedRandom.Next(1, 4); i++)
+                {
+                    PotentialGangVehicle newVeh = PotentialGangVehicle.GetMemberFromPool();
+                    if(newVeh != null)
+                    {
+                        this.watchedGang.AddGangCar(newVeh);
+                    }
+                }
+            }
         }
     }
 }
