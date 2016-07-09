@@ -149,26 +149,7 @@ namespace GTA.GangAndTurfMod
                 if (livingMembers[i].watchedPed != null)
                 {
                     livingMembers[i].ticksSinceLastUpdate++;
-                    if (livingMembers[i].watchedPed.IsFleeing)
-                    {
-                        //why are you running?
-                        //UI.Notify("no coward");
-                        Function.Call(Hash.SET_IGNORE_LOW_PRIORITY_SHOCKING_EVENTS, Game.Player, true);
-                        Function.Call(Hash.SET_ALL_RANDOM_PEDS_FLEE, Game.Player, false);
-                        //Function.Call(Hash.REMOVE_ALL_SHOCKING_EVENTS, true);
-                        if (fightingEnabled)
-                        {
-                            if(livingMembers[i].watchedPed.RelationshipGroup == GetPlayerGang().relationGroupIndex)
-                            {
-                                livingMembers[i].watchedPed.Task.FightAgainstHatedTargets(200);
-                            }
-                            else
-                            {
-                                livingMembers[i].watchedPed.Task.FightAgainst(Game.Player.Character);
-                            }
-                                
-                        }
-                    }
+                    
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
                         livingMembers[i].Update();
@@ -625,16 +606,19 @@ namespace GTA.GangAndTurfMod
             Vector3 chosenPos = Vector3.Zero;
             Vector3 playerPos = Game.Player.Character.Position;
 
+            int attempts = 0;
+
             chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableMemberSpawnDistance()));
             float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
-            while (distFromPlayer > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
-                distFromPlayer < ModOptions.instance.minDistanceMemberSpawnFromPlayer)
+            while ((distFromPlayer > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceMemberSpawnFromPlayer) && attempts <= 5)
             {
                 // UI.Notify("too far"); or too close
                 chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) * 
                     ModOptions.instance.GetAcceptableMemberSpawnDistance());
                 distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+                attempts++;
             }
 
             return chosenPos;
@@ -645,19 +629,22 @@ namespace GTA.GangAndTurfMod
             Vector3 chosenPos = Vector3.Zero;
             Vector3 playerPos = Game.Player.Character.Position;
 
+            int attempts = 0;
+
             chosenPos = World.GetNextPositionOnStreet
                           (Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableCarSpawnDistance());
             float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
 
-            while (distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
-                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer)
+            while ((distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer) && attempts < 5)
             {
                 // UI.Notify("too far"); or too close
                 //just spawn it then, don't mind being on the street because the player might be on the mountains or the desert
                 chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandomUtil.RandomDirection(true) *
                     ModOptions.instance.GetAcceptableCarSpawnDistance());
                 distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+                attempts++;
             }
 
             return chosenPos;
@@ -680,10 +667,11 @@ namespace GTA.GangAndTurfMod
                 targetVehicle.Position = FindGoodSpawnPointForCar();
                 targetVehicle.PlaceOnNextStreet();
                 distFromPlayer = World.GetDistance(Game.Player.Character.Position, targetVehicle.Position);
+                attemptsPlaceOnStreet++;
             }
 
-            if(attemptsPlaceOnStreet >= 3 || (distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
-                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer))
+            if(distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
+                distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer)
             {
                 targetVehicle.Position = originalPos;
             }
@@ -691,7 +679,7 @@ namespace GTA.GangAndTurfMod
 
         public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false)
         {
-            if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit)
+            if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero)
             {
                 //don't start spawning, we're on the limit already
                 return null;
@@ -829,9 +817,9 @@ namespace GTA.GangAndTurfMod
 
         public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
         {
-            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit)
+            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero)
             {
-                //don't start spawning, we're on the limit already
+                //don't start spawning, we're on the limit already or we failed to find a good spawn point
                 return null;
             }
 
