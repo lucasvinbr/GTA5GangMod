@@ -60,8 +60,12 @@ namespace GTA.GangAndTurfMod
             {
                 gangData = new GangData();
 
+                Gang playerGang = new Gang("Player's Gang", VehicleColor.BrushedGold, true);
                 //setup gangs
-                gangData.gangs.Add(new Gang("Player's Gang", VehicleColor.BrushedGold, true));
+                gangData.gangs.Add(playerGang);
+
+                playerGang.blipColor = (int) BlipColor.Yellow;
+
                 CreateNewEnemyGang();
             }
 
@@ -246,6 +250,8 @@ namespace GTA.GangAndTurfMod
 
             Gang newGang = new Gang(gangName, RandomUtil.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
 
+            newGang.blipColor = ModOptions.instance.GetGangColorTranslation(gangColor).blipColor;
+
             GetMembersForGang(newGang);
 
             //relations...
@@ -274,7 +280,7 @@ namespace GTA.GangAndTurfMod
 
         public void GetMembersForGang(Gang targetGang)
         {
-            PotentialGangMember.memberColor gangColor = ModOptions.instance.TranslateVehicleToMemberColor(targetGang.color);
+            PotentialGangMember.memberColor gangColor = ModOptions.instance.TranslateVehicleToMemberColor(targetGang.vehicleColor);
             PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandomUtil.CachedRandom.Next(3);
             for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 6); i++)
             {
@@ -361,6 +367,21 @@ namespace GTA.GangAndTurfMod
             {
                 livingMembers[i].ResetUpdateInterval();
             }
+        }
+
+        public static int CalculateHealthUpgradeCost(int currentMemberHealth)
+        {
+            return (currentMemberHealth + 20) * (20 * (currentMemberHealth / 100) + 1);
+        }
+
+        public static int CalculateArmorUpgradeCost(int currentMemberArmor)
+        {
+            return (currentMemberArmor + 20) * (50 * (currentMemberArmor / 120) + 1);
+        }
+
+        public static int CalculateAccuracyUpgradeCost(int currentMemberAcc)
+        {
+            return (currentMemberAcc + 10) * 2500;
         }
 
         #endregion
@@ -593,6 +614,43 @@ namespace GTA.GangAndTurfMod
             return returnedList.ToArray();
         }
 
+        public Ped[] GetEnemyGangMembers(Gang friendlyGang)
+        {
+            //gets all members who are enemies of friendlyGang
+            List<Ped> returnedList = new List<Ped>();
+
+            for (int i = 0; i < livingMembers.Count; i++)
+            {
+                if (livingMembers[i].watchedPed != null)
+                {
+                    if (livingMembers[i].watchedPed.RelationshipGroup != friendlyGang.relationGroupIndex)
+                    {
+                        returnedList.Add(livingMembers[i].watchedPed);
+                    }
+                }
+            }
+
+            return returnedList.ToArray();
+        }
+
+        public Ped[] GetHostilePedsAround(Vector3 targetPos, Ped referencePed, float radius)
+        {
+            Ped[] detectedPeds = World.GetNearbyPeds(targetPos, radius);
+
+            List<Ped> hostilePeds = new List<Ped>();
+
+            foreach(Ped ped in detectedPeds)
+            {
+                if (referencePed.RelationshipGroup != ped.RelationshipGroup &&
+                World.GetRelationshipBetweenGroups(referencePed.RelationshipGroup, ped.RelationshipGroup) == Relationship.Hate)
+                {
+                    hostilePeds.Add(ped);
+                }
+            }
+
+            return hostilePeds.ToArray();
+        }
+
         #endregion
 
         #region spawner methods
@@ -705,15 +763,8 @@ namespace GTA.GangAndTurfMod
                     newPed.AddBlip();
                     newPed.CurrentBlip.IsShortRange = true;
                     newPed.CurrentBlip.Sprite = BlipSprite.Pistol;
-                    if (ownerGang.isPlayerOwned)
-                    {
-                        newPed.CurrentBlip.Color = BlipColor.Green;
-                    }
-                    else
-                    {
-                        newPed.CurrentBlip.Color = BlipColor.Red;
-                    }
 
+                    Function.Call(Hash.SET_BLIP_COLOUR, newPed.CurrentBlip, ownerGang.blipColor);
 
                     //set blip name - got to use native, the c# blip.name returns error ingame
                     Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
@@ -724,11 +775,13 @@ namespace GTA.GangAndTurfMod
                     //give a weapon
                     if (ownerGang.gangWeaponHashes.Count > 0)
                     {
-                        newPed.Weapons.Give(ownerGang.GetDriveByGunFromOwnedGuns(), 1000, true, true); //it's a sidearm... or a bottle hahaha
-                        if(ownerGang.gangWeaponHashes.Count > 0)
-                        {
-                            newPed.Weapons.Give(RandomUtil.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, true, true);
-                        }
+                        //get one weap from each type... if possible
+                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, false, true);
+                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons), 1000, false, true);
+                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
+
+                        //and one extra
+                        newPed.Weapons.Give(RandomUtil.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, false, true);
                     }
 
                     //set the relationship group
@@ -772,6 +825,7 @@ namespace GTA.GangAndTurfMod
                             if (livingMembers[i].watchedPed == null)
                             {
                                 livingMembers[i].watchedPed = newPed;
+                                livingMembers[i].myGang = ownerGang;
                                 couldEnlistWithoutAdding = true;
                                 break;
                             }
@@ -780,6 +834,8 @@ namespace GTA.GangAndTurfMod
                         {
                             if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
                             {
+                                SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
+                                newAddition.myGang = ownerGang;
                                 livingMembers.Add(new SpawnedGangMember(newPed));
                             }
                             else
@@ -794,6 +850,8 @@ namespace GTA.GangAndTurfMod
                     {
                         if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
                         {
+                            SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
+                            newAddition.myGang = ownerGang;
                             livingMembers.Add(new SpawnedGangMember(newPed));
                         }
                         else
@@ -826,7 +884,7 @@ namespace GTA.GangAndTurfMod
             if (ownerGang.carVariations.Count > 0)
             {
                 Vehicle newVehicle = World.CreateVehicle(RandomUtil.GetRandomElementFromList(ownerGang.carVariations).modelHash, spawnPos);
-                newVehicle.PrimaryColor = ownerGang.color;
+                newVehicle.PrimaryColor = ownerGang.vehicleColor;
 
                 if (!isImportant)
                 {
@@ -860,14 +918,7 @@ namespace GTA.GangAndTurfMod
                     newVehicle.AddBlip();
                     newVehicle.CurrentBlip.IsShortRange = true;
 
-                    if (ownerGang.isPlayerOwned)
-                    {
-                        newVehicle.CurrentBlip.Color = BlipColor.Green;
-                    }
-                    else
-                    {
-                        newVehicle.CurrentBlip.Color = BlipColor.Red;
-                    }
+                    Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
 
                     return newVehicle;
                 }

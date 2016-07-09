@@ -104,6 +104,23 @@ namespace GTA.GangAndTurfMod
             Game.WantedMultiplier = 1;
         }
 
+        void CheckIfBattleWasUnfair()
+        {
+            //the battle was unfair if the player's gang had guns and the enemy gang hadn't
+            //in this case, there is a possibility of the defeated gang instantly getting pistols
+            //in order to at least not get decimated all the time
+
+            if(enemyGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) == WeaponHash.Unarmed &&
+                GangManager.instance.GetPlayerGang().GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) != WeaponHash.Unarmed)
+            {
+                if (RandomUtil.RandomBool())
+                {
+                    enemyGang.gangWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.driveByWeapons));
+                    GangManager.instance.SaveGangData(false);
+                }
+            }
+        }
+
         /// <summary>
         /// spawns a vehicle that has the player as destination
         /// </summary>
@@ -138,12 +155,14 @@ namespace GTA.GangAndTurfMod
                         playerGang.TakeZone(warZone);
                         Game.Player.Character.Money += ModOptions.instance.rewardForTakingEnemyTurf;
                         UI.ShowSubtitle(warZone.zoneName + " is now ours!");
+                        CheckIfBattleWasUnfair();
                         Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
                     }
                     else
                     {
                         Game.Player.Money += ModOptions.instance.costToTakeNeutralTurf / 2;
                         UI.ShowSubtitle(warZone.zoneName + " remains ours!");
+                        CheckIfBattleWasUnfair();
                         Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
                     }
 

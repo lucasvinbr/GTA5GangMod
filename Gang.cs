@@ -15,7 +15,8 @@ namespace GTA.GangAndTurfMod
     public class Gang
     {
         public string name;
-        public VehicleColor color;
+        public int blipColor;
+        public VehicleColor vehicleColor;
         public int moneyAvailable;
         public bool isPlayerOwned = false;
 
@@ -23,8 +24,8 @@ namespace GTA.GangAndTurfMod
         //it's not really saved, so it is set up differently on every run (and reloading of scripts)
         public int relationGroupIndex;
 
-        public int memberAccuracyLevel = 20;
-        public int memberHealth = 120;
+        public int memberAccuracyLevel = 1;
+        public int memberHealth = 70;
         public int memberArmor = 0;
 
         //car stats - the models
@@ -40,12 +41,11 @@ namespace GTA.GangAndTurfMod
         public Gang(string name, VehicleColor color, bool isPlayerOwned)
         {
             this.name = name;
-            this.color = color;
+            this.vehicleColor = color;
+
             this.isPlayerOwned = isPlayerOwned;
 
-            moneyAvailable = RandomUtil.CachedRandom.Next(60000, 100000); //this isnt used if this is the player's gang - he'll use his own money instead
-
-            gangWeaponHashes.Add(WeaponHash.SNSPistol);
+            moneyAvailable = RandomUtil.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
 
         }
 
@@ -56,13 +56,22 @@ namespace GTA.GangAndTurfMod
 
         public void SetPreferredWeapons()
         {
-            for(int i = 0; i < RandomUtil.CachedRandom.Next(2, 5); i++)
+            if (ModOptions.instance.buyableWeapons.Count == 0) return; //don't even start looking if there aren't any buyable weapons
+
+            //add at least one of each type - melee, primary and drive-by
+            preferredWeaponHashes.Add(ModOptions.instance.GetWeaponFromListIfBuyable(ModOptions.instance.meleeWeapons));
+            preferredWeaponHashes.Add(ModOptions.instance.GetWeaponFromListIfBuyable(ModOptions.instance.driveByWeapons));
+            preferredWeaponHashes.Add(ModOptions.instance.GetWeaponFromListIfBuyable(ModOptions.instance.primaryWeapons));
+
+            //and some more for that extra variation
+            for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 5); i++)
             {
                 preferredWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
             }
 
             GangManager.instance.SaveGangData(false);
         }
+
 
         public void TakeZone(TurfZone takenZone)
         {
@@ -166,12 +175,12 @@ namespace GTA.GangAndTurfMod
                 memberHealth;
         }
 
-        public WeaponHash GetDriveByGunFromOwnedGuns()
+        public WeaponHash GetListedGunFromOwnedGuns(List<WeaponHash> targetList)
         {
             List<WeaponHash> possibleGuns = new List<WeaponHash>();
             for(int i = 0; i < gangWeaponHashes.Count; i++)
             {
-                if (ModOptions.instance.driveByWeapons.Contains(gangWeaponHashes[i]))
+                if (targetList.Contains(gangWeaponHashes[i]))
                 {
                     possibleGuns.Add(gangWeaponHashes[i]);
                 }
@@ -181,7 +190,7 @@ namespace GTA.GangAndTurfMod
             {
                 return RandomUtil.GetRandomElementFromList(possibleGuns);
             }
-            else return WeaponHash.Bottle;
+            return WeaponHash.Unarmed;
         }
 
     }

@@ -270,21 +270,28 @@ namespace GTA.GangAndTurfMod
         {
             if (targetZone.AttachedBlip != null)
             {
-                if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
-                {
-                    targetZone.AttachedBlip.Color = BlipColor.Green;
-                }
-                else if (targetZone.ownerGangName == "none")
+                Gang ownerGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
+                if (ownerGang == null)
                 {
                     targetZone.AttachedBlip.Color = BlipColor.White;
+                    Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 0f, 0f);
                 }
-                else
-                {
-                    targetZone.AttachedBlip.Color = BlipColor.Red;
+                else {
+
+                    Function.Call(Hash.SET_BLIP_COLOUR, targetZone.AttachedBlip, ownerGang.blipColor);
+
+                    if (ownerGang.isPlayerOwned)
+                    {
+                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 0.5f, 0f);
+                    }
+                    else
+                    {
+                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0.5f, 0f, 0f);
+                    }
                 }
 
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                if (targetZone.ownerGangName != "none")
+                if (ownerGang != null)
                 {
                     Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf)"));
                 }

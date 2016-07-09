@@ -34,6 +34,36 @@ namespace GTA.GangAndTurfMod
         Dictionary<VehicleColor, UIMenuItem> carColorEntries =
             new Dictionary<VehicleColor, UIMenuItem>();
 
+        int playerGangOriginalBlipColor = 0;
+        Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
+        {
+            {"white", 0 },
+            {"red", 1 },
+            {"green", 2 },
+            {"blue", 3 },
+            {"4", 4 },
+            {"5", 5 },
+            {"6", 6 },
+            {"7", 7 },
+            {"8", 8 },
+            {"9", 9 },
+            {"10", 10 },
+            {"11", 11 },
+            {"12", 12 },
+            {"13", 13 },
+            {"14", 14 },
+            {"15", 15 },
+            {"orange", 17 },
+            {"purple", 19 },
+            {"gray", 20 },
+            {"brown", 21 },
+            {"pink", 23 },
+            {"dark green", 25 },
+            {"dark purple", 27 },
+            {"black", 29 },
+            {"yellow", 66 },
+        };
+
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton,
             openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, paraBackupBtn;
 
@@ -202,9 +232,9 @@ namespace GTA.GangAndTurfMod
         void UpdateUpgradeCosts()
         {
             Gang playerGang = GangManager.instance.GetPlayerGang();
-            healthUpgradeCost = (playerGang.memberHealth + 20) * 20;
-            armorUpgradeCost = (playerGang.memberArmor + 20) * 50;
-            accuracyUpgradeCost = (playerGang.memberAccuracyLevel + 10) * 250;
+            healthUpgradeCost = GangManager.CalculateHealthUpgradeCost(playerGang.memberHealth);
+            armorUpgradeCost = GangManager.CalculateArmorUpgradeCost(playerGang.memberArmor);
+            accuracyUpgradeCost = GangManager.CalculateAccuracyUpgradeCost(playerGang.memberAccuracyLevel);
 
             healthButton.Text = "Upgrade Member Health - " + healthUpgradeCost.ToString();
             armorButton.Text = "Upgrade Member Armor - " + armorUpgradeCost.ToString();
@@ -842,6 +872,7 @@ namespace GTA.GangAndTurfMod
             AddGangUpgradesMenu();
             AddGangWeaponsMenu();
             AddSetCarColorMenu();
+            AddSetBlipColorMenu();
             AddRenameGangButton();
 
             gangOptionsSubMenu.RefreshIndex();
@@ -1032,7 +1063,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (item == carColorEntries[carColorsArray[i]])
                     {
-                        playerGang.color = carColorsArray[i];
+                        playerGang.vehicleColor = carColorsArray[i];
                         GangManager.instance.SaveGangData(false);
                         UI.ShowSubtitle("Gang vehicle color changed!");
                         break;
@@ -1040,6 +1071,69 @@ namespace GTA.GangAndTurfMod
                 }
 
             };
+        }
+
+        void AddSetBlipColorMenu()
+        {
+
+            UIMenu blipColorsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Blip Colors Menu");
+
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+
+            string[] blipColorNamesArray = blipColorEntries.Keys.ToArray();
+            int[] colorCodesArray = blipColorEntries.Values.ToArray();
+
+            for (int i = 0; i < colorCodesArray.Length; i++)
+            {
+                blipColorsMenu.AddItem(new UIMenuItem(blipColorNamesArray[i], "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change."));
+            }
+
+            blipColorsMenu.RefreshIndex();
+
+            blipColorsMenu.OnIndexChange += (sender, index) =>
+            {
+                GangManager.instance.GetPlayerGang().blipColor = colorCodesArray[index];
+                ZoneManager.instance.RefreshZoneBlips();
+            };
+
+            gangOptionsSubMenu.OnMenuChange += (oldMenu, newMenu, forward) =>{
+                if(newMenu == blipColorsMenu)
+                {
+                    playerGangOriginalBlipColor = GangManager.instance.GetPlayerGang().blipColor;
+                }
+            };
+
+            blipColorsMenu.OnMenuClose += (sender) =>
+            {
+                GangManager.instance.GetPlayerGang().blipColor = playerGangOriginalBlipColor;
+                ZoneManager.instance.RefreshZoneBlips();
+            };
+
+            blipColorsMenu.OnItemSelect += (sender, item, checked_) =>
+            {
+                for (int i = 0; i < blipColorNamesArray.Length; i++)
+                {
+                    if (item.Text == blipColorNamesArray[i])
+                    {
+                        GangManager.instance.GetPlayerGang().blipColor = colorCodesArray[i];
+                        playerGangOriginalBlipColor = colorCodesArray[i];
+                        GangManager.instance.SaveGangData(false);
+                        UI.ShowSubtitle("Gang blip color changed!");
+                        break;
+                    }
+                }
+
+            };
+        }
+
+        private void BlipColorsMenu_OnMenuChange(UIMenu oldMenu, UIMenu newMenu, bool forward)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BlipColorsMenu_OnMenuClose(UIMenu sender)
+        {
+            throw new NotImplementedException();
         }
 
         void AddRenameGangButton()
@@ -1067,6 +1161,7 @@ namespace GTA.GangAndTurfMod
             AddEnableWarVersusPlayerToggle();
             AddKeyBindingMenu();
             AddReloadOptionsButton();
+            AddResetWeaponOptionsButton();
             AddResetOptionsButton();
            
             modSettingsSubMenu.RefreshIndex();
@@ -1200,6 +1295,23 @@ namespace GTA.GangAndTurfMod
                     carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
                     paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
                     UpdateTakeOverBtnText();
+                }
+            };
+        }
+
+        void AddResetWeaponOptionsButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Reset Weapon List and Prices to Defaults", "Resets the weapon list in the ModOptions file back to the default values. The new options take effect immediately.");
+            modSettingsSubMenu.AddItem(newButton);
+            modSettingsSubMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    ModOptions.instance.buyableWeapons.Clear();
+                    ModOptions.instance.SetWeaponListDefaultValues();
+                    ModOptions.instance.SaveOptions(false);
+                    UpdateBuyableWeapons();
+                    UpdateUpgradeCosts();
                 }
             };
         }

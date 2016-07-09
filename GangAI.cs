@@ -41,9 +41,10 @@ namespace GTA.GangAndTurfMod
                     if (RandomUtil.RandomBool())
                     {
                         //since we've got some extra cash, lets upgrade our members!
-                        if (RandomUtil.RandomBool() && watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
+                        if (RandomUtil.RandomBool() && watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
+                            watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
                         {
-                            watchedGang.moneyAvailable -= (watchedGang.memberAccuracyLevel + 10) * 250;
+                            watchedGang.moneyAvailable -= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
                             watchedGang.memberAccuracyLevel += 10;
                             if (watchedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                             {
@@ -75,9 +76,10 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        if(watchedGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
+                        if(watchedGang.memberHealth < ModOptions.instance.maxGangMemberHealth &&
+                            watchedGang.moneyAvailable >= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth))
                         {
-                            watchedGang.moneyAvailable -= (watchedGang.memberHealth + 20) * 20;
+                            watchedGang.moneyAvailable -= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth);
                             watchedGang.memberHealth += 20;
 
                             if (watchedGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
@@ -89,9 +91,10 @@ namespace GTA.GangAndTurfMod
                         }
                         else
                         {
-                            if (watchedGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
+                            if (watchedGang.memberArmor < ModOptions.instance.maxGangMemberArmor &&
+                            watchedGang.moneyAvailable >= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor))
                             {
-                                watchedGang.moneyAvailable -= (watchedGang.memberArmor + 20) * 50;
+                                watchedGang.moneyAvailable -= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor);
                                 watchedGang.memberArmor += 20;
 
                                 if (watchedGang.memberArmor > ModOptions.instance.maxGangMemberArmor)

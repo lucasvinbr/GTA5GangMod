@@ -1,9 +1,6 @@
 ﻿using GTA.Native;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GTA.GangAndTurfMod
@@ -18,6 +15,7 @@ namespace GTA.GangAndTurfMod
         public GangManager gangManagerScript;
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
+
 
         public ModCore()
         {

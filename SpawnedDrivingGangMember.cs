@@ -100,8 +100,10 @@ namespace GTA.GangAndTurfMod
 
             if (playerAsDest) destination = Game.Player.Character.Position;
 
+            //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 20)
             {
+                //leave the vehicle if we wanted to get to the player and he's on foot or if we just had to get somewhere
                 if (!playerAsDest || Game.Player.Character.CurrentVehicle == null)
                 {
                     EveryoneLeaveVehicle();
