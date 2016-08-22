@@ -34,6 +34,24 @@ namespace GTA.GangAndTurfMod
         Dictionary<VehicleColor, UIMenuItem> carColorEntries =
             new Dictionary<VehicleColor, UIMenuItem>();
 
+        int playerGangOriginalBlipColor = 0;
+        Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
+        {
+            {"white", 0 },
+            {"red", 1 },
+            {"green", 2 },
+            {"blue", 3 },
+            {"orange", 17 },
+            {"purple", 19 },
+            {"gray", 20 },
+            {"brown", 21 },
+            {"pink", 23 },
+            {"dark green", 25 },
+            {"dark purple", 27 },
+            {"black", 29 },
+            {"yellow", 66 },
+        };
+
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton,
             openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, paraBackupBtn;
 
@@ -131,6 +149,8 @@ namespace GTA.GangAndTurfMod
                     if (closestPed != null)
                     {
                         UI.ShowSubtitle("ped selected!");
+                        //World.DrawMarker(MarkerType.VerticalCylinder, closestPed.Position, Math.Vector3.WorldUp, Math.Vector3.Zero, new Math.Vector3(1,1,1), System.Drawing.Color.
+                        //World.DrawSpotLight(closestPed.Position + Math.Vector3.WorldUp, Math.Vector3.WorldDown, System.Drawing.Color.Azure, 5, 5, 5, 2, 500);
                         World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
                         memberMenu.Visible = !memberMenu.Visible;
                     }
@@ -202,9 +222,9 @@ namespace GTA.GangAndTurfMod
         void UpdateUpgradeCosts()
         {
             Gang playerGang = GangManager.instance.GetPlayerGang();
-            healthUpgradeCost = (playerGang.memberHealth + 20) * 20;
-            armorUpgradeCost = (playerGang.memberArmor + 20) * 50;
-            accuracyUpgradeCost = (playerGang.memberAccuracyLevel + 10) * 250;
+            healthUpgradeCost = GangManager.CalculateHealthUpgradeCost(playerGang.memberHealth);
+            armorUpgradeCost = GangManager.CalculateArmorUpgradeCost(playerGang.memberArmor);
+            accuracyUpgradeCost = GangManager.CalculateAccuracyUpgradeCost(playerGang.memberAccuracyLevel);
 
             healthButton.Text = "Upgrade Member Health - " + healthUpgradeCost.ToString();
             armorButton.Text = "Upgrade Member Armor - " + armorUpgradeCost.ToString();
@@ -322,9 +342,8 @@ namespace GTA.GangAndTurfMod
                     {
                        if(curZone.ownerGangName == "none")
                         {
-                            if (Game.Player.Money >= ModOptions.instance.costToTakeNeutralTurf)
+                            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToTakeNeutralTurf))
                             {
-                                Game.Player.Money -= ModOptions.instance.costToTakeNeutralTurf;
                                 GangManager.instance.GetPlayerGang().TakeZone(curZone);
                                 UI.ShowSubtitle("This zone is " + GangManager.instance.GetPlayerGang().name + " turf now!");
                             }
@@ -340,7 +359,7 @@ namespace GTA.GangAndTurfMod
                                 UI.ShowSubtitle("Your gang already owns this zone.");
                             }
                             else
-                            if (Game.Player.Money >= ModOptions.instance.costToTakeNeutralTurf / 2)
+                            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToTakeNeutralTurf / 2, true))
                             {
                                 zonesMenu.Visible = !zonesMenu.Visible;
                                 if (GangManager.instance.fightingEnabled)
@@ -351,7 +370,7 @@ namespace GTA.GangAndTurfMod
                                     }
                                     else
                                     {
-                                        Game.Player.Money -= ModOptions.instance.costToTakeNeutralTurf / 2;
+                                        GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToTakeNeutralTurf / 2);
                                     }
                                 }
                                 else
@@ -744,7 +763,7 @@ namespace GTA.GangAndTurfMod
                         UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
                         return;
                     }
-                    if(Game.Player.Money >= ModOptions.instance.costToCallBackupCar)
+                    if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
                     {
                         Gang playergang = GangManager.instance.GetPlayerGang();
                         if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
@@ -763,7 +782,7 @@ namespace GTA.GangAndTurfMod
 
                                 gangMenu.Visible = !gangMenu.Visible;
                                 ticksSinceLastCarBkp = 0;
-                                Game.Player.Money -= ModOptions.instance.costToCallBackupCar;
+                                GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
                                 UI.ShowSubtitle("A vehicle is on its way!", 1000);
                             }
                             else
@@ -800,7 +819,7 @@ namespace GTA.GangAndTurfMod
                         return;
                     }
 
-                    if (Game.Player.Money >= ModOptions.instance.costToCallParachutingMember)
+                    if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember, true))
                     {
                         Gang playergang = GangManager.instance.GetPlayerGang();
                         if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
@@ -812,7 +831,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 spawnedPed.Task.ParachuteTo(destPos);
                                 ticksSinceLastParaBkp = 0;
-                                Game.Player.Money -= ModOptions.instance.costToCallParachutingMember;
+                                GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember);
                                 gangMenu.Visible = !gangMenu.Visible;
                             }
                             else
@@ -842,6 +861,7 @@ namespace GTA.GangAndTurfMod
             AddGangUpgradesMenu();
             AddGangWeaponsMenu();
             AddSetCarColorMenu();
+            AddSetBlipColorMenu();
             AddRenameGangButton();
 
             gangOptionsSubMenu.RefreshIndex();
@@ -866,7 +886,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == healthButton)
                 {
-                    if(Game.Player.Money >= healthUpgradeCost)
+                    if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost, true))
                     {
                         if(playerGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
                         {
@@ -875,7 +895,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
                             }
-                            Game.Player.Money -= healthUpgradeCost;
+                            GangManager.instance.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member health upgraded!");
                         }
@@ -892,7 +912,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == armorButton)
                 {
-                    if (Game.Player.Money >= armorUpgradeCost)
+                    if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost, true))
                     {
                         if (playerGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
                         {
@@ -901,7 +921,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
                             }
-                            Game.Player.Money -= armorUpgradeCost;
+                            GangManager.instance.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member armor upgraded!");
                         }
@@ -918,7 +938,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == accuracyButton)
                 {
-                    if (Game.Player.Money >= accuracyUpgradeCost)
+                    if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost, true))
                     {
                         if (playerGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                         {
@@ -927,7 +947,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
                             }
-                            Game.Player.Money -= accuracyUpgradeCost;
+                            GangManager.instance.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member accuracy upgraded!");
                         }
@@ -972,15 +992,14 @@ namespace GTA.GangAndTurfMod
                     {
                         if (playerGang.gangWeaponHashes.Contains(buyableWeaponsArray[i].wepHash)){
                             playerGang.gangWeaponHashes.Remove(buyableWeaponsArray[i].wepHash);
-                            Game.Player.Money += buyableWeaponsArray[i].price;
+                            GangManager.instance.AddOrSubtractMoneyToProtagonist(buyableWeaponsArray[i].price);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Weapon Removed!");
                         }
                         else
                         {
-                            if(Game.Player.Money >= buyableWeaponsArray[i].price)
+                            if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-buyableWeaponsArray[i].price))
                             {
-                                Game.Player.Money -= buyableWeaponsArray[i].price;
                                 playerGang.gangWeaponHashes.Add(buyableWeaponsArray[i].wepHash);
                                 GangManager.instance.SaveGangData();
                                 UI.ShowSubtitle("Weapon Bought!");
@@ -1032,7 +1051,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (item == carColorEntries[carColorsArray[i]])
                     {
-                        playerGang.color = carColorsArray[i];
+                        playerGang.vehicleColor = carColorsArray[i];
                         GangManager.instance.SaveGangData(false);
                         UI.ShowSubtitle("Gang vehicle color changed!");
                         break;
@@ -1040,6 +1059,69 @@ namespace GTA.GangAndTurfMod
                 }
 
             };
+        }
+
+        void AddSetBlipColorMenu()
+        {
+
+            UIMenu blipColorsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Blip Colors Menu");
+
+            Gang playerGang = GangManager.instance.GetPlayerGang();
+
+            string[] blipColorNamesArray = blipColorEntries.Keys.ToArray();
+            int[] colorCodesArray = blipColorEntries.Values.ToArray();
+
+            for (int i = 0; i < colorCodesArray.Length; i++)
+            {
+                blipColorsMenu.AddItem(new UIMenuItem(blipColorNamesArray[i], "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change."));
+            }
+
+            blipColorsMenu.RefreshIndex();
+
+            blipColorsMenu.OnIndexChange += (sender, index) =>
+            {
+                GangManager.instance.GetPlayerGang().blipColor = colorCodesArray[index];
+                ZoneManager.instance.RefreshZoneBlips();
+            };
+
+            gangOptionsSubMenu.OnMenuChange += (oldMenu, newMenu, forward) =>{
+                if(newMenu == blipColorsMenu)
+                {
+                    playerGangOriginalBlipColor = GangManager.instance.GetPlayerGang().blipColor;
+                }
+            };
+
+            blipColorsMenu.OnMenuClose += (sender) =>
+            {
+                GangManager.instance.GetPlayerGang().blipColor = playerGangOriginalBlipColor;
+                ZoneManager.instance.RefreshZoneBlips();
+            };
+
+            blipColorsMenu.OnItemSelect += (sender, item, checked_) =>
+            {
+                for (int i = 0; i < blipColorNamesArray.Length; i++)
+                {
+                    if (item.Text == blipColorNamesArray[i])
+                    {
+                        GangManager.instance.GetPlayerGang().blipColor = colorCodesArray[i];
+                        playerGangOriginalBlipColor = colorCodesArray[i];
+                        GangManager.instance.SaveGangData(false);
+                        UI.ShowSubtitle("Gang blip color changed!");
+                        break;
+                    }
+                }
+
+            };
+        }
+
+        private void BlipColorsMenu_OnMenuChange(UIMenu oldMenu, UIMenu newMenu, bool forward)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BlipColorsMenu_OnMenuClose(UIMenu sender)
+        {
+            throw new NotImplementedException();
         }
 
         void AddRenameGangButton()
@@ -1067,6 +1149,7 @@ namespace GTA.GangAndTurfMod
             AddEnableWarVersusPlayerToggle();
             AddKeyBindingMenu();
             AddReloadOptionsButton();
+            AddResetWeaponOptionsButton();
             AddResetOptionsButton();
            
             modSettingsSubMenu.RefreshIndex();
@@ -1200,6 +1283,23 @@ namespace GTA.GangAndTurfMod
                     carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
                     paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
                     UpdateTakeOverBtnText();
+                }
+            };
+        }
+
+        void AddResetWeaponOptionsButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Reset Weapon List and Prices to Defaults", "Resets the weapon list in the ModOptions file back to the default values. The new options take effect immediately.");
+            modSettingsSubMenu.AddItem(newButton);
+            modSettingsSubMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    ModOptions.instance.buyableWeapons.Clear();
+                    ModOptions.instance.SetWeaponListDefaultValues();
+                    ModOptions.instance.SaveOptions(false);
+                    UpdateBuyableWeapons();
+                    UpdateUpgradeCosts();
                 }
             };
         }

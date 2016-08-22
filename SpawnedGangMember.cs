@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
+using GTA.Math;
 
 namespace GTA.GangAndTurfMod
 {
@@ -12,55 +13,60 @@ namespace GTA.GangAndTurfMod
         
         public Ped watchedPed;
 
+        public Gang myGang;
+
+        private Vector3 currentWalkTarget;
+
         public override void Update()
         {
             if (watchedPed.IsInAir || watchedPed.IsPlayer)
             {
                 return;
             }
-
-            if(!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
+            if (!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
             {
                 if (RandomUtil.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
-                    watchedPed.Task.GoTo(World.GetNextPositionOnSidewalk(Game.Player.Character.Position +
-                        RandomUtil.RandomDirection(true) * 25));
-                }
-                                
-                if (((RandomUtil.RandomBool() && ModOptions.instance.gangMemberAggressiveness !=
-                    ModOptions.gangMemberAggressivenessMode.defensive) || Game.Player.IsTargetting(watchedPed)) &&
-                    !watchedPed.IsInCombat && !watchedPed.IsInGroup && GangManager.instance.fightingEnabled)
-                {
-                    watchedPed.Task.FightAgainstHatedTargets(100);
+                    currentWalkTarget = World.GetNextPositionOnSidewalk(Game.Player.Character.Position +
+                        RandomUtil.RandomDirection(true) * 45);
+                    watchedPed.Task.GoTo(currentWalkTarget);
                 }
 
-                //call for aid of nearby friendly members
+                
+                if (((RandomUtil.RandomBool() && ModOptions.instance.gangMemberAggressiveness !=
+                    ModOptions.gangMemberAggressivenessMode.defensive) || Game.Player.IsTargetting(watchedPed) || 
+                    watchedPed.HasBeenDamagedBy(Game.Player.Character))
+                    && !watchedPed.IsInGroup && GangManager.instance.fightingEnabled)
+                {
+                    PickATarget();
+                }
+
+                //call for aid of nearby friendly members if we're in combat
                 if (watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
                 {
-                    Gang pedGang = GangManager.instance.GetGangByRelGroup(watchedPed.RelationshipGroup);
-                    if (pedGang != null)
-                        foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
-                            (pedGang))
+                    foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
+                        (myGang))
+                    {
+                        if (!member.IsInCombat && 
+                            !member.IsInAir && !member.IsPlayer && !member.IsInVehicle())
                         {
-                            if (!member.IsInCombat && !member.IsInAir && !member.IsPlayer && !member.IsInVehicle())
-                            {
-                                member.Task.FightAgainstHatedTargets(200);
-                            }
-
+                            member.Task.FightAgainstHatedTargets(100);
                         }
+
+                    }
                 }
                 else
                 {
-                    if (watchedPed.RelationshipGroup == GangManager.instance.GetPlayerGang().relationGroupIndex)
+                    if (myGang.isPlayerOwned)
                     {
 
                         if (!watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
                         {
+                            
                             //help the player if he's in trouble and we're not
                             foreach (Ped ped in World.GetNearbyPeds(Game.Player.Character.Position, 100))
                             {
-                                if (ped.IsInCombat && (ped.RelationshipGroup != GangManager.instance.GetPlayerGang().relationGroupIndex &&
-                                    ped.RelationshipGroup != Game.Player.Character.RelationshipGroup))
+                                if (ped.IsInCombatAgainst(Game.Player.Character) && (myGang.relationGroupIndex != ped.RelationshipGroup))
                                 {
                                     watchedPed.Task.FightAgainst(ped);
                                     break;
@@ -69,6 +75,7 @@ namespace GTA.GangAndTurfMod
                         }
 
                     }
+
                 }
             }
             else
@@ -76,7 +83,7 @@ namespace GTA.GangAndTurfMod
                 Ped vehicleDriver = watchedPed.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver);
                 if (vehicleDriver != watchedPed)
                 {
-                    if(vehicleDriver != null)
+                    if (vehicleDriver != null)
                     {
                         if (!vehicleDriver.IsAlive || !vehicleDriver.IsInVehicle())
                         {
@@ -95,18 +102,16 @@ namespace GTA.GangAndTurfMod
                     }
                    
                 }
+
             }
 
-            
 
-            if(World.GetDistance(Game.Player.Character.Position, this.watchedPed.Position) > 
-                ModOptions.instance.maxDistanceMemberSpawnFromPlayer && watchedPed.CurrentVehicle == null)
+            if (World.GetDistance(Game.Player.Character.Position, this.watchedPed.Position) > 
+                ModOptions.instance.maxDistanceMemberSpawnFromPlayer &&
+                !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
             {
                 //we're too far to be important
-                watchedPed.CurrentBlip.Remove();
-                this.watchedPed.MarkAsNoLongerNeeded();
-                this.watchedPed = null;
-                GangManager.instance.livingMembersCount--;
+                Die();
                 return;
             }
 
@@ -120,11 +125,37 @@ namespace GTA.GangAndTurfMod
                         GangWarManager.instance.OnEnemyDeath();
                     }
                 }
-                watchedPed.CurrentBlip.Remove();
-                this.watchedPed.MarkAsNoLongerNeeded();
-                this.watchedPed = null;
-                GangManager.instance.livingMembersCount--;
+                Die();
             }
+
+        }
+
+        public void Die()
+        {
+
+            watchedPed.CurrentBlip.Remove();
+            this.watchedPed.MarkAsNoLongerNeeded();
+            this.myGang = null;
+            this.watchedPed = null;
+            GangManager.instance.livingMembersCount--;
+
+        }
+
+        public bool PickATarget()
+        {
+            //a method that tries to make the target idle melee fighter pick other idle fighters as targets (by luck)
+            //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
+
+            //get a random ped from the hostile ones nearby
+            Ped[] hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, 20);
+
+            if(hostileNearbyPeds != null && hostileNearbyPeds.Length > 0)
+            {
+                watchedPed.Task.FightAgainst(RandomUtil.GetRandomElementFromArray(hostileNearbyPeds));
+                return true;
+            }
+
+            return false;
         }
 
         public void ResetUpdateInterval()

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
 {
@@ -19,6 +20,7 @@ namespace GTA.GangAndTurfMod
             {
                 instance = this;
                 LoadOptions();
+                SetupPrimaryWeapons();
             }
         }
 
@@ -70,12 +72,18 @@ namespace GTA.GangAndTurfMod
                 this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
+
+                if(similarColors[0].blipColor == 0)
+                {
+                    SetColorTranslationDefaultValues();
+                }
                 SaveOptions();
             }
             else
             {
-                SetWeaponListDefaultValues();
+                SetAllValuesToDefault();
                 SetNameListsDefaultValues();
+                SetColorTranslationDefaultValues();
                 PersistenceHandler.SaveToFile(this, "ModOptions");
             }
         }
@@ -89,22 +97,6 @@ namespace GTA.GangAndTurfMod
             openZoneMenuKey = Keys.N,
             mindControlKey = Keys.J,
             addToGroupKey = Keys.H;
-
-        public List<WeaponHash> driveByWeapons = new List<WeaponHash>()
-        {
-            WeaponHash.APPistol,
-            WeaponHash.CombatPistol,
-            WeaponHash.HeavyPistol,
-            WeaponHash.MachinePistol,
-            WeaponHash.MarksmanPistol,
-            WeaponHash.Pistol,
-            WeaponHash.Pistol50,
-            WeaponHash.Revolver,
-            WeaponHash.SawnOffShotgun,
-            WeaponHash.SNSPistol,
-            WeaponHash.VintagePistol,
-            WeaponHash.MicroSMG
-        };
 
         public enum gangMemberAggressivenessMode
         {
@@ -122,7 +114,7 @@ namespace GTA.GangAndTurfMod
         public bool emptyZoneDuringWar = true;
         public int baseNumKillsBeforeWarVictory = 25;
 
-        public int ticksBetweenTurfRewards = 50000;
+        public int ticksBetweenTurfRewards = 45000;
         public int ticksBetweenGangAIUpdates = 30000;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 500;
@@ -133,8 +125,8 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float rewardMultiplierPerZone = 0.2f;
 
-        public int costToTakeNeutralTurf = 10000;
-        public int rewardForTakingEnemyTurf = 10000;
+        public int costToTakeNeutralTurf = 2000;
+        public int rewardForTakingEnemyTurf = 3000;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
@@ -150,6 +142,42 @@ namespace GTA.GangAndTurfMod
         public int minDistanceCarSpawnFromPlayer = 80;
         public int maxDistanceCarSpawnFromPlayer = 190;
 
+        [XmlIgnore]
+        public List<WeaponHash> primaryWeapons = new List<WeaponHash>();
+
+        [XmlIgnore]
+        public List<WeaponHash> driveByWeapons = new List<WeaponHash>()
+        {
+            WeaponHash.APPistol,
+            WeaponHash.CombatPistol,
+            WeaponHash.HeavyPistol,
+            WeaponHash.MachinePistol,
+            WeaponHash.MarksmanPistol,
+            WeaponHash.Pistol,
+            WeaponHash.Pistol50,
+            WeaponHash.Revolver,
+            WeaponHash.SawnOffShotgun,
+            WeaponHash.SNSPistol,
+            WeaponHash.VintagePistol,
+            WeaponHash.MicroSMG
+        };
+
+        [XmlIgnore]
+        public List<WeaponHash> meleeWeapons = new List<WeaponHash>()
+        {
+            WeaponHash.Bat,
+            WeaponHash.Bottle,
+            WeaponHash.Crowbar,
+            WeaponHash.Dagger,
+            WeaponHash.GolfClub,
+            WeaponHash.Hammer,
+            WeaponHash.Hatchet,
+            WeaponHash.Knife,
+            WeaponHash.KnuckleDuster,
+            WeaponHash.Machete,
+            WeaponHash.Nightstick,
+            WeaponHash.SwitchBlade,
+        };
 
         public List<BuyableWeapon> buyableWeapons;
 
@@ -184,16 +212,18 @@ namespace GTA.GangAndTurfMod
         {
             public List<VehicleColor> vehicleColors;
             public PotentialGangMember.memberColor baseColor;
+            public int blipColor;
 
             public GangColorTranslation()
             {
                 vehicleColors = new List<VehicleColor>();
             }
 
-            public GangColorTranslation(PotentialGangMember.memberColor baseColor, List<VehicleColor> vehicleColors)
+            public GangColorTranslation(PotentialGangMember.memberColor baseColor, List<VehicleColor> vehicleColors, int blipColor)
             {
                 this.baseColor = baseColor;
                 this.vehicleColors = vehicleColors;
+                this.blipColor = blipColor;
             }
         }
 
@@ -240,7 +270,7 @@ namespace GTA.GangAndTurfMod
         {
             if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
             {
-                maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 1;
+                maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 2;
                 SaveOptions(false);
             }
             return RandomUtil.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
@@ -250,10 +280,43 @@ namespace GTA.GangAndTurfMod
         {
             if(maxDistanceCarSpawnFromPlayer <= minDistanceCarSpawnFromPlayer)
             {
-                maxDistanceCarSpawnFromPlayer = minDistanceCarSpawnFromPlayer + 1;
+                maxDistanceCarSpawnFromPlayer = minDistanceCarSpawnFromPlayer + 2;
                 SaveOptions(false);
             }
             return RandomUtil.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
+        }
+
+        /// <summary>
+        /// gets a weapon from a list and check if it is in the buyables list.
+        /// if it isn't, get another or get a random one from the buyables
+        /// </summary>
+        /// <param name="theWeaponList"></param>
+        /// <returns></returns>
+        public WeaponHash GetWeaponFromListIfBuyable(List<WeaponHash> theWeaponList)
+        {
+            for (int attempts = 0; attempts < 5; attempts++)
+            {
+                WeaponHash chosenWeapon = RandomUtil.GetRandomElementFromList(theWeaponList);
+                if (GetBuyableWeaponByHash(chosenWeapon) != null)
+                {
+                    return chosenWeapon;
+                }
+            }
+
+            return RandomUtil.GetRandomElementFromList(buyableWeapons).wepHash;
+        }
+
+        public void SetupPrimaryWeapons()
+        {
+            primaryWeapons.Clear();
+            //primary weapons are the ones that are not melee and cannot be used to drive-by (the bigger weapons, like rifles)
+            for(int i = 0; i < buyableWeapons.Count; i++)
+            {
+                if(!meleeWeapons.Contains(buyableWeapons[i].wepHash) &&
+                    !driveByWeapons.Contains(buyableWeapons[i].wepHash)){
+                    primaryWeapons.Add(buyableWeapons[i].wepHash);
+                }
+            }
         }
 
         public void SetKey(MenuScript.changeableKeyBinding keyToChange, Keys newKey)
@@ -331,10 +394,10 @@ namespace GTA.GangAndTurfMod
             emptyZoneDuringWar = true;
             baseNumKillsBeforeWarVictory = 25;
 
-            ticksBetweenTurfRewards = 50000;
+            ticksBetweenTurfRewards = 45000;
             ticksBetweenGangAIUpdates = 30000;
             ticksBetweenGangMemberAIUpdates = 100;
-            baseRewardPerZoneOwned = 500;
+            baseRewardPerZoneOwned = 1200;
 
             rewardMultiplierPerZone = 0.2f;
 
@@ -355,10 +418,6 @@ namespace GTA.GangAndTurfMod
             minDistanceCarSpawnFromPlayer = 80;
             maxDistanceCarSpawnFromPlayer = 190;
 
-            buyableWeapons.Clear();
-
-            SetWeaponListDefaultValues();
-
             SaveOptions();
 
             GangManager.instance.ResetGangUpdateIntervals();
@@ -368,43 +427,57 @@ namespace GTA.GangAndTurfMod
         {
             buyableWeapons = new List<BuyableWeapon>()
         {
-            new BuyableWeapon(WeaponHash.AdvancedRifle, 20000),
-            new BuyableWeapon(WeaponHash.APPistol, 5000),
-            new BuyableWeapon(WeaponHash.AssaultRifle, 12000),
-            new BuyableWeapon(WeaponHash.AssaultShotgun, 25000),
-            new BuyableWeapon(WeaponHash.AssaultSMG, 19000),
-            new BuyableWeapon(WeaponHash.BullpupRifle, 23000),
-            new BuyableWeapon(WeaponHash.BullpupShotgun, 26500),
-            new BuyableWeapon(WeaponHash.CarbineRifle, 15000),
-            new BuyableWeapon(WeaponHash.CombatMG, 22000),
-            new BuyableWeapon(WeaponHash.CombatPDW, 20500),
-            new BuyableWeapon(WeaponHash.CombatPistol, 5000),
-            new BuyableWeapon(WeaponHash.CompactRifle, 17500),
-            new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 21000),
-            new BuyableWeapon(WeaponHash.GrenadeLauncher, 28000),
-            new BuyableWeapon(WeaponHash.Gusenberg, 10000),
-            new BuyableWeapon(WeaponHash.HeavyPistol, 4000),
-            new BuyableWeapon(WeaponHash.HeavyShotgun, 18000),
-            new BuyableWeapon(WeaponHash.HeavySniper, 30000),
-            new BuyableWeapon(WeaponHash.MachinePistol, 5500),
-            new BuyableWeapon(WeaponHash.MarksmanPistol, 5000),
-            new BuyableWeapon(WeaponHash.MarksmanRifle, 20000),
-            new BuyableWeapon(WeaponHash.MG, 19000),
-            new BuyableWeapon(WeaponHash.MicroSMG, 7000),
-            new BuyableWeapon(WeaponHash.Minigun, 40000),
-            new BuyableWeapon(WeaponHash.Musket, 5000),
-            new BuyableWeapon(WeaponHash.Pistol, 1000),
-            new BuyableWeapon(WeaponHash.Pistol50, 3000),
-            new BuyableWeapon(WeaponHash.PumpShotgun, 10000),
-            new BuyableWeapon(WeaponHash.Railgun, 50000),
-            new BuyableWeapon(WeaponHash.Revolver, 8000),
-            new BuyableWeapon(WeaponHash.RPG, 32000),
-            new BuyableWeapon(WeaponHash.SawnOffShotgun, 8000),
-            new BuyableWeapon(WeaponHash.SMG, 11000),
-            new BuyableWeapon(WeaponHash.SniperRifle, 23000),
-            new BuyableWeapon(WeaponHash.SNSPistol, 900),
-            new BuyableWeapon(WeaponHash.SpecialCarbine, 23000),
-            new BuyableWeapon(WeaponHash.VintagePistol, 5000)
+            //--melee
+            new BuyableWeapon(WeaponHash.Bat, 1000),
+            new BuyableWeapon(WeaponHash.Bottle, 500),
+            new BuyableWeapon(WeaponHash.Crowbar, 800),
+            new BuyableWeapon(WeaponHash.Dagger, 4000),
+            new BuyableWeapon(WeaponHash.GolfClub, 3000),
+            new BuyableWeapon(WeaponHash.Hammer, 800),
+            new BuyableWeapon(WeaponHash.Hatchet, 1100),
+            new BuyableWeapon(WeaponHash.Knife, 1000),
+            new BuyableWeapon(WeaponHash.KnuckleDuster, 650),
+            new BuyableWeapon(WeaponHash.Machete, 1050),
+            new BuyableWeapon(WeaponHash.Nightstick, 700),
+            new BuyableWeapon(WeaponHash.SwitchBlade, 1100),
+            //--guns
+            new BuyableWeapon(WeaponHash.AdvancedRifle, 200000),
+            new BuyableWeapon(WeaponHash.APPistol, 60000),
+            new BuyableWeapon(WeaponHash.AssaultRifle, 120000),
+            new BuyableWeapon(WeaponHash.AssaultShotgun, 250000),
+            new BuyableWeapon(WeaponHash.AssaultSMG, 190000),
+            new BuyableWeapon(WeaponHash.BullpupRifle, 230000),
+            new BuyableWeapon(WeaponHash.BullpupShotgun, 265000),
+            new BuyableWeapon(WeaponHash.CarbineRifle, 150000),
+            new BuyableWeapon(WeaponHash.CombatMG, 220000),
+            new BuyableWeapon(WeaponHash.CombatPDW, 205000),
+            new BuyableWeapon(WeaponHash.CombatPistol, 50000),
+            new BuyableWeapon(WeaponHash.CompactRifle, 175000),
+            new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
+            new BuyableWeapon(WeaponHash.GrenadeLauncher, 550000),
+            new BuyableWeapon(WeaponHash.Gusenberg, 200000),
+            new BuyableWeapon(WeaponHash.HeavyPistol, 55000),
+            new BuyableWeapon(WeaponHash.HeavyShotgun, 180000),
+            new BuyableWeapon(WeaponHash.HeavySniper, 300000),
+            new BuyableWeapon(WeaponHash.MachinePistol, 65000),
+            new BuyableWeapon(WeaponHash.MarksmanPistol, 50000),
+            new BuyableWeapon(WeaponHash.MarksmanRifle, 250000),
+            new BuyableWeapon(WeaponHash.MG, 290000),
+            new BuyableWeapon(WeaponHash.MicroSMG, 90000),
+            new BuyableWeapon(WeaponHash.Minigun, 400000),
+            new BuyableWeapon(WeaponHash.Musket, 70000),
+            new BuyableWeapon(WeaponHash.Pistol, 30000),
+            new BuyableWeapon(WeaponHash.Pistol50, 70000),
+            new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
+            new BuyableWeapon(WeaponHash.Railgun, 1000000),
+            new BuyableWeapon(WeaponHash.Revolver, 80000),
+            new BuyableWeapon(WeaponHash.RPG, 720000),
+            new BuyableWeapon(WeaponHash.SawnOffShotgun, 95000),
+            new BuyableWeapon(WeaponHash.SMG, 115000),
+            new BuyableWeapon(WeaponHash.SniperRifle, 230000),
+            new BuyableWeapon(WeaponHash.SNSPistol, 27000),
+            new BuyableWeapon(WeaponHash.SpecialCarbine, 230000),
+            new BuyableWeapon(WeaponHash.VintagePistol, 50000)
         };
         }
 
@@ -507,116 +580,120 @@ namespace GTA.GangAndTurfMod
             "Monsters",
             "Fighters",
         };
-
-            similarColors = new List<GangColorTranslation>
-        {
-            new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
-                 VehicleColor.BrushedBlackSteel,
-                VehicleColor.MatteBlack,
-                VehicleColor.MetallicBlack,
-                VehicleColor.MetallicGraphiteBlack,
-                VehicleColor.UtilBlack,
-                VehicleColor.WornBlack,
-                VehicleColor.ModshopBlack1
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
-                 VehicleColor.Blue,
-                VehicleColor.EpsilonBlue,
-                VehicleColor.MatteBlue,
-                VehicleColor.MatteDarkBlue,
-                VehicleColor.MatteMidnightBlue,
-                VehicleColor.MetaillicVDarkBlue,
-                VehicleColor.MetallicBlueSilver,
-                VehicleColor.MetallicBrightBlue,
-                VehicleColor.MetallicDarkBlue,
-                VehicleColor.MetallicDiamondBlue,
-                VehicleColor.MetallicHarborBlue,
-                VehicleColor.MetallicMarinerBlue,
-                VehicleColor.UtilBlue,
-                VehicleColor.MetallicUltraBlue
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
-                 VehicleColor.Green,
-                VehicleColor.HunterGreen,
-                VehicleColor.MatteFoliageGreen,
-                VehicleColor.MatteForestGreen,
-                VehicleColor.MatteGreen,
-                VehicleColor.MatteLimeGreen,
-                VehicleColor.MetallicDarkGreen,
-                VehicleColor.MetallicGreen,
-                VehicleColor.MetallicRacingGreen,
-                VehicleColor.UtilDarkGreen,
-                VehicleColor.MetallicOliveGreen,
-                VehicleColor.WornGreen,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
-                 VehicleColor.HotPink,
-                VehicleColor.MetallicVermillionPink,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
-                 VehicleColor.MatteDarkPurple,
-                VehicleColor.MattePurple,
-                VehicleColor.MetallicPurple,
-                VehicleColor.MetallicPurpleBlue,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
-                 VehicleColor.MatteDarkRed,
-                VehicleColor.MatteRed,
-                VehicleColor.MetallicBlazeRed,
-                VehicleColor.MetallicCabernetRed,
-                VehicleColor.MetallicCandyRed,
-                VehicleColor.MetallicDesertRed,
-                VehicleColor.MetallicFormulaRed,
-                VehicleColor.MetallicGarnetRed,
-                VehicleColor.MetallicGracefulRed,
-                VehicleColor.MetallicLavaRed,
-                VehicleColor.MetallicRed,
-                VehicleColor.MetallicTorinoRed,
-                VehicleColor.UtilBrightRed,
-                VehicleColor.UtilGarnetRed,
-                VehicleColor.UtilRed,
-                VehicleColor.WornDarkRed,
-                VehicleColor.WornGoldenRed,
-                VehicleColor.WornRed,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
-                 VehicleColor.MatteWhite,
-                VehicleColor.MetallicFrostWhite,
-                VehicleColor.MetallicWhite,
-                VehicleColor.PureWhite,
-                VehicleColor.UtilOffWhite,
-                VehicleColor.WornOffWhite,
-                VehicleColor.WornWhite,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
-                 VehicleColor.MatteYellow,
-                VehicleColor.MetallicRaceYellow,
-                VehicleColor.MetallicTaxiYellow,
-                VehicleColor.MetallicYellowBird,
-                VehicleColor.WornTaxiYellow,
-                VehicleColor.BrushedGold,
-                VehicleColor.MetallicClassicGold,
-                VehicleColor.PureGold,
-                VehicleColor.MetallicGoldenBrown,
-            }
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
-                 VehicleColor.MatteGray,
-               VehicleColor.MatteLightGray,
-               VehicleColor.MetallicAnthraciteGray,
-               VehicleColor.MetallicSteelGray,
-               VehicleColor.WornSilverGray,
-            }
-           )
-        };
         }
+
+        public void SetColorTranslationDefaultValues()
+        {
+                similarColors = new List<GangColorTranslation>
+            {
+                new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
+                     VehicleColor.BrushedBlackSteel,
+                    VehicleColor.MatteBlack,
+                    VehicleColor.MetallicBlack,
+                    VehicleColor.MetallicGraphiteBlack,
+                    VehicleColor.UtilBlack,
+                    VehicleColor.WornBlack,
+                    VehicleColor.ModshopBlack1
+                }, 29
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
+                     VehicleColor.Blue,
+                    VehicleColor.EpsilonBlue,
+                    VehicleColor.MatteBlue,
+                    VehicleColor.MatteDarkBlue,
+                    VehicleColor.MatteMidnightBlue,
+                    VehicleColor.MetaillicVDarkBlue,
+                    VehicleColor.MetallicBlueSilver,
+                    VehicleColor.MetallicBrightBlue,
+                    VehicleColor.MetallicDarkBlue,
+                    VehicleColor.MetallicDiamondBlue,
+                    VehicleColor.MetallicHarborBlue,
+                    VehicleColor.MetallicMarinerBlue,
+                    VehicleColor.UtilBlue,
+                    VehicleColor.MetallicUltraBlue
+                }, 3
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
+                     VehicleColor.Green,
+                    VehicleColor.HunterGreen,
+                    VehicleColor.MatteFoliageGreen,
+                    VehicleColor.MatteForestGreen,
+                    VehicleColor.MatteGreen,
+                    VehicleColor.MatteLimeGreen,
+                    VehicleColor.MetallicDarkGreen,
+                    VehicleColor.MetallicGreen,
+                    VehicleColor.MetallicRacingGreen,
+                    VehicleColor.UtilDarkGreen,
+                    VehicleColor.MetallicOliveGreen,
+                    VehicleColor.WornGreen,
+                }, 2
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
+                     VehicleColor.HotPink,
+                    VehicleColor.MetallicVermillionPink,
+                }, 23
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
+                     VehicleColor.MatteDarkPurple,
+                    VehicleColor.MattePurple,
+                    VehicleColor.MetallicPurple,
+                    VehicleColor.MetallicPurpleBlue,
+                }, 19
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
+                     VehicleColor.MatteDarkRed,
+                    VehicleColor.MatteRed,
+                    VehicleColor.MetallicBlazeRed,
+                    VehicleColor.MetallicCabernetRed,
+                    VehicleColor.MetallicCandyRed,
+                    VehicleColor.MetallicDesertRed,
+                    VehicleColor.MetallicFormulaRed,
+                    VehicleColor.MetallicGarnetRed,
+                    VehicleColor.MetallicGracefulRed,
+                    VehicleColor.MetallicLavaRed,
+                    VehicleColor.MetallicRed,
+                    VehicleColor.MetallicTorinoRed,
+                    VehicleColor.UtilBrightRed,
+                    VehicleColor.UtilGarnetRed,
+                    VehicleColor.UtilRed,
+                    VehicleColor.WornDarkRed,
+                    VehicleColor.WornGoldenRed,
+                    VehicleColor.WornRed,
+                }, 1
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
+                     VehicleColor.MatteWhite,
+                    VehicleColor.MetallicFrostWhite,
+                    VehicleColor.MetallicWhite,
+                    VehicleColor.PureWhite,
+                    VehicleColor.UtilOffWhite,
+                    VehicleColor.WornOffWhite,
+                    VehicleColor.WornWhite,
+                }, 0
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
+                     VehicleColor.MatteYellow,
+                    VehicleColor.MetallicRaceYellow,
+                    VehicleColor.MetallicTaxiYellow,
+                    VehicleColor.MetallicYellowBird,
+                    VehicleColor.WornTaxiYellow,
+                    VehicleColor.BrushedGold,
+                    VehicleColor.MetallicClassicGold,
+                    VehicleColor.PureGold,
+                    VehicleColor.MetallicGoldenBrown,
+                }, 66
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
+                     VehicleColor.MatteGray,
+                   VehicleColor.MatteLightGray,
+                   VehicleColor.MetallicAnthraciteGray,
+                   VehicleColor.MetallicSteelGray,
+                   VehicleColor.WornSilverGray,
+                }, 20
+               )
+            };
+        }
+            
                 
     }
 }

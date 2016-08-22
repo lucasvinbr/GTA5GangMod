@@ -47,7 +47,7 @@ namespace GTA.GangAndTurfMod
                     }
 
 
-                    //stop tracking this driver if he/she leaves the vehicle
+                    //stop tracking this driver/vehicle if he/she leaves the vehicle
                     if (!watchedPed.IsInVehicle())
                     {
                         vehicleIAmDriving.IsPersistent = false;
@@ -100,8 +100,10 @@ namespace GTA.GangAndTurfMod
 
             if (playerAsDest) destination = Game.Player.Character.Position;
 
+            //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 20)
             {
+                //leave the vehicle if we wanted to get to the player and he's on foot or if we just had to get somewhere
                 if (!playerAsDest || Game.Player.Character.CurrentVehicle == null)
                 {
                     EveryoneLeaveVehicle();
@@ -113,9 +115,19 @@ namespace GTA.GangAndTurfMod
                 updatesWhileGoingToDest++;
 
                 //give up, drop passengers and go away... but only if we're not chasing the player
+                //and he/she isn't on a vehicle
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
                     (!playerAsDest || Game.Player.Character.CurrentVehicle == null))
                 {
+                    if (playerAsDest)
+                    {
+                        //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
+                        if (!vehicleIAmDriving.IsOnScreen)
+                        {
+                            vehicleIAmDriving.Position = World.GetNextPositionOnStreet(Game.Player.Character.Position, true);
+                        }
+                        
+                    }
                     EveryoneLeaveVehicle();
                 }
                 else
