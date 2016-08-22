@@ -34,8 +34,8 @@ namespace GTA.GangAndTurfMod
 
         public bool hasChangedBody = false;
         public bool hasDiedWithChangedBody = false;
-        private Ped theOriginalPed;
-        private int profitWhileChangedBody = 0;
+        public Ped theOriginalPed;
+        private int moneyFromLastProtagonist = 0;
 
         #region setup/save stuff
         [System.Serializable]
@@ -86,7 +86,6 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         void SetUpGangRelations()
         {
-
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
@@ -100,11 +99,17 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    //lets also check if we don't have any member variation, which could be a problem
-                    if(gangData.gangs[i].memberVariations.Count == 0)
+                    //since we're checking each gangs situation...
+                    //lets check if we don't have any member variation, which could be a problem
+                    if (gangData.gangs[i].memberVariations.Count == 0)
                     {
                         GetMembersForGang(gangData.gangs[i]);
                     }
+
+                    //lets also see if their colors are consistent
+                    gangData.gangs[i].EnforceGangColorConsistency();
+
+                    //if we're not player owned, we hate the player!
                     World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
                     
@@ -116,10 +121,13 @@ namespace GTA.GangAndTurfMod
             }
 
             //and the relations themselves
-            for (int i = 0; i < gangData.gangs.Count - 1; i++)
+            for (int i = gangData.gangs.Count - 1; i > -1; i--)
             {
-                World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[i + 1].relationGroupIndex);
-                World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i + 1].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+                for(int j = 0; j < i; j++)
+                {
+                    World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
+                    World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+                }
             }
 
             //all gangs hate cops if set to very aggressive
@@ -324,14 +332,8 @@ namespace GTA.GangAndTurfMod
                     {
                         int zoneReward = (int)((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned *
                         (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Length));
-                        if (hasChangedBody)
-                        {
-                            profitWhileChangedBody += zoneReward;
-                        }
-                        else
-                        {
-                            Game.Player.Money += zoneReward;
-                        }
+
+                        AddOrSubtractMoneyToProtagonist(zoneReward);
                         
                         rewardedCash += zoneReward;
                     }
@@ -371,12 +373,12 @@ namespace GTA.GangAndTurfMod
 
         public static int CalculateHealthUpgradeCost(int currentMemberHealth)
         {
-            return (currentMemberHealth + 20) * (20 * (currentMemberHealth / 100) + 1);
+            return (currentMemberHealth + 20) * (20 * (currentMemberHealth / 20) + 1);
         }
 
         public static int CalculateArmorUpgradeCost(int currentMemberArmor)
         {
-            return (currentMemberArmor + 20) * (50 * (currentMemberArmor / 120) + 1);
+            return 2000 + (currentMemberArmor + 20) * (50 * (currentMemberArmor / 25) + 1);
         }
 
         public static int CalculateAccuracyUpgradeCost(int currentMemberAcc)
@@ -418,12 +420,14 @@ namespace GTA.GangAndTurfMod
             {
                 if (!(Game.Player.Character.IsRagdoll) && hasDiedWithChangedBody)
                 {
+                    Game.Player.Character.Weapons.Select(WeaponHash.Unarmed, true);
+                    Game.Player.Character.Task.ClearAllImmediately();
                     Game.Player.Character.Euphoria.ShotFallToKnees.Start();
                 }
                 else
                 {
                     hasDiedWithChangedBody = true;
-                    Game.Player.CanControlCharacter = false;
+                    //Game.Player.CanControlCharacter = false;
                     Game.Player.Character.CanRagdoll = true;
                     Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
                     Game.Player.IgnoredByEveryone = true;
@@ -445,6 +449,7 @@ namespace GTA.GangAndTurfMod
                         if (playerGangMembers[i].IsAlive)
                         {
                             theOriginalPed = Game.Player.Character;
+                            moneyFromLastProtagonist = Game.Player.Money;
                             //theOriginalPed.IsInvincible = true;
                             hasChangedBody = true;
                             TakePedBody(playerGangMembers[i]);
@@ -462,11 +467,13 @@ namespace GTA.GangAndTurfMod
         void TakePedBody(Ped targetPed)
         {
             targetPed.Task.ClearAllImmediately();
+            
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
             Game.Player.MaxArmor = targetPed.Armor + targetPed.Health;
             targetPed.Armor += targetPed.Health;
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
+            
             Game.Player.CanControlCharacter = true;
         }
 
@@ -530,11 +537,8 @@ namespace GTA.GangAndTurfMod
             Game.Player.MaxArmor = 100;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             hasChangedBody = false;
-            Game.Player.CanControlCharacter = true;
+            //Game.Player.CanControlCharacter = true;
             theOriginalPed.Task.ClearAllImmediately();
-
-            Game.Player.Money += profitWhileChangedBody;
-            profitWhileChangedBody = 0;
             
             if (hasDiedWithChangedBody)
             {
@@ -551,6 +555,41 @@ namespace GTA.GangAndTurfMod
             }
 
             hasDiedWithChangedBody = false;
+            Game.Player.Money = moneyFromLastProtagonist;
+        }
+
+        /// <summary>
+        /// adds the value to the currently controlled protagonist
+        /// (or the last controlled protagonist if the player is mind-controlling a member)
+        /// </summary>
+        /// <param name="valueToAdd"></param>
+        /// <returns></returns>
+        public bool AddOrSubtractMoneyToProtagonist(int valueToAdd, bool onlyCheck = false)
+        {
+            if (hasChangedBody)
+            {
+                if (valueToAdd > 0 || moneyFromLastProtagonist >= valueToAdd)
+                {
+                    if(!onlyCheck) moneyFromLastProtagonist += valueToAdd;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (valueToAdd > 0 || Game.Player.Money >= valueToAdd)
+                {
+                    if (!onlyCheck) Game.Player.Money += valueToAdd;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         #endregion
@@ -641,13 +680,19 @@ namespace GTA.GangAndTurfMod
 
             foreach(Ped ped in detectedPeds)
             {
-                if (referencePed.RelationshipGroup != ped.RelationshipGroup &&
-                World.GetRelationshipBetweenGroups(referencePed.RelationshipGroup, ped.RelationshipGroup) == Relationship.Hate)
+                if (referencePed.RelationshipGroup != ped.RelationshipGroup)
                 {
-                    hostilePeds.Add(ped);
+                    if (World.GetRelationshipBetweenGroups(referencePed.RelationshipGroup, ped.RelationshipGroup) == Relationship.Hate)
+                    {
+                        if (ped.IsAlive)
+                        {
+                            hostilePeds.Add(ped);
+                        }
+                        
+                    }
                 }
+               
             }
-
             return hostilePeds.ToArray();
         }
 
@@ -762,8 +807,7 @@ namespace GTA.GangAndTurfMod
                     //set the blip
                     newPed.AddBlip();
                     newPed.CurrentBlip.IsShortRange = true;
-                    newPed.CurrentBlip.Sprite = BlipSprite.Pistol;
-
+                    newPed.CurrentBlip.Scale = 0.65f;
                     Function.Call(Hash.SET_BLIP_COLOUR, newPed.CurrentBlip, ownerGang.blipColor);
 
                     //set blip name - got to use native, the c# blip.name returns error ingame
@@ -836,7 +880,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
                                 newAddition.myGang = ownerGang;
-                                livingMembers.Add(new SpawnedGangMember(newPed));
+                                livingMembers.Add(newAddition);
                             }
                             else
                             {
@@ -852,7 +896,7 @@ namespace GTA.GangAndTurfMod
                         {
                             SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
                             newAddition.myGang = ownerGang;
-                            livingMembers.Add(new SpawnedGangMember(newPed));
+                            livingMembers.Add(newAddition);
                         }
                         else
                         {

@@ -72,12 +72,18 @@ namespace GTA.GangAndTurfMod
                 this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
+
+                if(similarColors[0].blipColor == 0)
+                {
+                    SetColorTranslationDefaultValues();
+                }
                 SaveOptions();
             }
             else
             {
                 SetAllValuesToDefault();
                 SetNameListsDefaultValues();
+                SetColorTranslationDefaultValues();
                 PersistenceHandler.SaveToFile(this, "ModOptions");
             }
         }
@@ -108,7 +114,7 @@ namespace GTA.GangAndTurfMod
         public bool emptyZoneDuringWar = true;
         public int baseNumKillsBeforeWarVictory = 25;
 
-        public int ticksBetweenTurfRewards = 50000;
+        public int ticksBetweenTurfRewards = 45000;
         public int ticksBetweenGangAIUpdates = 30000;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 500;
@@ -388,10 +394,10 @@ namespace GTA.GangAndTurfMod
             emptyZoneDuringWar = true;
             baseNumKillsBeforeWarVictory = 25;
 
-            ticksBetweenTurfRewards = 50000;
+            ticksBetweenTurfRewards = 45000;
             ticksBetweenGangAIUpdates = 30000;
             ticksBetweenGangMemberAIUpdates = 100;
-            baseRewardPerZoneOwned = 500;
+            baseRewardPerZoneOwned = 1200;
 
             rewardMultiplierPerZone = 0.2f;
 
@@ -574,116 +580,120 @@ namespace GTA.GangAndTurfMod
             "Monsters",
             "Fighters",
         };
-
-            similarColors = new List<GangColorTranslation>
-        {
-            new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
-                 VehicleColor.BrushedBlackSteel,
-                VehicleColor.MatteBlack,
-                VehicleColor.MetallicBlack,
-                VehicleColor.MetallicGraphiteBlack,
-                VehicleColor.UtilBlack,
-                VehicleColor.WornBlack,
-                VehicleColor.ModshopBlack1
-            }, 29
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
-                 VehicleColor.Blue,
-                VehicleColor.EpsilonBlue,
-                VehicleColor.MatteBlue,
-                VehicleColor.MatteDarkBlue,
-                VehicleColor.MatteMidnightBlue,
-                VehicleColor.MetaillicVDarkBlue,
-                VehicleColor.MetallicBlueSilver,
-                VehicleColor.MetallicBrightBlue,
-                VehicleColor.MetallicDarkBlue,
-                VehicleColor.MetallicDiamondBlue,
-                VehicleColor.MetallicHarborBlue,
-                VehicleColor.MetallicMarinerBlue,
-                VehicleColor.UtilBlue,
-                VehicleColor.MetallicUltraBlue
-            }, 3
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
-                 VehicleColor.Green,
-                VehicleColor.HunterGreen,
-                VehicleColor.MatteFoliageGreen,
-                VehicleColor.MatteForestGreen,
-                VehicleColor.MatteGreen,
-                VehicleColor.MatteLimeGreen,
-                VehicleColor.MetallicDarkGreen,
-                VehicleColor.MetallicGreen,
-                VehicleColor.MetallicRacingGreen,
-                VehicleColor.UtilDarkGreen,
-                VehicleColor.MetallicOliveGreen,
-                VehicleColor.WornGreen,
-            }, 2
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
-                 VehicleColor.HotPink,
-                VehicleColor.MetallicVermillionPink,
-            }, 23
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
-                 VehicleColor.MatteDarkPurple,
-                VehicleColor.MattePurple,
-                VehicleColor.MetallicPurple,
-                VehicleColor.MetallicPurpleBlue,
-            }, 19
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
-                 VehicleColor.MatteDarkRed,
-                VehicleColor.MatteRed,
-                VehicleColor.MetallicBlazeRed,
-                VehicleColor.MetallicCabernetRed,
-                VehicleColor.MetallicCandyRed,
-                VehicleColor.MetallicDesertRed,
-                VehicleColor.MetallicFormulaRed,
-                VehicleColor.MetallicGarnetRed,
-                VehicleColor.MetallicGracefulRed,
-                VehicleColor.MetallicLavaRed,
-                VehicleColor.MetallicRed,
-                VehicleColor.MetallicTorinoRed,
-                VehicleColor.UtilBrightRed,
-                VehicleColor.UtilGarnetRed,
-                VehicleColor.UtilRed,
-                VehicleColor.WornDarkRed,
-                VehicleColor.WornGoldenRed,
-                VehicleColor.WornRed,
-            }, 1
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
-                 VehicleColor.MatteWhite,
-                VehicleColor.MetallicFrostWhite,
-                VehicleColor.MetallicWhite,
-                VehicleColor.PureWhite,
-                VehicleColor.UtilOffWhite,
-                VehicleColor.WornOffWhite,
-                VehicleColor.WornWhite,
-            }, 0
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
-                 VehicleColor.MatteYellow,
-                VehicleColor.MetallicRaceYellow,
-                VehicleColor.MetallicTaxiYellow,
-                VehicleColor.MetallicYellowBird,
-                VehicleColor.WornTaxiYellow,
-                VehicleColor.BrushedGold,
-                VehicleColor.MetallicClassicGold,
-                VehicleColor.PureGold,
-                VehicleColor.MetallicGoldenBrown,
-            }, 66
-           ),
-            new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
-                 VehicleColor.MatteGray,
-               VehicleColor.MatteLightGray,
-               VehicleColor.MetallicAnthraciteGray,
-               VehicleColor.MetallicSteelGray,
-               VehicleColor.WornSilverGray,
-            }, 20
-           )
-        };
         }
+
+        public void SetColorTranslationDefaultValues()
+        {
+                similarColors = new List<GangColorTranslation>
+            {
+                new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
+                     VehicleColor.BrushedBlackSteel,
+                    VehicleColor.MatteBlack,
+                    VehicleColor.MetallicBlack,
+                    VehicleColor.MetallicGraphiteBlack,
+                    VehicleColor.UtilBlack,
+                    VehicleColor.WornBlack,
+                    VehicleColor.ModshopBlack1
+                }, 29
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
+                     VehicleColor.Blue,
+                    VehicleColor.EpsilonBlue,
+                    VehicleColor.MatteBlue,
+                    VehicleColor.MatteDarkBlue,
+                    VehicleColor.MatteMidnightBlue,
+                    VehicleColor.MetaillicVDarkBlue,
+                    VehicleColor.MetallicBlueSilver,
+                    VehicleColor.MetallicBrightBlue,
+                    VehicleColor.MetallicDarkBlue,
+                    VehicleColor.MetallicDiamondBlue,
+                    VehicleColor.MetallicHarborBlue,
+                    VehicleColor.MetallicMarinerBlue,
+                    VehicleColor.UtilBlue,
+                    VehicleColor.MetallicUltraBlue
+                }, 3
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
+                     VehicleColor.Green,
+                    VehicleColor.HunterGreen,
+                    VehicleColor.MatteFoliageGreen,
+                    VehicleColor.MatteForestGreen,
+                    VehicleColor.MatteGreen,
+                    VehicleColor.MatteLimeGreen,
+                    VehicleColor.MetallicDarkGreen,
+                    VehicleColor.MetallicGreen,
+                    VehicleColor.MetallicRacingGreen,
+                    VehicleColor.UtilDarkGreen,
+                    VehicleColor.MetallicOliveGreen,
+                    VehicleColor.WornGreen,
+                }, 2
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
+                     VehicleColor.HotPink,
+                    VehicleColor.MetallicVermillionPink,
+                }, 23
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
+                     VehicleColor.MatteDarkPurple,
+                    VehicleColor.MattePurple,
+                    VehicleColor.MetallicPurple,
+                    VehicleColor.MetallicPurpleBlue,
+                }, 19
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
+                     VehicleColor.MatteDarkRed,
+                    VehicleColor.MatteRed,
+                    VehicleColor.MetallicBlazeRed,
+                    VehicleColor.MetallicCabernetRed,
+                    VehicleColor.MetallicCandyRed,
+                    VehicleColor.MetallicDesertRed,
+                    VehicleColor.MetallicFormulaRed,
+                    VehicleColor.MetallicGarnetRed,
+                    VehicleColor.MetallicGracefulRed,
+                    VehicleColor.MetallicLavaRed,
+                    VehicleColor.MetallicRed,
+                    VehicleColor.MetallicTorinoRed,
+                    VehicleColor.UtilBrightRed,
+                    VehicleColor.UtilGarnetRed,
+                    VehicleColor.UtilRed,
+                    VehicleColor.WornDarkRed,
+                    VehicleColor.WornGoldenRed,
+                    VehicleColor.WornRed,
+                }, 1
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
+                     VehicleColor.MatteWhite,
+                    VehicleColor.MetallicFrostWhite,
+                    VehicleColor.MetallicWhite,
+                    VehicleColor.PureWhite,
+                    VehicleColor.UtilOffWhite,
+                    VehicleColor.WornOffWhite,
+                    VehicleColor.WornWhite,
+                }, 0
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
+                     VehicleColor.MatteYellow,
+                    VehicleColor.MetallicRaceYellow,
+                    VehicleColor.MetallicTaxiYellow,
+                    VehicleColor.MetallicYellowBird,
+                    VehicleColor.WornTaxiYellow,
+                    VehicleColor.BrushedGold,
+                    VehicleColor.MetallicClassicGold,
+                    VehicleColor.PureGold,
+                    VehicleColor.MetallicGoldenBrown,
+                }, 66
+               ),
+                new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
+                     VehicleColor.MatteGray,
+                   VehicleColor.MatteLightGray,
+                   VehicleColor.MetallicAnthraciteGray,
+                   VehicleColor.MetallicSteelGray,
+                   VehicleColor.WornSilverGray,
+                }, 20
+               )
+            };
+        }
+            
                 
     }
 }

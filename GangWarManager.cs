@@ -124,12 +124,21 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// spawns a vehicle that has the player as destination
         /// </summary>
-        public void SpawnEnemyAngryVehicle()
+        public void SpawnAngryVehicle(bool isFriendly)
         {
             Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
-
-            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(enemyGang,
+            Vehicle spawnedVehicle = null;
+            if (!isFriendly)
+            {
+                spawnedVehicle = GangManager.instance.SpawnGangVehicle(enemyGang,
                     spawnPos, GangManager.instance.FindGoodSpawnPointForCar(), true, false, true);
+            }
+            else
+            {
+                spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
+                    spawnPos, GangManager.instance.FindGoodSpawnPointForCar(), true, false, true);
+            }
+            
             if (spawnedVehicle != null)
             {
                 spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 25, 100);
@@ -153,14 +162,14 @@ namespace GTA.GangAndTurfMod
                     {
                         Gang playerGang = GangManager.instance.GetPlayerGang();
                         playerGang.TakeZone(warZone);
-                        Game.Player.Character.Money += ModOptions.instance.rewardForTakingEnemyTurf;
+                        GangManager.instance.AddOrSubtractMoneyToProtagonist(ModOptions.instance.rewardForTakingEnemyTurf);
                         UI.ShowSubtitle(warZone.zoneName + " is now ours!");
                         CheckIfBattleWasUnfair();
                         Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
                     }
                     else
                     {
-                        Game.Player.Money += ModOptions.instance.costToTakeNeutralTurf / 2;
+                        GangManager.instance.AddOrSubtractMoneyToProtagonist(ModOptions.instance.rewardForTakingEnemyTurf / 2);
                         UI.ShowSubtitle(warZone.zoneName + " remains ours!");
                         CheckIfBattleWasUnfair();
                         Function.Call(Hash.PLAY_SOUND, -1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1);
@@ -194,7 +203,12 @@ namespace GTA.GangAndTurfMod
 
                     if (ticksSinceLastCarSpawn >= minTicksBetweenCarSpawns)
                     {
-                        SpawnEnemyAngryVehicle();
+                        SpawnAngryVehicle(false);
+
+                        if(curWarType == warType.defendingFromEnemy && RandomUtil.RandomBool())
+                        {
+                            SpawnAngryVehicle(true); //automatic backup for us
+                        }
                     }
 
                     if (GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Length < ModOptions.instance.spawnedMemberLimit / 2)

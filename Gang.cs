@@ -25,7 +25,7 @@ namespace GTA.GangAndTurfMod
         public int relationGroupIndex;
 
         public int memberAccuracyLevel = 1;
-        public int memberHealth = 70;
+        public int memberHealth = 50;
         public int memberArmor = 0;
 
         //car stats - the models
@@ -154,6 +154,21 @@ namespace GTA.GangAndTurfMod
             }
 
             return false;
+        }
+
+        public void EnforceGangColorConsistency()
+        {
+            //this checks if the gangs member, blip and car colors are consistent, like black, black and black
+            //if left unassigned, the blip color is 0 and the car color is metallic black
+            //a sign that somethings wrong, because 0 is white blip color
+            ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
+            if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.memberColor.white) ||
+                (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black))
+            {                
+                blipColor = ourColor.blipColor;
+                vehicleColor = RandomUtil.GetRandomElementFromList(ourColor.vehicleColors);
+                GangManager.instance.SaveGangData(false);
+            }
         }
 
         /// <summary>

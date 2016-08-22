@@ -13,7 +13,7 @@ namespace GTA.GangAndTurfMod
 
         public override void Update()
         {
-            if (watchedGang.moneyAvailable >= ModOptions.instance.costToTakeNeutralTurf)
+            if (RandomUtil.RandomBool())
             {
                 //lets attack!
                 //pick a random zone owned by us, get the closest hostile zone and attempt to take it
@@ -29,9 +29,9 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     //we're out of turf!
-                    //get a random zone and try to take it
+                    //get a random zone (preferably neutral, since it's cheaper for the AI) and try to take it
                     //but only sometimes, since we're probably on a tight spot
-                    TurfZone chosenZone = ZoneManager.instance.GetRandomZone();
+                    TurfZone chosenZone = ZoneManager.instance.GetRandomZone(true);
                     TryTakeTurf(chosenZone);
 
                 }
@@ -127,43 +127,56 @@ namespace GTA.GangAndTurfMod
 
         void TryTakeTurf(TurfZone targetZone)
         {
-            if (targetZone == null) return; //whoops, there just isn't any zone available for gangs
+            if (targetZone == null || targetZone.ownerGangName == watchedGang.name) return; //whoops, there just isn't any zone available for our gang
             if (targetZone.ownerGangName == "none")
             {
                 //this zone is neutral, lets just take it
-                watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf;
-                watchedGang.TakeZone(targetZone);
+                //we make it cheaper for the AI to get neutral zones in order to not make the world a gangless place haha
+                if(watchedGang.moneyAvailable >= ModOptions.instance.costToTakeNeutralTurf / 10)
+                {
+                    watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 10;
+                    watchedGang.TakeZone(targetZone);
+                }
             }
             else if(GangManager.instance.GetGangByName(targetZone.ownerGangName) == null)
             {
                 ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
-                //this zone is neutral, lets just take it
-                watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf;
-                watchedGang.TakeZone(targetZone);
+                //this zone was controlled by a gang that no longer exists. it is neutral now
+                if (watchedGang.moneyAvailable >= ModOptions.instance.costToTakeNeutralTurf / 10)
+                {
+                    watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 10;
+                    watchedGang.TakeZone(targetZone);
+                }
             }
             else if (targetZone.ownerGangName == GangManager.instance.GetPlayerGang().name)
             {
                 //start a war against the player!
-                if (RandomUtil.RandomBool() && GangManager.instance.fightingEnabled && GangManager.instance.warAgainstPlayerEnabled)
+                if(watchedGang.moneyAvailable >= ModOptions.instance.costToTakeNeutralTurf / 4)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 4;
-                    GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy);
+                    if (RandomUtil.RandomBool() && GangManager.instance.fightingEnabled && GangManager.instance.warAgainstPlayerEnabled)
+                    {
+                        watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 4;
+                        GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy);
+                    }
                 }
+                
             }
             else
             {
                 //take the turf from the other gang... or not, maybe we fail
-                watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 2; //we attacked already, spend the money
-                int myAttackValue = watchedGang.GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20),
-                    theirDefenseValue = GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20);
-
-                if (myAttackValue > 
-                    theirDefenseValue)
+                if(watchedGang.moneyAvailable >= ModOptions.instance.costToTakeNeutralTurf / 2)
                 {
-                    watchedGang.TakeZone(targetZone);
-                    GangManager.instance.GiveTurfRewardToGang(watchedGang);
-                }
+                    watchedGang.moneyAvailable -= ModOptions.instance.costToTakeNeutralTurf / 2; //we attacked already, spend the money
+                    int myAttackValue = watchedGang.GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20),
+                        theirDefenseValue = GangManager.instance.GetGangByName(targetZone.ownerGangName).GetGangAIStrengthValue() / RandomUtil.CachedRandom.Next(1, 20);
 
+                    if (myAttackValue >
+                        theirDefenseValue)
+                    {
+                        watchedGang.TakeZone(targetZone);
+                        GangManager.instance.GiveTurfRewardToGang(watchedGang);
+                    }
+                }
             }
         }
 

@@ -176,7 +176,6 @@ namespace GTA.GangAndTurfMod
             if(targetZone.AttachedBlip == null)
             {
                 targetZone.AttachedBlip = World.CreateBlip(targetZone.zoneBlipPosition);
-                targetZone.AttachedBlip.Sprite = BlipSprite.ArmWrestling;
             }
            
         }
@@ -273,20 +272,20 @@ namespace GTA.GangAndTurfMod
                 Gang ownerGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
                 if (ownerGang == null)
                 {
+                    targetZone.AttachedBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     targetZone.AttachedBlip.Color = BlipColor.White;
-                    Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 0f, 0f);
                 }
                 else {
-
+                    targetZone.AttachedBlip.Sprite = BlipSprite.GTAOPlayerSafehouse;
                     Function.Call(Hash.SET_BLIP_COLOUR, targetZone.AttachedBlip, ownerGang.blipColor);
 
                     if (ownerGang.isPlayerOwned)
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 0.5f, 0f);
+                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 255, 0f);
                     }
                     else
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0.5f, 0f, 0f);
+                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 255, 0f, 0f);
                     }
                 }
 
@@ -357,10 +356,14 @@ namespace GTA.GangAndTurfMod
             return ownedZones.ToArray();
         }
 
-        public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false)
+        public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, bool randomBetween3Closest = true)
         {
             float smallestDistance = 0;
-            TurfZone closestZone = targetZone;
+            //we start our top 3 closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
+            //the result may not be the 3 closest zones, but thats okay
+            TurfZone aRandomFillerZone = RandomUtil.GetRandomElementFromList(zoneData.zoneList);
+            List<TurfZone> top3ClosestZones = new List<TurfZone> { targetZone, targetZone, targetZone };
+            int timesFoundBetterZone = 0;
             for (int i = 0; i < zoneData.zoneList.Count; i++)
             {
                 float distanceToThisZone = World.GetDistance(targetZone.zoneBlipPosition, zoneData.zoneList[i].zoneBlipPosition);
@@ -369,19 +372,50 @@ namespace GTA.GangAndTurfMod
                 {
                     if(smallestDistance == 0 || smallestDistance > distanceToThisZone)
                     {
-                        closestZone = zoneData.zoneList[i];
+                        timesFoundBetterZone++;
+                        top3ClosestZones.Insert(0, zoneData.zoneList[i]);
+                        top3ClosestZones.RemoveAt(3);
                         smallestDistance = distanceToThisZone;
                     }
                 }
             }
 
-            return closestZone;
+            if (randomBetween3Closest && timesFoundBetterZone >= 3) //only get a random from top 3 if we found 3 different zones
+            {
+                return RandomUtil.GetRandomElementFromList(top3ClosestZones);
+            }
+            else
+            {
+                return top3ClosestZones[0];
+            }
+            
         }
 
-        public TurfZone GetRandomZone()
+        public TurfZone GetRandomZone(bool preferablyNeutralZone = false)
         {
             if(zoneData.zoneList.Count > 0)
             {
+                List<TurfZone> possibleTurfChoices = zoneData.zoneList;
+
+                for(int i = 0; i < zoneData.zoneList.Count; i++)
+                {
+                    if(possibleTurfChoices.Count == 0)
+                    {
+                        //we've run out of options! abort
+                        break;
+                    }
+                    TurfZone chosenZone = RandomUtil.GetRandomElementFromList(possibleTurfChoices);
+                    if(!preferablyNeutralZone || chosenZone.ownerGangName == "none")
+                    {
+                        return chosenZone;
+                    }
+                    else
+                    {
+                        possibleTurfChoices.Remove(chosenZone);
+                    }
+                }
+
+                //if we couldn't find a neutral zone, just get any zone
                 return zoneData.zoneList[RandomUtil.CachedRandom.Next(0, zoneData.zoneList.Count)];
             }
             else
