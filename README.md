@@ -13,4 +13,6 @@ ScriptHookDotNet: https://github.com/crosire/scripthookvdotnet/releases
 
 NativeUI: https://github.com/Guad/NativeUI/releases
 
-Contributions are welcome! Please create a new branch and make a pull request if you'd like to contribute.
+Contributions are welcome! Please create a new fork and make a pull request if you'd like to contribute.
+
+If using this mod's code as reference or base for your own works, please provide credit and/or a link to this page.
