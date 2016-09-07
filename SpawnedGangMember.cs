@@ -50,7 +50,7 @@ namespace GTA.GangAndTurfMod
                         if (!member.IsInCombat && 
                             !member.IsInAir && !member.IsPlayer && !member.IsInVehicle())
                         {
-                            member.Task.FightAgainstHatedTargets(100);
+                            PickATarget(100);
                         }
 
                     }
@@ -95,7 +95,7 @@ namespace GTA.GangAndTurfMod
                             if (ModOptions.instance.gangMemberAggressiveness !=
                     ModOptions.gangMemberAggressivenessMode.defensive && GangManager.instance.fightingEnabled)
                             {
-                                watchedPed.Task.FightAgainstHatedTargets(200);
+                                PickATarget(100);
                             }
                         }
                         
@@ -141,13 +141,13 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public bool PickATarget()
+        public bool PickATarget(float radius = 20)
         {
             //a method that tries to make the target idle melee fighter pick other idle fighters as targets (by luck)
             //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
 
             //get a random ped from the hostile ones nearby
-            Ped[] hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, 20);
+            Ped[] hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
 
             if(hostileNearbyPeds != null && hostileNearbyPeds.Length > 0)
             {

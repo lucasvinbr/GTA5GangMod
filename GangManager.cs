@@ -53,6 +53,10 @@ namespace GTA.GangAndTurfMod
         {
             instance = this;
 
+            livingMembers = new List<SpawnedGangMember>();
+            livingDrivingMembers = new List<SpawnedDrivingGangMember>();
+            enemyGangs = new List<GangAI>();
+
             new ModOptions(); //just start the options, we can call it by its instance later
 
             gangData = PersistenceHandler.LoadFromFile<GangData>("GangData");
@@ -74,10 +78,6 @@ namespace GTA.GangAndTurfMod
                 //we're alone.. add an enemy!
                 CreateNewEnemyGang();
             }
-
-            livingMembers = new List<SpawnedGangMember>();
-            livingDrivingMembers = new List<SpawnedDrivingGangMember>();
-            enemyGangs = new List<GangAI>();
 
             SetUpGangRelations();
         }
@@ -782,9 +782,9 @@ namespace GTA.GangAndTurfMod
 
         public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false)
         {
-            if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero)
+            if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
-                //don't start spawning, we're on the limit already
+                //don't start spawning, we're on the limit already or we failed to find a good spawn point or we haven't started up our data properly yet
                 return null;
             }
             if (ownerGang.memberVariations.Count > 0)
@@ -919,9 +919,9 @@ namespace GTA.GangAndTurfMod
 
         public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
         {
-            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero)
+            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
-                //don't start spawning, we're on the limit already or we failed to find a good spawn point
+                //don't start spawning, we're on the limit already or we failed to find a good spawn point or we haven't started up our data properly yet
                 return null;
             }
 

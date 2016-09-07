@@ -395,7 +395,9 @@ namespace GTA.GangAndTurfMod
         {
             if(zoneData.zoneList.Count > 0)
             {
-                List<TurfZone> possibleTurfChoices = zoneData.zoneList;
+                List<TurfZone> possibleTurfChoices = new List<TurfZone>();
+
+                possibleTurfChoices.AddRange(zoneData.zoneList);
 
                 for(int i = 0; i < zoneData.zoneList.Count; i++)
                 {
