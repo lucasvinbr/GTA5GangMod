@@ -794,10 +794,7 @@ namespace GTA.GangAndTurfMod
                 Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
                 if(newPed != null)
                 {
-                    int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, newPed, 1);
-
-                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 3, chosenMember.torsoDrawableIndex, chosenMember.torsoTextureIndex, pedPalette);
-                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 4, chosenMember.legsDrawableIndex, chosenMember.legsTextureIndex, pedPalette);
+                    SetPedAppearance(newPed, chosenMember);
 
                     newPed.Accuracy = ownerGang.memberAccuracyLevel;
                     newPed.MaxHealth = ownerGang.memberHealth;
@@ -1013,6 +1010,103 @@ namespace GTA.GangAndTurfMod
             }
 
 
+        }
+
+        /// <summary>
+        /// this method sets the ped's appearance according to what's been specified in the potential gang member info.
+        /// then, it checks for inconsistencies in the ped's appearance (differences in skin tone, for example, between the ped's body parts).
+        /// if it finds one, it tries to find a valid variation of the inconsistent part
+        /// </summary>
+        void SetPedAppearance(Ped targetPed, PotentialGangMember pedAppearanceInfo)
+        {
+            bool hasChangedLegs = false, hasChangedTorso = false;
+            int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 0);
+
+            if (pedAppearanceInfo.torsoDrawableIndex != -1)
+            {
+                int torsoTexIndex = pedAppearanceInfo.torsoTextureIndex;
+                if (torsoTexIndex == -1)
+                {
+                    torsoTexIndex = RandomUtil.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS, targetPed, 3, pedAppearanceInfo.torsoDrawableIndex));
+                }
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, pedAppearanceInfo.torsoDrawableIndex, torsoTexIndex, pedPalette);
+                hasChangedTorso = true;
+            }
+
+            if (pedAppearanceInfo.legsDrawableIndex != -1)
+            {
+                int legsTexIndex = pedAppearanceInfo.legsTextureIndex;
+                if (legsTexIndex == -1)
+                {
+                    legsTexIndex = RandomUtil.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS, targetPed, 4, pedAppearanceInfo.legsDrawableIndex));
+                }
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, pedAppearanceInfo.legsDrawableIndex, legsTexIndex, pedPalette);
+                hasChangedLegs = true;
+            }
+
+            if (hasChangedTorso || hasChangedLegs)
+            {
+                //check if the head is valid with the changes that have been made
+                //also, find out if the torso or the legs haven't been changed
+                //because, in that case, we'll have to enforce consistency for them too
+
+                int unchangedComponentIndex = -1, changedComponentIndex = 0;
+                int changedDrawableIndex = 0;
+                
+
+                if (!hasChangedTorso)
+                {
+                    unchangedComponentIndex = 3;
+                    changedComponentIndex = 4;
+                    changedDrawableIndex = pedAppearanceInfo.legsDrawableIndex;
+                }
+
+                if (!hasChangedLegs)
+                {
+                    unchangedComponentIndex = 4;
+                    changedComponentIndex = 3;
+                    changedDrawableIndex = pedAppearanceInfo.torsoDrawableIndex;
+                }
+
+                int changedTexIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, targetPed, changedComponentIndex);
+                //if it's aleady valid, lets just stop here
+                if (Function.Call<bool>(Hash.IS_PED_COMPONENT_VARIATION_VALID, targetPed, changedComponentIndex, changedDrawableIndex, changedTexIndex))
+                {
+                    UI.ShowSubtitle("already valid!");
+                    return;
+                }
+
+               
+
+                //for each head variation, check if it matches the rest
+                //if we havent changed torso or legs, do that for them too
+                for(int i = 0; i < Function.Call<int>(Hash.GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS, targetPed, 0); i++)
+                {
+                    for(int j = 0; j < Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS, targetPed, 0, i); j++)
+                    {
+                        if (unchangedComponentIndex != -1)
+                        {
+                            for (int k = 0; k < Function.Call<int>(Hash.GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS, targetPed, unchangedComponentIndex); k++)
+                            {
+                                for (int l = 0; l < Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS, targetPed, unchangedComponentIndex, k); l++)
+                                {
+                                    //set the unchanged body to this new variation we're testing
+                                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, unchangedComponentIndex, k, l, pedPalette);
+                                }
+                            }
+                        }
+
+                        //check the head again if it's consistent...
+                        if (Function.Call<bool>(Hash.IS_PED_COMPONENT_VARIATION_VALID, targetPed, 0, i, j))
+                        {
+                            //if this one is, set the head to this variation!
+                            UI.ShowSubtitle("found valid!");
+                            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, i, j, pedPalette);
+                            return;
+                        }
+                    }
+                }
+            }
         }
         #endregion
     }
