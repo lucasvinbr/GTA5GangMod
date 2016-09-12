@@ -41,7 +41,7 @@ namespace GTA.GangAndTurfMod
 
                     //the driver can also do some drive-by
                     if (ModOptions.instance.gangMemberAggressiveness !=
-                    ModOptions.gangMemberAggressivenessMode.defensive && GangManager.instance.fightingEnabled)
+                    ModOptions.gangMemberAggressivenessMode.defensive && ModOptions.instance.fightingEnabled)
                     {
                         watchedPed.Task.FightAgainstHatedTargets(100);
                     }

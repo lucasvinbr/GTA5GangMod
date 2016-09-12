@@ -68,7 +68,7 @@ namespace GTA.GangAndTurfMod
                 return null;
             }
 
-            returnedVehicle = CarPool.carList[RandomUtil.CachedRandom.Next(CarPool.carList.Count)];
+            returnedVehicle = CarPool.carList[RandoMath.CachedRandom.Next(CarPool.carList.Count)];
 
             return returnedVehicle;
         }

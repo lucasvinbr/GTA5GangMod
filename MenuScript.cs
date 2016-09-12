@@ -21,7 +21,6 @@ namespace GTA.GangAndTurfMod
         UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
             modSettingsSubMenu;
         Ped closestPed;
-        bool saveTorsoIndex = false, saveTorsoTex = false, saveLegIndex = false, saveLegTex = false;
         
         PotentialGangMember memberToSave = new PotentialGangMember();
         int memberStyle = 0, memberColor = 0;
@@ -96,11 +95,12 @@ namespace GTA.GangAndTurfMod
             AddSaveZoneButton();
             //AddZoneCircleButton();
             
-            AddMemberToggles();
             AddMemberStyleChoices();
             AddSaveMemberButton();
             AddNewPlayerGangMemberButton();
             AddRemovePlayerGangMemberButton();
+            AddMakeFriendlyToPlayerGangButton();
+
             AddCallVehicleButton();
             AddCallParatrooperButton();
             AddSaveVehicleButton();
@@ -362,7 +362,7 @@ namespace GTA.GangAndTurfMod
                             if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToTakeNeutralTurf / 2, true))
                             {
                                 zonesMenu.Visible = !zonesMenu.Visible;
-                                if (GangManager.instance.fightingEnabled)
+                                if (ModOptions.instance.fightingEnabled)
                                 {
                                     if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(curZone.ownerGangName), curZone, GangWarManager.warType.attackingEnemy))
                                     {
@@ -392,39 +392,6 @@ namespace GTA.GangAndTurfMod
         #endregion
 
         #region register Member/Vehicle Stuff
-
-        void AddMemberToggles()
-        {
-            UIMenuItem saveTorsoToggle = new UIMenuCheckboxItem("Save torso variation", saveTorsoIndex, "If checked, this member will always spawn with this torso variation.");
-            UIMenuItem saveTorsoTexToggle = new UIMenuCheckboxItem("Save torso variation color", saveTorsoTex, "If checked, this member will always spawn with this torso color and torso variation (the variation must also be saved in this case!).");
-            UIMenuItem saveLegToggle = new UIMenuCheckboxItem("Save leg variation", saveLegIndex, "If checked, this member will always spawn with this leg variation.");
-            UIMenuItem saveLegTexToggle = new UIMenuCheckboxItem("Save leg variation color", saveLegTex, "If checked, this member will always spawn with this leg color and variation (the leg variation must also be saved in this case!).");
-
-            memberMenu.AddItem(saveTorsoToggle);
-            memberMenu.AddItem(saveTorsoTexToggle);
-            memberMenu.AddItem(saveLegToggle);
-            memberMenu.AddItem(saveLegTexToggle);
-
-            memberMenu.OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == saveTorsoToggle)
-                {
-                    saveTorsoIndex = checked_;
-                }
-                else if(item == saveTorsoTexToggle)
-                {
-                    saveTorsoTex = checked_;
-                }
-                else if (item == saveLegToggle)
-                {
-                    saveLegIndex = checked_;
-                }
-                else if (item == saveLegTexToggle)
-                {
-                    saveLegTex = checked_;
-                }
-            };
-        }
 
         void AddMemberStyleChoices()
         {
@@ -478,47 +445,23 @@ namespace GTA.GangAndTurfMod
                 {
                     memberToSave.modelHash = closestPed.Model.Hash;
 
-                    if (saveTorsoIndex)
-                    {
-                        memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                        if (saveTorsoTex)
-                        {
-                            memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-                        }
-                        else
-                        {
-                            memberToSave.torsoTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.torsoDrawableIndex = -1;
-                        memberToSave.torsoTextureIndex = -1;
-                    }
+                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
+                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
 
-                    if (saveLegIndex)
-                    {
-                        memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                        if (saveLegTex)
-                        {
-                            memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-                        }
-                        else
-                        {
-                            memberToSave.legsTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.legsDrawableIndex = -1;
-                        memberToSave.legsTextureIndex = -1;
-                    }
+                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
+
+                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
+                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
+                       
+                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
+                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
 
                     memberToSave.myStyle = (PotentialGangMember.dressStyle) memberStyle;
                     memberToSave.linkedColor = (PotentialGangMember.memberColor) memberColor;
 
                     if (PotentialGangMember.AddMemberAndSavePool
                     (new PotentialGangMember(memberToSave.modelHash, memberToSave.myStyle, memberToSave.linkedColor,
+                    memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
                         memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
                         memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
                     {
@@ -543,47 +486,23 @@ namespace GTA.GangAndTurfMod
 
                     memberToSave.modelHash = closestPed.Model.Hash;
 
-                    if (saveTorsoIndex)
-                    {
-                        memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                        if (saveTorsoTex)
-                        {
-                            memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-                        }
-                        else
-                        {
-                            memberToSave.torsoTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.torsoDrawableIndex = -1;
-                        memberToSave.torsoTextureIndex = -1;
-                    }
+                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
+                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
 
-                    if (saveLegIndex)
-                    {
-                        memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                        if (saveLegTex)
-                        {
-                            memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-                        }
-                        else
-                        {
-                            memberToSave.legsTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.legsDrawableIndex = -1;
-                        memberToSave.legsTextureIndex = -1;
-                    }
+                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
+
+                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
+                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
+
+                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
+                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
 
                     memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
                     memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
 
                     if (GangManager.instance.GetPlayerGang().AddMemberVariation(new PotentialGangMember(memberToSave.modelHash,
                         memberToSave.myStyle, memberToSave.linkedColor,
+                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
                         memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
                         memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
                     {
@@ -608,47 +527,23 @@ namespace GTA.GangAndTurfMod
 
                     memberToSave.modelHash = closestPed.Model.Hash;
 
-                    if (saveTorsoIndex)
-                    {
-                        memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                        if (saveTorsoTex)
-                        {
-                            memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-                        }
-                        else
-                        {
-                            memberToSave.torsoTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.torsoDrawableIndex = -1;
-                        memberToSave.torsoTextureIndex = -1;
-                    }
+                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
+                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
 
-                    if (saveLegIndex)
-                    {
-                        memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                        if (saveLegTex)
-                        {
-                            memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-                        }
-                        else
-                        {
-                            memberToSave.legsTextureIndex = -1;
-                        }
-                    }
-                    else
-                    {
-                        memberToSave.legsDrawableIndex = -1;
-                        memberToSave.legsTextureIndex = -1;
-                    }
+                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
+
+                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
+                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
+
+                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
+                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
 
                     memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
                     memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
 
                     if (GangManager.instance.GetPlayerGang().RemoveMemberVariation(new PotentialGangMember(memberToSave.modelHash,
                         memberToSave.myStyle, memberToSave.linkedColor,
+                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
                         memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
                         memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
                     {
@@ -662,9 +557,44 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddMakeFriendlyToPlayerGangButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Make Ped friendly to your gang", "Makes the selected ped (and everyone from his group) and your gang become allies. Can't be used with cops or gangs from this mod! NOTE: this only lasts until scripts are loaded again");
+            memberMenu.AddItem(newButton);
+            memberMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    int closestPedRelGroup = closestPed.RelationshipGroup;
+                    //check if we can really become allies with this guy
+                    if(closestPedRelGroup != Function.Call<int>(Hash.GET_HASH_KEY, "COP"))
+                    {
+                        //he can still be from one of the gangs! we should check
+                     
+                        if(GangManager.instance.GetGangByRelGroup(closestPedRelGroup) != null)
+                        {
+                            UI.ShowSubtitle("That ped is a gang member! Gang members cannot be marked as allies");
+                            return;
+                        }
+
+                        //ok, we can be allies
+                        Gang playerGang = GangManager.instance.GetPlayerGang();
+                        World.SetRelationshipBetweenGroups(Relationship.Respect, playerGang.relationGroupIndex, closestPedRelGroup);
+                        World.SetRelationshipBetweenGroups(Relationship.Respect, closestPedRelGroup, playerGang.relationGroupIndex);
+                        UI.ShowSubtitle("That ped's group is now an allied group!");
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("That ped is a cop! Cops cannot be marked as allies");
+                    }
+                }
+            };
+        }
+
+
         void AddSaveVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Register vehicle as usable by AI Gangs", "Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.");
+            UIMenuItem newButton = new UIMenuItem("Register Vehicle as usable by AI Gangs", "Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.");
             carMenu.AddItem(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -692,7 +622,7 @@ namespace GTA.GangAndTurfMod
 
         void AddRegisterPlayerVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Register as Gang Vehicle", "Makes the vehicle type you are driving become one of the default types used by your gang.");
+            UIMenuItem newButton = new UIMenuItem("Register Vehicle for your Gang", "Makes the vehicle type you are driving become one of the default types used by your gang.");
             carMenu.AddItem(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -766,7 +696,7 @@ namespace GTA.GangAndTurfMod
                     if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
                     {
                         Gang playergang = GangManager.instance.GetPlayerGang();
-                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                         {
                             Math.Vector3 destPos = Game.Player.Character.Position;
 
@@ -822,7 +752,8 @@ namespace GTA.GangAndTurfMod
                     if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember, true))
                     {
                         Gang playergang = GangManager.instance.GetPlayerGang();
-                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Length > 0)
+                        //only allow spawning if the player has turf
+                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                         {
                             Math.Vector3 destPos = Game.Player.Character.Position;
                             Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
@@ -1114,16 +1045,6 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        private void BlipColorsMenu_OnMenuChange(UIMenu oldMenu, UIMenu newMenu, bool forward)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void BlipColorsMenu_OnMenuClose(UIMenu sender)
-        {
-            throw new NotImplementedException();
-        }
-
         void AddRenameGangButton()
         {
             UIMenuItem newButton = new UIMenuItem("Rename Gang", "Resets your gang's name.");
@@ -1178,7 +1099,7 @@ namespace GTA.GangAndTurfMod
 
         void AddEnableFightingToggle()
         {
-            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", true, "If unchecked, members from different gangs won't attack each other (including the player). Gang wars also won't happen.");
+            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", ModOptions.instance.fightingEnabled, "If unchecked, members from different gangs won't attack each other (including the player). Gang wars also won't happen.");
 
             modSettingsSubMenu.AddItem(fightingToggle);
             modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
@@ -1187,7 +1108,8 @@ namespace GTA.GangAndTurfMod
                 {
                     if (!GangWarManager.instance.isOccurring)
                     {
-                        GangManager.instance.fightingEnabled = checked_;
+                        ModOptions.instance.fightingEnabled = checked_;
+                        ModOptions.instance.SaveOptions(false);
                     }
                     else
                     {
@@ -1201,14 +1123,15 @@ namespace GTA.GangAndTurfMod
 
         void AddEnableWarVersusPlayerToggle()
         {
-            UIMenuCheckboxItem warToggle = new UIMenuCheckboxItem("Enemy gangs can attack your turf?", true, "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
+            UIMenuCheckboxItem warToggle = new UIMenuCheckboxItem("Enemy gangs can attack your turf?", ModOptions.instance.warAgainstPlayerEnabled, "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
 
             modSettingsSubMenu.AddItem(warToggle);
             modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
                 if (item == warToggle)
                 {
-                    GangManager.instance.warAgainstPlayerEnabled = checked_;
+                    ModOptions.instance.warAgainstPlayerEnabled = checked_;
+                    ModOptions.instance.SaveOptions(false);
                 }
 
             };
@@ -1216,14 +1139,15 @@ namespace GTA.GangAndTurfMod
 
         void AddEnableAmbientSpawnToggle()
         {
-            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient member spawning?", true, "If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.");
+            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient member spawning?", ModOptions.instance.ambientSpawningEnabled, "If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.");
 
             modSettingsSubMenu.AddItem(spawnToggle);
             modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
                 if (item == spawnToggle)
                 {
-                    AmbientGangMemberSpawner.instance.enabled = checked_;
+                    ModOptions.instance.ambientSpawningEnabled = checked_;
+                    ModOptions.instance.SaveOptions(false);
                 }
 
             };

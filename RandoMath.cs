@@ -8,8 +8,9 @@ namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// just a few useful methods for getting random stuff
+    /// and some math stuff as well
     /// </summary>
-    class RandomUtil
+    class RandoMath
     {
 
         public static Random CachedRandom
@@ -63,6 +64,20 @@ namespace GTA.GangAndTurfMod
         public static T GetRandomElementFromArray<T>(T[] theArray)
         {
             return theArray[CachedRandom.Next(theArray.Length)];
+        }
+
+        /// <summary>
+        /// returns the absolute value (without sign)
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static int Abs(int value)
+        {
+            if (value >= 0) return value;
+            else
+            {
+                return value * -1;
+            }
         }
     }
 }

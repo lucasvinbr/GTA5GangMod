@@ -66,6 +66,10 @@ namespace GTA.GangAndTurfMod
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
 
+                this.fightingEnabled = loadedOptions.fightingEnabled;
+                this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
+                this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
+
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
                 this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
@@ -131,6 +135,8 @@ namespace GTA.GangAndTurfMod
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
         public int ticksCooldownParachutingMember = 600;
+
+        public bool fightingEnabled = true, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
@@ -273,7 +279,7 @@ namespace GTA.GangAndTurfMod
                 maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 2;
                 SaveOptions(false);
             }
-            return RandomUtil.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
+            return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
         }
 
         public int GetAcceptableCarSpawnDistance()
@@ -283,7 +289,7 @@ namespace GTA.GangAndTurfMod
                 maxDistanceCarSpawnFromPlayer = minDistanceCarSpawnFromPlayer + 2;
                 SaveOptions(false);
             }
-            return RandomUtil.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
+            return RandoMath.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
         }
 
         /// <summary>
@@ -296,14 +302,14 @@ namespace GTA.GangAndTurfMod
         {
             for (int attempts = 0; attempts < 5; attempts++)
             {
-                WeaponHash chosenWeapon = RandomUtil.GetRandomElementFromList(theWeaponList);
+                WeaponHash chosenWeapon = RandoMath.GetRandomElementFromList(theWeaponList);
                 if (GetBuyableWeaponByHash(chosenWeapon) != null)
                 {
                     return chosenWeapon;
                 }
             }
 
-            return RandomUtil.GetRandomElementFromList(buyableWeapons).wepHash;
+            return RandoMath.GetRandomElementFromList(buyableWeapons).wepHash;
         }
 
         public void SetupPrimaryWeapons()
@@ -410,6 +416,10 @@ namespace GTA.GangAndTurfMod
 
             wantedFactorWhenInGangTurf = 0.2f;
             maxWantedLevelInGangTurf = 1;
+
+            fightingEnabled = true;
+            warAgainstPlayerEnabled = true;
+            ambientSpawningEnabled = true;
 
             spawnedMembersBeforeAmbientGenStops = 20;
             spawnedMemberLimit = 30; //max number of living gang members at any time

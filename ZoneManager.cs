@@ -307,8 +307,8 @@ namespace GTA.GangAndTurfMod
 
         public void GiveGangZonesToAnother(string FromGang, string ToGang)
         {
-            TurfZone[] fromGangZones = GetZonesControlledByGang(FromGang);
-            for(int i = 0; i < fromGangZones.Length; i++)
+            List<TurfZone> fromGangZones = GetZonesControlledByGang(FromGang);
+            for(int i = 0; i < fromGangZones.Count; i++)
             {
                 fromGangZones[i].ownerGangName = ToGang;
             }
@@ -341,7 +341,7 @@ namespace GTA.GangAndTurfMod
             return GetZoneByName(World.GetZoneName(Game.Player.Character.Position));
         }
 
-        public TurfZone[] GetZonesControlledByGang(string desiredGangName)
+        public List<TurfZone> GetZonesControlledByGang(string desiredGangName)
         {
             List<TurfZone> ownedZones = new List<TurfZone>();
 
@@ -353,7 +353,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            return ownedZones.ToArray();
+            return ownedZones;
         }
 
         public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, bool randomBetween3Closest = true)
@@ -361,7 +361,7 @@ namespace GTA.GangAndTurfMod
             float smallestDistance = 0;
             //we start our top 3 closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
             //the result may not be the 3 closest zones, but thats okay
-            TurfZone aRandomFillerZone = RandomUtil.GetRandomElementFromList(zoneData.zoneList);
+            TurfZone aRandomFillerZone = RandoMath.GetRandomElementFromList(zoneData.zoneList);
             List<TurfZone> top3ClosestZones = new List<TurfZone> { targetZone, targetZone, targetZone };
             int timesFoundBetterZone = 0;
             for (int i = 0; i < zoneData.zoneList.Count; i++)
@@ -382,7 +382,7 @@ namespace GTA.GangAndTurfMod
 
             if (randomBetween3Closest && timesFoundBetterZone >= 3) //only get a random from top 3 if we found 3 different zones
             {
-                return RandomUtil.GetRandomElementFromList(top3ClosestZones);
+                return RandoMath.GetRandomElementFromList(top3ClosestZones);
             }
             else
             {
@@ -406,7 +406,7 @@ namespace GTA.GangAndTurfMod
                         //we've run out of options! abort
                         break;
                     }
-                    TurfZone chosenZone = RandomUtil.GetRandomElementFromList(possibleTurfChoices);
+                    TurfZone chosenZone = RandoMath.GetRandomElementFromList(possibleTurfChoices);
                     if(!preferablyNeutralZone || chosenZone.ownerGangName == "none")
                     {
                         return chosenZone;
@@ -418,7 +418,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 //if we couldn't find a neutral zone, just get any zone
-                return zoneData.zoneList[RandomUtil.CachedRandom.Next(0, zoneData.zoneList.Count)];
+                return zoneData.zoneList[RandoMath.CachedRandom.Next(0, zoneData.zoneList.Count)];
             }
             else
             {

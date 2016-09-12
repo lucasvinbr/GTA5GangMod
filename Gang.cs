@@ -45,7 +45,7 @@ namespace GTA.GangAndTurfMod
 
             this.isPlayerOwned = isPlayerOwned;
 
-            moneyAvailable = RandomUtil.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
+            moneyAvailable = RandoMath.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
 
         }
 
@@ -64,9 +64,9 @@ namespace GTA.GangAndTurfMod
             preferredWeaponHashes.Add(ModOptions.instance.GetWeaponFromListIfBuyable(ModOptions.instance.primaryWeapons));
 
             //and some more for that extra variation
-            for (int i = 0; i < RandomUtil.CachedRandom.Next(2, 5); i++)
+            for (int i = 0; i < RandoMath.CachedRandom.Next(2, 5); i++)
             {
-                preferredWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
+                preferredWeaponHashes.Add(RandoMath.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
             }
 
             GangManager.instance.SaveGangData(false);
@@ -85,10 +85,13 @@ namespace GTA.GangAndTurfMod
             for(int i = 0; i < memberVariations.Count; i++)
             {
                 if (memberVariations[i].modelHash == newMember.modelHash &&
-                       memberVariations[i].legsDrawableIndex == newMember.legsDrawableIndex &&
-                       memberVariations[i].legsTextureIndex == newMember.legsTextureIndex &&
-                       memberVariations[i].torsoDrawableIndex == newMember.torsoDrawableIndex &&
-                       memberVariations[i].torsoTextureIndex == newMember.torsoTextureIndex)
+                        memberVariations[i].hairDrawableIndex == newMember.hairDrawableIndex &&
+                        memberVariations[i].headDrawableIndex == newMember.headDrawableIndex &&
+                        memberVariations[i].headTextureIndex == newMember.headTextureIndex &&
+                        memberVariations[i].legsDrawableIndex == newMember.legsDrawableIndex &&
+                        memberVariations[i].legsTextureIndex == newMember.legsTextureIndex &&
+                        memberVariations[i].torsoDrawableIndex == newMember.torsoDrawableIndex &&
+                        memberVariations[i].torsoTextureIndex == newMember.torsoTextureIndex)
                 {
                     return false;
                 }
@@ -103,16 +106,36 @@ namespace GTA.GangAndTurfMod
         {
             for (int i = 0; i < memberVariations.Count; i++)
             {
-                if (memberVariations[i].modelHash == sadMember.modelHash &&
+                if(memberVariations[i].headDrawableIndex == -1)
+                {
+                    if (memberVariations[i].modelHash == sadMember.modelHash &&
+                       (memberVariations[i].legsDrawableIndex == -1 || memberVariations[i].legsDrawableIndex == sadMember.legsDrawableIndex) &&
+                       (memberVariations[i].legsTextureIndex == -1 || memberVariations[i].legsTextureIndex == sadMember.legsTextureIndex) &&
+                       (memberVariations[i].torsoDrawableIndex == -1 || memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex) &&
+                       (memberVariations[i].torsoTextureIndex == -1 || memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex))
+                    {
+                        memberVariations.Remove(memberVariations[i]);
+                        GangManager.instance.SaveGangData();
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (memberVariations[i].modelHash == sadMember.modelHash &&
+                        memberVariations[i].hairDrawableIndex == sadMember.hairDrawableIndex &&
+                        memberVariations[i].headDrawableIndex == sadMember.headDrawableIndex &&
+                        memberVariations[i].headTextureIndex == sadMember.headTextureIndex &&
                        memberVariations[i].legsDrawableIndex == sadMember.legsDrawableIndex &&
                        memberVariations[i].legsTextureIndex == sadMember.legsTextureIndex &&
                        memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex &&
                        memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex)
-                {
-                    memberVariations.Remove(memberVariations[i]);
-                    GangManager.instance.SaveGangData();
-                    return true;
+                    {
+                        memberVariations.Remove(memberVariations[i]);
+                        GangManager.instance.SaveGangData();
+                        return true;
+                    }
                 }
+                
             }
 
             return false;
@@ -166,7 +189,7 @@ namespace GTA.GangAndTurfMod
                 (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black))
             {                
                 blipColor = ourColor.blipColor;
-                vehicleColor = RandomUtil.GetRandomElementFromList(ourColor.vehicleColors);
+                vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
                 GangManager.instance.SaveGangData(false);
             }
         }
@@ -180,10 +203,10 @@ namespace GTA.GangAndTurfMod
             int weaponValue = 200;
             if(gangWeaponHashes.Count > 0)
             {
-                weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandomUtil.GetRandomElementFromList(gangWeaponHashes)).price;
+                weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes)).price;
             }
             return moneyAvailable / 10000 +
-                ZoneManager.instance.GetZonesControlledByGang(name).Length * 50 +
+                ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
                 weaponValue / 20 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
@@ -203,7 +226,7 @@ namespace GTA.GangAndTurfMod
 
             if (possibleGuns.Count > 0)
             {
-                return RandomUtil.GetRandomElementFromList(possibleGuns);
+                return RandoMath.GetRandomElementFromList(possibleGuns);
             }
             return WeaponHash.Unarmed;
         }

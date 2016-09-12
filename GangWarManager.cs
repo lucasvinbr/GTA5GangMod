@@ -63,7 +63,7 @@ namespace GTA.GangAndTurfMod
 
                 currentEnemyCasualties = 0;
                 casualtiesForEnemyDefeat = waves + ModOptions.instance.baseNumKillsBeforeWarVictory + 
-                    RandomUtil.CachedRandom.Next(ModOptions.instance.baseNumKillsBeforeWarVictory / 6);
+                    RandoMath.CachedRandom.Next(ModOptions.instance.baseNumKillsBeforeWarVictory / 6);
 
                 isOccurring = true;
 
@@ -75,13 +75,13 @@ namespace GTA.GangAndTurfMod
 
                 if (theWarType == warType.attackingEnemy)
                 {
-                    waves = warZone.value + RandomUtil.CachedRandom.Next(gangStrengthBonus);
+                    waves = warZone.value + RandoMath.CachedRandom.Next(gangStrengthBonus);
                     UI.ShowSubtitle("The " + enemyGang.name + " are coming!");
                     Wait(4000);
                 }
                 else
                 {
-                    waves = 1 + RandomUtil.CachedRandom.Next(2);
+                    waves = 1 + RandoMath.CachedRandom.Next(2);
                     Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     UI.Notify("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!", true);
                 }
@@ -113,9 +113,9 @@ namespace GTA.GangAndTurfMod
             if(enemyGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) == WeaponHash.Unarmed &&
                 GangManager.instance.GetPlayerGang().GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) != WeaponHash.Unarmed)
             {
-                if (RandomUtil.RandomBool())
+                if (RandoMath.RandomBool())
                 {
-                    enemyGang.gangWeaponHashes.Add(RandomUtil.GetRandomElementFromList(ModOptions.instance.driveByWeapons));
+                    enemyGang.gangWeaponHashes.Add(RandoMath.GetRandomElementFromList(ModOptions.instance.driveByWeapons));
                     GangManager.instance.SaveGangData(false);
                 }
             }
@@ -144,7 +144,7 @@ namespace GTA.GangAndTurfMod
                 spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, Game.Player.Character.Position, 25, 100);
                 Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
 
-                ticksSinceLastCarSpawn = RandomUtil.CachedRandom.Next(-minTicksBetweenCarSpawns, 0);
+                ticksSinceLastCarSpawn = RandoMath.CachedRandom.Next(-minTicksBetweenCarSpawns, 0);
             }
         }
 
@@ -205,13 +205,13 @@ namespace GTA.GangAndTurfMod
                     {
                         SpawnAngryVehicle(false);
 
-                        if(curWarType == warType.defendingFromEnemy && RandomUtil.RandomBool())
+                        if(curWarType == warType.defendingFromEnemy && RandoMath.RandomBool())
                         {
                             SpawnAngryVehicle(true); //automatic backup for us
                         }
                     }
 
-                    if (GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Length < ModOptions.instance.spawnedMemberLimit / 2)
+                    if (GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Count < ModOptions.instance.spawnedMemberLimit / 2)
                     {
                         Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
                         Ped spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos);

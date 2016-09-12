@@ -19,8 +19,8 @@ namespace GTA.GangAndTurfMod
 
         public ModCore()
         {
-            gangManagerScript = new GangManager();
             zoneManagerScript = new ZoneManager();
+            gangManagerScript = new GangManager();
             menuScript = new MenuScript();
 
             this.KeyUp += onKeyUp;
@@ -77,8 +77,8 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == ModOptions.instance.addToGroupKey)
                 {
-                    Ped[] playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
-                    for (int i = 0; i < playerGangMembers.Length; i++)
+                    List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
+                    for (int i = 0; i < playerGangMembers.Count; i++)
                     {
                         if (Game.Player.IsTargetting(playerGangMembers[i]))
                         {

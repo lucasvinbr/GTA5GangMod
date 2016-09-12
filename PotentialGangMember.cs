@@ -39,6 +39,8 @@ namespace GTA.GangAndTurfMod
         //if data is saved with a value of -1, it wasn't considered important (by the person who saved) to the linked color
 
         public int modelHash;
+        public int hairDrawableIndex;
+        public int headDrawableIndex, headTextureIndex;
         public int torsoDrawableIndex, torsoTextureIndex;
         public int legsDrawableIndex, legsTextureIndex;
         public dressStyle myStyle;
@@ -66,12 +68,16 @@ namespace GTA.GangAndTurfMod
 
 
 
-        public PotentialGangMember(int modelHash, dressStyle myStyle, memberColor linkedColor, 
+        public PotentialGangMember(int modelHash, dressStyle myStyle, memberColor linkedColor,
+             int headDrawableIndex = -1, int headTextureIndex = -1, int hairDrawableIndex = -1,
             int torsoDrawableIndex = -1,int torsoTextureIndex = -1, int legsDrawableIndex = -1, int legsTextureIndex = -1)
         {
             this.modelHash = modelHash;
             this.myStyle = myStyle;
             this.linkedColor = linkedColor;
+            this.hairDrawableIndex = hairDrawableIndex;
+            this.headDrawableIndex = headDrawableIndex;
+            this.headTextureIndex = headTextureIndex;
             this.torsoDrawableIndex = torsoDrawableIndex;
             this.torsoTextureIndex = torsoTextureIndex;
             this.legsDrawableIndex = legsDrawableIndex;
@@ -87,6 +93,9 @@ namespace GTA.GangAndTurfMod
             this.torsoTextureIndex = -1;
             this.legsDrawableIndex = -1;
             this.legsTextureIndex = -1;
+            this.hairDrawableIndex = -1;
+            this.headDrawableIndex = -1;
+            this.headTextureIndex = -1;
         }
 
         public static bool AddMemberAndSavePool(PotentialGangMember newMember)
@@ -115,7 +124,7 @@ namespace GTA.GangAndTurfMod
             int attempts = 0;
             do
             {
-                returnedMember = MemberPool.memberList[RandomUtil.CachedRandom.Next(MemberPool.memberList.Count)];
+                returnedMember = MemberPool.memberList[RandoMath.CachedRandom.Next(MemberPool.memberList.Count)];
                 attempts++;
             } while ((returnedMember.linkedColor != color || returnedMember.myStyle != style) && attempts < 1000);
 
@@ -154,6 +163,9 @@ namespace GTA.GangAndTurfMod
                 for(int i = 0; i < memberList.Count; i++)
                 {
                     if (memberList[i].modelHash == potentialEntry.modelHash &&
+                        memberList[i].hairDrawableIndex == potentialEntry.hairDrawableIndex &&
+                        memberList[i].headDrawableIndex == potentialEntry.headDrawableIndex &&
+                        memberList[i].headTextureIndex == potentialEntry.headTextureIndex &&
                         memberList[i].legsDrawableIndex == potentialEntry.legsDrawableIndex &&
                         memberList[i].legsTextureIndex == potentialEntry.legsTextureIndex &&
                         memberList[i].torsoDrawableIndex == potentialEntry.torsoDrawableIndex &&

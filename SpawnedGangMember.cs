@@ -25,24 +25,24 @@ namespace GTA.GangAndTurfMod
             }
             if (!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
             {
-                if (RandomUtil.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
+                if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
                     currentWalkTarget = World.GetNextPositionOnSidewalk(Game.Player.Character.Position +
-                        RandomUtil.RandomDirection(true) * 45);
+                        RandoMath.RandomDirection(true) * 45);
                     watchedPed.Task.GoTo(currentWalkTarget);
                 }
 
                 
-                if (((RandomUtil.RandomBool() && ModOptions.instance.gangMemberAggressiveness !=
+                if (((RandoMath.RandomBool() && ModOptions.instance.gangMemberAggressiveness !=
                     ModOptions.gangMemberAggressivenessMode.defensive) || Game.Player.IsTargetting(watchedPed) || 
                     watchedPed.HasBeenDamagedBy(Game.Player.Character))
-                    && !watchedPed.IsInGroup && GangManager.instance.fightingEnabled)
+                    && !watchedPed.IsInGroup && ModOptions.instance.fightingEnabled)
                 {
                     PickATarget();
                 }
 
                 //call for aid of nearby friendly members if we're in combat
-                if (watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
+                if (watchedPed.IsInCombat && ModOptions.instance.fightingEnabled)
                 {
                     foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
                         (myGang))
@@ -60,7 +60,7 @@ namespace GTA.GangAndTurfMod
                     if (myGang.isPlayerOwned)
                     {
 
-                        if (!watchedPed.IsInCombat && GangManager.instance.fightingEnabled)
+                        if (!watchedPed.IsInCombat && ModOptions.instance.fightingEnabled)
                         {
                             
                             //help the player if he's in trouble and we're not
@@ -93,7 +93,7 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             if (ModOptions.instance.gangMemberAggressiveness !=
-                    ModOptions.gangMemberAggressivenessMode.defensive && GangManager.instance.fightingEnabled)
+                    ModOptions.gangMemberAggressivenessMode.defensive && ModOptions.instance.fightingEnabled)
                             {
                                 PickATarget(100);
                             }
@@ -147,11 +147,11 @@ namespace GTA.GangAndTurfMod
             //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
 
             //get a random ped from the hostile ones nearby
-            Ped[] hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
+            List<Ped> hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
 
-            if(hostileNearbyPeds != null && hostileNearbyPeds.Length > 0)
+            if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
             {
-                watchedPed.Task.FightAgainst(RandomUtil.GetRandomElementFromArray(hostileNearbyPeds));
+                watchedPed.Task.FightAgainst(RandoMath.GetRandomElementFromList(hostileNearbyPeds));
                 return true;
             }
 
@@ -160,7 +160,7 @@ namespace GTA.GangAndTurfMod
 
         public void ResetUpdateInterval()
         {
-            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates;
+            ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates + RandoMath.CachedRandom.Next(100);
         }
 
         public SpawnedGangMember(Ped watchedPed)

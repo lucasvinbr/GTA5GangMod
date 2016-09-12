@@ -11,17 +11,15 @@ namespace GTA.GangAndTurfMod
     class AmbientGangMemberSpawner : Script
     {
 
-        public bool enabled = true;
         public static AmbientGangMemberSpawner instance;
-
 
         void OnTick(object sender, EventArgs e)
         {
-            Wait(4000 + RandomUtil.CachedRandom.Next(2000));
+            Wait(4000 + RandoMath.CachedRandom.Next(2000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             //lets try to spawn the current zone's corresponding gang members!
-            if (enabled)
+            if (ModOptions.instance.ambientSpawningEnabled)
             {
                 TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
                 if (curTurfZone != null)
@@ -47,9 +45,9 @@ namespace GTA.GangAndTurfMod
                                     newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
                                 }
                             }
-                            if (RandomUtil.CachedRandom.Next(0, 5) < 3)
+                            if (RandoMath.CachedRandom.Next(0, 5) < 3)
                             {
-                                Wait(100 + RandomUtil.CachedRandom.Next(300));
+                                Wait(100 + RandoMath.CachedRandom.Next(300));
                                 Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
                                 GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
                                 if (spawnedVehicle != null)
@@ -63,7 +61,7 @@ namespace GTA.GangAndTurfMod
                                 }
                             }
 
-                            Wait(1000 + RandomUtil.CachedRandom.Next(3000000) / curGang.GetGangAIStrengthValue());
+                            Wait(1000 + RandoMath.CachedRandom.Next(3000000) / curGang.GetGangAIStrengthValue());
                         }
                     }
                     else

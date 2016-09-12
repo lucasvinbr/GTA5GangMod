@@ -1,5 +1,8 @@
 bin/
 obj/
-Properties/
 app.config
 nativeUI/
+Properties/Resources.Designer.cs
+Properties/Resources.resx
+Properties/Settings.Designer.cs
+.vs/GangMod/v14/.suo

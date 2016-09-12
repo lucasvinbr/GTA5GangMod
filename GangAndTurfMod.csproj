@@ -35,8 +35,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GTAV Mods\nativeUI\scripts\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\GTAV Mods\ScriptHookDotNet\ScriptHookVDotNet.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet, Version=2.9.2.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Release\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,7 +68,7 @@
     <Compile Include="PotentialGangMember.cs" />
     <Compile Include="MenuScript.cs" />
     <Compile Include="PersistenceHandler.cs" />
-    <Compile Include="RandomUtil.cs" />
+    <Compile Include="RandoMath.cs" />
     <Compile Include="GangManager.cs" />
     <Compile Include="SpawnedDrivingGangMember.cs" />
     <Compile Include="SpawnedGangMember.cs" />
