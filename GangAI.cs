@@ -235,7 +235,7 @@ namespace GTA.GangAndTurfMod
                 //get some vehicles!
                 for(int i = 0; i < RandoMath.CachedRandom.Next(1, 4); i++)
                 {
-                    PotentialGangVehicle newVeh = PotentialGangVehicle.GetMemberFromPool();
+                    PotentialGangVehicle newVeh = PotentialGangVehicle.GetCarFromPool();
                     if(newVeh != null)
                     {
                         this.watchedGang.AddGangCar(newVeh);

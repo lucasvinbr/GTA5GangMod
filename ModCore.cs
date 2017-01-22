@@ -31,6 +31,28 @@ namespace GTA.GangAndTurfMod
         {
             gangManagerScript.Tick();
             menuScript.Tick();
+
+            //zix attempt controller recruit
+            if (ModOptions.instance.joypadControls)
+            {
+                if (Game.IsControlPressed(0, GTA.Control.Aim) || Game.IsControlPressed(0, GTA.Control.AccurateAim))
+                {
+                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadRight))
+                    {
+                        recruitGangMember();
+                    }
+
+                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft))
+                    {
+                        menuScript.doCallBackup(false);
+                    }
+
+                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadUp))
+                    {
+                        zoneManagerScript.OutputCurrentZoneInfo();
+                    }
+                }
+            }
         }
 
         private void onKeyUp(object sender, KeyEventArgs e)
@@ -77,27 +99,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == ModOptions.instance.addToGroupKey)
                 {
-                    List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
-                    for (int i = 0; i < playerGangMembers.Count; i++)
-                    {
-                        if (Game.Player.IsTargetting(playerGangMembers[i]))
-                        {
-                            int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
-
-                            if (playerGangMembers[i].IsInGroup)
-                            {
-                                Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                                UI.Notify("A member has left your group");
-                            }
-                            else
-                            {
-                                playerGangMembers[i].Task.ClearAll();
-                                Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
-                                UI.Notify("A member has joined your group");
-                            }
-                            break;
-                        }
-                    }
+                    recruitGangMember();
 
                 }
                 else if (e.KeyCode == ModOptions.instance.mindControlKey)
@@ -106,6 +108,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == Keys.Space)
                 {
+                    
                     if (gangManagerScript.hasChangedBody)
                     {
                         gangManagerScript.RespawnIfPossible();
@@ -113,6 +116,31 @@ namespace GTA.GangAndTurfMod
                 }
             }
             
+        }
+
+        public void recruitGangMember()
+        {
+            List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
+            for (int i = 0; i < playerGangMembers.Count; i++)
+            {
+                if (Game.Player.IsTargetting(playerGangMembers[i]))
+                {
+                    int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
+
+                    if (playerGangMembers[i].IsInGroup)
+                    {
+                        Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
+                        UI.Notify("A member has left your group");
+                    }
+                    else
+                    {
+                        playerGangMembers[i].Task.ClearAll();
+                        Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
+                        UI.Notify("A member has joined your group");
+                    }
+                    break;
+                }
+            }
         }
         
     }

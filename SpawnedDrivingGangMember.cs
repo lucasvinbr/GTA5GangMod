@@ -101,7 +101,7 @@ namespace GTA.GangAndTurfMod
             if (playerAsDest) destination = Game.Player.Character.Position;
 
             //if we're close to the destination...
-            if (vehicleIAmDriving.Position.DistanceTo(destination) < 20)
+            if (vehicleIAmDriving.Position.DistanceTo(destination) < 25) //tweaked to match my changes below -- zix
             {
                 //leave the vehicle if we wanted to get to the player and he's on foot or if we just had to get somewhere
                 if (!playerAsDest || Game.Player.Character.CurrentVehicle == null)
@@ -119,10 +119,12 @@ namespace GTA.GangAndTurfMod
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
                     (!playerAsDest || Game.Player.Character.CurrentVehicle == null))
                 {
-                    if (playerAsDest)
+                    if (playerAsDest) //zix - extra config options
                     {
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
-                        if (!vehicleIAmDriving.IsOnScreen)
+                        //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
+                        if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
+                            watchedPed.RelationshipGroup == GangManager.instance.GetPlayerGang().relationGroupIndex)
                         {
                             vehicleIAmDriving.Position = World.GetNextPositionOnStreet(Game.Player.Character.Position, true);
                         }
@@ -142,7 +144,8 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 10, 7 * Vector3.Distance(watchedPed.Position, destination), 4457020);
+                            //watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 10, 7 * Vector3.Distance(watchedPed.Position, destination), 4457020); --zix: speed is kinda ridic
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 25, 50, 4457020);
                         }
                     }
                 }

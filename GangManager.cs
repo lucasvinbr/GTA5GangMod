@@ -162,6 +162,8 @@ namespace GTA.GangAndTurfMod
 
         public void Tick()
         {
+            
+
             //tick living members...
             for (int i = 0; i < livingMembers.Count; i++)
             {
@@ -283,6 +285,8 @@ namespace GTA.GangAndTurfMod
 
             gangData.gangs.Add(newGang);
 
+            newGang.GetPistolIfOptionsRequire();
+
             SaveGangData();
             if (notifyMsg)
             {
@@ -348,7 +352,7 @@ namespace GTA.GangAndTurfMod
                         
                         rewardedCash += zoneReward;
                     }
-
+                    Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
                 }
             }
@@ -433,14 +437,17 @@ namespace GTA.GangAndTurfMod
                 {
                     Game.Player.Character.Weapons.Select(WeaponHash.Unarmed, true);
                     Game.Player.Character.Task.ClearAllImmediately();
-                    Game.Player.Character.Euphoria.ShotFallToKnees.Start();
+                    Game.Player.Character.CanRagdoll = true;
+                    Function.Call((Hash)0xAE99FB955581844A, Game.Player.Character.Handle, -1, -1, 0, 0, 0, 0);
+                    //Game.Player.Character.Euphoria.ShotFallToKnees.Start();
                 }
                 else
                 {
                     hasDiedWithChangedBody = true;
                     //Game.Player.CanControlCharacter = false;
-                    Game.Player.Character.CanRagdoll = true;
-                    Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
+                    //Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
+                    Game.Player.Character.Weapons.Select(WeaponHash.Unarmed, true);
+                    Function.Call((Hash)0xAE99FB955581844A, Game.Player.Character.Handle, -1, -1, 0, 0, 0, 0);
                     Game.Player.IgnoredByEveryone = true;
                 }
 
