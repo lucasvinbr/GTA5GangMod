@@ -66,6 +66,8 @@ namespace GTA.GangAndTurfMod
                 this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
                 this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
 
+                this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
+
                 this.fightingEnabled = loadedOptions.fightingEnabled;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
                 this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
@@ -77,7 +79,10 @@ namespace GTA.GangAndTurfMod
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
 
-                if(similarColors[0].blipColor == 0)
+                this.forceSpawnCars = loadedOptions.forceSpawnCars;
+                this.joypadControls = loadedOptions.joypadControls;
+
+                if (similarColors[0].blipColor == 0)
                 {
                     SetColorTranslationDefaultValues();
                 }
@@ -136,7 +141,11 @@ namespace GTA.GangAndTurfMod
         public int ticksCooldownBackupCar = 1000;
         public int ticksCooldownParachutingMember = 600;
 
+        public bool gangsStartWithPistols = true;
+
         public bool fightingEnabled = true, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
+        public bool forceSpawnCars = false;
+        public bool joypadControls = false;
 
         public float wantedFactorWhenInGangTurf = 0.2f;
         public int maxWantedLevelInGangTurf = 1;
@@ -417,9 +426,13 @@ namespace GTA.GangAndTurfMod
             wantedFactorWhenInGangTurf = 0.2f;
             maxWantedLevelInGangTurf = 1;
 
+            gangsStartWithPistols = true;
+
             fightingEnabled = true;
             warAgainstPlayerEnabled = true;
             ambientSpawningEnabled = true;
+            forceSpawnCars = false;
+            joypadControls = false;
 
             spawnedMembersBeforeAmbientGenStops = 20;
             spawnedMemberLimit = 30; //max number of living gang members at any time

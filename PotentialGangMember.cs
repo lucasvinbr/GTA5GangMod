@@ -111,6 +111,20 @@ namespace GTA.GangAndTurfMod
             return false;
         }
 
+        public static bool RemoveMemberAndSavePool(PotentialGangMember newMember)
+        {
+            //find an identical or similar entry and remove it
+            PotentialGangMember similarEntry = MemberPool.GetSimilarEntry(newMember);
+            if (similarEntry != null)
+            {
+                MemberPool.memberList.Remove(similarEntry);
+                PersistenceHandler.SaveToFile<PotentialMemberPool>(MemberPool, "MemberPool");
+                return true;
+            }
+
+            return false;
+        }
+
         public static PotentialGangMember GetMemberFromPool(dressStyle style, memberColor color)
         {
             PotentialGangMember returnedMember;
@@ -175,6 +189,32 @@ namespace GTA.GangAndTurfMod
                     }
                 }
                 return false;
+            }
+
+            /// <summary>
+            /// gets a similar entry to the member provided.
+            /// it may not be the only similar one, however
+            /// </summary>
+            /// <param name="potentialEntry"></param>
+            /// <returns></returns>
+            public PotentialGangMember GetSimilarEntry(PotentialGangMember potentialEntry)
+            {
+
+                for (int i = 0; i < memberList.Count; i++)
+                {
+                    if (memberList[i].modelHash == potentialEntry.modelHash &&
+                        (memberList[i].hairDrawableIndex == -1 || memberList[i].hairDrawableIndex == potentialEntry.hairDrawableIndex) &&
+                        (memberList[i].headDrawableIndex == -1 || memberList[i].headDrawableIndex == potentialEntry.headDrawableIndex) &&
+                        (memberList[i].headTextureIndex == -1 || memberList[i].headTextureIndex == potentialEntry.headTextureIndex) &&
+                       (memberList[i].legsDrawableIndex == -1 || memberList[i].legsDrawableIndex == potentialEntry.legsDrawableIndex) &&
+                        (memberList[i].legsTextureIndex == -1 || memberList[i].legsTextureIndex == potentialEntry.legsTextureIndex) &&
+                       (memberList[i].torsoDrawableIndex == -1 || memberList[i].torsoDrawableIndex == potentialEntry.torsoDrawableIndex) &&
+                        (memberList[i].torsoTextureIndex == -1 || memberList[i].torsoTextureIndex == potentialEntry.torsoTextureIndex))
+                    {
+                        return memberList[i];
+                    }
+                }
+                return null;
             }
         }
     }

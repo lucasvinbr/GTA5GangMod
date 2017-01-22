@@ -115,6 +115,13 @@ namespace GTA.GangAndTurfMod
                        (memberVariations[i].torsoTextureIndex == -1 || memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex))
                     {
                         memberVariations.Remove(memberVariations[i]);
+
+                        //get new members if we have none now and we're AI-controlled
+                        if(memberVariations.Count == 0 && !isPlayerOwned)
+                        {
+                            GangManager.instance.GetMembersForGang(this);
+                        }
+
                         GangManager.instance.SaveGangData();
                         return true;
                     }
@@ -131,6 +138,13 @@ namespace GTA.GangAndTurfMod
                        memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex)
                     {
                         memberVariations.Remove(memberVariations[i]);
+
+                        //get new members if we have none now and we're AI-controlled
+                        if (memberVariations.Count == 0 && !isPlayerOwned)
+                        {
+                            GangManager.instance.GetMembersForGang(this);
+                        }
+
                         GangManager.instance.SaveGangData();
                         return true;
                     }
@@ -171,12 +185,33 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     carVariations.Remove(carVariations[i]);
+
+                    //if we're AI and we're out of cars, get a replacement for this one
+                    if(carVariations.Count == 0 && !isPlayerOwned)
+                    {
+                        carVariations.Add(PotentialGangVehicle.GetCarFromPool());
+                    }
+
                     GangManager.instance.SaveGangData();
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// gives pistols to this gang if the gangsStartWithPistols mod option is toggled on
+        /// </summary>
+        public void GetPistolIfOptionsRequire()
+        {
+            if (ModOptions.instance.gangsStartWithPistols)
+            {
+                if (!gangWeaponHashes.Contains(WeaponHash.Pistol))
+                {
+                    gangWeaponHashes.Add(WeaponHash.Pistol);
+                }
+            }
         }
 
         public void EnforceGangColorConsistency()

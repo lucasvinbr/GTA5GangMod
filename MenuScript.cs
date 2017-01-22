@@ -47,7 +47,7 @@ namespace GTA.GangAndTurfMod
             {"pink", 23 },
             {"dark green", 25 },
             {"dark purple", 27 },
-            {"black", 29 },
+            {"black", 29 }, //not really black, but...
             {"yellow", 66 },
         };
 
@@ -99,6 +99,7 @@ namespace GTA.GangAndTurfMod
             AddSaveMemberButton();
             AddNewPlayerGangMemberButton();
             AddRemovePlayerGangMemberButton();
+            AddRemoveFromAllGangsButton();
             AddMakeFriendlyToPlayerGangButton();
 
             AddCallVehicleButton();
@@ -106,6 +107,7 @@ namespace GTA.GangAndTurfMod
             AddSaveVehicleButton();
             AddRegisterPlayerVehicleButton();
             AddRemovePlayerVehicleButton();
+            AddRemoveVehicleEverywhereButton();
 
             UpdateBuyableWeapons();
             AddGangOptionsSubMenu();
@@ -557,6 +559,55 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddRemoveFromAllGangsButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Remove ped type from all gangs and pool", "Removes the ped type from all gangs and from the member pool, which means future gangs also won't try to use this type. The selected ped himself will still be a gang member, however.");
+            memberMenu.AddItem(newButton);
+            memberMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+
+                    memberToSave.modelHash = closestPed.Model.Hash;
+
+                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
+                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
+
+                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
+
+                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
+                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
+
+                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
+                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
+
+                    memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
+                    memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
+
+                    PotentialGangMember memberToRemove = new PotentialGangMember(memberToSave.modelHash,
+                        memberToSave.myStyle, memberToSave.linkedColor,
+                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
+                        memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
+                        memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex);
+
+                    if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
+                    {
+                        UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("Ped type not found in pool.");
+                    }
+
+                    for(int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
+                    {
+                        GangManager.instance.gangData.gangs[i].RemoveMemberVariation(memberToRemove);
+                    }
+
+                }
+            };
+        }
+
         void AddMakeFriendlyToPlayerGangButton()
         {
             UIMenuItem newButton = new UIMenuItem("Make Ped friendly to your gang", "Makes the selected ped (and everyone from his group) and your gang become allies. Can't be used with cops or gangs from this mod! NOTE: this only lasts until scripts are loaded again");
@@ -676,9 +727,92 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddRemoveVehicleEverywhereButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Remove Vehicle Type from all gangs and pool", "Removes the vehicle type you are driving from the possible vehicle types for all gangs, including yours. Existing gangs will also stop using that car and get another one if needed.");
+            carMenu.AddItem(newButton);
+            carMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    if (curVehicle != null)
+                    {
+                        PotentialGangVehicle removedVehicle = new PotentialGangVehicle(curVehicle.Model.Hash);
+
+                        if (PotentialGangVehicle.RemoveVehicleAndSavePool(removedVehicle))
+                        {
+                            UI.ShowSubtitle("Vehicle type removed from pool!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Vehicle type not found in pool.");
+                        }
+
+                        for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
+                        {
+                            GangManager.instance.gangData.gangs[i].RemoveGangCar(removedVehicle);
+                        }
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("You are not inside a vehicle.");
+                    }
+                }
+            };
+        }
+
         #endregion
 
         #region Gang Control Stuff
+
+        public void doCallBackup(bool showMenu=true)
+        {
+            if (ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
+            {
+                UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
+                return;
+            }
+            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
+            {
+                Gang playergang = GangManager.instance.GetPlayerGang();
+                if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
+                {
+                    Math.Vector3 destPos = Game.Player.Character.Position;
+
+                    Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
+
+                    Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
+                            spawnPos, destPos, true, false, true); //zix - im not convinced the set drive task below is used, seems to be handle by this constructor instead
+                    if (spawnedVehicle != null)
+                    {
+                        GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnPos);
+                        spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
+                        Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
+
+                        if (showMenu)
+                        {
+                            gangMenu.Visible = !gangMenu.Visible;
+                        }
+                        ticksSinceLastCarBkp = 0;
+                        GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
+                        UI.ShowSubtitle("A vehicle is on its way!", 1000);
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
+                    }
+                }
+                else
+                {
+                    UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+                }
+            }
+            else
+            {
+                UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallBackupCar.ToString() + " to call a vehicle!");
+            }
+        }
 
         void AddCallVehicleButton()
         {
@@ -688,47 +822,7 @@ namespace GTA.GangAndTurfMod
             {
                 if(item == carBackupBtn)
                 {
-                    if(ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
-                    {
-                        UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
-                        return;
-                    }
-                    if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
-                    {
-                        Gang playergang = GangManager.instance.GetPlayerGang();
-                        if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
-                        {
-                            Math.Vector3 destPos = Game.Player.Character.Position;
-
-                            Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
-
-                            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.GetPlayerGang(),
-                                    spawnPos, destPos, true, false, true);
-                            if (spawnedVehicle != null)
-                            {
-                                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnPos);
-                                spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
-                                Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
-
-                                gangMenu.Visible = !gangMenu.Visible;
-                                ticksSinceLastCarBkp = 0;
-                                GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
-                                UI.ShowSubtitle("A vehicle is on its way!", 1000);
-                            }
-                            else
-                            {
-                                UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
-                            }
-                        }
-                        else
-                        {
-                            UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
-                        }
-                    }
-                    else
-                    {
-                        UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallBackupCar.ToString() + " to call a vehicle!");
-                    }
+                    doCallBackup();
                     
                 }
                
@@ -1060,6 +1154,10 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        #endregion
+
+        #region Mod Settings
+
         void AddModSettingsSubMenu()
         {
             modSettingsSubMenu = menuPool.AddSubMenu(gangMenu, "Mod Settings Menu");
@@ -1068,7 +1166,10 @@ namespace GTA.GangAndTurfMod
             AddEnableAmbientSpawnToggle();
             AddEnableFightingToggle();
             AddEnableWarVersusPlayerToggle();
+            AddEnableCarTeleportToggle();
+            AddGangsStartWithPistolToggle();
             AddKeyBindingMenu();
+            AddGamepadControlsToggle();
             AddReloadOptionsButton();
             AddResetWeaponOptionsButton();
             AddResetOptionsButton();
@@ -1095,7 +1196,6 @@ namespace GTA.GangAndTurfMod
                 } 
             }; 
      } 
-
 
         void AddEnableFightingToggle()
         {
@@ -1147,6 +1247,58 @@ namespace GTA.GangAndTurfMod
                 if (item == spawnToggle)
                 {
                     ModOptions.instance.ambientSpawningEnabled = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
+        void AddEnableCarTeleportToggle()
+        {
+            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Backup cars can teleport to always arrive?", ModOptions.instance.forceSpawnCars, "If enabled, backup cars, after taking too long to get to the player, will teleport close by. This will only affect friendly vehicles.");
+
+            modSettingsSubMenu.AddItem(spawnToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == spawnToggle)
+                {
+                    ModOptions.instance.forceSpawnCars = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
+        void AddGangsStartWithPistolToggle()
+        {
+            UIMenuCheckboxItem pistolToggle = new UIMenuCheckboxItem("Gangs start with Pistols?", ModOptions.instance.gangsStartWithPistols, "If checked, all gangs, except the player's, will start with pistols. Pistols will not be given to gangs already in town.");
+
+            modSettingsSubMenu.AddItem(pistolToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == pistolToggle)
+                {
+                    ModOptions.instance.gangsStartWithPistols = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
+        void AddGamepadControlsToggle()
+        {
+            UIMenuCheckboxItem padToggle = new UIMenuCheckboxItem("Use joypad controls?", ModOptions.instance.joypadControls, "Enables/disables the use of joypad commands to recruit members (pad right), call backup (pad left) and output zone info (pad up). Commands are used while aiming. All credit goes to zixum.");
+
+            modSettingsSubMenu.AddItem(padToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == padToggle)
+                {
+                    ModOptions.instance.joypadControls = checked_;
+                    if (checked_)
+                    {
+                        UI.ShowSubtitle("Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well");
+                    }
                     ModOptions.instance.SaveOptions(false);
                 }
 

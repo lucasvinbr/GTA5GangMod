@@ -73,6 +73,8 @@ namespace GTA.GangAndTurfMod
                     gangStrengthBonus = 4;
                 }
 
+                Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "PROPERTY_PURCHASE", "HUD_AWARDS");
+
                 if (theWarType == warType.attackingEnemy)
                 {
                     waves = warZone.value + RandoMath.CachedRandom.Next(gangStrengthBonus);
@@ -82,7 +84,6 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     waves = 1 + RandoMath.CachedRandom.Next(2);
-                    Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     UI.Notify("The " + enemyGang.name + " are attacking " + warZone.zoneName + "!", true);
                 }
 
@@ -98,6 +99,7 @@ namespace GTA.GangAndTurfMod
 
         public void EndWar()
         {
+            Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "ScreenFlash", "WastedSounds");
             warBlip.Remove();
             currentEnemyCasualties = 0;
             isOccurring = false;

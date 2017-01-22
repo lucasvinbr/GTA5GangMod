@@ -58,7 +58,21 @@ namespace GTA.GangAndTurfMod
             return false;
         }
 
-        public static PotentialGangVehicle GetMemberFromPool()
+        public static bool RemoveVehicleAndSavePool(PotentialGangVehicle newCar)
+        {
+            int identicalEntryIndex = 0;
+            //check if there is an identical entry in the pool
+            if (CarPool.HasIdenticalEntry(newCar, ref identicalEntryIndex))
+            {
+                CarPool.carList.RemoveAt(identicalEntryIndex);
+                PersistenceHandler.SaveToFile<PotentialCarPool>(CarPool, "VehiclePool");
+                return true;
+            }
+
+            return false;
+        }
+
+        public static PotentialGangVehicle GetCarFromPool()
         {
             PotentialGangVehicle returnedVehicle;
 
@@ -94,6 +108,21 @@ namespace GTA.GangAndTurfMod
                     return true;
                 }
             }
+            return false;
+        }
+
+        public bool HasIdenticalEntry(PotentialGangVehicle potentialEntry, ref int identicalEntryIndex)
+        {
+
+            for (int i = 0; i < carList.Count; i++)
+            {
+                if (carList[i].modelHash == potentialEntry.modelHash)
+                {
+                    identicalEntryIndex = i;
+                    return true;
+                }
+            }
+            identicalEntryIndex = -1;
             return false;
         }
     }
