@@ -125,7 +125,9 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        zoneInfoMsg += " It is owned by the " + currentZone.ownerGangName;
+                        zoneInfoMsg += " It is owned by the " + currentZone.ownerGangName + ".";
+
+                        zoneInfoMsg += " Its current level is " + currentZone.value.ToString();
                     }
                 }
                 else
@@ -141,11 +143,11 @@ namespace GTA.GangAndTurfMod
             UI.ShowSubtitle(zoneInfoMsg);
         }
 
-        public int CompareZonesByDistToPlayer(TurfZone x, TurfZone y)
+        public static int CompareZonesByDistToPlayer(TurfZone x, TurfZone y)
         {
-            if(x == null)
+            if (x == null)
             {
-                if(y == null)
+                if (y == null)
                 {
                     return 0;
                 }
@@ -156,7 +158,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                if(y == null)
+                if (y == null)
                 {
                     return 1;
                 }
@@ -165,6 +167,33 @@ namespace GTA.GangAndTurfMod
                     Vector3 playerPos = Game.Player.Character.Position;
                     return World.GetDistance(x.zoneBlipPosition, playerPos).
                         CompareTo(World.GetDistance(y.zoneBlipPosition, playerPos));
+                }
+            }
+        }
+
+
+        public static int CompareZonesByValue(TurfZone x, TurfZone y)
+        {
+            if (x == null)
+            {
+                if (y == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (y == null)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return y.value.CompareTo(x.value);
                 }
             }
         }
@@ -287,12 +316,14 @@ namespace GTA.GangAndTurfMod
                     {
                         Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 255, 0f, 0f);
                     }
+
+                    targetZone.AttachedBlip.Scale = 1.0f + 0.65f / ((ModOptions.instance.maxTurfValue + 1) / (targetZone.value + 1));
                 }
 
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf)"));
+                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf, level ", targetZone.value.ToString(), ")"));
                 }
                 else
                 {

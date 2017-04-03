@@ -124,7 +124,7 @@ namespace GTA.GangAndTurfMod
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
                         if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
-                            watchedPed.RelationshipGroup == GangManager.instance.GetPlayerGang().relationGroupIndex)
+                            watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
                         {
                             vehicleIAmDriving.Position = World.GetNextPositionOnStreet(Game.Player.Character.Position, true);
                         }

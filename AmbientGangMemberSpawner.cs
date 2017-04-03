@@ -13,13 +13,18 @@ namespace GTA.GangAndTurfMod
 
         public static AmbientGangMemberSpawner instance;
 
+        /// <summary>
+        /// some circumstances, such as wars, may disable ambient spawning, even if it is active in the mod options
+        /// </summary>
+        public bool enabled = true;
+
         void OnTick(object sender, EventArgs e)
         {
             Wait(4000 + RandoMath.CachedRandom.Next(2000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             //lets try to spawn the current zone's corresponding gang members!
-            if (ModOptions.instance.ambientSpawningEnabled)
+            if (ModOptions.instance.ambientSpawningEnabled && enabled)
             {
                 TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
                 if (curTurfZone != null)
@@ -28,8 +33,8 @@ namespace GTA.GangAndTurfMod
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang == curGang) return; //we want enemies of this gang to spawn only when close to the war
                                                                                                                      
                     // also reduce police influence
-                    Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
-                    Game.MaxWantedLevel = ModOptions.instance.maxWantedLevelInGangTurf;
+                    Game.WantedMultiplier = (1 / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
+                    Game.MaxWantedLevel = RandoMath.Max((6 / (curTurfZone.value + 1)), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
 
                     if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
@@ -61,7 +66,7 @@ namespace GTA.GangAndTurfMod
                                 }
                             }
 
-                            Wait(1000 + RandoMath.CachedRandom.Next(3000000) / curGang.GetGangAIStrengthValue());
+                            Wait(1000 + RandoMath.CachedRandom.Next(40000) / (curTurfZone.value * curTurfZone.value + 1));
                         }
                     }
                     else

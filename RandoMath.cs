@@ -79,5 +79,53 @@ namespace GTA.GangAndTurfMod
                 return value * -1;
             }
         }
+
+        /// <summary>
+        /// returns the lesser of two values
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static float Min(float x, float y)
+        {
+            if (x <= y) return x;
+            else return y;
+        }
+
+        /// <summary>
+        /// returns the lesser of two values
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static int Min(int x, int y)
+        {
+            if (x <= y) return x;
+            else return y;
+        }
+
+        /// <summary>
+        /// returns the greater of two values
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static int Max(int x, int y)
+        {
+            if (x >= y) return x;
+            else return y;
+        }
+
+        /// <summary>
+        /// returns the greater of two values
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static float Max(float x, float y)
+        {
+            if (x >= y) return x;
+            else return y;
+        }
     }
 }

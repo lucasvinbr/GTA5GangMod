@@ -120,7 +120,7 @@ namespace GTA.GangAndTurfMod
 
         public void recruitGangMember()
         {
-            List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.GetPlayerGang());
+            List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.PlayerGang);
             for (int i = 0; i < playerGangMembers.Count; i++)
             {
                 if (Game.Player.IsTargetting(playerGangMembers[i]))

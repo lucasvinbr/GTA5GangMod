@@ -41,6 +41,7 @@ namespace GTA.GangAndTurfMod
                 this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
                 this.buyableWeapons = loadedOptions.buyableWeapons;
                 this.similarColors = loadedOptions.similarColors;
+                this.extraPlayerExclusiveColors = loadedOptions.extraPlayerExclusiveColors;
 
                 this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
                 this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
@@ -48,39 +49,45 @@ namespace GTA.GangAndTurfMod
 
                 this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
+                this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
 
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
+                this.maxTurfValue = loadedOptions.maxTurfValue;
 
                 this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
 
-                this.costToTakeNeutralTurf = loadedOptions.costToTakeNeutralTurf;
+                this.costToTakeTurf = loadedOptions.costToTakeTurf;
                 this.rewardForTakingEnemyTurf = loadedOptions.rewardForTakingEnemyTurf;
+
+                this.baseCostToUpgradeGeneralGangTurfValue = loadedOptions.baseCostToUpgradeGeneralGangTurfValue;
+                this.baseCostToUpgradeSingleTurfValue = loadedOptions.baseCostToUpgradeSingleTurfValue;
                 this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
                 this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
                 this.ticksCooldownBackupCar = loadedOptions.ticksCooldownBackupCar;
                 this.ticksCooldownParachutingMember = loadedOptions.ticksCooldownParachutingMember;
 
-                this.wantedFactorWhenInGangTurf = loadedOptions.wantedFactorWhenInGangTurf;
-                this.maxWantedLevelInGangTurf = loadedOptions.maxWantedLevelInGangTurf;
+                this.minWantedFactorWhenInGangTurf = loadedOptions.minWantedFactorWhenInGangTurf;
+                this.maxWantedLevelInMaxedGangTurf = loadedOptions.maxWantedLevelInMaxedGangTurf;
 
                 this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
 
+                this.notificationsEnabled = loadedOptions.notificationsEnabled;
                 this.fightingEnabled = loadedOptions.fightingEnabled;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
                 this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
+                this.forceSpawnCars = loadedOptions.forceSpawnCars;
+                this.joypadControls = loadedOptions.joypadControls;
 
+                this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
                 this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
                 this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
-
-                this.forceSpawnCars = loadedOptions.forceSpawnCars;
-                this.joypadControls = loadedOptions.joypadControls;
 
                 if (similarColors[0].blipColor == 0)
                 {
@@ -122,11 +129,13 @@ namespace GTA.GangAndTurfMod
 
         public bool emptyZoneDuringWar = true;
         public int baseNumKillsBeforeWarVictory = 25;
+        public int extraKillsPerTurfValue = 15;
 
         public int ticksBetweenTurfRewards = 45000;
-        public int ticksBetweenGangAIUpdates = 30000;
+        public int ticksBetweenGangAIUpdates = 15000;
         public int ticksBetweenGangMemberAIUpdates = 100;
-        public int baseRewardPerZoneOwned = 500;
+        public int baseRewardPerZoneOwned = 1200;
+        public int maxTurfValue = 10;
 
         /// <summary>
         /// percentage sum, per zone owned, over the total reward received.
@@ -134,8 +143,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float rewardMultiplierPerZone = 0.2f;
 
-        public int costToTakeNeutralTurf = 2000;
+        public int costToTakeTurf = 1000;
         public int rewardForTakingEnemyTurf = 3000;
+
+        public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
+        public int baseCostToUpgradeSingleTurfValue = 15000;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
@@ -143,13 +155,15 @@ namespace GTA.GangAndTurfMod
 
         public bool gangsStartWithPistols = true;
 
+        public bool notificationsEnabled = true;
         public bool fightingEnabled = true, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
         public bool forceSpawnCars = false;
         public bool joypadControls = false;
 
-        public float wantedFactorWhenInGangTurf = 0.2f;
-        public int maxWantedLevelInGangTurf = 1;
+        public float minWantedFactorWhenInGangTurf = 0.0f;
+        public int maxWantedLevelInMaxedGangTurf = 0;
 
+        public int maxCoexistingGangs = 7;
         public int spawnedMembersBeforeAmbientGenStops = 20;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int minDistanceMemberSpawnFromPlayer = 50;
@@ -201,6 +215,8 @@ namespace GTA.GangAndTurfMod
         public List<string> possibleGangLastNames;
 
         public List<GangColorTranslation> similarColors;
+
+        public List<VehicleColor> extraPlayerExclusiveColors;
 
         //XMLserializer does not like dictionaries
         [System.Serializable]
@@ -323,7 +339,20 @@ namespace GTA.GangAndTurfMod
 
         public void SetupPrimaryWeapons()
         {
-            primaryWeapons.Clear();
+            if (primaryWeapons != null)
+            {
+                primaryWeapons.Clear();
+            }
+            else
+            {
+                primaryWeapons = new List<WeaponHash>();
+            }
+
+            if (buyableWeapons == null)
+            {
+                SetWeaponListDefaultValues();
+                SaveOptions(false);
+            }
             //primary weapons are the ones that are not melee and cannot be used to drive-by (the bigger weapons, like rifles)
             for(int i = 0; i < buyableWeapons.Count; i++)
             {
@@ -408,32 +437,39 @@ namespace GTA.GangAndTurfMod
 
             emptyZoneDuringWar = true;
             baseNumKillsBeforeWarVictory = 25;
+            extraKillsPerTurfValue = 15;
 
             ticksBetweenTurfRewards = 45000;
-            ticksBetweenGangAIUpdates = 30000;
+            ticksBetweenGangAIUpdates = 15000;
             ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 1200;
+            maxTurfValue = 10;
 
             rewardMultiplierPerZone = 0.2f;
 
-            costToTakeNeutralTurf = 10000;
-            rewardForTakingEnemyTurf = 10000;
+            costToTakeTurf = 4000;
+            rewardForTakingEnemyTurf = 5000;
+
+            baseCostToUpgradeGeneralGangTurfValue = 1000000;
+            baseCostToUpgradeSingleTurfValue = 15000;
             costToCallBackupCar = 900;
             costToCallParachutingMember = 250;
             ticksCooldownBackupCar = 1000;
             ticksCooldownParachutingMember = 600;
 
-            wantedFactorWhenInGangTurf = 0.2f;
-            maxWantedLevelInGangTurf = 1;
+            minWantedFactorWhenInGangTurf = 0.0f;
+            maxWantedLevelInMaxedGangTurf = 0;
 
             gangsStartWithPistols = true;
 
+            notificationsEnabled = true;
             fightingEnabled = true;
             warAgainstPlayerEnabled = true;
             ambientSpawningEnabled = true;
             forceSpawnCars = false;
             joypadControls = false;
 
+            maxCoexistingGangs = 7;
             spawnedMembersBeforeAmbientGenStops = 20;
             spawnedMemberLimit = 30; //max number of living gang members at any time
             minDistanceMemberSpawnFromPlayer = 50;
@@ -692,6 +728,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.UtilOffWhite,
                     VehicleColor.WornOffWhite,
                     VehicleColor.WornWhite,
+                    VehicleColor.MetallicDarkIvory,
                 }, 0
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
@@ -704,6 +741,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MetallicClassicGold,
                     VehicleColor.PureGold,
                     VehicleColor.MetallicGoldenBrown,
+                    VehicleColor.MatteDesertTan,
                 }, 66
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
@@ -712,8 +750,43 @@ namespace GTA.GangAndTurfMod
                    VehicleColor.MetallicAnthraciteGray,
                    VehicleColor.MetallicSteelGray,
                    VehicleColor.WornSilverGray,
+                   VehicleColor.BrushedAluminium,
+                    VehicleColor.BrushedSteel,
+                    VehicleColor.Chrome,
+                    VehicleColor.WornGraphite,
+                    VehicleColor.WornShadowSilver,
+                    VehicleColor.MetallicDarkSilver,
+                    VehicleColor.MetallicMidnightSilver,
+                    VehicleColor.MetallicShadowSilver,
                 }, 20
                )
+            };
+
+            extraPlayerExclusiveColors = new List<VehicleColor>()
+            {
+                VehicleColor.MatteOliveDrab,
+                VehicleColor.MatteOrange,
+                VehicleColor.MetallicBeachSand,
+                VehicleColor.MetallicBeechwood,
+                VehicleColor.MetallicBistonBrown,
+                VehicleColor.MetallicBronze,
+                VehicleColor.MetallicChampagne,
+                VehicleColor.MetallicChocoBrown,
+                VehicleColor.MetallicChocoOrange,
+                VehicleColor.MetallicCream,
+                VehicleColor.MetallicDarkBeechwood,
+                VehicleColor.MetallicGunMetal,
+                VehicleColor.MetallicLime,
+                VehicleColor.MetallicMossBrown,
+                VehicleColor.MetallicOrange,
+                VehicleColor.MetallicPuebloBeige,
+                VehicleColor.MetallicStrawBeige,
+                VehicleColor.MetallicSunBleechedSand,
+                VehicleColor.MetallicSunriseOrange,
+                VehicleColor.Orange,
+                VehicleColor.WornLightOrange,
+                VehicleColor.WornOrange,
+                VehicleColor.WornSeaWash,
             };
         }
             

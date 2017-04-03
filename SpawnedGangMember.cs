@@ -123,6 +123,10 @@ namespace GTA.GangAndTurfMod
                     {
                         //enemy down
                         GangWarManager.instance.OnEnemyDeath();
+                    }else if(watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
+                    {
+                        //ally down
+                        GangWarManager.instance.OnAllyDeath();
                     }
                 }
                 Die();
