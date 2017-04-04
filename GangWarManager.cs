@@ -150,15 +150,28 @@ namespace GTA.GangAndTurfMod
         void SetSpawnPoints(Vector3 initialReferencePoint)
         {
             //spawn points for both sides should be a bit far from each other, so that the war isn't just pure chaos
-            alliedSpawnPoints[0] = GangManager.instance.FindGoodSpawnPointForMember(initialReferencePoint);
+            //the defenders' spawn point should be closer to the war blip than the attacker
+            if(curWarType == warType.defendingFromEnemy)
+            {
+                alliedSpawnPoints[0] = GangManager.instance.FindGoodSpawnPointForMember(initialReferencePoint);
+                enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                ModOptions.instance.GetAcceptableMemberSpawnDistance(), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
+                30, alliedSpawnPoints[0], ModOptions.instance.maxDistanceMemberSpawnFromPlayer);
+            }
+            else
+            {
+                enemySpawnPoints[0] = GangManager.instance.FindGoodSpawnPointForMember(initialReferencePoint);
+                alliedSpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                ModOptions.instance.GetAcceptableMemberSpawnDistance(), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
+                30, enemySpawnPoints[0], ModOptions.instance.maxDistanceMemberSpawnFromPlayer);
+            }
+            
             for (int i = 1; i < 3; i++)
             {
                 alliedSpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
             }
 
-            enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
-                30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
+            
             for (int i = 1; i < 3; i++)
             {
                 enemySpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
@@ -188,6 +201,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
+                //we probably failed to place spawn points properly.
                 //we will try placing the spawn points again in the next tick
                 alliedSpawnBlip.Remove();
                 enemySpawnBlip.Remove();
@@ -394,7 +408,7 @@ namespace GTA.GangAndTurfMod
         {
             //check if the player was in or near the warzone when the death happened 
             if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 300){
+                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600){
                 enemyReinforcements--;
                 spawnedEnemies--; //reducing this assures both sides will keep spawning
 
@@ -415,7 +429,7 @@ namespace GTA.GangAndTurfMod
         {
             //check if the player was in or near the warzone when the death happened 
             if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 300)
+                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600)
             {
                 alliedReinforcements--;
                 spawnedAllies--; //reducing this assures both sides will keep spawning

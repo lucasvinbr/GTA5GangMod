@@ -54,7 +54,7 @@ namespace GTA.GangAndTurfMod
 
         public AIUpgradeTendency upgradeTendency = AIUpgradeTendency.moreExpansion;
 
-        public Gang(string name, VehicleColor color, bool isPlayerOwned)
+        public Gang(string name, VehicleColor color, bool isPlayerOwned, int moneyAvailable = -1)
         {
             this.name = name;
             this.vehicleColor = color;
@@ -66,7 +66,15 @@ namespace GTA.GangAndTurfMod
                 upgradeTendency = (AIUpgradeTendency) RandoMath.CachedRandom.Next(4);
             }
 
-            moneyAvailable = RandoMath.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
+            if(moneyAvailable == -1)
+            {
+                moneyAvailable = RandoMath.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
+            }
+            else
+            {
+                this.moneyAvailable = moneyAvailable;
+            }
+            
 
         }
 

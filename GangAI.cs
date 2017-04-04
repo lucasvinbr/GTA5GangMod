@@ -117,8 +117,11 @@ namespace GTA.GangAndTurfMod
             switch (RandoMath.CachedRandom.Next(3))
             {
                 case 0: //accuracy!
+                        //wait for the player here. we don't want enemies to start spawnkilling the protagonist, 
+                        //so invest on this only if the player also did
                     if (watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
-                watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
+                watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel) &&
+                watchedGang.memberAccuracyLevel <= GangManager.instance.PlayerGang.memberAccuracyLevel)
                     {
                         watchedGang.moneyAvailable -= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
                         watchedGang.memberAccuracyLevel += 10;
@@ -168,7 +171,9 @@ namespace GTA.GangAndTurfMod
         void TryUpgradeZones()
         {
             //upgrade the whole gang strength if possible!
-            if(watchedGang.moneyAvailable >= GangManager.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue))
+            //lets not get more upgrades here than the player. it may get too hard for the player to catch up otherwise
+            if (watchedGang.moneyAvailable >= GangManager.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue) &&
+                watchedGang.baseTurfValue <= GangManager.instance.PlayerGang.baseTurfValue - 1)
             {
                 watchedGang.moneyAvailable -= GangManager.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue);
                 watchedGang.baseTurfValue++;

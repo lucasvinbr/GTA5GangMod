@@ -526,6 +526,8 @@ namespace GTA.GangAndTurfMod
                                     ZoneManager.instance.SaveZoneData(false);
                                     UI.ShowSubtitle("Zone level increased!");
                                     GangManager.instance.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost);
+                                    UpdateZoneUpgradeBtn();
+
                                 }
                             }
                             else

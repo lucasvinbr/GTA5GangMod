@@ -286,7 +286,7 @@ namespace GTA.GangAndTurfMod
 
             PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandoMath.CachedRandom.Next(9);
 
-            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
+            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false, GetWealthiestGang().moneyAvailable * 2);
 
             newGang.blipColor = ModOptions.instance.GetGangColorTranslation(gangColor).blipColor;
 
@@ -390,6 +390,7 @@ namespace GTA.GangAndTurfMod
             }
 
         }
+
 
         /// <summary>
         /// when the player asks to reset mod options, we must reset these update intervals because they
@@ -819,6 +820,29 @@ namespace GTA.GangAndTurfMod
                
             }
             return hostilePeds;
+        }
+
+        /// <summary>
+        /// returns the gang with the most stocked money
+        /// </summary>
+        /// <returns></returns>
+        public Gang GetWealthiestGang()
+        {
+            Gang pickedGang = null;
+
+            for(int i = 0; i < gangData.gangs.Count; i++)
+            {
+                if (pickedGang != null) {
+                    if (gangData.gangs[i].moneyAvailable > pickedGang.moneyAvailable)
+                        pickedGang = gangData.gangs[i];
+                }
+                else
+                {
+                    pickedGang = gangData.gangs[i];
+                }
+            }
+
+            return pickedGang;
         }
 
         #endregion
