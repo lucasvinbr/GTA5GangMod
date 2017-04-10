@@ -66,9 +66,9 @@ namespace GTA.GangAndTurfMod
                 upgradeTendency = (AIUpgradeTendency) RandoMath.CachedRandom.Next(4);
             }
 
-            if(moneyAvailable == -1)
+            if(moneyAvailable <= 0)
             {
-                moneyAvailable = RandoMath.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
+                this.moneyAvailable = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
             }
             else
             {

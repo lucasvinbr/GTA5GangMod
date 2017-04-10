@@ -44,7 +44,7 @@ namespace GTA.GangAndTurfMod
 
                     if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft))
                     {
-                        menuScript.doCallBackup(false);
+                        menuScript.CallCarBackup(false);
                     }
 
                     if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadUp))

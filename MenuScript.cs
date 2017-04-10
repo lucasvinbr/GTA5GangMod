@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         MenuPool menuPool;
         UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
-            modSettingsSubMenu, warAttackStrengthMenu;
+            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu;
         Ped closestPed;
         
         PotentialGangMember memberToSave = new PotentialGangMember();
@@ -53,7 +53,7 @@ namespace GTA.GangAndTurfMod
         };
 
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton, upgradeGangValueBtn, upgradeZoneValueBtn,
-            openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, newButton, 
+            openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, paraBackupBtn, 
             warLightAtkBtn, warMedAtkBtn, warLargeAtkBtn, warMassAtkBtn;
 
         private int ticksSinceLastCarBkp = 5000, ticksSinceLastParaBkp = 5000;
@@ -109,8 +109,7 @@ namespace GTA.GangAndTurfMod
             AddRemoveFromAllGangsButton();
             AddMakeFriendlyToPlayerGangButton();
 
-            AddCallVehicleButton();
-            AddCallParatrooperButton();
+            AddCallBackupBtns();
             
             AddSaveVehicleButton();
             AddRegisterPlayerVehicleButton();
@@ -118,8 +117,8 @@ namespace GTA.GangAndTurfMod
             AddRemoveVehicleEverywhereButton();
 
             UpdateBuyableWeapons();
+            AddWarOptionsSubMenu();
             AddGangOptionsSubMenu();
-            AddSkipWarBtn();
             AddModSettingsSubMenu();
 
             zonesMenu.RefreshIndex();
@@ -203,7 +202,7 @@ namespace GTA.GangAndTurfMod
                 if(inputFieldSituation == 1)
                 {
                     string typedText = Function.Call<string>(Hash.GET_ONSCREEN_KEYBOARD_RESULT);
-                    if(typedText != "none")
+                    if(typedText != "none" && GangManager.instance.GetGangByName(typedText) == null)
                     {
                         ZoneManager.instance.GiveGangZonesToAnother(GangManager.instance.PlayerGang.name, typedText);
                         GangManager.instance.PlayerGang.name = typedText;
@@ -213,7 +212,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        UI.ShowSubtitle("That name is not allowed, sorry!");
+                        UI.ShowSubtitle("That name is not allowed, sorry! (It may be in use already)");
                     }
 
                     curInputType = desiredInputType.none;
@@ -250,7 +249,7 @@ namespace GTA.GangAndTurfMod
         void UpdateTakeOverBtnText()
         {
             takeZoneButton.Description = "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $" +
-                ModOptions.instance.costToTakeTurf.ToString() + ". If it belongs to another gang, a battle will begin!";
+                ModOptions.instance.baseCostToTakeTurf.ToString() + ". If it belongs to another gang, a battle will begin!";
         }
 
         void UpdateZoneUpgradeBtn()
@@ -323,11 +322,11 @@ namespace GTA.GangAndTurfMod
 
         void AddSaveZoneButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Add Current Zone to Takeables", "Makes the zone you are in become takeable by gangs and sets your position as the zone's reference position (if toggled, this zone's blip will show here).");
-            zonesMenu.AddItem(newButton);
+            UIMenuItem saveZoneBtn = new UIMenuItem("Add Current Zone to Takeables", "Makes the zone you are in become takeable by gangs and sets your position as the zone's reference position (if toggled, this zone's blip will show here).");
+            zonesMenu.AddItem(saveZoneBtn);
             zonesMenu.OnItemSelect += (sender, item, index) =>
             {
-                if (item == newButton)
+                if (item == saveZoneBtn)
                 {
                     string curZoneName = World.GetZoneName(Game.Player.Character.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
@@ -350,7 +349,7 @@ namespace GTA.GangAndTurfMod
         {
             takeZoneButton = new UIMenuItem("Take current zone",
                 "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $" +
-                ModOptions.instance.costToTakeTurf.ToString() +". If it belongs to another gang, a battle will begin!");
+                ModOptions.instance.baseCostToTakeTurf.ToString() +". If it belongs to another gang, a battle will begin!");
             zonesMenu.AddItem(takeZoneButton);
             zonesMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -366,7 +365,7 @@ namespace GTA.GangAndTurfMod
                     {
                        if(curZone.ownerGangName == "none")
                         {
-                            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToTakeTurf))
+                            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.baseCostToTakeTurf))
                             {
                                 GangManager.instance.PlayerGang.TakeZone(curZone);
                                 UI.ShowSubtitle("This zone is " + GangManager.instance.PlayerGang.name + " turf now!");
@@ -468,6 +467,13 @@ namespace GTA.GangAndTurfMod
 
         bool TryStartWar(int atkCost, TurfZone targetZone, GangWarManager.attackStrength atkStrength)
         {
+            if(targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
+            {
+                UI.ShowSubtitle("You can't start a war against your own gang! (You probably have changed zones after opening this menu)");
+                return false;
+            }
+
+
             if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-atkCost, true))
             {
                 if (ModOptions.instance.fightingEnabled)
@@ -964,7 +970,7 @@ namespace GTA.GangAndTurfMod
 
         #region Gang Control Stuff
 
-        public void doCallBackup(bool showMenu=true)
+        public void CallCarBackup(bool showMenu=true)
         {
             if (ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
             {
@@ -1012,30 +1018,24 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        void AddCallVehicleButton()
+        void AddCallBackupBtns()
         {
             carBackupBtn = new UIMenuItem("Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")", "Calls one of your gang's vehicles to your position. All passengers leave the vehicle once it arrives.");
+            paraBackupBtn = new UIMenuItem("Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
+
             gangMenu.AddItem(carBackupBtn);
+            gangMenu.AddItem(paraBackupBtn);
             gangMenu.OnItemSelect += (sender, item, index) =>
             {
                 if(item == carBackupBtn)
                 {
-                    doCallBackup();
+                    CallCarBackup();
                     
                 }
-               
-            };
-        }
 
-        void AddCallParatrooperButton()
-        {
-            newButton = new UIMenuItem("Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
-            {
-                if (item == newButton)
+                if (item == paraBackupBtn)
                 {
-                    if(ticksSinceLastParaBkp < ModOptions.instance.ticksCooldownParachutingMember)
+                    if (ticksSinceLastParaBkp < ModOptions.instance.ticksCooldownParachutingMember)
                     {
                         UI.ShowSubtitle("You must wait before calling for parachuting backup again! (This is configurable)");
                         return;
@@ -1071,32 +1071,54 @@ namespace GTA.GangAndTurfMod
                     {
                         UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallParachutingMember.ToString() + " to call a parachuting member!");
                     }
-                   
-                }
 
+                }
             };
+
+           
         }
 
-        void AddSkipWarBtn()
+        void AddWarOptionsSubMenu()
         {
-            UIMenuItem newButton = new UIMenuItem("Skip current War", 
-                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
-            gangMenu.AddItem(newButton);
-            gangMenu.OnItemSelect += (sender, item, index) =>
+            warOptionsSubMenu = menuPool.AddSubMenu(gangMenu, "War Options Menu");
+
+            UIMenuItem skipWarBtn = new UIMenuItem("Skip current War",
+               "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
+            UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn point to your position",
+                "If a war is currently occurring, your gang members will keep spawning at the allied spawn point for as long as you've got reinforcements. This option sets that spawn point to your position.");
+            warOptionsSubMenu.AddItem(resetAlliedSpawnBtn);
+            warOptionsSubMenu.AddItem(skipWarBtn);
+            warOptionsSubMenu.OnItemSelect += (sender, item, index) =>
             {
-                if (item == newButton)
+                if (GangWarManager.instance.isOccurring)
                 {
-                    if (GangWarManager.instance.isOccurring)
+                    if (item == skipWarBtn)
                     {
+
                         GangWarManager.instance.EndWar(GangWarManager.instance.SkipWar(0.9f));
                     }
-                    else
+
+                    if (item == resetAlliedSpawnBtn)
                     {
-                        UI.ShowSubtitle("There is no war in progress.");
+                        if (!Game.Player.Character.IsInAir)
+                        {
+                            GangWarManager.instance.ForceSetAlliedSpawnPoint(Game.Player.Character.Position);
+                        }
+                        else
+                        {
+                            GangWarManager.instance.ForceSetAlliedSpawnPoint(GangManager.instance.FindGoodSpawnPointForMember());
+                        }
+
                     }
+                }
+                else
+                {
+                    UI.ShowSubtitle("There is no war in progress.");
                 }
 
             };
+
+            warOptionsSubMenu.RefreshIndex();
         }
 
         void AddGangOptionsSubMenu()
@@ -1624,7 +1646,7 @@ namespace GTA.GangAndTurfMod
                     UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
                     carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
-                    this.newButton.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
+                    this.paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
                     UpdateTakeOverBtnText();
                 }
             };

@@ -13,8 +13,15 @@ namespace GTA.GangAndTurfMod
 
         private List<TurfZone> myZones;
 
+        public int ticksSinceLastFightWithPlayer = 0;
+
         public override void Update()
         {
+            if (!GangWarManager.instance.isOccurring)
+            {
+                ticksSinceLastFightWithPlayer++;
+            }
+            
             //everyone tries to expand before anything else;
             //that way, we don't end up with isolated gangs or some kind of peace
             myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
@@ -27,26 +34,26 @@ namespace GTA.GangAndTurfMod
                     TryUpgradeGuns();
                     TryUpgradeGuns(); //yeah, we like guns
                     TryUpgradeZones();
-                    TryUpgradeMembers(); //but we're not buff
+                    if(RandoMath.RandomBool()) TryUpgradeMembers(); //but we're not buff
                     break;
                 case Gang.AIUpgradeTendency.moreExpansion:
                     TryExpand();
                     TryExpand(); //that's some serious expansion
                     TryUpgradeGuns();
                     TryUpgradeMembers();
-                    TryUpgradeZones(); //...but zone strength isn't our priority
+                    if (RandoMath.RandomBool()) TryUpgradeZones(); //...but zone strength isn't our priority
                     break;
                 case Gang.AIUpgradeTendency.toughMembers:
                     TryUpgradeMembers();
                     TryUpgradeMembers();
                     TryUpgradeGuns();
-                    TryUpgradeZones(); //tough members, but tend to be few in number
+                    if (RandoMath.RandomBool()) TryUpgradeZones(); //tough members, but tend to be few in number
                     break;
                 case Gang.AIUpgradeTendency.toughTurf:
                     TryUpgradeZones();
                     TryUpgradeZones(); //lots of defenders!
                     TryUpgradeMembers();
-                    TryUpgradeGuns(); //...with below average guns
+                    if (RandoMath.RandomBool()) TryUpgradeGuns(); //...with below average guns
                     break;
             }
 
@@ -54,14 +61,23 @@ namespace GTA.GangAndTurfMod
             //are we running very low on cash (unable to take even a neutral territory)?
             //do we have any turf? is any war going on?
             //if not, we no longer exist
-            if(watchedGang.moneyAvailable < ModOptions.instance.costToTakeTurf)
+            if(watchedGang.moneyAvailable < ModOptions.instance.baseCostToTakeTurf)
             {
                 if (!GangWarManager.instance.isOccurring)
                 {
                     myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
                     if (myZones.Count == 0)
                     {
-                        GangManager.instance.KillGang(this);
+                        if (ModOptions.instance.gangsCanBeWipedOut)
+                        {
+                            GangManager.instance.KillGang(this);
+                        }
+                        else
+                        {
+                            //we get some money then, at least to keep trying to fight
+                            watchedGang.moneyAvailable += ModOptions.instance.baseCostToTakeTurf * 5;
+                        }
+                        
                     }
                 }
             }
@@ -121,7 +137,7 @@ namespace GTA.GangAndTurfMod
                         //so invest on this only if the player also did
                     if (watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
                 watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel) &&
-                watchedGang.memberAccuracyLevel <= GangManager.instance.PlayerGang.memberAccuracyLevel)
+                watchedGang.memberAccuracyLevel <= GangManager.instance.PlayerGang.memberAccuracyLevel + 20)
                     {
                         watchedGang.moneyAvailable -= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
                         watchedGang.memberAccuracyLevel += 10;
@@ -208,9 +224,9 @@ namespace GTA.GangAndTurfMod
             {
                 //this zone is neutral, lets just take it
                 //we make it cheaper for the AI to get neutral zones in order to not make the world a gangless place haha
-                if (watchedGang.moneyAvailable >= ModOptions.instance.costToTakeTurf / 10)
+                if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf / 10)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.costToTakeTurf / 10;
+                    watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf / 10;
                     watchedGang.TakeZone(targetZone);
                 }
             }
@@ -221,9 +237,9 @@ namespace GTA.GangAndTurfMod
                 {
                     ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
                     //this zone was controlled by a gang that no longer exists. it is neutral now
-                    if (watchedGang.moneyAvailable >= ModOptions.instance.costToTakeTurf / 10)
+                    if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf / 10)
                     {
-                        watchedGang.moneyAvailable -= ModOptions.instance.costToTakeTurf / 10;
+                        watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf / 10;
                         watchedGang.TakeZone(targetZone);
                     }
                 }
@@ -244,7 +260,8 @@ namespace GTA.GangAndTurfMod
                         if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
                         {
                             if (ModOptions.instance.fightingEnabled &&
-                            ModOptions.instance.warAgainstPlayerEnabled)
+                            ModOptions.instance.warAgainstPlayerEnabled &&
+                            ticksSinceLastFightWithPlayer > ModOptions.instance.minGangAITicksBetweenBattlesWithSameGang)
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
@@ -255,7 +272,7 @@ namespace GTA.GangAndTurfMod
                         {
                             watchedGang.moneyAvailable -= atkCost;
                             //roll dices... favor the defenders a little here
-                            if (atkCost / ModOptions.instance.costToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
+                            if (atkCost / ModOptions.instance.baseCostToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
@@ -272,7 +289,8 @@ namespace GTA.GangAndTurfMod
                         if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
                         {
                             if (ModOptions.instance.fightingEnabled &&
-                            ModOptions.instance.warAgainstPlayerEnabled)
+                            ModOptions.instance.warAgainstPlayerEnabled &&
+                            ticksSinceLastFightWithPlayer > ModOptions.instance.minGangAITicksBetweenBattlesWithSameGang)
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
@@ -283,7 +301,7 @@ namespace GTA.GangAndTurfMod
                         {
                             watchedGang.moneyAvailable -= atkCost;
                             //roll dices... favor the defenders a little here
-                            if (atkCost / ModOptions.instance.costToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
+                            if (atkCost / ModOptions.instance.baseCostToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
@@ -360,9 +378,5 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void CompareZonesByValue(TurfZone x, TurfZone y)
-        {
-
-        }
     }
 }

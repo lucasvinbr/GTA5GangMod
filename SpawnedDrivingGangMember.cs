@@ -60,13 +60,21 @@ namespace GTA.GangAndTurfMod
                     //if we get too far from the player, despawn
                     if(World.GetDistance(vehicleIAmDriving.Position, Game.Player.Character.Position) > 
                             ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f){
-                        if(!watchedPed.IsPlayer)
-                        watchedPed.MarkAsNoLongerNeeded();
+                        if (!watchedPed.IsPlayer)
+                        {
+                            SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
+                            if (memberAI != null) memberAI.Die();
+                        }
+                        
 
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            if(!myPassengers[i].IsPlayer)
-                            myPassengers[i].MarkAsNoLongerNeeded();
+                            if (!myPassengers[i].IsPlayer)
+                            {
+                                SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
+                                if (memberAI != null) memberAI.Die();
+                            }
+                            
                         }
                         vehicleIAmDriving.IsPersistent = false;
                         vehicleIAmDriving.CurrentBlip.Remove();

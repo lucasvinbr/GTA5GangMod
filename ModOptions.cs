@@ -50,20 +50,25 @@ namespace GTA.GangAndTurfMod
                 this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
                 this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
+                this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
 
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
+                this.minGangAITicksBetweenBattlesWithSameGang = loadedOptions.minGangAITicksBetweenBattlesWithSameGang;
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
                 this.maxTurfValue = loadedOptions.maxTurfValue;
 
                 this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
 
-                this.costToTakeTurf = loadedOptions.costToTakeTurf;
+                this.baseCostToTakeTurf = loadedOptions.baseCostToTakeTurf;
                 this.rewardForTakingEnemyTurf = loadedOptions.rewardForTakingEnemyTurf;
 
                 this.baseCostToUpgradeGeneralGangTurfValue = loadedOptions.baseCostToUpgradeGeneralGangTurfValue;
                 this.baseCostToUpgradeSingleTurfValue = loadedOptions.baseCostToUpgradeSingleTurfValue;
+                this.baseCostToUpgradeArmor = loadedOptions.baseCostToUpgradeArmor;
+                this.baseCostToUpgradeHealth = loadedOptions.baseCostToUpgradeHealth;
+                this.baseCostToUpgradeAccuracy = loadedOptions.baseCostToUpgradeAccuracy;
                 this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
                 this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
                 this.ticksCooldownBackupCar = loadedOptions.ticksCooldownBackupCar;
@@ -72,8 +77,6 @@ namespace GTA.GangAndTurfMod
                 this.minWantedFactorWhenInGangTurf = loadedOptions.minWantedFactorWhenInGangTurf;
                 this.maxWantedLevelInMaxedGangTurf = loadedOptions.maxWantedLevelInMaxedGangTurf;
 
-                this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
-
                 this.notificationsEnabled = loadedOptions.notificationsEnabled;
                 this.fightingEnabled = loadedOptions.fightingEnabled;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
@@ -81,9 +84,12 @@ namespace GTA.GangAndTurfMod
                 this.forceSpawnCars = loadedOptions.forceSpawnCars;
                 this.joypadControls = loadedOptions.joypadControls;
 
+                this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
+                this.gangsCanBeWipedOut = loadedOptions.gangsCanBeWipedOut;
                 this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
+                this.numSpawnsReservedForCarsDuringWars = loadedOptions.numSpawnsReservedForCarsDuringWars;
                 this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
                 this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
@@ -130,9 +136,11 @@ namespace GTA.GangAndTurfMod
         public bool emptyZoneDuringWar = true;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
+        public int killsBetweenEnemySpawnReplacement = 25;
 
         public int ticksBetweenTurfRewards = 45000;
         public int ticksBetweenGangAIUpdates = 15000;
+        public int minGangAITicksBetweenBattlesWithSameGang = 4;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 1200;
         public int maxTurfValue = 10;
@@ -143,17 +151,18 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float rewardMultiplierPerZone = 0.2f;
 
-        public int costToTakeTurf = 1000;
+        public int baseCostToTakeTurf = 1000;
         public int rewardForTakingEnemyTurf = 3000;
 
         public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
         public int baseCostToUpgradeSingleTurfValue = 15000;
+        public int baseCostToUpgradeArmor = 20000;
+        public int baseCostToUpgradeHealth = 10000;
+        public int baseCostToUpgradeAccuracy = 40000;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
         public int ticksCooldownParachutingMember = 600;
-
-        public bool gangsStartWithPistols = true;
 
         public bool notificationsEnabled = true;
         public bool fightingEnabled = true, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
@@ -163,9 +172,12 @@ namespace GTA.GangAndTurfMod
         public float minWantedFactorWhenInGangTurf = 0.0f;
         public int maxWantedLevelInMaxedGangTurf = 0;
 
+        public bool gangsStartWithPistols = true;
+        public bool gangsCanBeWipedOut = true;
         public int maxCoexistingGangs = 7;
         public int spawnedMembersBeforeAmbientGenStops = 20;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
+        public int numSpawnsReservedForCarsDuringWars = 1;
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 130;
         public int minDistanceCarSpawnFromPlayer = 80;
@@ -438,16 +450,18 @@ namespace GTA.GangAndTurfMod
             emptyZoneDuringWar = true;
             baseNumKillsBeforeWarVictory = 25;
             extraKillsPerTurfValue = 15;
+            killsBetweenEnemySpawnReplacement = 25;
 
             ticksBetweenTurfRewards = 45000;
             ticksBetweenGangAIUpdates = 15000;
+            minGangAITicksBetweenBattlesWithSameGang = 4;
             ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 1200;
             maxTurfValue = 10;
 
             rewardMultiplierPerZone = 0.2f;
 
-            costToTakeTurf = 4000;
+            baseCostToTakeTurf = 4000;
             rewardForTakingEnemyTurf = 5000;
 
             baseCostToUpgradeGeneralGangTurfValue = 1000000;
@@ -460,8 +474,6 @@ namespace GTA.GangAndTurfMod
             minWantedFactorWhenInGangTurf = 0.0f;
             maxWantedLevelInMaxedGangTurf = 0;
 
-            gangsStartWithPistols = true;
-
             notificationsEnabled = true;
             fightingEnabled = true;
             warAgainstPlayerEnabled = true;
@@ -469,9 +481,12 @@ namespace GTA.GangAndTurfMod
             forceSpawnCars = false;
             joypadControls = false;
 
+            gangsStartWithPistols = true;
+            gangsCanBeWipedOut = true;
             maxCoexistingGangs = 7;
             spawnedMembersBeforeAmbientGenStops = 20;
             spawnedMemberLimit = 30; //max number of living gang members at any time
+            numSpawnsReservedForCarsDuringWars = 1;
             minDistanceMemberSpawnFromPlayer = 50;
             maxDistanceMemberSpawnFromPlayer = 130;
             minDistanceCarSpawnFromPlayer = 80;
@@ -513,6 +528,8 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
+            new BuyableWeapon(WeaponHash.Firework, 1000000),
+            new BuyableWeapon(WeaponHash.FlareGun, 600000),
             new BuyableWeapon(WeaponHash.GrenadeLauncher, 950000),
             new BuyableWeapon(WeaponHash.Gusenberg, 200000),
             new BuyableWeapon(WeaponHash.HeavyPistol, 55000),
@@ -576,6 +593,7 @@ namespace GTA.GangAndTurfMod
                 "Egyptian",
                 "Electric",
                 "Epic",
+                "Fake",
                 "Fallen",
                 "Fire",
                 "Forbidden",
@@ -611,10 +629,12 @@ namespace GTA.GangAndTurfMod
                 "Mighty",
                 "Mountain",
                 "Neon",
+                "New",
                 "New Wave",
                 "Night",
                 "Nihilist",
                 "Nordic",
+                "Original",
                 "Power",
                 "Poisonous",
                 "Rabid",
