@@ -133,14 +133,11 @@ namespace GTA.GangAndTurfMod
             switch (RandoMath.CachedRandom.Next(3))
             {
                 case 0: //accuracy!
-                        //wait for the player here. we don't want enemies to start spawnkilling the protagonist, 
-                        //so invest on this only if the player also did
                     if (watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
-                watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel) &&
-                watchedGang.memberAccuracyLevel <= GangManager.instance.PlayerGang.memberAccuracyLevel + 20)
+                watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
                     {
                         watchedGang.moneyAvailable -= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
-                        watchedGang.memberAccuracyLevel += 10;
+                        watchedGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
                         if (watchedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                         {
                             watchedGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
@@ -154,7 +151,7 @@ namespace GTA.GangAndTurfMod
                             watchedGang.moneyAvailable >= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor))
                     {
                         watchedGang.moneyAvailable -= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor);
-                        watchedGang.memberArmor += 20;
+                        watchedGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
 
                         if (watchedGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
                         {
@@ -170,7 +167,7 @@ namespace GTA.GangAndTurfMod
                             watchedGang.moneyAvailable >= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth))
                     {
                         watchedGang.moneyAvailable -= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth);
-                        watchedGang.memberHealth += 20;
+                        watchedGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
 
                         if (watchedGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
                         {

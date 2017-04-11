@@ -1159,7 +1159,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if(playerGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
                         {
-                            playerGang.memberHealth += 20;
+                            playerGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
                             if(playerGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
                             {
                                 playerGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
@@ -1185,7 +1185,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (playerGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
                         {
-                            playerGang.memberArmor += 20;
+                            playerGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
                             if (playerGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
                             {
                                 playerGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
@@ -1211,7 +1211,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (playerGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                         {
-                            playerGang.memberAccuracyLevel += 10;
+                            playerGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
                             if (playerGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                             {
                                 playerGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;

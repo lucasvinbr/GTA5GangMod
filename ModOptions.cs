@@ -69,6 +69,7 @@ namespace GTA.GangAndTurfMod
                 this.baseCostToUpgradeArmor = loadedOptions.baseCostToUpgradeArmor;
                 this.baseCostToUpgradeHealth = loadedOptions.baseCostToUpgradeHealth;
                 this.baseCostToUpgradeAccuracy = loadedOptions.baseCostToUpgradeAccuracy;
+                this.numUpgradesUntilMaxMemberAttribute = loadedOptions.numUpgradesUntilMaxMemberAttribute;
                 this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
                 this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
                 this.ticksCooldownBackupCar = loadedOptions.ticksCooldownBackupCar;
@@ -130,9 +131,9 @@ namespace GTA.GangAndTurfMod
 
         public gangMemberAggressivenessMode gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
 
-        public int maxGangMemberHealth = 150;
+        public int maxGangMemberHealth = 120;
         public int maxGangMemberArmor = 100;
-        public int maxGangMemberAccuracy = 75;
+        public int maxGangMemberAccuracy = 30;
 
         public bool emptyZoneDuringWar = true;
         public int baseNumKillsBeforeWarVictory = 25;
@@ -152,14 +153,15 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float rewardMultiplierPerZone = 0.2f;
 
-        public int baseCostToTakeTurf = 1000;
-        public int rewardForTakingEnemyTurf = 3000;
+        public int baseCostToTakeTurf = 4000;
+        public int rewardForTakingEnemyTurf = 5000;
 
         public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
         public int baseCostToUpgradeSingleTurfValue = 15000;
-        public int baseCostToUpgradeArmor = 20000;
-        public int baseCostToUpgradeHealth = 10000;
+        public int baseCostToUpgradeArmor = 35000;
+        public int baseCostToUpgradeHealth = 20000;
         public int baseCostToUpgradeAccuracy = 40000;
+        public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
@@ -272,6 +274,8 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        #region getters
+
         public BuyableWeapon GetBuyableWeaponByHash(WeaponHash wepHash)
         {
             for (int i = 0; i < buyableWeapons.Count; i++)
@@ -298,19 +302,6 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public PotentialGangMember.memberColor TranslateVehicleToMemberColor(VehicleColor vehColor)
-        {
-            for(int i = 0; i < similarColors.Count; i++)
-            {
-                if (similarColors[i].vehicleColors.Contains(vehColor))
-                {
-                    return similarColors[i].baseColor;
-                }
-            }
-
-            return PotentialGangMember.memberColor.white;
-        }
-
         public int GetAcceptableMemberSpawnDistance()
         {
             if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
@@ -331,6 +322,21 @@ namespace GTA.GangAndTurfMod
             return RandoMath.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
         }
 
+        public int GetAccuracyUpgradeIncrement()
+        {
+            return RandoMath.Max(1, maxGangMemberAccuracy / numUpgradesUntilMaxMemberAttribute);
+        }
+
+        public int GetHealthUpgradeIncrement()
+        {
+            return RandoMath.Max(1, maxGangMemberHealth / numUpgradesUntilMaxMemberAttribute);
+        }
+
+        public int GetArmorUpgradeIncrement()
+        {
+            return RandoMath.Max(1, maxGangMemberArmor / numUpgradesUntilMaxMemberAttribute);
+        }
+
         /// <summary>
         /// gets a weapon from a list and check if it is in the buyables list.
         /// if it isn't, get another or get a random one from the buyables
@@ -349,6 +355,21 @@ namespace GTA.GangAndTurfMod
             }
 
             return RandoMath.GetRandomElementFromList(buyableWeapons).wepHash;
+        }
+
+        #endregion
+
+        public PotentialGangMember.memberColor TranslateVehicleToMemberColor(VehicleColor vehColor)
+        {
+            for (int i = 0; i < similarColors.Count; i++)
+            {
+                if (similarColors[i].vehicleColors.Contains(vehColor))
+                {
+                    return similarColors[i].baseColor;
+                }
+            }
+
+            return PotentialGangMember.memberColor.white;
         }
 
         public void SetupPrimaryWeapons()
@@ -445,9 +466,9 @@ namespace GTA.GangAndTurfMod
 
             gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
 
-            maxGangMemberHealth = 150;
+            maxGangMemberHealth = 120;
             maxGangMemberArmor = 100;
-            maxGangMemberAccuracy = 75;
+            maxGangMemberAccuracy = 30;
 
             emptyZoneDuringWar = true;
             baseNumKillsBeforeWarVictory = 25;
@@ -468,6 +489,10 @@ namespace GTA.GangAndTurfMod
 
             baseCostToUpgradeGeneralGangTurfValue = 1000000;
             baseCostToUpgradeSingleTurfValue = 15000;
+            baseCostToUpgradeArmor = 35000;
+            baseCostToUpgradeHealth = 20000;
+            baseCostToUpgradeAccuracy = 40000;
+            numUpgradesUntilMaxMemberAttribute = 10;
             costToCallBackupCar = 900;
             costToCallParachutingMember = 250;
             ticksCooldownBackupCar = 1000;
@@ -609,6 +634,7 @@ namespace GTA.GangAndTurfMod
                 "Greek",
                 "Happy",
                 "High",
+                "High Poly",
                 "Holy",
                 "Ice",
                 "Ice Cold",
@@ -623,6 +649,7 @@ namespace GTA.GangAndTurfMod
                 "Legendary",
                 "Lordly",
                 "Lost",
+                "Low Poly",
                 "Magic",
                 "Manic",
                 "Mercenary",
