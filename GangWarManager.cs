@@ -44,7 +44,7 @@ namespace GTA.GangAndTurfMod
 
         private int ticksBeforeAutoResolution = 30000, ticksSinceLastCarSpawn = 0, minTicksBetweenCarSpawns = 20;
 
-        private int initialEnemyReinforcements = 0;
+        private int initialEnemyReinforcements = 0, maxSpawnedAllies, maxSpawnedEnemies;
 
         private float spawnedAllies = 0, spawnedEnemies = 0;
 
@@ -110,6 +110,9 @@ namespace GTA.GangAndTurfMod
                 spawnedAllies = GangManager.instance.GetSpawnedMembersOfGang(GangManager.instance.PlayerGang).Count;
                 spawnedEnemies = GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Count;
 
+                maxSpawnedAllies = (int) (RandoMath.Max(ModOptions.instance.spawnedMemberLimit * reinforcementsAdvantage, 5));
+                maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, 5);
+
                 isOccurring = true;
 
                 if(World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
@@ -149,7 +152,7 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 1; i < 3; i++)
             {
-                alliedSpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
+                alliedSpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 10, 3, 20);
             }
 
             if (alliedSpawnBlip != null)
@@ -174,7 +177,7 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 1; i < 3; i++)
             {
-                enemySpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
+                enemySpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 10, 3, 20);
             }
 
             if(enemySpawnBlip != null)
@@ -218,7 +221,7 @@ namespace GTA.GangAndTurfMod
             //and the spawn point blips, so that we don't have to hunt where our troops will come from
             alliedSpawnBlip = World.CreateBlip(alliedSpawnPoints[0]);
             alliedSpawnBlip.Sprite = BlipSprite.PickupSpawn;
-            alliedSpawnBlip.Scale = 1.15f;
+            alliedSpawnBlip.Scale = 1.55f;
             Function.Call(Hash.SET_BLIP_COLOUR, alliedSpawnBlip, GangManager.instance.PlayerGang.blipColor);
 
             Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
@@ -227,7 +230,7 @@ namespace GTA.GangAndTurfMod
 
             enemySpawnBlip = World.CreateBlip(enemySpawnPoints[0]);
             enemySpawnBlip.Sprite = BlipSprite.PickupSpawn;
-            enemySpawnBlip.Scale = 1.15f;
+            enemySpawnBlip.Scale = 1.55f;
             Function.Call(Hash.SET_BLIP_COLOUR, enemySpawnBlip, enemyGang.blipColor);
 
             Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
@@ -339,8 +342,12 @@ namespace GTA.GangAndTurfMod
         {
             if (playerVictory)
             {
+                int battleProfit = GangManager.CalculateBattleRewards(enemyGang, curWarType == warType.attackingEnemy);
                 GangManager.instance.AddOrSubtractMoneyToProtagonist
-                    (GangManager.CalculateBattleRewards(enemyGang, curWarType == warType.attackingEnemy));
+                    (battleProfit);
+
+                UI.Notify("Victory rewards: $" + battleProfit.ToString());
+
                 if (curWarType == warType.attackingEnemy)
                 {
                     GangManager.instance.PlayerGang.TakeZone(warZone);
@@ -355,8 +362,9 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                enemyGang.moneyAvailable +=
-                    GangManager.CalculateBattleRewards(GangManager.instance.PlayerGang, curWarType != warType.attackingEnemy);
+                enemyGang.moneyAvailable += (int)
+                    (GangManager.CalculateBattleRewards(GangManager.instance.PlayerGang, curWarType != warType.attackingEnemy) *
+                    ModOptions.instance.extraProfitForAIGangsFactor);
                 if (curWarType == warType.attackingEnemy)
                 {
                     UI.ShowSubtitle("We've lost this battle. They keep the turf.");
@@ -374,7 +382,6 @@ namespace GTA.GangAndTurfMod
             alliedSpawnBlip.Remove();
             enemySpawnBlip.Remove();
             isOccurring = false;
-            Game.WantedMultiplier = 1;
             AmbientGangMemberSpawner.instance.enabled = true;
             GangManager.instance.GetGangAI(enemyGang).ticksSinceLastFightWithPlayer = 0;
         }
@@ -434,7 +441,9 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount);
+                if (spawnedEnemies < maxSpawnedEnemies)
+                    GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount);
+                else return;
             }
                 
 
@@ -556,7 +565,7 @@ namespace GTA.GangAndTurfMod
                     //it won't be a defeat, however, until the player dies
                     if(GangManager.instance.livingMembersCount < ModOptions.instance.spawnedMemberLimit - ModOptions.instance.numSpawnsReservedForCarsDuringWars)
                     {
-                        SpawnMember(alliedReinforcements > 0 && spawnedMembersProportion < reinforcementsAdvantage);
+                        SpawnMember(alliedReinforcements > 0 && spawnedMembersProportion < reinforcementsAdvantage && spawnedAllies < maxSpawnedAllies);
                     }
 
                     Wait(400);

@@ -87,6 +87,7 @@ namespace GTA.GangAndTurfMod
                 this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
                 this.gangsCanBeWipedOut = loadedOptions.gangsCanBeWipedOut;
                 this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
+                this.extraProfitForAIGangsFactor = loadedOptions.extraProfitForAIGangsFactor;
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
                 this.numSpawnsReservedForCarsDuringWars = loadedOptions.numSpawnsReservedForCarsDuringWars;
@@ -175,6 +176,7 @@ namespace GTA.GangAndTurfMod
         public bool gangsStartWithPistols = true;
         public bool gangsCanBeWipedOut = true;
         public int maxCoexistingGangs = 7;
+        public float extraProfitForAIGangsFactor = 1.5f;
         public int spawnedMembersBeforeAmbientGenStops = 20;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int numSpawnsReservedForCarsDuringWars = 1;
@@ -484,6 +486,7 @@ namespace GTA.GangAndTurfMod
             gangsStartWithPistols = true;
             gangsCanBeWipedOut = true;
             maxCoexistingGangs = 7;
+            extraProfitForAIGangsFactor = 1.5f;
             spawnedMembersBeforeAmbientGenStops = 20;
             spawnedMemberLimit = 30; //max number of living gang members at any time
             numSpawnsReservedForCarsDuringWars = 1;

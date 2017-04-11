@@ -276,7 +276,13 @@ namespace GTA.GangAndTurfMod
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += defenderStrength;
+                                watchedGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(ownerGang, true) *
+                                    ModOptions.instance.extraProfitForAIGangsFactor);
+                            }
+                            else
+                            {
+                                ownerGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(watchedGang, false) *
+                                    ModOptions.instance.extraProfitForAIGangsFactor);
                             }
 
                         }
@@ -305,9 +311,14 @@ namespace GTA.GangAndTurfMod
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += defenderStrength;
+                                watchedGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(ownerGang, true) *
+                                    ModOptions.instance.extraProfitForAIGangsFactor);
                             }
-
+                            else
+                            {
+                                ownerGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(watchedGang, false) *
+                                    ModOptions.instance.extraProfitForAIGangsFactor);
+                            }
                         }
                     }
                 }
