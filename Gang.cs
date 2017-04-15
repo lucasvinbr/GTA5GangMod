@@ -28,6 +28,8 @@ namespace GTA.GangAndTurfMod
         public int memberHealth = 50;
         public int memberArmor = 0;
 
+        public int baseTurfValue = 0;
+
         //car stats - the models
         public List<PotentialGangVehicle> carVariations = new List<PotentialGangVehicle>();
 
@@ -38,14 +40,41 @@ namespace GTA.GangAndTurfMod
         //the weapons the AI Gang will probably buy if they have enough cash
         public List<WeaponHash> preferredWeaponHashes = new List<WeaponHash>();
 
-        public Gang(string name, VehicleColor color, bool isPlayerOwned)
+        /// <summary>
+        /// what does this Gang give priority to when spending money?
+        /// (all gangs should try to expand a little, but the expanders should go beyond that)
+        /// </summary>
+        public enum AIUpgradeTendency
+        {
+            toughMembers,
+            bigGuns,
+            toughTurf,
+            moreExpansion
+        }
+
+        public AIUpgradeTendency upgradeTendency = AIUpgradeTendency.moreExpansion;
+
+        public Gang(string name, VehicleColor color, bool isPlayerOwned, int moneyAvailable = -1)
         {
             this.name = name;
             this.vehicleColor = color;
 
             this.isPlayerOwned = isPlayerOwned;
 
-            moneyAvailable = RandoMath.CachedRandom.Next(10000, 50000); //this isnt used if this is the player's gang - he'll use his own money instead
+            if(!isPlayerOwned)
+            {
+                upgradeTendency = (AIUpgradeTendency) RandoMath.CachedRandom.Next(4);
+            }
+
+            if(moneyAvailable <= 0)
+            {
+                this.moneyAvailable = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
+            }
+            else
+            {
+                this.moneyAvailable = moneyAvailable;
+            }
+            
 
         }
 
@@ -73,9 +102,19 @@ namespace GTA.GangAndTurfMod
         }
 
 
-        public void TakeZone(TurfZone takenZone)
+        public void TakeZone(TurfZone takenZone, bool doNotify = true)
         {
-            takenZone.value = 0;
+            if(doNotify && ModOptions.instance.notificationsEnabled)
+            {
+                string notificationMsg = string.Concat("The ", name, " have taken ", takenZone.zoneName);
+                if(takenZone.ownerGangName != "none")
+                {
+                    notificationMsg = string.Concat(notificationMsg, " from the ", takenZone.ownerGangName);
+                }
+                notificationMsg = string.Concat(notificationMsg, "!");
+                UI.Notify(notificationMsg);
+            }
+            takenZone.value = baseTurfValue;
             takenZone.ownerGangName = name;
             ZoneManager.instance.UpdateZoneData(takenZone);
         }
@@ -230,22 +269,74 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// when an AI gang fights against another, this value is used to influence the outcome
+        /// when a gang fights against another, this value is used to influence the outcome.
+        /// it varies a little, to give that extra chance to weaker gangs
         /// </summary>
         /// <returns></returns>
-        public int GetGangAIStrengthValue()
+        public int GetGangVariedStrengthValue()
         {
-            int weaponValue = 200;
+            int weaponValue = 10;
             if(gangWeaponHashes.Count > 0)
             {
                 weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes)).price;
             }
-            return moneyAvailable / 10000 +
-                ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
+            return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
                 weaponValue / 20 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
                 memberHealth;
+        }
+
+        /// <summary>
+        /// this value doesn't have random variations. we use the gang's number of territories
+        ///  and upgrades to define this. a high value is around 2000, 3000
+        /// </summary>
+        /// <returns></returns>
+        public int GetFixedStrengthValue()
+        {
+            return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
+                memberAccuracyLevel * 10 +
+                memberArmor +
+                memberHealth;
+        }
+
+        /// <summary>
+        /// uses the number of territories and the gang's strength
+        /// </summary>
+        /// <returns></returns>
+        public int GetReinforcementsValue()
+        {
+            return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
+                baseTurfValue * 500;
+        }
+
+        public int CompareGunsByPrice(WeaponHash x, WeaponHash y)
+        {
+            ModOptions.BuyableWeapon buyableX = ModOptions.instance.GetBuyableWeaponByHash(x),
+                buyableY = buyableX = ModOptions.instance.GetBuyableWeaponByHash(y);
+            if (buyableX == null)
+            {
+                if (buyableY == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (buyableY == null)
+                {
+                    return 1;
+                }
+                else
+                {
+
+                    return buyableY.price.CompareTo(buyableX.price);
+                }
+            }
         }
 
         public WeaponHash GetListedGunFromOwnedGuns(List<WeaponHash> targetList)

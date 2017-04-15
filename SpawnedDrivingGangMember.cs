@@ -60,13 +60,21 @@ namespace GTA.GangAndTurfMod
                     //if we get too far from the player, despawn
                     if(World.GetDistance(vehicleIAmDriving.Position, Game.Player.Character.Position) > 
                             ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f){
-                        if(!watchedPed.IsPlayer)
-                        watchedPed.MarkAsNoLongerNeeded();
+                        if (!watchedPed.IsPlayer)
+                        {
+                            SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
+                            if (memberAI != null) memberAI.Die();
+                        }
+                        
 
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            if(!myPassengers[i].IsPlayer)
-                            myPassengers[i].MarkAsNoLongerNeeded();
+                            if (!myPassengers[i].IsPlayer)
+                            {
+                                SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
+                                if (memberAI != null) memberAI.Die();
+                            }
+                            
                         }
                         vehicleIAmDriving.IsPersistent = false;
                         vehicleIAmDriving.CurrentBlip.Remove();
@@ -124,7 +132,7 @@ namespace GTA.GangAndTurfMod
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
                         if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
-                            watchedPed.RelationshipGroup == GangManager.instance.GetPlayerGang().relationGroupIndex)
+                            watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
                         {
                             vehicleIAmDriving.Position = World.GetNextPositionOnStreet(Game.Player.Character.Position, true);
                         }

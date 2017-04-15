@@ -13,23 +13,29 @@ namespace GTA.GangAndTurfMod
 
         public static AmbientGangMemberSpawner instance;
 
+        /// <summary>
+        /// some circumstances, such as wars, may disable ambient spawning, even if it is active in the mod options
+        /// </summary>
+        public bool enabled = true;
+
         void OnTick(object sender, EventArgs e)
         {
             Wait(4000 + RandoMath.CachedRandom.Next(2000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
-            //lets try to spawn the current zone's corresponding gang members!
-            if (ModOptions.instance.ambientSpawningEnabled)
+            TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
+            if (curTurfZone != null)
             {
-                TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
-                if (curTurfZone != null)
+                // also reduce police influence
+                Game.WantedMultiplier = (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
+                Game.MaxWantedLevel = RandoMath.Max(CalculateMaxWantedLevelInTurf(curTurfZone.value), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
+
+                //if spawning is enabled, lets try to spawn the current zone's corresponding gang members!
+                if (ModOptions.instance.ambientSpawningEnabled && enabled)
                 {
+
                     Gang curGang = GangManager.instance.GetGangByName(curTurfZone.ownerGangName);
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang == curGang) return; //we want enemies of this gang to spawn only when close to the war
-                                                                                                                     
-                    // also reduce police influence
-                    Game.WantedMultiplier = ModOptions.instance.wantedFactorWhenInGangTurf;
-                    Game.MaxWantedLevel = ModOptions.instance.maxWantedLevelInGangTurf;
 
                     if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
@@ -40,7 +46,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
                                 Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
-                                if(newMember != null)
+                                if (newMember != null)
                                 {
                                     newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
                                 }
@@ -54,14 +60,14 @@ namespace GTA.GangAndTurfMod
                                 {
                                     GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
                                     Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
-                                    if(driver != null) //if, for some reason, we don't have a driver, do nothing
+                                    if (driver != null) //if, for some reason, we don't have a driver, do nothing
                                     {
-                                        driver.Task.CruiseWithVehicle(spawnedVehicle, 20, (int) DrivingStyle.Rushed);
+                                        driver.Task.CruiseWithVehicle(spawnedVehicle, 20, (int)DrivingStyle.Rushed);
                                     }
                                 }
                             }
 
-                            Wait(1000 + RandoMath.CachedRandom.Next(3000000) / curGang.GetGangAIStrengthValue());
+                            Wait(1000 + RandoMath.CachedRandom.Next(40000) / (curTurfZone.value * curTurfZone.value + 1));
                         }
                     }
                     else
@@ -78,6 +84,13 @@ namespace GTA.GangAndTurfMod
         {
             this.Tick += OnTick;
             instance = this;
+        }
+
+        public int CalculateMaxWantedLevelInTurf(int curTurfValue)
+        {
+            int maxTurfValue = ModOptions.instance.maxTurfValue;
+            float turfProgressPercent = (float) curTurfValue / maxTurfValue;
+            return 6 - (int) (6 * turfProgressPercent);
         }
     }
 }

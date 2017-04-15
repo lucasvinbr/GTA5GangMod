@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         public override void Update()
         {
-            if (watchedPed.IsInAir || watchedPed.IsPlayer)
+            if ((myGang.isPlayerOwned && watchedPed.IsInAir) || watchedPed.IsPlayer)
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace GTA.GangAndTurfMod
                 //call for aid of nearby friendly members if we're in combat
                 if (watchedPed.IsInCombat && ModOptions.instance.fightingEnabled)
                 {
-                    foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
+                    foreach (Ped member in GangManager.instance.GetSpawnedPedsOfGang
                         (myGang))
                     {
                         if (!member.IsInCombat && 
@@ -123,6 +123,10 @@ namespace GTA.GangAndTurfMod
                     {
                         //enemy down
                         GangWarManager.instance.OnEnemyDeath();
+                    }else if(watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
+                    {
+                        //ally down
+                        GangWarManager.instance.OnAllyDeath();
                     }
                 }
                 Die();
@@ -132,7 +136,19 @@ namespace GTA.GangAndTurfMod
 
         public void Die()
         {
-
+            if (GangWarManager.instance.isOccurring)
+            {
+                if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
+                {
+                    //enemy down
+                    GangWarManager.instance.DecrementSpawnedsNumber(false);
+                }
+                else if (watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
+                {
+                    //ally down
+                    GangWarManager.instance.DecrementSpawnedsNumber(true);
+                }
+            }
             watchedPed.CurrentBlip.Remove();
             this.watchedPed.MarkAsNoLongerNeeded();
             this.myGang = null;
@@ -141,7 +157,7 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public bool PickATarget(float radius = 20)
+        public bool PickATarget(float radius = 50)
         {
             //a method that tries to make the target idle melee fighter pick other idle fighters as targets (by luck)
             //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time

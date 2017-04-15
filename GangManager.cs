@@ -22,6 +22,21 @@ namespace GTA.GangAndTurfMod
         public GangData gangData;
         public static GangManager instance;
 
+        public Gang PlayerGang
+        {
+            get
+            {
+                if(cachedPlayerGang == null)
+                {
+                    cachedPlayerGang = GetPlayerGang();
+                }
+
+                return cachedPlayerGang;
+            }
+        }
+
+        private Gang cachedPlayerGang;
+
         private int ticksSinceLastReward = 0;
 
         /// <summary>
@@ -34,6 +49,9 @@ namespace GTA.GangAndTurfMod
         public bool hasDiedWithChangedBody = false;
         public Ped theOriginalPed;
         private int moneyFromLastProtagonist = 0;
+        private int defaultMaxHealth = 200;
+
+        public delegate void SuccessfulMemberSpawnDelegate();
 
         #region setup/save stuff
         [System.Serializable]
@@ -57,6 +75,8 @@ namespace GTA.GangAndTurfMod
 
             new ModOptions(); //just start the options, we can call it by its instance later
 
+            defaultMaxHealth = Game.Player.Character.MaxHealth;
+
             gangData = PersistenceHandler.LoadFromFile<GangData>("GangData");
             if (gangData == null)
             {
@@ -67,6 +87,11 @@ namespace GTA.GangAndTurfMod
                 gangData.gangs.Add(playerGang);
 
                 playerGang.blipColor = (int) BlipColor.Yellow;
+
+                if (ModOptions.instance.gangsStartWithPistols)
+                {
+                    playerGang.gangWeaponHashes.Add(WeaponHash.Pistol);
+                }
 
                 CreateNewEnemyGang();
             }
@@ -162,8 +187,6 @@ namespace GTA.GangAndTurfMod
 
         public void Tick()
         {
-            
-
             //tick living members...
             for (int i = 0; i < livingMembers.Count; i++)
             {
@@ -218,7 +241,7 @@ namespace GTA.GangAndTurfMod
 
                     //lets also check if there aren't too many gangs around
                     //if there aren't, we might create a new one...
-                    if (enemyGangs.Count < 7)
+                    if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs)
                     {
                         if (RandoMath.CachedRandom.Next(enemyGangs.Count) == 0)
                         {
@@ -244,7 +267,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 //this also counts for the player's gang
-                GiveTurfRewardToGang(GetPlayerGang());
+                GiveTurfRewardToGang(PlayerGang);
             }
         }
 
@@ -265,7 +288,7 @@ namespace GTA.GangAndTurfMod
 
             PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandoMath.CachedRandom.Next(9);
 
-            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false);
+            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false, RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * 2);
 
             newGang.blipColor = ModOptions.instance.GetGangColorTranslation(gangColor).blipColor;
 
@@ -345,8 +368,9 @@ namespace GTA.GangAndTurfMod
 
                     for (int i = 0; i < curGangZones.Count; i++)
                     {
-                        int zoneReward = (int)((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned *
-                        (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count));
+                        int zoneReward = (int)((ModOptions.instance.baseRewardPerZoneOwned * 
+                            (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count)) +
+                            ((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned * 0.25f) );
 
                         AddOrSubtractMoneyToProtagonist(zoneReward);
                         
@@ -369,6 +393,7 @@ namespace GTA.GangAndTurfMod
 
         }
 
+
         /// <summary>
         /// when the player asks to reset mod options, we must reset these update intervals because they
         /// may have changed
@@ -386,19 +411,94 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        #endregion
+
+        #region Gang Upgrade/War Calculations
+
         public static int CalculateHealthUpgradeCost(int currentMemberHealth)
         {
-            return (currentMemberHealth + 20) * (20 * (currentMemberHealth / 20) + 1);
+            return ModOptions.instance.baseCostToUpgradeHealth + (currentMemberHealth + 20) * (20 * (currentMemberHealth / 20) + 1);
         }
 
         public static int CalculateArmorUpgradeCost(int currentMemberArmor)
         {
-            return 2000 + (currentMemberArmor + 20) * (50 * (currentMemberArmor / 25) + 1);
+            return ModOptions.instance.baseCostToUpgradeArmor + (currentMemberArmor + 20) * (50 * (currentMemberArmor / 25));
         }
 
         public static int CalculateAccuracyUpgradeCost(int currentMemberAcc)
         {
-            return (currentMemberAcc + 10) * 2500;
+            return ((currentMemberAcc / 5) + 1) * ModOptions.instance.baseCostToUpgradeAccuracy;
+        }
+
+        public static int CalculateGangValueUpgradeCost(int currentGangValue)
+        {
+            return (currentGangValue + 1) * ModOptions.instance.baseCostToUpgradeGeneralGangTurfValue;
+        }
+
+        public static int CalculateTurfValueUpgradeCost(int currentTurfValue)
+        {
+            return (currentTurfValue + 1) * ModOptions.instance.baseCostToUpgradeSingleTurfValue;
+        }
+
+        public static int CalculateAttackCost(Gang attackerGang, GangWarManager.attackStrength attackType)
+        {
+            int attackTypeInt = (int) attackType;
+            int pow2NonZeroAttackType = (attackTypeInt * attackTypeInt + 1);
+            return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt +
+                attackerGang.GetFixedStrengthValue() * pow2NonZeroAttackType;
+        }
+
+        public static GangWarManager.attackStrength CalculateRequiredAttackStrength(Gang attackerGang, int defenderStrength)
+        {
+            GangWarManager.attackStrength requiredAtk = GangWarManager.attackStrength.light;
+
+            int attackerGangStrength = attackerGang.GetFixedStrengthValue();
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (attackerGangStrength * (i * i + 1) > defenderStrength)
+                {
+                    break;
+                }
+                else
+                {
+                    requiredAtk++;
+                }
+            }
+
+            return requiredAtk;
+        }
+
+        public static int CalculateAttackerReinforcements(Gang attackerGang, GangWarManager.attackStrength attackType)
+        {
+            return ModOptions.instance.extraKillsPerTurfValue * ((int) (attackType + 1) * (int) (attackType + 1)) +  ModOptions.instance.baseNumKillsBeforeWarVictory / 2 +
+                attackerGang.GetReinforcementsValue() / 100;
+        }
+
+        public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone)
+        {
+            return defenderGang.GetFixedStrengthValue() * contestedZone.value;
+        }
+
+        public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone)
+        {
+            return ModOptions.instance.extraKillsPerTurfValue * targetZone.value + ModOptions.instance.baseNumKillsBeforeWarVictory +
+                defenderGang.GetReinforcementsValue() / 100;
+        }
+
+        /// <summary>
+        /// uses the base reward for taking enemy turf (half if it was just a battle for defending)
+        /// and the enemy strength (with variation) to define the "loot"
+        /// </summary>
+        /// <returns></returns>
+        public static int CalculateBattleRewards(Gang ourEnemy, bool weWereAttacking)
+        {
+            int baseReward = ModOptions.instance.rewardForTakingEnemyTurf;
+            if(weWereAttacking)
+            {
+                baseReward /= 2;
+            }
+            return baseReward + ourEnemy.GetGangVariedStrengthValue();
         }
 
         #endregion
@@ -443,10 +543,19 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
+                    if (!hasDiedWithChangedBody)
+                    {
+                        if (GangWarManager.instance.isOccurring)
+                        {
+                            GangWarManager.instance.OnAllyDeath(true);
+                        }
+                    }
                     hasDiedWithChangedBody = true;
                     //Game.Player.CanControlCharacter = false;
                     //Game.Player.Character.Euphoria.ShotFallToKnees.Start(20000);
                     Game.Player.Character.Weapons.Select(WeaponHash.Unarmed, true);
+                    //in a war, this counts as a casualty in our team
+                    
                     Function.Call((Hash)0xAE99FB955581844A, Game.Player.Character.Handle, -1, -1, 0, 0, 0, 0);
                     Game.Player.IgnoredByEveryone = true;
                 }
@@ -459,7 +568,7 @@ namespace GTA.GangAndTurfMod
         {
             if (!hasChangedBody)
             {
-                List<Ped> playerGangMembers = GetSpawnedMembersOfGang(GetPlayerGang());
+                List<Ped> playerGangMembers = GetSpawnedPedsOfGang(PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
                     if (Game.Player.IsTargetting(playerGangMembers[i]))
@@ -467,6 +576,15 @@ namespace GTA.GangAndTurfMod
                         if (playerGangMembers[i].IsAlive)
                         {
                             theOriginalPed = Game.Player.Character;
+                            //adds a blip to the protagonist so that we know where we left him
+                            Blip protagonistBlip = theOriginalPed.AddBlip();
+                            protagonistBlip.Sprite = BlipSprite.Creator;
+                            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+                            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Last Used Protagonist");
+                            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, protagonistBlip);
+                            
+
+                            defaultMaxHealth = theOriginalPed.MaxHealth;
                             moneyFromLastProtagonist = Game.Player.Money;
                             //theOriginalPed.IsInvincible = true;
                             hasChangedBody = true;
@@ -488,7 +606,7 @@ namespace GTA.GangAndTurfMod
             targetPed.Task.ClearAllImmediately();
             
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
-            Game.Player.MaxArmor = targetPed.Armor + targetPed.Health;
+            Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth;
             targetPed.Armor += targetPed.Health;
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
@@ -504,6 +622,11 @@ namespace GTA.GangAndTurfMod
         {
             hasDiedWithChangedBody = false;
             theBody.IsInvincible = false;
+            SpawnedGangMember bodyAI = GetTargetMemberAI(theBody);
+            if(bodyAI != null)
+            {
+                bodyAI.Die();
+            }
             theBody.Health = 0;
             theBody.MarkAsNoLongerNeeded();
             theBody.Kill();
@@ -520,7 +643,7 @@ namespace GTA.GangAndTurfMod
             {
                 Ped oldPed = Game.Player.Character;
 
-                List<Ped> respawnOptions = GetSpawnedMembersOfGang(GetPlayerGang());
+                List<Ped> respawnOptions = GetSpawnedPedsOfGang(PlayerGang);
 
                 for(int i = 0; i < respawnOptions.Count; i++)
                 {
@@ -535,7 +658,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 //lets parachute if no one is around
-                Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.GetPlayerGang(),
+                Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang,
                    Game.Player.Character.Position + Vector3.WorldUp * 70);
                 if (spawnedPed != null)
                 {
@@ -554,6 +677,8 @@ namespace GTA.GangAndTurfMod
             //return to original body
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
             Game.Player.MaxArmor = 100;
+            theOriginalPed.CurrentBlip.Remove();
+            theOriginalPed.MaxHealth = defaultMaxHealth;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             hasChangedBody = false;
             //Game.Player.CanControlCharacter = true;
@@ -569,7 +694,7 @@ namespace GTA.GangAndTurfMod
             else
             {
                 oldPed.Health = oldPed.Armor + 100;
-                oldPed.RelationshipGroup = GetPlayerGang().relationGroupIndex;
+                oldPed.RelationshipGroup = PlayerGang.relationGroupIndex;
                 oldPed.Task.FightAgainstHatedTargets(80);
             }
 
@@ -578,7 +703,7 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// adds the value to the currently controlled protagonist
+        /// adds the value, or checks if it's possible to do so, to the currently controlled protagonist
         /// (or the last controlled protagonist if the player is mind-controlling a member)
         /// </summary>
         /// <param name="valueToAdd"></param>
@@ -638,6 +763,18 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
+        public GangAI GetGangAI(Gang targetGang)
+        {
+            for (int i = 0; i < enemyGangs.Count; i++)
+            {
+                if (enemyGangs[i].watchedGang == targetGang)
+                {
+                    return enemyGangs[i];
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// returns the player's gang
         /// </summary>
@@ -654,7 +791,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public List<Ped> GetSpawnedMembersOfGang(Gang desiredGang)
+        public List<Ped> GetSpawnedPedsOfGang(Gang desiredGang)
         {
             List<Ped> returnedList = new List<Ped>();
 
@@ -670,6 +807,35 @@ namespace GTA.GangAndTurfMod
             }
 
             return returnedList;
+        }
+
+        public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang)
+        {
+            List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
+
+            for (int i = 0; i < livingMembers.Count; i++)
+            {
+                if (livingMembers[i].myGang == desiredGang)
+                {
+                    returnedList.Add(livingMembers[i]);
+                }
+            }
+
+            return returnedList;
+        }
+
+        public SpawnedGangMember GetTargetMemberAI(Ped targetMember)
+        {
+            if (targetMember == null) return null;
+            for(int i = 0; i < livingMembers.Count; i++)
+            {
+                if(livingMembers[i].watchedPed == targetMember)
+                {
+                    return livingMembers[i];
+                }
+            }
+
+            return null;
         }
 
         public List<Ped> GetEnemyGangMembers(Gang friendlyGang)
@@ -714,31 +880,86 @@ namespace GTA.GangAndTurfMod
             return hostilePeds;
         }
 
+        /// <summary>
+        /// returns the gang with the most stocked money
+        /// </summary>
+        /// <returns></returns>
+        public Gang GetWealthiestGang()
+        {
+            Gang pickedGang = null;
+
+            for(int i = 0; i < gangData.gangs.Count; i++)
+            {
+                if (pickedGang != null) {
+                    if (gangData.gangs[i].moneyAvailable > pickedGang.moneyAvailable)
+                        pickedGang = gangData.gangs[i];
+                }
+                else
+                {
+                    pickedGang = gangData.gangs[i];
+                }
+            }
+
+            return pickedGang;
+        }
+
         #endregion
 
         #region spawner methods
 
         /// <summary>
-        /// a good spawn point is one that is not too close and not too far from the player (according to the Mod Options)
+        /// a good spawn point is one that is not too close and not too far from the player or referencePosition (according to the Mod Options)
         /// </summary>
         /// <returns></returns>
-        public Vector3 FindGoodSpawnPointForMember()
+        public Vector3 FindGoodSpawnPointForMember(Vector3? referencePosition = null)
         {
             Vector3 chosenPos = Vector3.Zero;
-            Vector3 playerPos = Game.Player.Character.Position;
+            Vector3 referencePos = Game.Player.Character.Position;
+
+            if(referencePosition != null)
+            {
+                referencePos = referencePosition.Value;
+            }
 
             int attempts = 0;
 
-            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(Game.Player.Character.Position + RandoMath.RandomDirection(true) *
+            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(referencePos + RandoMath.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableMemberSpawnDistance()));
-            float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
-            while ((distFromPlayer > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
-                distFromPlayer < ModOptions.instance.minDistanceMemberSpawnFromPlayer) && attempts <= 5)
+            float distFromRef = World.GetDistance(referencePos, chosenPos);
+            while ((distFromRef > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
+                distFromRef < ModOptions.instance.minDistanceMemberSpawnFromPlayer) && attempts <= 5)
             {
                 // UI.Notify("too far"); or too close
-                chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandoMath.RandomDirection(true) * 
+                chosenPos = World.GetNextPositionOnSidewalk(referencePos + RandoMath.RandomDirection(true) * 
                     ModOptions.instance.GetAcceptableMemberSpawnDistance());
-                distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+                distFromRef = World.GetDistance(referencePos, chosenPos);
+                attempts++;
+            }
+
+            return chosenPos;
+        }
+
+        /// <summary>
+        /// finds a spawn point that is close to the specified reference point and, optionally, far from the specified repulsor
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindCustomSpawnPoint(Vector3 referencePoint, float averageDistanceFromReference, float minDistanceFromReference, int maxAttempts = 10, Vector3? repulsor = null, float minDistanceFromRepulsor = 0)
+        {
+            Vector3 chosenPos = Vector3.Zero;
+
+            int attempts = 0;
+
+            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
+                          averageDistanceFromReference));
+            float distFromRef = World.GetDistance(referencePoint, chosenPos);
+            while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
+                (repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
+                attempts <= maxAttempts)
+            {
+                // UI.Notify("too far"); or too close
+                chosenPos = World.GetNextPositionOnSidewalk(referencePoint + RandoMath.RandomDirection(true) *
+                    averageDistanceFromReference);
+                distFromRef = World.GetDistance(referencePoint, chosenPos);
                 attempts++;
             }
 
@@ -753,18 +974,18 @@ namespace GTA.GangAndTurfMod
             int attempts = 0;
 
             chosenPos = World.GetNextPositionOnStreet
-                          (Game.Player.Character.Position + RandoMath.RandomDirection(true) *
+                          (playerPos + RandoMath.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableCarSpawnDistance());
-            float distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+            float distFromPlayer = World.GetDistance(playerPos, chosenPos);
 
             while ((distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
                 distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer) && attempts < 5)
             {
                 // UI.Notify("too far"); or too close
                 //just spawn it then, don't mind being on the street because the player might be on the mountains or the desert
-                chosenPos = World.GetNextPositionOnSidewalk(Game.Player.Character.Position + RandoMath.RandomDirection(true) *
+                chosenPos = World.GetNextPositionOnSidewalk(playerPos + RandoMath.RandomDirection(true) *
                     ModOptions.instance.GetAcceptableCarSpawnDistance());
-                distFromPlayer = World.GetDistance(Game.Player.Character.Position, chosenPos);
+                distFromPlayer = World.GetDistance(playerPos, chosenPos);
                 attempts++;
             }
 
@@ -798,7 +1019,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false)
+        public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null)
         {
             if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
@@ -829,6 +1050,8 @@ namespace GTA.GangAndTurfMod
                     newPed.MaxHealth = ownerGang.memberHealth;
                     newPed.Health = ownerGang.memberHealth;
                     newPed.Armor = ownerGang.memberArmor;
+
+                    newPed.Money = RandoMath.CachedRandom.Next(60);
 
                     //set the blip
                     newPed.AddBlip();
@@ -937,13 +1160,14 @@ namespace GTA.GangAndTurfMod
                 }
 
                 livingMembersCount++;
+                if (onSuccessfulMemberSpawn != null) onSuccessfulMemberSpawn();
                 return newPed;
             }
 
             return null;
         }
 
-        public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false)
+        public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
@@ -963,7 +1187,7 @@ namespace GTA.GangAndTurfMod
                         newVehicle.MarkAsNoLongerNeeded();
                     }
 
-                    Ped driver = SpawnGangMember(ownerGang, spawnPos, true);
+                    Ped driver = SpawnGangMember(ownerGang, spawnPos, true, onSuccessfulMemberSpawn : onSuccessfulPassengerSpawn);
                     if (driver != null)
                     {
                         driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
@@ -973,7 +1197,7 @@ namespace GTA.GangAndTurfMod
 
                         for (int i = 0; i < passengerCount; i++)
                         {
-                            Ped passenger = SpawnGangMember(ownerGang, spawnPos, true);
+                            Ped passenger = SpawnGangMember(ownerGang, spawnPos, true, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
                             if (passenger != null)
                             {
                                 passenger.SetIntoVehicle(newVehicle, VehicleSeat.Any);
@@ -1009,7 +1233,7 @@ namespace GTA.GangAndTurfMod
 
         void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool playerIsDest = false)
         {
-            //enlist this new gang member in the spawned list!
+            //enlist this new driver in the spawned list!
             if (livingDrivingMembers.Count > 0)
             {
                 bool couldEnlistWithoutAdding = false;
