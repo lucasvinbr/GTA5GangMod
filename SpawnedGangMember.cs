@@ -44,7 +44,7 @@ namespace GTA.GangAndTurfMod
                 //call for aid of nearby friendly members if we're in combat
                 if (watchedPed.IsInCombat && ModOptions.instance.fightingEnabled)
                 {
-                    foreach (Ped member in GangManager.instance.GetSpawnedMembersOfGang
+                    foreach (Ped member in GangManager.instance.GetSpawnedPedsOfGang
                         (myGang))
                     {
                         if (!member.IsInCombat && 

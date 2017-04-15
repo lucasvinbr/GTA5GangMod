@@ -568,7 +568,7 @@ namespace GTA.GangAndTurfMod
         {
             if (!hasChangedBody)
             {
-                List<Ped> playerGangMembers = GetSpawnedMembersOfGang(PlayerGang);
+                List<Ped> playerGangMembers = GetSpawnedPedsOfGang(PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
                     if (Game.Player.IsTargetting(playerGangMembers[i]))
@@ -576,6 +576,15 @@ namespace GTA.GangAndTurfMod
                         if (playerGangMembers[i].IsAlive)
                         {
                             theOriginalPed = Game.Player.Character;
+                            //adds a blip to the protagonist so that we know where we left him
+                            Blip protagonistBlip = theOriginalPed.AddBlip();
+                            protagonistBlip.Sprite = BlipSprite.Creator;
+                            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+                            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Last Used Protagonist");
+                            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, protagonistBlip);
+                            
+
+                            defaultMaxHealth = theOriginalPed.MaxHealth;
                             moneyFromLastProtagonist = Game.Player.Money;
                             //theOriginalPed.IsInvincible = true;
                             hasChangedBody = true;
@@ -613,6 +622,11 @@ namespace GTA.GangAndTurfMod
         {
             hasDiedWithChangedBody = false;
             theBody.IsInvincible = false;
+            SpawnedGangMember bodyAI = GetTargetMemberAI(theBody);
+            if(bodyAI != null)
+            {
+                bodyAI.Die();
+            }
             theBody.Health = 0;
             theBody.MarkAsNoLongerNeeded();
             theBody.Kill();
@@ -629,7 +643,7 @@ namespace GTA.GangAndTurfMod
             {
                 Ped oldPed = Game.Player.Character;
 
-                List<Ped> respawnOptions = GetSpawnedMembersOfGang(PlayerGang);
+                List<Ped> respawnOptions = GetSpawnedPedsOfGang(PlayerGang);
 
                 for(int i = 0; i < respawnOptions.Count; i++)
                 {
@@ -663,6 +677,7 @@ namespace GTA.GangAndTurfMod
             //return to original body
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
             Game.Player.MaxArmor = 100;
+            theOriginalPed.CurrentBlip.Remove();
             theOriginalPed.MaxHealth = defaultMaxHealth;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             hasChangedBody = false;
@@ -776,7 +791,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public List<Ped> GetSpawnedMembersOfGang(Gang desiredGang)
+        public List<Ped> GetSpawnedPedsOfGang(Gang desiredGang)
         {
             List<Ped> returnedList = new List<Ped>();
 
@@ -788,6 +803,21 @@ namespace GTA.GangAndTurfMod
                     {
                         returnedList.Add(livingMembers[i].watchedPed);
                     }
+                }
+            }
+
+            return returnedList;
+        }
+
+        public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang)
+        {
+            List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
+
+            for (int i = 0; i < livingMembers.Count; i++)
+            {
+                if (livingMembers[i].myGang == desiredGang)
+                {
+                    returnedList.Add(livingMembers[i]);
                 }
             }
 

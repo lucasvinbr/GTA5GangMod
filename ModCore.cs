@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using NativeUI;
+using System.Drawing;
 
 namespace GTA.GangAndTurfMod
 {
@@ -16,13 +18,13 @@ namespace GTA.GangAndTurfMod
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
-
         public ModCore()
         {
             zoneManagerScript = new ZoneManager();
             gangManagerScript = new GangManager();
             menuScript = new MenuScript();
 
+            
             this.KeyUp += onKeyUp;
             this.Tick += OnTick;
         }
@@ -31,6 +33,12 @@ namespace GTA.GangAndTurfMod
         {
             gangManagerScript.Tick();
             menuScript.Tick();
+
+            if (GangWarManager.instance.shouldDisplayReinforcementsTexts)
+            {
+                GangWarManager.instance.alliedNumText.Draw();
+                GangWarManager.instance.enemyNumText.Draw();
+            }
 
             //zix attempt controller recruit
             if (ModOptions.instance.joypadControls)
@@ -120,7 +128,7 @@ namespace GTA.GangAndTurfMod
 
         public void recruitGangMember()
         {
-            List<Ped> playerGangMembers = gangManagerScript.GetSpawnedMembersOfGang(gangManagerScript.PlayerGang);
+            List<Ped> playerGangMembers = gangManagerScript.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
             for (int i = 0; i < playerGangMembers.Count; i++)
             {
                 if (Game.Player.IsTargetting(playerGangMembers[i]))

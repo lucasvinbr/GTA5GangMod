@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 using GTA.Math;
+using NativeUI;
+using System.Drawing;
 
 namespace GTA.GangAndTurfMod
 {
@@ -44,6 +46,10 @@ namespace GTA.GangAndTurfMod
 
         private int ticksBeforeAutoResolution = 30000, ticksSinceLastCarSpawn = 0, minTicksBetweenCarSpawns = 20;
 
+        //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
+        //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
+        private int ticksSinceLastBalanceCheck = 0, ticksBetweenBalanceChecks = 8;
+
         private int initialEnemyReinforcements = 0, maxSpawnedAllies, maxSpawnedEnemies;
 
         private float spawnedAllies = 0, spawnedEnemies = 0;
@@ -60,12 +66,21 @@ namespace GTA.GangAndTurfMod
 
         private bool spawnPointsSet = false;
 
+        public UIResText alliedNumText, enemyNumText;
+
+        public bool shouldDisplayReinforcementsTexts = false;
+
         public GangWarManager()
         {
             instance = this;
             this.Tick += OnTick;
             enemySpawnPoints = new Vector3[3];
             alliedSpawnPoints = new Vector3[3];
+            alliedNumText = new UIResText("400", new Point(576, 10), 0.5f, Color.CadetBlue);
+            enemyNumText = new UIResText("400", new Point(800, 10), 0.5f, Color.Red);
+
+            alliedNumText.Outline = true;
+            enemyNumText.Outline = true;
         }
 
         
@@ -103,6 +118,9 @@ namespace GTA.GangAndTurfMod
                     enemyReinforcements = GangManager.CalculateAttackerReinforcements(enemyGang, attackStrength);
                 }
 
+                alliedNumText.Caption = alliedReinforcements.ToString();
+                enemyNumText.Caption = enemyReinforcements.ToString();
+
                 initialEnemyReinforcements = enemyReinforcements;
 
                 reinforcementsAdvantage = alliedReinforcements / (float) enemyReinforcements;
@@ -110,7 +128,7 @@ namespace GTA.GangAndTurfMod
                 spawnedAllies = GangManager.instance.GetSpawnedMembersOfGang(GangManager.instance.PlayerGang).Count;
                 spawnedEnemies = GangManager.instance.GetSpawnedMembersOfGang(enemyGang).Count;
 
-                maxSpawnedAllies = (int) (RandoMath.Max(ModOptions.instance.spawnedMemberLimit * reinforcementsAdvantage, 5));
+                maxSpawnedAllies = (int) (RandoMath.Max((ModOptions.instance.spawnedMemberLimit / 2) * reinforcementsAdvantage, 5));
                 maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, 5);
 
                 isOccurring = true;
@@ -379,11 +397,17 @@ namespace GTA.GangAndTurfMod
             CheckIfBattleWasUnfair();
             Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "ScreenFlash", "WastedSounds");
             warBlip.Remove();
-            alliedSpawnBlip.Remove();
-            enemySpawnBlip.Remove();
+            shouldDisplayReinforcementsTexts = false;
             isOccurring = false;
             AmbientGangMemberSpawner.instance.enabled = true;
             GangManager.instance.GetGangAI(enemyGang).ticksSinceLastFightWithPlayer = 0;
+
+            if (alliedSpawnBlip != null)
+            {
+                alliedSpawnBlip.Remove();
+                enemySpawnBlip.Remove();
+            }
+            
         }
 
         void CheckIfBattleWasUnfair()
@@ -411,12 +435,12 @@ namespace GTA.GangAndTurfMod
         {
             Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
             Vehicle spawnedVehicle = null;
-            if (!isFriendly)
+            if (!isFriendly && spawnedEnemies - 4 < maxSpawnedEnemies)
             {
                 spawnedVehicle = GangManager.instance.SpawnGangVehicle(enemyGang,
                     spawnPos, GangManager.instance.FindGoodSpawnPointForCar(), true, false, true, IncrementEnemiesCount);
             }
-            else
+            else if(spawnedAllies - 4 < maxSpawnedAllies)
             {
                 spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
                     spawnPos, GangManager.instance.FindGoodSpawnPointForCar(), true, false, true, IncrementAlliesCount);
@@ -479,8 +503,8 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    UI.ShowSubtitle(enemyReinforcements.ToString() + " kills remaining!", 900);
-
+                    //UI.ShowSubtitle(enemyReinforcements.ToString() + " kills remaining!", 900);
+                    enemyNumText.Caption = enemyReinforcements.ToString();
                     //if we've lost too many people since the last time we changed spawn points,
                     //change them again!
                     if(initialEnemyReinforcements - enemyReinforcements > 0 &&
@@ -501,13 +525,13 @@ namespace GTA.GangAndTurfMod
                 World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600)
             {
                 alliedReinforcements--;
-
+                alliedNumText.Caption = alliedReinforcements.ToString();
                 //we can't lose by running out of reinforcements only.
                 //the player must fall or the war be skipped for it to end as a defeat
 
                 if (alliedReinforcements >= 0)
                 {
-                    UI.ShowSubtitle(alliedReinforcements.ToString() + " of us remain!", 900);
+                    //UI.ShowSubtitle(alliedReinforcements.ToString() + " of us remain!", 900);
                 }
                 else
                 {
@@ -520,10 +544,39 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public void TryWarBalancing(bool cullFriendlies)
+        {
+            List<SpawnedGangMember> spawnedMembers = 
+                GangManager.instance.GetSpawnedMembersOfGang(cullFriendlies ? GangManager.instance.PlayerGang : enemyGang);
+
+            for(int i = 0; i < spawnedMembers.Count; i++)
+            {
+                if(!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, spawnedMembers[i].watchedPed, false) &&
+                    World.GetDistance(Game.Player.Character.Position, spawnedMembers[i].watchedPed.Position) >
+                ModOptions.instance.minDistanceMemberSpawnFromPlayer && !spawnedMembers[i].watchedPed.IsOnScreen)
+                {
+                    spawnedMembers[i].Die();
+                    //make sure we don't exagerate!
+                    //stop if we're back inside the limits
+                    if ((cullFriendlies && spawnedAllies < maxSpawnedAllies) ||
+                        (!cullFriendlies && spawnedEnemies < maxSpawnedEnemies)){
+                        break;
+                    }
+                }
+            }
+        }
+
         public void DecrementSpawnedsNumber(bool memberWasFriendly)
         {
-            if (memberWasFriendly) spawnedAllies--;
-            else spawnedEnemies--;
+            if (memberWasFriendly)
+            {
+                spawnedAllies--;
+                if (spawnedAllies < 0) spawnedAllies = 0;
+            }
+            else {
+                spawnedEnemies--;
+                if (spawnedEnemies < 0) spawnedEnemies = 0;
+            }
         }
 
         void OnTick(object sender, EventArgs e)
@@ -533,7 +586,10 @@ namespace GTA.GangAndTurfMod
                 if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
                 World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 300)
                 {
+
+                    shouldDisplayReinforcementsTexts = true;
                     ticksSinceLastCarSpawn++;
+                    ticksSinceLastBalanceCheck++;
                     curTicksAwayFromBattle = 0;
                     Game.WantedMultiplier = 0;
 
@@ -557,6 +613,19 @@ namespace GTA.GangAndTurfMod
                         ticksSinceLastCarSpawn = 0;
                     }
 
+                    if(ticksSinceLastBalanceCheck > ticksBetweenBalanceChecks)
+                    {
+                        ticksSinceLastBalanceCheck = 0;
+                        if(spawnedAllies > maxSpawnedAllies)
+                        {
+                            //try removing some members that can't currently be seen by the player or are far enough
+                            TryWarBalancing(true);
+                        }else if(spawnedEnemies > maxSpawnedEnemies)
+                        {
+                            TryWarBalancing(false);
+                        }
+                    }
+
                     if (!spawnPointsSet) SetSpawnPoints(warZone.zoneBlipPosition);
 
                     spawnedMembersProportion = spawnedAllies / RandoMath.Max(spawnedEnemies, 1.0f);
@@ -572,6 +641,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
+                    shouldDisplayReinforcementsTexts = false;
                     curTicksAwayFromBattle++;
                     AmbientGangMemberSpawner.instance.enabled = true;
                     if (curTicksAwayFromBattle > ticksBeforeAutoResolution)
