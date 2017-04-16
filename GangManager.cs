@@ -96,7 +96,7 @@ namespace GTA.GangAndTurfMod
                 CreateNewEnemyGang();
             }
 
-            if (gangData.gangs.Count == 1)
+            if (gangData.gangs.Count == 1 && ModOptions.instance.maxCoexistingGangs > 1)
             {
                 //we're alone.. add an enemy!
                 CreateNewEnemyGang();
@@ -241,7 +241,7 @@ namespace GTA.GangAndTurfMod
 
                     //lets also check if there aren't too many gangs around
                     //if there aren't, we might create a new one...
-                    if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs)
+                    if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs - 1)
                     {
                         if (RandoMath.CachedRandom.Next(enemyGangs.Count) == 0)
                         {
@@ -344,7 +344,7 @@ namespace GTA.GangAndTurfMod
             UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
             enemyGangs.Remove(aiWatchingTheGang);
             gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
-            if(enemyGangs.Count == 0)
+            if(enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)
             {
                 //create a new gang right away... but do it silently to not demotivate the player too much
                 Gang createdGang = CreateNewEnemyGang(false);
@@ -695,6 +695,7 @@ namespace GTA.GangAndTurfMod
             {
                 oldPed.Health = oldPed.Armor + 100;
                 oldPed.RelationshipGroup = PlayerGang.relationGroupIndex;
+                oldPed.Task.ClearAllImmediately();
                 oldPed.Task.FightAgainstHatedTargets(80);
             }
 

@@ -29,6 +29,7 @@ namespace GTA.GangAndTurfMod
                 // also reduce police influence
                 Game.WantedMultiplier = (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
                 Game.MaxWantedLevel = RandoMath.Max(CalculateMaxWantedLevelInTurf(curTurfZone.value), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
+                if (Game.Player.WantedLevel > Game.MaxWantedLevel) Game.Player.WantedLevel--;
 
                 //if spawning is enabled, lets try to spawn the current zone's corresponding gang members!
                 if (ModOptions.instance.ambientSpawningEnabled && enabled)
