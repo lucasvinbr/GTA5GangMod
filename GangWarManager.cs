@@ -524,7 +524,8 @@ namespace GTA.GangAndTurfMod
             if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
                 World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600)
             {
-                alliedReinforcements--;
+                alliedReinforcements = RandoMath.Max(alliedReinforcements - 1, 0);
+
                 alliedNumText.Caption = alliedReinforcements.ToString();
                 //we can't lose by running out of reinforcements only.
                 //the player must fall or the war be skipped for it to end as a defeat
