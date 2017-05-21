@@ -76,8 +76,8 @@ namespace GTA.GangAndTurfMod
             this.Tick += OnTick;
             enemySpawnPoints = new Vector3[3];
             alliedSpawnPoints = new Vector3[3];
-            alliedNumText = new UIResText("400", new Point(576, 10), 0.5f, Color.CadetBlue);
-            enemyNumText = new UIResText("400", new Point(800, 10), 0.5f, Color.Red);
+            alliedNumText = new UIResText("400", new Point((Game.ScreenResolution.Width / 2) - 120, 10), 0.5f, Color.CadetBlue);
+            enemyNumText = new UIResText("400", new Point((Game.ScreenResolution.Width / 2) + 120, 10), 0.5f, Color.Red);
 
             alliedNumText.Outline = true;
             enemyNumText.Outline = true;
@@ -117,6 +117,9 @@ namespace GTA.GangAndTurfMod
                     alliedReinforcements = GangManager.CalculateDefenderReinforcements(GangManager.instance.PlayerGang, warZone);
                     enemyReinforcements = GangManager.CalculateAttackerReinforcements(enemyGang, attackStrength);
                 }
+
+                alliedNumText.Position = new Point((Game.ScreenResolution.Width / 2) - 120, 10);
+                enemyNumText.Position = new Point((Game.ScreenResolution.Width / 2) + 120, 10);
 
                 alliedNumText.Caption = alliedReinforcements.ToString();
                 enemyNumText.Caption = enemyReinforcements.ToString();
@@ -530,7 +533,7 @@ namespace GTA.GangAndTurfMod
                 //we can't lose by running out of reinforcements only.
                 //the player must fall or the war be skipped for it to end as a defeat
 
-                if (alliedReinforcements >= 0)
+                if (alliedReinforcements > 0)
                 {
                     //UI.ShowSubtitle(alliedReinforcements.ToString() + " of us remain!", 900);
                 }

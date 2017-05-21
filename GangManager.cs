@@ -290,7 +290,7 @@ namespace GTA.GangAndTurfMod
 
             Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false, RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * 2);
 
-            newGang.blipColor = ModOptions.instance.GetGangColorTranslation(gangColor).blipColor;
+            newGang.blipColor = RandoMath.GetRandomElementFromArray(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors);
 
             GetMembersForGang(newGang);
 
@@ -1034,18 +1034,7 @@ namespace GTA.GangAndTurfMod
                 Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
                 if(newPed != null)
                 {
-                    int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, newPed, 1);
-                    //if we're not a legacy registration, set the head and hair data too
-                    if(chosenMember.hairDrawableIndex != -1)
-                    {
-                        int randomHairTex = RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
-                            newPed, 2, chosenMember.hairDrawableIndex));
-                        Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 0, chosenMember.headDrawableIndex, chosenMember.headTextureIndex, pedPalette);
-                        Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 2, chosenMember.hairDrawableIndex, randomHairTex, pedPalette);
-                    }
-                    
-                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 3, chosenMember.torsoDrawableIndex, chosenMember.torsoTextureIndex, pedPalette);
-                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, newPed, 4, chosenMember.legsDrawableIndex, chosenMember.legsTextureIndex, pedPalette);
+                    chosenMember.SetPedAppearance(newPed);
 
                     newPed.Accuracy = ownerGang.memberAccuracyLevel;
                     newPed.MaxHealth = ownerGang.memberHealth;
@@ -1092,10 +1081,10 @@ namespace GTA.GangAndTurfMod
                     {
                         newPed.IsPersistent = false;
                     }
-
                     newPed.NeverLeavesGroup = true;
 
                     newPed.BlockPermanentEvents = true;
+
 
                     Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
                     Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 1); //average combat ability

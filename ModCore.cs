@@ -76,6 +76,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
+
                 if (e.KeyCode == ModOptions.instance.openGangMenuKey)
                 {
                     //numpad keys dont seem to go along well with shift

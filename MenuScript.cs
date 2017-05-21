@@ -22,7 +22,6 @@ namespace GTA.GangAndTurfMod
             modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu;
         Ped closestPed;
         
-        PotentialGangMember memberToSave = new PotentialGangMember();
         int memberStyle = 0, memberColor = 0;
 
         int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost, curZoneValueUpgradeCost,
@@ -38,18 +37,41 @@ namespace GTA.GangAndTurfMod
         Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
         {
             {"white", 0 },
+            {"white-2", 4 },
+            {"white snowy", 13 },
             {"red", 1 },
+            {"red-2", 6 },
+            {"dark red", 76 },
             {"green", 2 },
-            {"blue", 3 },
-            {"orange", 17 },
-            {"purple", 19 },
-            {"gray", 20 },
-            {"brown", 21 },
-            {"pink", 23 },
+            {"green-2", 11 },
             {"dark green", 25 },
+            {"darker green", 52 },
+            {"turquoise", 15 },
+            {"blue", 3 },
+            {"light blue", 18 },
+            {"dark blue", 38 },
+            {"darker blue", 54 },
+            {"purple", 7 },
+            {"purple-2", 19 },
             {"dark purple", 27 },
-            {"black", 29 }, //not really black, but...
+            {"dark purple-2", 83 },
+            {"very dark purple", 58 },
+            {"orange", 17 },
+            {"orange-2", 51 },
+            {"orange-3", 44 },
+            {"gray", 20 },
+            {"light gray", 39 },
+            {"brown", 21 },
+            {"beige", 56 },
+            {"pink", 23 },
+            {"pink-2", 8 },
+            {"smooth pink", 41 },
+            {"strong pink", 48 },
+            {"black", 40 }, //as close as it gets
             {"yellow", 66 },
+            {"gold-ish", 28 },
+            {"yellow-2", 46 },
+            {"light yellow", 33 },
         };
 
         UIMenuItem healthButton, armorButton, accuracyButton, takeZoneButton, upgradeGangValueBtn, upgradeZoneValueBtn,
@@ -649,34 +671,29 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    memberToSave.modelHash = closestPed.Model.Hash;
-
-                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
-                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
-
-                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
-
-                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-                       
-                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-
-                    memberToSave.myStyle = (PotentialGangMember.dressStyle) memberStyle;
-                    memberToSave.linkedColor = (PotentialGangMember.memberColor) memberColor;
-
-                    if (PotentialGangMember.AddMemberAndSavePool
-                    (new PotentialGangMember(memberToSave.modelHash, memberToSave.myStyle, memberToSave.linkedColor,
-                    memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
-                        memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
-                        memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
+                    if(closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        UI.ShowSubtitle("Potential member added!");
+                        if (PotentialGangMember.AddMemberAndSavePool(new FreemodePotentialGangMember(closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Potential freemode member added!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("A similar potential member already exists.");
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("A similar potential member already exists.");
+                        if (PotentialGangMember.AddMemberAndSavePool(new PotentialGangMember(closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Potential member added!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("A similar potential member already exists.");
+                        }
                     }
+                    
                 }
             };
         }
@@ -689,35 +706,31 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-
-                    memberToSave.modelHash = closestPed.Model.Hash;
-
-                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
-                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
-
-                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
-
-                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-
-                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-
-                    memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
-                    memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
-
-                    if (GangManager.instance.PlayerGang.AddMemberVariation(new PotentialGangMember(memberToSave.modelHash,
-                        memberToSave.myStyle, memberToSave.linkedColor,
-                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
-                        memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
-                        memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
+                    if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        UI.ShowSubtitle("Member added successfully!");
+                        if (GangManager.instance.PlayerGang.AddMemberVariation(new FreemodePotentialGangMember
+                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Freemode Member added successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your gang already has a similar member.");
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("Your gang already has a similar member.");
+                        if (GangManager.instance.PlayerGang.AddMemberVariation(new PotentialGangMember
+                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Member added successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your gang already has a similar member.");
+                        }
                     }
+                       
                 }
             };
         }
@@ -730,34 +743,29 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-
-                    memberToSave.modelHash = closestPed.Model.Hash;
-
-                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
-                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
-
-                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
-
-                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-
-                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-
-                    memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
-                    memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
-
-                    if (GangManager.instance.PlayerGang.RemoveMemberVariation(new PotentialGangMember(memberToSave.modelHash,
-                        memberToSave.myStyle, memberToSave.linkedColor,
-                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
-                        memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
-                        memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex)))
+                    if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        UI.ShowSubtitle("Member removed successfully!");
+                        if (GangManager.instance.PlayerGang.RemoveMemberVariation(new FreemodePotentialGangMember
+                        (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Member removed successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your gang doesn't seem to have a similar member.", 8000);
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("Your gang doesn't seem to have a similar member. Make sure you've selected the registration options (color and style don't matter) just like the ones you did when registering!", 8000);
+                        if (GangManager.instance.PlayerGang.RemoveMemberVariation(new PotentialGangMember
+                        (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Member removed successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Your gang doesn't seem to have a similar member.", 8000);
+                        }
                     }
                 }
             };
@@ -771,43 +779,44 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-
-                    memberToSave.modelHash = closestPed.Model.Hash;
-
-                    memberToSave.headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 0);
-                    memberToSave.headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 0);
-
-                    memberToSave.hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 2);
-
-                    memberToSave.torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 3);
-                    memberToSave.torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 3);
-
-                    memberToSave.legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, closestPed, 4);
-                    memberToSave.legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, closestPed, 4);
-
-                    memberToSave.myStyle = (PotentialGangMember.dressStyle)memberStyle;
-                    memberToSave.linkedColor = (PotentialGangMember.memberColor)memberColor;
-
-                    PotentialGangMember memberToRemove = new PotentialGangMember(memberToSave.modelHash,
-                        memberToSave.myStyle, memberToSave.linkedColor,
-                        memberToSave.headDrawableIndex, memberToSave.headTextureIndex, memberToSave.hairDrawableIndex,
-                        memberToSave.torsoDrawableIndex, memberToSave.torsoTextureIndex,
-                        memberToSave.legsDrawableIndex, memberToSave.legsTextureIndex);
-
-                    if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
+                    if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                        FreemodePotentialGangMember memberToRemove = new FreemodePotentialGangMember
+                   (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor);
+
+                        if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
+                        {
+                            UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Ped type not found in pool.");
+                        }
+
+                        for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
+                        {
+                            GangManager.instance.gangData.gangs[i].RemoveMemberVariation(memberToRemove);
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("Ped type not found in pool.");
-                    }
+                        PotentialGangMember memberToRemove = new PotentialGangMember
+                   (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor);
 
-                    for(int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
-                    {
-                        GangManager.instance.gangData.gangs[i].RemoveMemberVariation(memberToRemove);
-                    }
+                        if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
+                        {
+                            UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("Ped type not found in pool.");
+                        }
 
+                        for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
+                        {
+                            GangManager.instance.gangData.gangs[i].RemoveMemberVariation(memberToRemove);
+                        }
+                    }
                 }
             };
         }

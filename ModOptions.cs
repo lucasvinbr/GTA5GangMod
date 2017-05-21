@@ -97,7 +97,7 @@ namespace GTA.GangAndTurfMod
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
 
-                if (similarColors[0].blipColor == 0)
+                if (similarColors[0].blipColors == null)
                 {
                     SetColorTranslationDefaultValues();
                 }
@@ -259,18 +259,18 @@ namespace GTA.GangAndTurfMod
         {
             public List<VehicleColor> vehicleColors;
             public PotentialGangMember.memberColor baseColor;
-            public int blipColor;
+            public int[] blipColors;
 
             public GangColorTranslation()
             {
                 vehicleColors = new List<VehicleColor>();
             }
 
-            public GangColorTranslation(PotentialGangMember.memberColor baseColor, List<VehicleColor> vehicleColors, int blipColor)
+            public GangColorTranslation(PotentialGangMember.memberColor baseColor, List<VehicleColor> vehicleColors, int[] blipColors)
             {
                 this.baseColor = baseColor;
                 this.vehicleColors = vehicleColors;
-                this.blipColor = blipColor;
+                this.blipColors = blipColors;
             }
         }
 
@@ -763,7 +763,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.UtilBlack,
                     VehicleColor.WornBlack,
                     VehicleColor.ModshopBlack1
-                }, 29
+                }, new int[]{40}
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
                      VehicleColor.Blue,
@@ -780,7 +780,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MetallicMarinerBlue,
                     VehicleColor.UtilBlue,
                     VehicleColor.MetallicUltraBlue
-                }, 3
+                }, new int[]{3, 12, 15, 18, 26, 30, 38, 42, 54, 57, 63, 67, 68, 74, 77, 78, 84}
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
                      VehicleColor.Green,
@@ -795,19 +795,19 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.UtilDarkGreen,
                     VehicleColor.MetallicOliveGreen,
                     VehicleColor.WornGreen,
-                }, 2
+                }, new int[]{2, 11, 25, 43, 52, 69, 82}
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
                      VehicleColor.HotPink,
                     VehicleColor.MetallicVermillionPink,
-                }, 23
+                }, new int[]{8, 23, 34, 35, 41, 48, 61 }
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
                      VehicleColor.MatteDarkPurple,
                     VehicleColor.MattePurple,
                     VehicleColor.MetallicPurple,
                     VehicleColor.MetallicPurpleBlue,
-                }, 19
+                }, new int[]{19, 7, 27, 50, 58, 83}
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
                      VehicleColor.MatteDarkRed,
@@ -828,7 +828,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.WornDarkRed,
                     VehicleColor.WornGoldenRed,
                     VehicleColor.WornRed,
-                }, 1
+                }, new int[]{1, 6, 49, 59, 75, 76 }
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
                      VehicleColor.MatteWhite,
@@ -839,7 +839,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.WornOffWhite,
                     VehicleColor.WornWhite,
                     VehicleColor.MetallicDarkIvory,
-                }, 0
+                }, new int[]{0, 4, 13, 37, 45 }
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
                      VehicleColor.MatteYellow,
@@ -852,7 +852,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.PureGold,
                     VehicleColor.MetallicGoldenBrown,
                     VehicleColor.MatteDesertTan,
-                }, 66
+                }, new int[]{66, 5, 28, 16, 36, 33, 46, 56, 60, 70, 71, 73, 81 }
                ),
                 new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
                      VehicleColor.MatteGray,
@@ -868,7 +868,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MetallicDarkSilver,
                     VehicleColor.MetallicMidnightSilver,
                     VehicleColor.MetallicShadowSilver,
-                }, 20
+                }, new int[]{20, 39, 55, 65}
                )
             };
 

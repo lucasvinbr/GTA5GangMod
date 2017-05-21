@@ -262,7 +262,7 @@ namespace GTA.GangAndTurfMod
             if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.memberColor.white) ||
                 (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black))
             {                
-                blipColor = ourColor.blipColor;
+                blipColor = RandoMath.GetRandomElementFromArray(ourColor.blipColors);
                 vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
                 GangManager.instance.SaveGangData(false);
             }

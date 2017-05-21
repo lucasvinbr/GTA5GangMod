@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
+using GTA.Native;
 
 namespace GTA.GangAndTurfMod
 {
@@ -10,7 +12,7 @@ namespace GTA.GangAndTurfMod
     /// a potential gang member is a ped with preset model variations and a color to which he is linked.
     /// that way, when an AI gang is picking a color, it will pick members with a similar color
     /// </summary>
-    [System.Serializable]
+    [XmlInclude(typeof(FreemodePotentialGangMember))]
     public class PotentialGangMember
     {
        public enum dressStyle
@@ -66,8 +68,6 @@ namespace GTA.GangAndTurfMod
 
         private static PotentialMemberPool memberPool;
 
-
-
         public PotentialGangMember(int modelHash, dressStyle myStyle, memberColor linkedColor,
              int headDrawableIndex = -1, int headTextureIndex = -1, int hairDrawableIndex = -1,
             int torsoDrawableIndex = -1,int torsoTextureIndex = -1, int legsDrawableIndex = -1, int legsTextureIndex = -1)
@@ -84,6 +84,25 @@ namespace GTA.GangAndTurfMod
             this.legsTextureIndex = legsTextureIndex;
         }
 
+        public PotentialGangMember(Ped sourcePed, dressStyle myStyle, memberColor linkedColor)
+        {
+            this.myStyle = myStyle;
+            this.linkedColor = linkedColor;
+
+            modelHash = sourcePed.Model.Hash;
+
+            headDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, sourcePed, 0);
+            headTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, sourcePed, 0);
+
+            hairDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, sourcePed, 2);
+
+            torsoDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, sourcePed, 3);
+            torsoTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, sourcePed, 3);
+
+            legsDrawableIndex = Function.Call<int>(Hash.GET_PED_DRAWABLE_VARIATION, sourcePed, 4);
+            legsTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, sourcePed, 4);
+        }
+
         public PotentialGangMember()
         {
             this.modelHash = -1;
@@ -96,6 +115,26 @@ namespace GTA.GangAndTurfMod
             this.hairDrawableIndex = -1;
             this.headDrawableIndex = -1;
             this.headTextureIndex = -1;
+        }
+
+        /// <summary>
+        /// uses the data stored in this potential gang member to alter the appearance of the target ped
+        /// </summary>
+        /// <param name="targetPed"></param>
+        public virtual void SetPedAppearance(Ped targetPed)
+        {
+            int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
+            //if we're not a legacy registration, set the head and hair data too
+            if (hairDrawableIndex != -1)
+            {
+                int randomHairTex = RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                    targetPed, 2, hairDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
+            }
+
+            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
+            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
         }
 
         public static bool AddMemberAndSavePool(PotentialGangMember newMember)
@@ -173,7 +212,12 @@ namespace GTA.GangAndTurfMod
 
             public bool HasIdenticalEntry(PotentialGangMember potentialEntry)
             {
+                if(potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
+                {
+                    return FreemodePotentialGangMember.FreemodeSimilarEntryCheck(potentialEntry as FreemodePotentialGangMember) != null;
+                }
                 
+
                 for(int i = 0; i < memberList.Count; i++)
                 {
                     if (memberList[i].modelHash == potentialEntry.modelHash &&
@@ -199,6 +243,10 @@ namespace GTA.GangAndTurfMod
             /// <returns></returns>
             public PotentialGangMember GetSimilarEntry(PotentialGangMember potentialEntry)
             {
+                if (potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
+                {
+                    return FreemodePotentialGangMember.FreemodeSimilarEntryCheck(potentialEntry as FreemodePotentialGangMember);
+                }
 
                 for (int i = 0; i < memberList.Count; i++)
                 {

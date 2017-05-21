@@ -15,7 +15,15 @@ namespace GTA.GangAndTurfMod
 
         public Gang myGang;
 
-        private Vector3 currentWalkTarget;
+        public enum memberStatus
+        {
+            none,
+            idle,
+            combat,
+            inVehicle
+        }
+
+        public memberStatus curStatus = memberStatus.none;
 
         public override void Update()
         {
@@ -27,9 +35,14 @@ namespace GTA.GangAndTurfMod
             {
                 if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
-                    currentWalkTarget = World.GetNextPositionOnSidewalk(Game.Player.Character.Position +
-                        RandoMath.RandomDirection(true) * 45);
-                    watchedPed.Task.GoTo(currentWalkTarget);
+                    if(curStatus != memberStatus.idle)
+                    {
+                        curStatus = memberStatus.idle;
+                        watchedPed.Task.WanderAround();
+                        //Function.Call(Hash.TASK_START_SCENARIO_IN_PLACE, watchedPed, "WORLD_HUMAN_AA_COFFEE", -1, false);
+                    }
+                    
+                    
                 }
 
                 
@@ -69,6 +82,7 @@ namespace GTA.GangAndTurfMod
                                 if (ped.IsInCombatAgainst(Game.Player.Character) && (myGang.relationGroupIndex != ped.RelationshipGroup))
                                 {
                                     watchedPed.Task.FightAgainst(ped);
+                                    curStatus = memberStatus.combat;
                                     break;
                                 }
                             }
@@ -80,6 +94,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
+                curStatus = memberStatus.inVehicle;
                 Ped vehicleDriver = watchedPed.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver);
                 if (vehicleDriver != watchedPed)
                 {
@@ -89,6 +104,7 @@ namespace GTA.GangAndTurfMod
                         {
                             //TODO check for mounted weapons
                             watchedPed.Task.LeaveVehicle();
+                            curStatus = memberStatus.none;
                         }
                         else
                         {
@@ -96,6 +112,7 @@ namespace GTA.GangAndTurfMod
                     ModOptions.gangMemberAggressivenessMode.defensive && ModOptions.instance.fightingEnabled)
                             {
                                 PickATarget(100);
+                                curStatus = memberStatus.inVehicle;
                             }
                         }
                         
@@ -153,6 +170,7 @@ namespace GTA.GangAndTurfMod
             this.watchedPed.MarkAsNoLongerNeeded();
             this.myGang = null;
             this.watchedPed = null;
+            curStatus = memberStatus.none;
             GangManager.instance.livingMembersCount--;
 
         }
@@ -168,6 +186,7 @@ namespace GTA.GangAndTurfMod
             if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
             {
                 watchedPed.Task.FightAgainst(RandoMath.GetRandomElementFromList(hostileNearbyPeds));
+                curStatus = memberStatus.combat;
                 return true;
             }
 
