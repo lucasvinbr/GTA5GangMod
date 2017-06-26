@@ -288,7 +288,10 @@ namespace GTA.GangAndTurfMod
 
             PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandoMath.CachedRandom.Next(9);
 
-            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors), false, RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * 2);
+            //the new gang takes the wealthiest gang around as reference to define its starting money.
+            //that does not mean it will be the new wealthiest one, hehe (but it may)
+            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors),
+                false, (int) (RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * (RandoMath.CachedRandom.Next(1,11) / 6.5f)));
 
             newGang.blipColor = RandoMath.GetRandomElementFromArray(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors);
 
@@ -1216,6 +1219,18 @@ namespace GTA.GangAndTurfMod
                 }
                 
 
+            }
+
+            return null;
+        }
+
+        public Ped SpawnParachutingMember(Gang ownerGang, Vector3 spawnPos, Vector3 destPos)
+        {
+            Ped spawnedPed = SpawnGangMember(ownerGang, spawnPos);
+            if (spawnedPed != null)
+            {
+                spawnedPed.Task.ParachuteTo(destPos);
+                return spawnedPed;
             }
 
             return null;

@@ -18,6 +18,8 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public bool enabled = true;
 
+        public int postWarBackupsRemaining = 0;
+
         void OnTick(object sender, EventArgs e)
         {
             Wait(4000 + RandoMath.CachedRandom.Next(2000));
@@ -30,6 +32,16 @@ namespace GTA.GangAndTurfMod
                 Game.WantedMultiplier = (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
                 Game.MaxWantedLevel = RandoMath.Max(CalculateMaxWantedLevelInTurf(curTurfZone.value), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
                 if (Game.Player.WantedLevel > Game.MaxWantedLevel) Game.Player.WantedLevel--;
+
+                if(postWarBackupsRemaining > 0 && curTurfZone == GangWarManager.instance.warZone)
+                {
+                    Vector3 playerPos = Game.Player.Character.Position;
+                    GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
+                       playerPos + Math.Vector3.WorldUp * 50, playerPos);
+                    GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
+                        GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true, false, true);
+                    postWarBackupsRemaining--;
+                }
 
                 //if spawning is enabled, lets try to spawn the current zone's corresponding gang members!
                 if (ModOptions.instance.ambientSpawningEnabled && enabled)

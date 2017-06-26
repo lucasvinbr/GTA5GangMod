@@ -1056,12 +1056,11 @@ namespace GTA.GangAndTurfMod
                         //only allow spawning if the player has turf
                         if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                         {
-                            Math.Vector3 destPos = Game.Player.Character.Position;
-                            Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang,
-                       Game.Player.Character.Position + Math.Vector3.WorldUp * 50);
+                            Math.Vector3 playerPos = Game.Player.Character.Position;
+                            Ped spawnedPed = GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
+                       playerPos + Math.Vector3.WorldUp * 50, playerPos);
                             if (spawnedPed != null)
                             {
-                                spawnedPed.Task.ParachuteTo(destPos);
                                 ticksSinceLastParaBkp = 0;
                                 GangManager.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember);
                                 gangMenu.Visible = !gangMenu.Visible;
@@ -1109,15 +1108,21 @@ namespace GTA.GangAndTurfMod
 
                     if (item == resetAlliedSpawnBtn)
                     {
-                        if (!Game.Player.Character.IsInAir)
+                        if (GangWarManager.instance.IsPlayerCloseToWar())
                         {
-                            GangWarManager.instance.ForceSetAlliedSpawnPoint(Game.Player.Character.Position);
+                            if (!Game.Player.Character.IsInAir)
+                            {
+                                GangWarManager.instance.ForceSetAlliedSpawnPoint(Game.Player.Character.Position);
+                            }
+                            else
+                            {
+                                GangWarManager.instance.ForceSetAlliedSpawnPoint(GangManager.instance.FindGoodSpawnPointForMember());
+                            }
                         }
                         else
                         {
-                            GangWarManager.instance.ForceSetAlliedSpawnPoint(GangManager.instance.FindGoodSpawnPointForMember());
+                            UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
                         }
-
                     }
                 }
                 else

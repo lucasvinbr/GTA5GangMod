@@ -76,11 +76,16 @@ namespace GTA.GangAndTurfMod
             this.Tick += OnTick;
             enemySpawnPoints = new Vector3[3];
             alliedSpawnPoints = new Vector3[3];
-            alliedNumText = new UIResText("400", new Point((Game.ScreenResolution.Width / 2) - 120, 10), 0.5f, Color.CadetBlue);
-            enemyNumText = new UIResText("400", new Point((Game.ScreenResolution.Width / 2) + 120, 10), 0.5f, Color.Red);
+
+
+            alliedNumText = new UIResText("400", new Point(), 0.5f, Color.CadetBlue);
+            enemyNumText = new UIResText("400", new Point(), 0.5f, Color.Red);
 
             alliedNumText.Outline = true;
             enemyNumText.Outline = true;
+
+            alliedNumText.TextAlignment = UIResText.Alignment.Centered;
+            enemyNumText.TextAlignment = UIResText.Alignment.Centered;
         }
 
         
@@ -100,6 +105,7 @@ namespace GTA.GangAndTurfMod
                 warBlip.IsFlashing = true;
                 warBlip.Sprite = BlipSprite.Deathmatch;
                 warBlip.Color = BlipColor.Red;
+                warBlip.Position += Vector3.WorldUp * 5; //an attempt to make the war blip be drawn over the zone blip
                 
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Gang War (versus " + enemyGang.name + ")");
@@ -118,8 +124,12 @@ namespace GTA.GangAndTurfMod
                     enemyReinforcements = GangManager.CalculateAttackerReinforcements(enemyGang, attackStrength);
                 }
 
-                alliedNumText.Position = new Point((Game.ScreenResolution.Width / 2) - 120, 10);
-                enemyNumText.Position = new Point((Game.ScreenResolution.Width / 2) + 120, 10);
+                float screenRatio = (float)Game.ScreenResolution.Width / Game.ScreenResolution.Height;
+
+                int proportionalScreenWidth = (int)(1080 * screenRatio); //nativeUI UIResText works with 1080p height
+
+                alliedNumText.Position = new Point((proportionalScreenWidth / 2) - 120, 10);
+                enemyNumText.Position = new Point((proportionalScreenWidth / 2) + 120, 10);
 
                 alliedNumText.Caption = alliedReinforcements.ToString();
                 enemyNumText.Caption = enemyReinforcements.ToString();
@@ -180,14 +190,42 @@ namespace GTA.GangAndTurfMod
             {
                 alliedSpawnBlip.Position = alliedSpawnPoints[0];
             }
+
+            if (!spawnPointsSet)
+            {
+                ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+
+                if(alliedSpawnBlip == null)
+                {
+                    CreateSpawnPointBlip(false);
+                }
+
+                if (enemySpawnBlip == null)
+                {
+                    CreateSpawnPointBlip(true);
+                }
+
+                if (alliedSpawnPoints[0] != Vector3.Zero &&
+                enemySpawnPoints[0] != Vector3.Zero)
+                {
+                    spawnPointsSet = true;
+                }
+                else
+                {
+                    //we probably failed to place spawn points properly.
+                    //we will try placing the spawn points again in the next tick
+                    alliedSpawnBlip.Remove();
+                    enemySpawnBlip.Remove();
+                }
+            }
         }
 
-        public void ReplaceEnemySpawnPoint()
+        public void ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)
         {
             Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
-            enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(warZone.zoneBlipPosition,
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(), 5,
+            enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(referencePoint,
+                ModOptions.instance.GetAcceptableMemberSpawnDistance(), minDistanceFromReference,
                 30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
             if(enemySpawnPoints[0] == Vector3.Zero)
@@ -240,25 +278,9 @@ namespace GTA.GangAndTurfMod
             }
 
             //and the spawn point blips, so that we don't have to hunt where our troops will come from
-            alliedSpawnBlip = World.CreateBlip(alliedSpawnPoints[0]);
-            alliedSpawnBlip.Sprite = BlipSprite.PickupSpawn;
-            alliedSpawnBlip.Scale = 1.55f;
-            Function.Call(Hash.SET_BLIP_COLOUR, alliedSpawnBlip, GangManager.instance.PlayerGang.blipColor);
+            CreateSpawnPointBlip(false);
 
-            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War: ", GangManager.instance.PlayerGang.name, " spawn point"));
-            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, alliedSpawnBlip);
-
-            enemySpawnBlip = World.CreateBlip(enemySpawnPoints[0]);
-            enemySpawnBlip.Sprite = BlipSprite.PickupSpawn;
-            enemySpawnBlip.Scale = 1.55f;
-            Function.Call(Hash.SET_BLIP_COLOUR, enemySpawnBlip, enemyGang.blipColor);
-
-            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War: ", enemyGang.name, " spawn point"));
-            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, enemySpawnBlip);
-
-            
+            CreateSpawnPointBlip(true);
 
             if (alliedSpawnPoints[0] != Vector3.Zero &&
                 enemySpawnPoints[0] != Vector3.Zero)
@@ -273,6 +295,36 @@ namespace GTA.GangAndTurfMod
                 enemySpawnBlip.Remove();
             }
             
+        }
+
+        void CreateSpawnPointBlip(bool enemySpawn)
+        {
+            if (enemySpawn)
+            {
+                enemySpawnBlip = World.CreateBlip(enemySpawnPoints[0]);
+
+                enemySpawnBlip.Sprite = BlipSprite.PickupSpawn;
+                enemySpawnBlip.Scale = 1.55f;
+                Function.Call(Hash.SET_BLIP_COLOUR, enemySpawnBlip, enemyGang.blipColor);
+
+                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+                    string.Concat("Gang War: ", enemyGang.name, " spawn point"));
+                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, enemySpawnBlip);
+            }
+            else
+            {
+                alliedSpawnBlip = World.CreateBlip(alliedSpawnPoints[0]);
+
+                alliedSpawnBlip.Sprite = BlipSprite.PickupSpawn;
+                alliedSpawnBlip.Scale = 1.55f;
+                Function.Call(Hash.SET_BLIP_COLOUR, alliedSpawnBlip, GangManager.instance.PlayerGang.blipColor);
+
+                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+                    string.Concat("Gang War: ", GangManager.instance.PlayerGang.name, " spawn point"));
+                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, alliedSpawnBlip);
+            }
         }
 
         /// <summary>
@@ -380,6 +432,8 @@ namespace GTA.GangAndTurfMod
                     UI.ShowSubtitle(warZone.zoneName + " remains ours!");
                     
                 }
+
+                AmbientGangMemberSpawner.instance.postWarBackupsRemaining = ModOptions.instance.postWarBackupsAmount;
             }
             else
             {
@@ -495,8 +549,8 @@ namespace GTA.GangAndTurfMod
         public void OnEnemyDeath()
         {
             //check if the player was in or near the warzone when the death happened 
-            if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600){
+            if (IsPlayerCloseToWar())
+            {
                 enemyReinforcements--;
 
                 //have we lost too many? its a victory for the player then
@@ -514,7 +568,7 @@ namespace GTA.GangAndTurfMod
                         ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
                         enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0)
                     {
-                        ReplaceEnemySpawnPoint();
+                        ReplaceEnemySpawnPoint(warZone.zoneBlipPosition);
                     }
                 }
 
@@ -524,8 +578,7 @@ namespace GTA.GangAndTurfMod
         public void OnAllyDeath(bool itWasThePlayer = false)
         {
             //check if the player was in or near the warzone when the death happened 
-            if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 600)
+            if (IsPlayerCloseToWar())
             {
                 alliedReinforcements = RandoMath.Max(alliedReinforcements - 1, 0);
 
@@ -583,12 +636,22 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        /// <summary>
+        /// true if the player is in the war zone or close enough to the zone blip
+        /// </summary>
+        /// <returns></returns>
+        public bool IsPlayerCloseToWar()
+        {
+            return (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
+                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 
+                ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
+        }
+
         void OnTick(object sender, EventArgs e)
         {
             if (isOccurring)
             {
-                if (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 300)
+                if (IsPlayerCloseToWar())
                 {
 
                     shouldDisplayReinforcementsTexts = true;
@@ -605,7 +668,7 @@ namespace GTA.GangAndTurfMod
                         Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
                     }
 
-                    if (RandoMath.RandomBool() && ticksSinceLastCarSpawn > minTicksBetweenCarSpawns)
+                    if (ticksSinceLastCarSpawn > minTicksBetweenCarSpawns && RandoMath.RandomBool())
                     {
                         SpawnAngryVehicle(false);
 
@@ -650,14 +713,14 @@ namespace GTA.GangAndTurfMod
                     AmbientGangMemberSpawner.instance.enabled = true;
                     if (curTicksAwayFromBattle > ticksBeforeAutoResolution)
                     {
-                        EndWar(SkipWar(0.75f));
+                        EndWar(SkipWar(0.65f));
                     }
                 }
                 //if the player's gang leader is dead...
                 if (!Game.Player.IsAlive && !GangManager.instance.hasChangedBody)
                 {
                     //the war ends, but the outcome depends on how well the player's side was doing
-                    EndWar(SkipWar());
+                    EndWar(SkipWar(0.9f));
                     return;
                 }
             }

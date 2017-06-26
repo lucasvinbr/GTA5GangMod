@@ -25,7 +25,7 @@ namespace GTA.GangAndTurfMod
         public int relationGroupIndex;
 
         public int memberAccuracyLevel = 1;
-        public int memberHealth = 50;
+        public int memberHealth = 10;
         public int memberArmor = 0;
 
         public int baseTurfValue = 0;
@@ -60,6 +60,8 @@ namespace GTA.GangAndTurfMod
             this.vehicleColor = color;
 
             this.isPlayerOwned = isPlayerOwned;
+
+            this.memberHealth = ModOptions.instance.startingGangMemberHealth;
 
             if(!isPlayerOwned)
             {
@@ -275,13 +277,13 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public int GetGangVariedStrengthValue()
         {
-            int weaponValue = 10;
+            int weaponValue = 200;
             if(gangWeaponHashes.Count > 0)
             {
                 weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes)).price;
             }
             return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
-                weaponValue / 20 +
+                weaponValue / 200 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
                 memberHealth;

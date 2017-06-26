@@ -43,11 +43,14 @@ namespace GTA.GangAndTurfMod
                 this.similarColors = loadedOptions.similarColors;
                 this.extraPlayerExclusiveColors = loadedOptions.extraPlayerExclusiveColors;
 
+                this.startingGangMemberHealth = loadedOptions.startingGangMemberHealth;
                 this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
                 this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
                 this.maxGangMemberAccuracy = loadedOptions.maxGangMemberAccuracy;
 
                 this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
+                this.maxDistToWarBlipBeforePlayerLeavesWar = loadedOptions.maxDistToWarBlipBeforePlayerLeavesWar;
+                this.postWarBackupsAmount = loadedOptions.postWarBackupsAmount;
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
                 this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
                 this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
@@ -131,11 +134,14 @@ namespace GTA.GangAndTurfMod
 
         public gangMemberAggressivenessMode gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
 
+        public int startingGangMemberHealth = 20;
         public int maxGangMemberHealth = 120;
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 30;
 
         public bool emptyZoneDuringWar = true;
+        public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
+        public int postWarBackupsAmount = 5;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
         public int killsBetweenEnemySpawnReplacement = 25;
@@ -466,11 +472,14 @@ namespace GTA.GangAndTurfMod
 
             gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
 
+            startingGangMemberHealth = 20;
             maxGangMemberHealth = 120;
             maxGangMemberArmor = 100;
             maxGangMemberAccuracy = 30;
 
             emptyZoneDuringWar = true;
+            maxDistToWarBlipBeforePlayerLeavesWar = 300;
+            postWarBackupsAmount = 5;
             baseNumKillsBeforeWarVictory = 25;
             extraKillsPerTurfValue = 15;
             killsBetweenEnemySpawnReplacement = 25;
