@@ -177,7 +177,7 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public void ForceSetAlliedSpawnPoint(Vector3 targetBasePosition)
+        public void ForceSetAlliedSpawnPoints(Vector3 targetBasePosition)
         {
             alliedSpawnPoints[0] = targetBasePosition;
 
@@ -218,6 +218,11 @@ namespace GTA.GangAndTurfMod
                     enemySpawnBlip.Remove();
                 }
             }
+        }
+
+        public void SetSpecificAlliedSpawnPoint(int spawnIndex, Vector3 targetPos)
+        {
+            alliedSpawnPoints[spawnIndex] = targetPos;
         }
 
         public void ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)

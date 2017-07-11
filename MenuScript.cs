@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         MenuPool menuPool;
         UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
-            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu;
+            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu, specificGangRegistrationSubMenu;
         Ped closestPed;
         
         int memberStyle = 0, memberColor = 0;
@@ -127,7 +127,8 @@ namespace GTA.GangAndTurfMod
             AddMemberStyleChoices();
             AddSaveMemberButton();
             AddNewPlayerGangMemberButton();
-            AddRemovePlayerGangMemberButton();
+            AddNewEnemyMemberSubMenu();
+            AddRemoveGangMemberButton();
             AddRemoveFromAllGangsButton();
             AddMakeFriendlyToPlayerGangButton();
 
@@ -187,6 +188,7 @@ namespace GTA.GangAndTurfMod
                         //World.DrawSpotLight(closestPed.Position + Math.Vector3.WorldUp, Math.Vector3.WorldDown, System.Drawing.Color.Azure, 5, 5, 5, 2, 500);
                         World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
                         memberMenu.Visible = !memberMenu.Visible;
+                        RefreshNewEnemyMemberMenuContent();
                     }
                     else
                     {
@@ -665,7 +667,7 @@ namespace GTA.GangAndTurfMod
 
         void AddSaveMemberButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Save Potential Member for AI gangs", "Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.");
+            UIMenuItem newButton = new UIMenuItem("Save Potential Member for future AI gangs", "Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.");
             memberMenu.AddItem(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -735,36 +737,97 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        void AddRemovePlayerGangMemberButton()
+        void AddNewEnemyMemberSubMenu()
         {
-            UIMenuItem newButton = new UIMenuItem("Remove ped type from your gang", "If the selected ped type was a member of your gang, it will no longer be. The selected ped himself will still be a member, however.");
+            specificGangRegistrationSubMenu = menuPool.AddSubMenu(memberMenu, "Save ped type for a specific enemy gang...");
+
+            RefreshNewEnemyMemberMenuContent();
+
+            specificGangRegistrationSubMenu.OnItemSelect += (sender, item, index) =>
+            {
+                Gang pickedGang = GangManager.instance.GetGangByName(item.Text);
+                if (pickedGang != null)
+                {
+                    if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
+                    {
+                        if (pickedGang.AddMemberVariation(new FreemodePotentialGangMember
+                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Freemode Member added successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("That gang already has a similar member.");
+                        }
+                    }
+                    else
+                    {
+                        if (pickedGang.AddMemberVariation(new PotentialGangMember
+                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        {
+                            UI.ShowSubtitle("Member added successfully!");
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("That gang already has a similar member.");
+                        }
+                    }
+                }
+            };
+
+        }
+
+        /// <summary>
+        /// removes all options and then adds all gangs that are not controlled by the player as chooseable options in the "Save ped type for a specific gang..." submenu
+        /// </summary>
+        public void RefreshNewEnemyMemberMenuContent()
+        {
+            specificGangRegistrationSubMenu.Clear();
+
+            List<Gang> gangsList = GangManager.instance.gangData.gangs;
+
+            for (int i = 0; i < gangsList.Count; i++)
+            {
+                if (!gangsList[i].isPlayerOwned)
+                {
+                    specificGangRegistrationSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
+                }
+            }
+
+            specificGangRegistrationSubMenu.RefreshIndex();
+        }
+
+        void AddRemoveGangMemberButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Remove ped type from respective gang", "If the selected ped type was a member of a gang, it will no longer be. The selected ped himself will still be a member, however. This works for your own gang and for the enemies.");
             memberMenu.AddItem(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
                 {
+                    Gang ownerGang = GangManager.instance.GetGangByRelGroup(closestPed.RelationshipGroup);
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        if (GangManager.instance.PlayerGang.RemoveMemberVariation(new FreemodePotentialGangMember
+                        if (ownerGang.RemoveMemberVariation(new FreemodePotentialGangMember
                         (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member removed successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your gang doesn't seem to have a similar member.", 8000);
+                            UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
                         }
                     }
                     else
                     {
-                        if (GangManager.instance.PlayerGang.RemoveMemberVariation(new PotentialGangMember
+                        if (ownerGang.RemoveMemberVariation(new PotentialGangMember
                         (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member removed successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your gang doesn't seem to have a similar member.", 8000);
+                            UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
                         }
                     }
                 }
@@ -1092,10 +1155,22 @@ namespace GTA.GangAndTurfMod
 
             UIMenuItem skipWarBtn = new UIMenuItem("Skip current War",
                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
-            UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn point to your position",
-                "If a war is currently occurring, your gang members will keep spawning at the allied spawn point for as long as you've got reinforcements. This option sets that spawn point to your position.");
+            UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn points to your region",
+                "If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets all 3 spawn points to your location: one exactly where you are and 2 nearby.");
+           
+            
             warOptionsSubMenu.AddItem(resetAlliedSpawnBtn);
             warOptionsSubMenu.AddItem(skipWarBtn);
+
+            UIMenuItem[] setSpecificSpawnBtns = new UIMenuItem[3];
+            for (int i = 0; i < setSpecificSpawnBtns.Length; i++)
+            {
+                setSpecificSpawnBtns[i] = new UIMenuItem(string.Concat("Set allied spawn point ", (i + 1).ToString(), " to your position"),
+                    string.Concat("If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets spawn point number ",
+                        (i + 1).ToString(), " to your exact location."));
+                warOptionsSubMenu.AddItem(setSpecificSpawnBtns[i]);
+            }
+
             warOptionsSubMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (GangWarManager.instance.isOccurring)
@@ -1104,7 +1179,7 @@ namespace GTA.GangAndTurfMod
                     {
 
                         GangWarManager.instance.EndWar(GangWarManager.instance.SkipWar(0.9f));
-                    }
+                    }else
 
                     if (item == resetAlliedSpawnBtn)
                     {
@@ -1112,11 +1187,11 @@ namespace GTA.GangAndTurfMod
                         {
                             if (!Game.Player.Character.IsInAir)
                             {
-                                GangWarManager.instance.ForceSetAlliedSpawnPoint(Game.Player.Character.Position);
+                                GangWarManager.instance.ForceSetAlliedSpawnPoints(Game.Player.Character.Position);
                             }
                             else
                             {
-                                GangWarManager.instance.ForceSetAlliedSpawnPoint(GangManager.instance.FindGoodSpawnPointForMember());
+                                GangWarManager.instance.ForceSetAlliedSpawnPoints(GangManager.instance.FindGoodSpawnPointForMember());
                             }
                         }
                         else
@@ -1124,6 +1199,29 @@ namespace GTA.GangAndTurfMod
                             UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
                         }
                     }
+                    else
+                    {
+                        for(int i = 0; i < setSpecificSpawnBtns.Length; i++)
+                        {
+                            if (GangWarManager.instance.IsPlayerCloseToWar())
+                            {
+                                if (!Game.Player.Character.IsInAir)
+                                {
+                                    GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, Game.Player.Character.Position);
+                                }
+                                else
+                                {
+                                    UI.ShowSubtitle("You must be on the ground before setting the spawn point!");
+                                }
+                            }
+                            else
+                            {
+                                UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
+                            }
+                        }
+                    }
+
+                    
                 }
                 else
                 {
