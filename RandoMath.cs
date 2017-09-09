@@ -48,6 +48,15 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
+        /// returns a random float between 0 and 360
+        /// </summary>
+        /// <returns></returns>
+        public static float RandomHeading()
+        {
+            return ((float) CachedRandom.NextDouble()) * 360.0f;
+        }
+
+        /// <summary>
         /// just a little function for a 50% chance for true or false
         /// </summary>
         /// <returns></returns>

@@ -16,7 +16,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangManager
     {
-        List<SpawnedGangMember> livingMembers;
+        public List<SpawnedGangMember> livingMembers;
         List<SpawnedDrivingGangMember> livingDrivingMembers;
         List<GangAI> enemyGangs;
         public GangData gangData;
@@ -185,6 +185,28 @@ namespace GTA.GangAndTurfMod
         }
         #endregion
 
+        #region cleanup
+
+        /// <summary>
+        /// marks all living members as no longer needed and removes their blips, 
+        /// as if everyone had died or were too far from the player
+        /// </summary>
+        public void RemoveAllMembers()
+        {
+            for (int i = 0; i < livingMembers.Count; i++)
+            {
+                livingMembers[i].Die();
+            }
+
+            for (int i = 0; i < livingDrivingMembers.Count; i++)
+            {
+                livingDrivingMembers[i].ClearAllRefs();
+            }
+
+        }
+
+        #endregion
+
         public void Tick()
         {
             //tick living members...
@@ -268,6 +290,17 @@ namespace GTA.GangAndTurfMod
 
                 //this also counts for the player's gang
                 GiveTurfRewardToGang(PlayerGang);
+            }
+        }
+
+        /// <summary>
+        /// makes all AI gangs do an Update run immediately
+        /// </summary>
+        public void ForceTickAIGangs()
+        {
+            for (int i = 0; i < enemyGangs.Count; i++)
+            {
+                enemyGangs[i].Update();
             }
         }
 
@@ -567,6 +600,10 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        /// <summary>
+        /// attempts to change the player's body.
+        /// if the player has already changed body, the original body is restored
+        /// </summary>
         public void TryBodyChange()
         {
             if (!hasChangedBody)
@@ -674,7 +711,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        void RestorePlayerBody()
+        public void RestorePlayerBody()
         {
             Ped oldPed = Game.Player.Character;
             //return to original body
@@ -704,6 +741,7 @@ namespace GTA.GangAndTurfMod
 
             hasDiedWithChangedBody = false;
             Game.Player.Money = moneyFromLastProtagonist;
+            Game.Player.IgnoredByEveryone = false;
         }
 
         /// <summary>
@@ -783,7 +821,7 @@ namespace GTA.GangAndTurfMod
         /// returns the player's gang
         /// </summary>
         /// <returns></returns>
-        public Gang GetPlayerGang()
+        private Gang GetPlayerGang()
         {
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
@@ -842,20 +880,29 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public List<Ped> GetEnemyGangMembers(Gang friendlyGang)
+        /// <summary>
+        /// returns gang members who are not from the gang provided
+        /// </summary>
+        /// <param name="myGang"></param>
+        /// <returns></returns>
+        public List<Ped> GetMembersNotFromMyGang(Gang myGang, bool includePlayer = true)
         {
-            //gets all members who are enemies of friendlyGang
             List<Ped> returnedList = new List<Ped>();
 
             for (int i = 0; i < livingMembers.Count; i++)
             {
                 if (livingMembers[i].watchedPed != null)
                 {
-                    if (livingMembers[i].watchedPed.RelationshipGroup != friendlyGang.relationGroupIndex)
+                    if (livingMembers[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
                     {
                         returnedList.Add(livingMembers[i].watchedPed);
                     }
                 }
+            }
+
+            if(includePlayer && myGang != PlayerGang)
+            {
+                returnedList.Add(Game.Player.Character);
             }
 
             return returnedList;

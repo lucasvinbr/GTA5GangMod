@@ -35,6 +35,7 @@ namespace GTA.GangAndTurfMod
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == ZoneManager.instance.GetCurrentTurfZone())
                     {
                         playerAsDest = true;
+                        updatesWhileGoingToDest = 0;
                         RideToDest();
                         return;
                     }
@@ -50,10 +51,7 @@ namespace GTA.GangAndTurfMod
                     //stop tracking this driver/vehicle if he/she leaves the vehicle
                     if (!watchedPed.IsInVehicle())
                     {
-                        vehicleIAmDriving.IsPersistent = false;
-                        vehicleIAmDriving.CurrentBlip.Remove();
-                        vehicleIAmDriving = null;
-                        watchedPed = null;
+                        ClearAllRefs();
                         return;
                     }
 
@@ -76,18 +74,13 @@ namespace GTA.GangAndTurfMod
                             }
                             
                         }
-                        vehicleIAmDriving.IsPersistent = false;
-                        vehicleIAmDriving.CurrentBlip.Remove();
-                        vehicleIAmDriving = null;
-                        watchedPed = null;
+                        ClearAllRefs();
                     }
                 }
             }
             else
             {
                 //our vehicle has been destroyed/ our driver has died
-                vehicleIAmDriving.IsPersistent = false;
-                //watchedPed.MarkAsNoLongerNeeded();
 
                 for (int i = 0; i < myPassengers.Count; i++)
                 {
@@ -96,9 +89,7 @@ namespace GTA.GangAndTurfMod
                         myPassengers[i].Task.LeaveVehicle();
                     }
                 }
-                vehicleIAmDriving.CurrentBlip.Remove();
-                vehicleIAmDriving = null;
-                watchedPed = null;
+                ClearAllRefs();
             }
             
         }
@@ -203,10 +194,28 @@ namespace GTA.GangAndTurfMod
             {
                 Function.Call(Hash.TASK_EVERYONE_LEAVE_VEHICLE, vehicleIAmDriving);
             }
-            vehicleIAmDriving.CurrentBlip.Remove();
-            vehicleIAmDriving.IsPersistent = false;
-            vehicleIAmDriving = null;
+
+            ClearAllRefs();
+        }
+
+        /// <summary>
+        /// nullifies/clears references to the vehicle, driver and passengers
+        /// </summary>
+        public void ClearAllRefs()
+        {
+            if (vehicleIAmDriving != null)
+            {
+                if (vehicleIAmDriving.CurrentBlip != null)
+                {
+                    vehicleIAmDriving.CurrentBlip.Remove();
+                }
+
+                vehicleIAmDriving.IsPersistent = false;
+                vehicleIAmDriving = null;
+            }
+            
             watchedPed = null;
+            myPassengers.Clear();
         }
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool playerAsDest = false)

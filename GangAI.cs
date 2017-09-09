@@ -117,6 +117,14 @@ namespace GTA.GangAndTurfMod
 
             if (!watchedGang.gangWeaponHashes.Contains(chosenWeapon))
             {
+                //maybe the chosen weapon can no longer be bought
+                if(ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon) == null)
+                {
+                    watchedGang.preferredWeaponHashes.Remove(chosenWeapon);
+                    GangManager.instance.SaveGangData(false);
+                    return;
+                }
+
                 if (watchedGang.moneyAvailable >= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price)
                 {
                     watchedGang.moneyAvailable -= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price;

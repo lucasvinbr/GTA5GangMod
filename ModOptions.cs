@@ -205,6 +205,7 @@ namespace GTA.GangAndTurfMod
             WeaponHash.MachinePistol,
             WeaponHash.MarksmanPistol,
             WeaponHash.Pistol,
+            WeaponHash.PistolMk2,
             WeaponHash.Pistol50,
             WeaponHash.Revolver,
             WeaponHash.SawnOffShotgun,
@@ -217,6 +218,7 @@ namespace GTA.GangAndTurfMod
         public List<WeaponHash> meleeWeapons = new List<WeaponHash>()
         {
             WeaponHash.Bat,
+            WeaponHash.BattleAxe,
             WeaponHash.Bottle,
             WeaponHash.Crowbar,
             WeaponHash.Dagger,
@@ -227,7 +229,9 @@ namespace GTA.GangAndTurfMod
             WeaponHash.KnuckleDuster,
             WeaponHash.Machete,
             WeaponHash.Nightstick,
+            WeaponHash.PoolCue,
             WeaponHash.SwitchBlade,
+            WeaponHash.Wrench,
         };
 
         public List<BuyableWeapon> buyableWeapons;
@@ -308,6 +312,10 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
+        /// <summary>
+        /// returns a random distance between the minimum and maximum distances that a member can spawn from the player
+        /// </summary>
+        /// <returns></returns>
         public int GetAcceptableMemberSpawnDistance()
         {
             if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
@@ -318,6 +326,10 @@ namespace GTA.GangAndTurfMod
             return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
         }
 
+        /// <summary>
+        /// returns a random distance between the minimum and maximum distances that a car can spawn from the player
+        /// </summary>
+        /// <returns></returns>
         public int GetAcceptableCarSpawnDistance()
         {
             if(maxDistanceCarSpawnFromPlayer <= minDistanceCarSpawnFromPlayer)
@@ -328,16 +340,28 @@ namespace GTA.GangAndTurfMod
             return RandoMath.CachedRandom.Next(minDistanceCarSpawnFromPlayer, maxDistanceCarSpawnFromPlayer);
         }
 
+        /// <summary>
+        /// gets how much the member accuracy increases with each upgrade (this depends on maxGangMemberAccuracy and numUpgradesUntilMaxMemberAttribute)
+        /// </summary>
+        /// <returns></returns>
         public int GetAccuracyUpgradeIncrement()
         {
             return RandoMath.Max(1, maxGangMemberAccuracy / numUpgradesUntilMaxMemberAttribute);
         }
 
+        /// <summary>
+        /// gets how much the member health increases with each upgrade (this depends on maxGangMemberHealth and numUpgradesUntilMaxMemberAttribute)
+        /// </summary>
+        /// <returns></returns>
         public int GetHealthUpgradeIncrement()
         {
             return RandoMath.Max(1, maxGangMemberHealth / numUpgradesUntilMaxMemberAttribute);
         }
 
+        /// <summary>
+        /// gets how much the member armor increases with each upgrade (this depends on maxGangMemberArmor and numUpgradesUntilMaxMemberAttribute)
+        /// </summary>
+        /// <returns></returns>
         public int GetArmorUpgradeIncrement()
         {
             return RandoMath.Max(1, maxGangMemberArmor / numUpgradesUntilMaxMemberAttribute);
@@ -540,6 +564,7 @@ namespace GTA.GangAndTurfMod
         {
             //--melee
             new BuyableWeapon(WeaponHash.Bat, 1000),
+            new BuyableWeapon(WeaponHash.BattleAxe, 4500),
             new BuyableWeapon(WeaponHash.Bottle, 500),
             new BuyableWeapon(WeaponHash.Crowbar, 800),
             new BuyableWeapon(WeaponHash.Dagger, 4000),
@@ -550,18 +575,24 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.KnuckleDuster, 650),
             new BuyableWeapon(WeaponHash.Machete, 1050),
             new BuyableWeapon(WeaponHash.Nightstick, 700),
+            new BuyableWeapon(WeaponHash.PoolCue, 730),
             new BuyableWeapon(WeaponHash.SwitchBlade, 1100),
+            new BuyableWeapon(WeaponHash.Wrench, 560),
             //--guns
             new BuyableWeapon(WeaponHash.AdvancedRifle, 200000),
             new BuyableWeapon(WeaponHash.APPistol, 60000),
             new BuyableWeapon(WeaponHash.AssaultRifle, 120000),
+            new BuyableWeapon(WeaponHash.AssaultrifleMk2, 195000),
             new BuyableWeapon(WeaponHash.AssaultShotgun, 250000),
             new BuyableWeapon(WeaponHash.AssaultSMG, 190000),
             new BuyableWeapon(WeaponHash.BullpupRifle, 230000),
             new BuyableWeapon(WeaponHash.BullpupShotgun, 265000),
             new BuyableWeapon(WeaponHash.CarbineRifle, 150000),
+            new BuyableWeapon(WeaponHash.CarbineRifleMk2, 210000),
             new BuyableWeapon(WeaponHash.CombatMG, 220000),
+            new BuyableWeapon(WeaponHash.CombatMGMk2, 245000),
             new BuyableWeapon(WeaponHash.CombatPDW, 205000),
+            new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
@@ -572,6 +603,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.HeavyPistol, 55000),
             new BuyableWeapon(WeaponHash.HeavyShotgun, 180000),
             new BuyableWeapon(WeaponHash.HeavySniper, 300000),
+            new BuyableWeapon(WeaponHash.HeavySniperMk2, 380000),
             new BuyableWeapon(WeaponHash.HomingLauncher, 2100000),
             new BuyableWeapon(WeaponHash.MachinePistol, 65000),
             new BuyableWeapon(WeaponHash.MarksmanPistol, 50000),
@@ -579,18 +611,23 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.MG, 290000),
             new BuyableWeapon(WeaponHash.MicroSMG, 90000),
             new BuyableWeapon(WeaponHash.Minigun, 400000),
+            new BuyableWeapon(WeaponHash.MiniSMG, 100000),
             new BuyableWeapon(WeaponHash.Musket, 70000),
             new BuyableWeapon(WeaponHash.Pistol, 30000),
             new BuyableWeapon(WeaponHash.Pistol50, 70000),
+            new BuyableWeapon(WeaponHash.PistolMk2, 65000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
             new BuyableWeapon(WeaponHash.Railgun, 5100000),
             new BuyableWeapon(WeaponHash.Revolver, 80000),
             new BuyableWeapon(WeaponHash.RPG, 1200000),
             new BuyableWeapon(WeaponHash.SawnOffShotgun, 95000),
             new BuyableWeapon(WeaponHash.SMG, 115000),
+            new BuyableWeapon(WeaponHash.SMGMk2, 155000),
             new BuyableWeapon(WeaponHash.SniperRifle, 230000),
             new BuyableWeapon(WeaponHash.SNSPistol, 27000),
             new BuyableWeapon(WeaponHash.SpecialCarbine, 230000),
+            new BuyableWeapon(WeaponHash.StunGun, 45000),
+            new BuyableWeapon(WeaponHash.SweeperShotgun, 230000),
             new BuyableWeapon(WeaponHash.VintagePistol, 50000),
         };
         }
