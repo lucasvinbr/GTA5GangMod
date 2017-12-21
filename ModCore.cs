@@ -24,7 +24,8 @@ namespace GTA.GangAndTurfMod
             gangManagerScript = new GangManager();
             menuScript = new MenuScript();
 
-            
+            this.Aborted += OnAbort;
+
             this.KeyUp += onKeyUp;
             this.Tick += OnTick;
         }
@@ -47,7 +48,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadRight))
                     {
-                        recruitGangMember();
+                        RecruitGangMember();
                     }
 
                     if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft))
@@ -65,9 +66,9 @@ namespace GTA.GangAndTurfMod
 
         private void onKeyUp(object sender, KeyEventArgs e)
         {
-            if(menuScript.curInputType == MenuScript.desiredInputType.changeKeyBinding)
+            if (menuScript.curInputType == MenuScript.desiredInputType.changeKeyBinding)
             {
-                if(e.KeyCode != Keys.Enter)
+                if (e.KeyCode != Keys.Enter)
                 {
                     ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
                     menuScript.curInputType = MenuScript.desiredInputType.none;
@@ -108,7 +109,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == ModOptions.instance.addToGroupKey)
                 {
-                    recruitGangMember();
+                    RecruitGangMember();
 
                 }
                 else if (e.KeyCode == ModOptions.instance.mindControlKey)
@@ -117,17 +118,17 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == Keys.Space)
                 {
-                    
+
                     if (gangManagerScript.hasChangedBody)
                     {
                         gangManagerScript.RespawnIfPossible();
                     }
                 }
             }
-            
+
         }
 
-        public void recruitGangMember()
+        public void RecruitGangMember()
         {
             List<Ped> playerGangMembers = gangManagerScript.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
             for (int i = 0; i < playerGangMembers.Count; i++)
@@ -151,6 +152,17 @@ namespace GTA.GangAndTurfMod
                 }
             }
         }
-        
+
+        void OnAbort(object sender, EventArgs e)
+        {
+            UI.Notify("Gang and Turf mod has crashed or has been reset! Removing blips");
+            zoneManagerScript.ChangeBlipDisplay(ZoneManager.zoneBlipDisplay.none);
+            gangManagerScript.RemoveAllMembers();
+            if (gangManagerScript.hasChangedBody)
+            {
+                gangManagerScript.RestorePlayerBody();
+            }
+            
+        }
     }
 }

@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         MenuPool menuPool;
         UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
-            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu, specificGangRegistrationSubMenu;
+            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu, weaponsMenu, specificGangRegistrationSubMenu;
         Ped closestPed;
         
         int memberStyle = 0, memberColor = 0;
@@ -27,7 +27,7 @@ namespace GTA.GangAndTurfMod
         int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost, curZoneValueUpgradeCost,
             warLightAtkCost, warMedAtkCost, warLargeAtkCost, warMassAtkCost;
 
-        Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> weaponEntries = 
+        Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> buyableWeaponCheckboxesDict = 
             new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
 
         Dictionary<VehicleColor, UIMenuItem> carColorEntries =
@@ -139,7 +139,7 @@ namespace GTA.GangAndTurfMod
             AddRemovePlayerVehicleButton();
             AddRemoveVehicleEverywhereButton();
 
-            UpdateBuyableWeapons();
+            //UpdateBuyableWeapons();
             AddWarOptionsSubMenu();
             AddGangOptionsSubMenu();
             AddModSettingsSubMenu();
@@ -169,7 +169,7 @@ namespace GTA.GangAndTurfMod
             if (!menuPool.IsAnyMenuOpen())
             {
                 UpdateUpgradeCosts();
-                UpdateBuyableWeapons();
+                //UpdateBuyableWeapons();
                 gangMenu.Visible = !gangMenu.Visible;
             }
         }
@@ -290,26 +290,6 @@ namespace GTA.GangAndTurfMod
                 upgradeZoneValueBtn.Text = "Upgrade current zone - " + curZoneValueUpgradeCost.ToString();
             }
             
-        }
-
-        void UpdateBuyableWeapons()
-        {
-            Gang playerGang = GangManager.instance.PlayerGang;
-            List<ModOptions.BuyableWeapon> weaponsList = ModOptions.instance.buyableWeapons;
-
-            for(int i = 0; i < weaponsList.Count; i++)
-            {
-                if (weaponEntries.ContainsKey(weaponsList[i])){
-                    weaponEntries[weaponsList[i]].Checked = playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash);
-                }
-                else
-                {
-                    weaponEntries.Add(weaponsList[i], new UIMenuCheckboxItem
-                        (string.Concat(weaponsList[i].wepHash.ToString(), " - ", weaponsList[i].price.ToString()),
-                        playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash)));
-                }
-            }
-
         }
 
         void FillCarColorEntries()
@@ -1157,10 +1137,9 @@ namespace GTA.GangAndTurfMod
                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
             UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn points to your region",
                 "If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets all 3 spawn points to your location: one exactly where you are and 2 nearby.");
-           
-            
-            warOptionsSubMenu.AddItem(resetAlliedSpawnBtn);
+
             warOptionsSubMenu.AddItem(skipWarBtn);
+            warOptionsSubMenu.AddItem(resetAlliedSpawnBtn);
 
             UIMenuItem[] setSpecificSpawnBtns = new UIMenuItem[3];
             for (int i = 0; i < setSpecificSpawnBtns.Length; i++)
@@ -1377,45 +1356,47 @@ namespace GTA.GangAndTurfMod
 
         void AddGangWeaponsMenu()
         {
-            UIMenu weaponsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Weapons Menu");
+            weaponsMenu = menuPool.AddSubMenu(gangOptionsSubMenu, "Gang Weapons Menu");
 
             Gang playerGang = GangManager.instance.PlayerGang;
 
-            ModOptions.BuyableWeapon[] buyableWeaponsArray = weaponEntries.Keys.ToArray();
-            UIMenuCheckboxItem[] weaponCheckBoxArray = weaponEntries.Values.ToArray();
-
-            for (int i = 0; i < weaponCheckBoxArray.Length; i++)
+            gangOptionsSubMenu.OnMenuChange += (oldMenu, newMenu, forward) =>
             {
-                weaponsMenu.AddItem(weaponCheckBoxArray[i]);
-            }
-
-            weaponsMenu.RefreshIndex();
+                if (newMenu == weaponsMenu)
+                {
+                    RefreshBuyableWeaponsMenuContent();
+                }
+            };
 
             weaponsMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
-                for(int i = 0; i < buyableWeaponsArray.Length; i++)
+                foreach(KeyValuePair<ModOptions.BuyableWeapon, UIMenuCheckboxItem> kvp in buyableWeaponCheckboxesDict)
                 {
-                    if(item == weaponEntries[buyableWeaponsArray[i]])
+                    if(kvp.Value == item)
                     {
-                        if (playerGang.gangWeaponHashes.Contains(buyableWeaponsArray[i].wepHash)){
-                            playerGang.gangWeaponHashes.Remove(buyableWeaponsArray[i].wepHash);
+                        if (playerGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
+                        {
+                            playerGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
                             playerGang.gangWeaponHashes.Sort(playerGang.CompareGunsByPrice);
-                            GangManager.instance.AddOrSubtractMoneyToProtagonist(buyableWeaponsArray[i].price);
+                            GangManager.instance.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Weapon Removed!");
+                            item.Checked = false;
                         }
                         else
                         {
-                            if(GangManager.instance.AddOrSubtractMoneyToProtagonist(-buyableWeaponsArray[i].price))
+                            if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
                             {
-                                playerGang.gangWeaponHashes.Add(buyableWeaponsArray[i].wepHash);
+                                playerGang.gangWeaponHashes.Add(kvp.Key.wepHash);
                                 playerGang.gangWeaponHashes.Sort(playerGang.CompareGunsByPrice);
                                 GangManager.instance.SaveGangData();
                                 UI.ShowSubtitle("Weapon Bought!");
+                                item.Checked = true;
                             }
                             else
                             {
                                 UI.ShowSubtitle("You don't have enough money to buy that weapon for your gang.");
+                                item.Checked = false;
                             }
                         }
 
@@ -1423,8 +1404,32 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                UpdateBuyableWeapons();
             };
+        }
+
+        /// <summary>
+        /// removes all options and then adds all gangs that are not controlled by the player as chooseable options in the "Save ped type for a specific gang..." submenu
+        /// </summary>
+        public void RefreshBuyableWeaponsMenuContent()
+        {
+            weaponsMenu.Clear();
+
+            buyableWeaponCheckboxesDict.Clear();
+
+            List<ModOptions.BuyableWeapon> weaponsList = ModOptions.instance.buyableWeapons;
+
+            Gang playerGang = GangManager.instance.PlayerGang;
+
+            for (int i = 0; i < weaponsList.Count; i++)
+            {
+                UIMenuCheckboxItem weaponCheckBox = new UIMenuCheckboxItem
+                        (string.Concat(weaponsList[i].wepHash.ToString(), " - ", weaponsList[i].price.ToString()),
+                        playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash));
+                buyableWeaponCheckboxesDict.Add(weaponsList[i], weaponCheckBox);
+                weaponsMenu.AddItem(weaponCheckBox);
+            }
+
+            weaponsMenu.RefreshIndex();
         }
 
         void AddSetCarColorMenu()
@@ -1555,6 +1560,7 @@ namespace GTA.GangAndTurfMod
             AddGangsStartWithPistolToggle();
             AddKeyBindingMenu();
             AddGamepadControlsToggle();
+            AddForceAIGangsTickButton();
             AddReloadOptionsButton();
             AddResetWeaponOptionsButton();
             AddResetOptionsButton();
@@ -1745,6 +1751,19 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddForceAIGangsTickButton()
+        {
+            UIMenuItem newButton = new UIMenuItem("Run an Update on all AI Gangs", "Makes all AI Gangs try to upgrade themselves and/or invade other territories immediately. Their normal updates, which happen from time to time (configurable in the ModOptions file), will still happen normally after this.");
+            modSettingsSubMenu.AddItem(newButton);
+            modSettingsSubMenu.OnItemSelect += (sender, item, index) =>
+            {
+                if (item == newButton)
+                {
+                    GangManager.instance.ForceTickAIGangs();
+                }
+            };
+        }
+
         void AddReloadOptionsButton()
         {
             UIMenuItem newButton = new UIMenuItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
@@ -1755,7 +1774,6 @@ namespace GTA.GangAndTurfMod
                 {
                     ModOptions.instance.LoadOptions();
                     GangManager.instance.ResetGangUpdateIntervals();
-                    UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
                     carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
                     this.paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";
@@ -1775,7 +1793,6 @@ namespace GTA.GangAndTurfMod
                     ModOptions.instance.buyableWeapons.Clear();
                     ModOptions.instance.SetWeaponListDefaultValues();
                     ModOptions.instance.SaveOptions(false);
-                    UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
                 }
             };
@@ -1790,7 +1807,6 @@ namespace GTA.GangAndTurfMod
                 if (item == newButton)
                 {
                     ModOptions.instance.SetAllValuesToDefault();
-                    UpdateBuyableWeapons();
                     UpdateUpgradeCosts();
                     UpdateTakeOverBtnText();
                 }
