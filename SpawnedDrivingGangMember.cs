@@ -8,7 +8,7 @@ using GTA.Native;
 
 namespace GTA.GangAndTurfMod
 {
-    class SpawnedDrivingGangMember : UpdatedClass
+    public class SpawnedDrivingGangMember : UpdatedClass
     {
         public Ped watchedPed;
         public List<Ped> myPassengers = new List<Ped>();
@@ -67,7 +67,7 @@ namespace GTA.GangAndTurfMod
 
                         for (int i = 0; i < myPassengers.Count; i++)
                         {
-                            if (!myPassengers[i].IsPlayer)
+                            if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer)
                             {
                                 SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
                                 if (memberAI != null) memberAI.Die();
@@ -84,7 +84,7 @@ namespace GTA.GangAndTurfMod
 
                 for (int i = 0; i < myPassengers.Count; i++)
                 {
-                    if (myPassengers[i].IsAlive && myPassengers[i].IsInVehicle(vehicleIAmDriving))
+                    if (myPassengers[i] != null && myPassengers[i].IsAlive && myPassengers[i].IsInVehicle(vehicleIAmDriving))
                     {
                         myPassengers[i].Task.LeaveVehicle();
                     }
@@ -151,14 +151,14 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void EveryoneLeaveVehicle()
+        public void EveryoneLeaveVehicle(bool doNotCareAboutMountedWeaps = false)
         {
             bool someoneCanUseMountedWeapons = false;
             //leave vehicle, everyone stops being important
             if (!watchedPed.IsPlayer)
             {
                 //watchedPed.Task.ClearAll();
-                if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
+                if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) || doNotCareAboutMountedWeaps)
                 {
                     watchedPed.Task.LeaveVehicle();
                 }
@@ -173,11 +173,11 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 0; i < myPassengers.Count; i++)
             {
-                if (!myPassengers[i].IsPlayer)
+                if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer)
                 {
                     //myPassengers[i].MarkAsNoLongerNeeded();
                     //myPassengers[i].Task.ClearAll();
-                    if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
+                    if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, myPassengers[i]) || doNotCareAboutMountedWeaps)
                     {
                         myPassengers[i].Task.LeaveVehicle();
                     }

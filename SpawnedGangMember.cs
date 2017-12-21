@@ -193,10 +193,22 @@ namespace GTA.GangAndTurfMod
         /// decrements gangManager's living members count, also tells the war manager about it,
         /// clears this script's references, removes the ped's blip and marks the ped as no longer needed
         /// </summary>
-        public void Die(bool fleeIfAlive = false)
+        public void Die(bool alsoDelete = false)
         {
+            
             if (watchedPed != null)
             {
+                if (Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
+                {
+                    //check if we're drivers; if we are, mark us and our passengers as "dead"
+                    SpawnedDrivingGangMember driverAI = GangManager.instance.GetTargetMemberDrivingAI(watchedPed);
+
+                    if(driverAI != null)
+                    {
+                        driverAI.EveryoneLeaveVehicle(true);
+                    }
+                }
+
                 if (GangWarManager.instance.isOccurring)
                 {
                     if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
@@ -215,12 +227,15 @@ namespace GTA.GangAndTurfMod
                     watchedPed.CurrentBlip.Remove();
                 }
 
-                this.watchedPed.MarkAsNoLongerNeeded();
-
-                if (fleeIfAlive && watchedPed.IsAlive)
+                if (alsoDelete && watchedPed.IsAlive)
                 {
-                    watchedPed.Task.FleeFrom(Game.Player.Character);
+                    watchedPed.Delete();
                 }
+                else
+                {
+                    watchedPed.MarkAsNoLongerNeeded();
+                }
+                
             }
 
             this.myGang = null;

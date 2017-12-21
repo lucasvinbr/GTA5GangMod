@@ -55,6 +55,9 @@ namespace GTA.GangAndTurfMod
 
         private float spawnedAllies = 0, spawnedEnemies = 0;
 
+        //this counter should help culling those enemy drivers that get stuck and count towards the enemy's numbers without being helpful
+        public List<SpawnedGangMember> enemiesInsideCars;
+
         public TurfZone warZone;
 
         public Gang enemyGang;
@@ -114,6 +117,7 @@ namespace GTA.GangAndTurfMod
                 Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
                 curTicksAwayFromBattle = 0;
+                enemiesInsideCars = GangManager.instance.GetSpawnedMembersOfGang(enemyGang, true);
 
                 if(theWarType == warType.attackingEnemy)
                 {
@@ -634,7 +638,9 @@ namespace GTA.GangAndTurfMod
 
             for(int i = 0; i < spawnedMembers.Count; i++)
             {
-                if(!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, spawnedMembers[i].watchedPed, false) &&
+                //don't attempt to cull a friendly driving member because they could be a backup car called by the player...
+                //and the player can probably take more advantage of any stuck friendly vehicle than the AI can
+                if((!cullFriendlies || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, spawnedMembers[i].watchedPed, false)) &&
                     World.GetDistance(Game.Player.Character.Position, spawnedMembers[i].watchedPed.Position) >
                 ModOptions.instance.minDistanceMemberSpawnFromPlayer && !spawnedMembers[i].watchedPed.IsOnScreen)
                 {
@@ -643,6 +649,29 @@ namespace GTA.GangAndTurfMod
                     //stop if we're back inside the limits
                     if ((cullFriendlies && spawnedAllies < maxSpawnedAllies) ||
                         (!cullFriendlies && spawnedEnemies < maxSpawnedEnemies)){
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// sometimes, too many enemy drivers get stuck with passengers, which causes quite a heavy impact on how many enemy foot members spawn.
+        /// This is an attempt to circumvent that, hehe
+        /// </summary>
+        public void CullEnemyVehicles()
+        {
+            for (int i = 0; i < enemiesInsideCars.Count; i++)
+            {
+                if (enemiesInsideCars[i].watchedPed != null &&
+                    World.GetDistance(Game.Player.Character.Position, enemiesInsideCars[i].watchedPed.Position) >
+                ModOptions.instance.minDistanceMemberSpawnFromPlayer && !enemiesInsideCars[i].watchedPed.IsOnScreen)
+                {
+                    enemiesInsideCars[i].Die(true);
+                    //make sure we don't exagerate!
+                    //stop if we're back inside a tolerable limit
+                    if (spawnedEnemies < ModOptions.instance.numSpawnsReservedForCarsDuringWars * 1.5f)
+                    {
                         break;
                     }
                 }
@@ -716,6 +745,15 @@ namespace GTA.GangAndTurfMod
                         }else if(spawnedEnemies > maxSpawnedEnemies)
                         {
                             TryWarBalancing(false);
+                        }
+
+                        //cull enemies inside cars if there are too many!
+                        enemiesInsideCars = GangManager.instance.GetSpawnedMembersOfGang(enemyGang, true);
+
+                        if (enemiesInsideCars.Count > 
+                            RandoMath.Max(maxSpawnedEnemies / 3, ModOptions.instance.numSpawnsReservedForCarsDuringWars * 2))
+                        {
+                            CullEnemyVehicles();
                         }
                     }
 

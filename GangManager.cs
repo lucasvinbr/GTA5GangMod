@@ -851,7 +851,14 @@ namespace GTA.GangAndTurfMod
             return returnedList;
         }
 
-        public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang)
+        /// <summary>
+        /// gets all currently active spawned members of the desired gang.
+        /// The onlyGetIfInsideVehicle will only add members who are inside vehicles to the returned list
+        /// </summary>
+        /// <param name="desiredGang"></param>
+        /// <param name="onlyGetIfInsideVehicle"></param>
+        /// <returns></returns>
+        public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang, bool onlyGetIfInsideVehicle = false)
         {
             List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
 
@@ -859,7 +866,18 @@ namespace GTA.GangAndTurfMod
             {
                 if (livingMembers[i].myGang == desiredGang)
                 {
-                    returnedList.Add(livingMembers[i]);
+                    if(onlyGetIfInsideVehicle)
+                    {
+                        if(Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, livingMembers[i].watchedPed, false))
+                        {
+                            returnedList.Add(livingMembers[i]);
+                        }
+                    }
+                    else
+                    {
+                        returnedList.Add(livingMembers[i]);
+                    }
+                    
                 }
             }
 
@@ -874,6 +892,20 @@ namespace GTA.GangAndTurfMod
                 if(livingMembers[i].watchedPed == targetMember)
                 {
                     return livingMembers[i];
+                }
+            }
+
+            return null;
+        }
+
+        public SpawnedDrivingGangMember GetTargetMemberDrivingAI(Ped targetMember)
+        {
+            if (targetMember == null) return null;
+            for (int i = 0; i < livingDrivingMembers.Count; i++)
+            {
+                if (livingDrivingMembers[i].watchedPed == targetMember)
+                {
+                    return livingDrivingMembers[i];
                 }
             }
 
