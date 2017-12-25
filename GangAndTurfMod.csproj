@@ -99,8 +99,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+	<GTAGameDestination>"C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\GangAndTurfMod.dll"</GTAGameDestination>
+    <PostBuildEvent>copy $(TargetPath) $(GTAGameDestination)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

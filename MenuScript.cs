@@ -184,16 +184,17 @@ namespace GTA.GangAndTurfMod
                     if (closestPed != null)
                     {
                         UI.ShowSubtitle("ped selected!");
-                        //World.DrawMarker(MarkerType.VerticalCylinder, closestPed.Position, Math.Vector3.WorldUp, Math.Vector3.Zero, new Math.Vector3(1,1,1), System.Drawing.Color.
-                        //World.DrawSpotLight(closestPed.Position + Math.Vector3.WorldUp, Math.Vector3.WorldDown, System.Drawing.Color.Azure, 5, 5, 5, 2, 500);
-                        World.AddExplosion(closestPed.Position, ExplosionType.WaterHydrant, 1.0f, 0.1f);
-                        memberMenu.Visible = !memberMenu.Visible;
-                        RefreshNewEnemyMemberMenuContent();
+                        World.AddExplosion(closestPed.Position, ExplosionType.Steam, 1.0f, 0.1f);
                     }
                     else
                     {
-                        UI.ShowSubtitle("couldn't find a ped in front of you!");
+                        UI.ShowSubtitle("Couldn't find a ped in front of you! You have selected yourself.");
+                        closestPed = Game.Player.Character;
+                        World.AddExplosion(closestPed.Position, ExplosionType.Extinguisher, 1.0f, 0.1f);
                     }
+
+                    memberMenu.Visible = !memberMenu.Visible;
+                    RefreshNewEnemyMemberMenuContent();
                 }
                 else
                 {
@@ -786,6 +787,11 @@ namespace GTA.GangAndTurfMod
                 if (item == newButton)
                 {
                     Gang ownerGang = GangManager.instance.GetGangByRelGroup(closestPed.RelationshipGroup);
+                    if(ownerGang == null)
+                    {
+                        UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
+                        return;
+                    }
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
                         if (ownerGang.RemoveMemberVariation(new FreemodePotentialGangMember
@@ -1555,6 +1561,7 @@ namespace GTA.GangAndTurfMod
             AddMemberAggressivenessControl();
             AddEnableAmbientSpawnToggle();
             AddEnableFightingToggle();
+            AddMeleeOnlyToggle();
             AddEnableWarVersusPlayerToggle();
             AddEnableCarTeleportToggle();
             AddGangsStartWithPistolToggle();
@@ -1628,6 +1635,22 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        void AddMeleeOnlyToggle()
+        {
+            UIMenuCheckboxItem meleeToggle = new UIMenuCheckboxItem("Gang members use melee weapons only?", ModOptions.instance.membersSpawnWithMeleeOnly, "If checked, all gang members will spawn with melee weapons only, even if they purchase firearms or are set to start with pistols.");
+
+            modSettingsSubMenu.AddItem(meleeToggle);
+            modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == meleeToggle)
+                {
+                    ModOptions.instance.membersSpawnWithMeleeOnly = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
         void AddEnableWarVersusPlayerToggle()
         {
             UIMenuCheckboxItem warToggle = new UIMenuCheckboxItem("Enemy gangs can attack your turf?", ModOptions.instance.warAgainstPlayerEnabled, "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
@@ -1691,6 +1714,8 @@ namespace GTA.GangAndTurfMod
 
             };
         }
+
+
 
         void AddGamepadControlsToggle()
         {

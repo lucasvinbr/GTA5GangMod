@@ -17,7 +17,8 @@ namespace GTA.GangAndTurfMod
 
         public override void Update()
         {
-            if (!GangWarManager.instance.isOccurring)
+            if (!GangWarManager.instance.isOccurring ||
+                (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang != watchedGang))
             {
                 ticksSinceLastFightWithPlayer++;
             }

@@ -35,10 +35,18 @@ namespace GTA.GangAndTurfMod
             gangManagerScript.Tick();
             menuScript.Tick();
 
+            //war stuff that should happen every frame
             if (GangWarManager.instance.shouldDisplayReinforcementsTexts)
             {
                 GangWarManager.instance.alliedNumText.Draw();
                 GangWarManager.instance.enemyNumText.Draw();
+
+                if (ModOptions.instance.emptyZoneDuringWar)
+                {
+                    Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+                    Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+                }
+
             }
 
             //zix attempt controller recruit

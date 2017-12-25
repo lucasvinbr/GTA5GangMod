@@ -219,7 +219,7 @@ namespace GTA.GangAndTurfMod
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
                         livingMembers[i].Update();
-                        livingMembers[i].ticksSinceLastUpdate = 0;
+                        livingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingMembers[i].ticksBetweenUpdates / 3);
                     }
                 }
             }
@@ -233,7 +233,7 @@ namespace GTA.GangAndTurfMod
                     if (livingDrivingMembers[i].ticksSinceLastUpdate >= livingDrivingMembers[i].ticksBetweenUpdates)
                     {
                         livingDrivingMembers[i].Update();
-                        livingDrivingMembers[i].ticksSinceLastUpdate = 0;
+                        livingDrivingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingDrivingMembers[i].ticksBetweenUpdates / 3);
                     }
                 }
             }
@@ -258,7 +258,7 @@ namespace GTA.GangAndTurfMod
                 enemyGangs[i].ticksSinceLastUpdate++;
                 if (enemyGangs[i].ticksSinceLastUpdate >= enemyGangs[i].ticksBetweenUpdates)
                 {
-                    enemyGangs[i].ticksSinceLastUpdate = 0;
+                    enemyGangs[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(enemyGangs[i].ticksBetweenUpdates / 3);
                     enemyGangs[i].Update();
 
                     //lets also check if there aren't too many gangs around
@@ -1140,13 +1140,16 @@ namespace GTA.GangAndTurfMod
                     //give a weapon
                     if (ownerGang.gangWeaponHashes.Count > 0)
                     {
-                        //get one weap from each type... if possible
+                        //get one weap from each type... if possible AND we're not forcing melee only
                         newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, false, true);
-                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons), 1000, false, true);
-                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
+                        if (!ModOptions.instance.membersSpawnWithMeleeOnly)
+                        {
+                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons), 1000, false, true);
+                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
 
-                        //and one extra
-                        newPed.Weapons.Give(RandoMath.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, false, true);
+                            //and one extra
+                            newPed.Weapons.Give(RandoMath.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, false, true);
+                        }
                     }
 
                     //set the relationship group

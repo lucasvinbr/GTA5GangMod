@@ -717,12 +717,7 @@ namespace GTA.GangAndTurfMod
 
                     AmbientGangMemberSpawner.instance.enabled = false;
 
-                    if (ModOptions.instance.emptyZoneDuringWar)
-                    {
-                        Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
-                        Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
-                    }
-
+                    
                     if (ticksSinceLastCarSpawn > minTicksBetweenCarSpawns && RandoMath.RandomBool())
                     {
                         SpawnAngryVehicle(false);
