@@ -162,6 +162,13 @@ namespace GTA.GangAndTurfMod
                             Die();
                             return;
                         }
+                        else
+                        {
+                            if (!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
+                            {
+                                watchedPed.Task.WarpOutOfVehicle(watchedPed.CurrentVehicle);
+                            }
+                        }
                     }
                 }
 

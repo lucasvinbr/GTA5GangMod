@@ -22,7 +22,7 @@ namespace GTA.GangAndTurfMod
 
         void OnTick(object sender, EventArgs e)
         {
-            Wait(4000 + RandoMath.CachedRandom.Next(2000));
+            Wait(3000 + RandoMath.CachedRandom.Next(1000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
@@ -61,30 +61,15 @@ namespace GTA.GangAndTurfMod
                             Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 70) || playerVehicle == null)
                             {
-                                Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
-                                Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
-                                if (newMember != null)
-                                {
-                                    newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
-                                }
+                                SpawnAmbientMember(curGang);
                             }
                             if (RandoMath.CachedRandom.Next(0, 5) < 3)
                             {
                                 Wait(100 + RandoMath.CachedRandom.Next(300));
-                                Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
-                                GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
-                                if (spawnedVehicle != null)
-                                {
-                                    GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
-                                    Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
-                                    if (driver != null) //if, for some reason, we don't have a driver, do nothing
-                                    {
-                                        driver.Task.CruiseWithVehicle(spawnedVehicle, 20, (int)DrivingStyle.Rushed);
-                                    }
-                                }
+                                SpawnAmbientVehicle(curGang);
                             }
 
-                            Wait(1000 + RandoMath.CachedRandom.Next(40000) / (curTurfZone.value * curTurfZone.value + 1));
+                            Wait(1 + RandoMath.CachedRandom.Next(RandoMath.Max(1, ModOptions.instance.msBaseIntervalBetweenAmbientSpawns / 2), ModOptions.instance.msBaseIntervalBetweenAmbientSpawns) / (curTurfZone.value + 1));
                         }
                     }
                     else
@@ -93,6 +78,31 @@ namespace GTA.GangAndTurfMod
                         Game.MaxWantedLevel = 6;
                     }
 
+                }
+            }
+        }
+
+        public void SpawnAmbientMember(Gang curGang)
+        {
+            Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
+            Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
+            if (newMember != null)
+            {
+                newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
+            }
+        }
+
+        public void SpawnAmbientVehicle(Gang curGang)
+        {
+            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
+                                GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
+            if (spawnedVehicle != null)
+            {
+                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
+                Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
+                if (driver != null) //if, for some reason, we don't have a driver, do nothing
+                {
+                    driver.Task.CruiseWithVehicle(spawnedVehicle, 8, (int) DrivingStyle.AvoidTraffic);
                 }
             }
         }

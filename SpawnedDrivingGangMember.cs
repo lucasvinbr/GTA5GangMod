@@ -138,7 +138,8 @@ namespace GTA.GangAndTurfMod
                         if (playerAsDest && Game.Player.Character.CurrentVehicle != null)
                         {
                             watchedPed.Task.ClearAll();
-                            Function.Call(Hash._TASK_VEHICLE_FOLLOW, watchedPed, vehicleIAmDriving, Game.Player.Character.CurrentVehicle, 4457020, 100, 20);
+                            //watchedPed.Task.VehicleChase(Game.Player.Character);
+                            Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, Game.Player.Character.CurrentVehicle, -1, -1, 4457020, 30, 0, 35);
                         }
                         else
                         {

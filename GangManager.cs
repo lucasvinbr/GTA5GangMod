@@ -884,6 +884,29 @@ namespace GTA.GangAndTurfMod
             return returnedList;
         }
 
+        /// <summary>
+        /// gets all (alive) driver members of the desired gang.
+        /// </summary>
+        /// <param name="desiredGang"></param>
+        /// <returns></returns>
+        public List<SpawnedDrivingGangMember> GetSpawnedDriversOfGang(Gang desiredGang)
+        {
+            List<SpawnedDrivingGangMember> returnedList = new List<SpawnedDrivingGangMember>();
+
+            for (int i = 0; i < livingDrivingMembers.Count; i++)
+            {
+                if (livingDrivingMembers[i].watchedPed != null)
+                {
+                    if(livingDrivingMembers[i].watchedPed.RelationshipGroup == desiredGang.relationGroupIndex)
+                    {
+                        returnedList.Add(livingDrivingMembers[i]);
+                    }
+                }
+            }
+
+            return returnedList;
+        }
+
         public SpawnedGangMember GetTargetMemberAI(Ped targetMember)
         {
             if (targetMember == null) return null;
@@ -1166,10 +1189,12 @@ namespace GTA.GangAndTurfMod
                     {
                         newPed.IsPersistent = false;
                     }
+
+
                     newPed.NeverLeavesGroup = true;
 
                     newPed.BlockPermanentEvents = true;
-
+                    newPed.StaysInVehicleWhenJacked = true;
 
                     Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
                     Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 1); //average combat ability

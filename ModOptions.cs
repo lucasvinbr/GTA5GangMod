@@ -94,6 +94,7 @@ namespace GTA.GangAndTurfMod
                 this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
                 this.extraProfitForAIGangsFactor = loadedOptions.extraProfitForAIGangsFactor;
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
+                this.msBaseIntervalBetweenAmbientSpawns = loadedOptions.msBaseIntervalBetweenAmbientSpawns;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
                 this.numSpawnsReservedForCarsDuringWars = loadedOptions.numSpawnsReservedForCarsDuringWars;
                 this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
@@ -187,6 +188,7 @@ namespace GTA.GangAndTurfMod
         public int maxCoexistingGangs = 7;
         public float extraProfitForAIGangsFactor = 1.5f;
         public int spawnedMembersBeforeAmbientGenStops = 20;
+        public int msBaseIntervalBetweenAmbientSpawns = 15000;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int numSpawnsReservedForCarsDuringWars = 1;
         public int minDistanceMemberSpawnFromPlayer = 50;
@@ -551,6 +553,7 @@ namespace GTA.GangAndTurfMod
             maxCoexistingGangs = 7;
             extraProfitForAIGangsFactor = 1.5f;
             spawnedMembersBeforeAmbientGenStops = 20;
+            msBaseIntervalBetweenAmbientSpawns = 15000;
             spawnedMemberLimit = 30; //max number of living gang members at any time
             numSpawnsReservedForCarsDuringWars = 1;
             minDistanceMemberSpawnFromPlayer = 50;
