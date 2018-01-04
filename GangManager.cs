@@ -45,7 +45,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public int livingMembersCount = 0;
 
-        public bool hasChangedBody = false;
+        public SpawnedGangMember currentlyControlledMember = null;
         public bool hasDiedWithChangedBody = false;
         public Ped theOriginalPed;
         private int moneyFromLastProtagonist = 0;
@@ -240,7 +240,7 @@ namespace GTA.GangAndTurfMod
 
             TickGangs();
 
-            if (hasChangedBody)
+            if (HasChangedBody)
             {
                 TickMindControl();
             }
@@ -606,7 +606,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void TryBodyChange()
         {
-            if (!hasChangedBody)
+            if (!HasChangedBody)
             {
                 List<Ped> playerGangMembers = GetSpawnedPedsOfGang(PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
@@ -626,8 +626,6 @@ namespace GTA.GangAndTurfMod
 
                             defaultMaxHealth = theOriginalPed.MaxHealth;
                             moneyFromLastProtagonist = Game.Player.Money;
-                            //theOriginalPed.IsInvincible = true;
-                            hasChangedBody = true;
                             TakePedBody(playerGangMembers[i]);
                             break;
                         }
@@ -650,7 +648,8 @@ namespace GTA.GangAndTurfMod
             targetPed.Armor += targetPed.Health;
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
-            
+            currentlyControlledMember = GetTargetMemberAI(targetPed);
+
             Game.Player.CanControlCharacter = true;
         }
 
@@ -720,8 +719,6 @@ namespace GTA.GangAndTurfMod
             theOriginalPed.CurrentBlip.Remove();
             theOriginalPed.MaxHealth = defaultMaxHealth;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
-            hasChangedBody = false;
-            //Game.Player.CanControlCharacter = true;
             theOriginalPed.Task.ClearAllImmediately();
             
             if (hasDiedWithChangedBody)
@@ -742,6 +739,15 @@ namespace GTA.GangAndTurfMod
             hasDiedWithChangedBody = false;
             Game.Player.Money = moneyFromLastProtagonist;
             Game.Player.IgnoredByEveryone = false;
+            currentlyControlledMember = null;
+        }
+
+        public bool HasChangedBody
+        {
+            get
+            {
+                return currentlyControlledMember != null;
+            }
         }
 
         /// <summary>
@@ -752,7 +758,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool AddOrSubtractMoneyToProtagonist(int valueToAdd, bool onlyCheck = false)
         {
-            if (hasChangedBody)
+            if (HasChangedBody)
             {
                 if (valueToAdd > 0 || moneyFromLastProtagonist >= RandoMath.Abs(valueToAdd))
                 {
@@ -948,7 +954,8 @@ namespace GTA.GangAndTurfMod
             {
                 if (livingMembers[i].watchedPed != null)
                 {
-                    if (livingMembers[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
+                    if (livingMembers[i] != currentlyControlledMember &&
+                        livingMembers[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
                     {
                         returnedList.Add(livingMembers[i].watchedPed);
                     }

@@ -54,6 +54,7 @@ namespace GTA.GangAndTurfMod
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
                 this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
                 this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
+                this.ticksBetweenEnemySpawnReplacement = loadedOptions.ticksBetweenEnemySpawnReplacement;
 
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
@@ -147,6 +148,7 @@ namespace GTA.GangAndTurfMod
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
         public int killsBetweenEnemySpawnReplacement = 25;
+        public int ticksBetweenEnemySpawnReplacement = 3600;
 
         public int ticksBetweenTurfRewards = 45000;
         public int ticksBetweenGangAIUpdates = 15000;
@@ -513,6 +515,7 @@ namespace GTA.GangAndTurfMod
             baseNumKillsBeforeWarVictory = 25;
             extraKillsPerTurfValue = 15;
             killsBetweenEnemySpawnReplacement = 25;
+            ticksBetweenEnemySpawnReplacement = 3600;
 
             ticksBetweenTurfRewards = 45000;
             ticksBetweenGangAIUpdates = 15000;

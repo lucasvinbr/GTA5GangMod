@@ -133,8 +133,16 @@ namespace GTA.GangAndTurfMod
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
             }
 
-            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
-            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+            if(torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
+            }
+            
+            if(legsDrawableIndex != -1 && legsTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+            }
+            
         }
 
         public static bool AddMemberAndSavePool(PotentialGangMember newMember)

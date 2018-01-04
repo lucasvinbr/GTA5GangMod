@@ -127,7 +127,7 @@ namespace GTA.GangAndTurfMod
                 else if (e.KeyCode == Keys.Space)
                 {
 
-                    if (gangManagerScript.hasChangedBody)
+                    if (gangManagerScript.HasChangedBody)
                     {
                         gangManagerScript.RespawnIfPossible();
                     }
@@ -190,7 +190,7 @@ namespace GTA.GangAndTurfMod
             UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.zoneBlipDisplay.none);
             gangManagerScript.RemoveAllMembers();
-            if (gangManagerScript.hasChangedBody)
+            if (gangManagerScript.HasChangedBody)
             {
                 gangManagerScript.RestorePlayerBody();
             }

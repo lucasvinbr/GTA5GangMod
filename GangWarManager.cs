@@ -45,7 +45,7 @@ namespace GTA.GangAndTurfMod
 
         private float spawnedMembersProportion;
 
-        private int ticksBeforeAutoResolution = 30000, ticksSinceLastCarSpawn = 0, minTicksBetweenCarSpawns = 20;
+        private int ticksBeforeAutoResolution = 30000, ticksSinceLastCarSpawn = 0, minTicksBetweenCarSpawns = 20, ticksSinceLastEnemyRelocation = 0;
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
@@ -409,6 +409,8 @@ namespace GTA.GangAndTurfMod
             {
                 enemySpawnBlip.Position = enemySpawnPoints[0];
             }
+
+            ticksSinceLastEnemyRelocation = 0;
         }
 
         void SetSpawnPoints(Vector3 initialReferencePoint)
@@ -590,7 +592,6 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    //UI.ShowSubtitle(enemyReinforcements.ToString() + " kills remaining!", 900);
                     enemyNumText.Caption = enemyReinforcements.ToString();
                     //if we've lost too many people since the last time we changed spawn points,
                     //change them again!
@@ -598,7 +599,15 @@ namespace GTA.GangAndTurfMod
                         ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
                         enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0)
                     {
-                        ReplaceEnemySpawnPoint(warZone.zoneBlipPosition);
+                        if(RandoMath.RandomBool() && spawnPointsSet)
+                        {
+                            ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+                        }
+                        else
+                        {
+                            ReplaceEnemySpawnPoint(warZone.zoneBlipPosition);
+                        }
+                        
                     }
                 }
 
@@ -712,6 +721,7 @@ namespace GTA.GangAndTurfMod
                     shouldDisplayReinforcementsTexts = true;
                     ticksSinceLastCarSpawn++;
                     ticksSinceLastBalanceCheck++;
+                    ticksSinceLastEnemyRelocation++;
                     curTicksAwayFromBattle = 0;
                     Game.WantedMultiplier = 0;
 
@@ -753,6 +763,7 @@ namespace GTA.GangAndTurfMod
                     }
 
                     if (!spawnPointsSet) SetSpawnPoints(warZone.zoneBlipPosition);
+                    else if (ticksSinceLastEnemyRelocation > ModOptions.instance.ticksBetweenEnemySpawnReplacement) ReplaceEnemySpawnPoint(alliedSpawnPoints[0]);
 
                     spawnedMembersProportion = spawnedAllies / RandoMath.Max(spawnedEnemies, 1.0f);
 
@@ -776,7 +787,7 @@ namespace GTA.GangAndTurfMod
                     }
                 }
                 //if the player's gang leader is dead...
-                if (!Game.Player.IsAlive && !GangManager.instance.hasChangedBody)
+                if (!Game.Player.IsAlive && !GangManager.instance.HasChangedBody)
                 {
                     //the war ends, but the outcome depends on how well the player's side was doing
                     EndWar(SkipWar(0.9f));
