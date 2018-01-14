@@ -40,6 +40,8 @@ namespace GTA.GangAndTurfMod
 
         public memberStatus curStatus = memberStatus.none;
 
+        public bool hasDriveByGun = false;
+
         public override void Update()
         {
             if ((myGang.isPlayerOwned && watchedPed.IsInAir) || watchedPed.IsPlayer)
@@ -83,7 +85,7 @@ namespace GTA.GangAndTurfMod
                     {
                         foreach (SpawnedGangMember member in GangManager.instance.livingMembers)
                         {
-                            if (member.watchedPed != null)
+                            if (member.watchedPed != null && member.watchedPed.IsAlive)
                             {
                                 if (!member.watchedPed.IsInCombat &&
                                 !member.watchedPed.IsInAir && !member.watchedPed.IsPlayer && !member.watchedPed.IsInVehicle())
@@ -128,22 +130,30 @@ namespace GTA.GangAndTurfMod
             else
             {
                 curStatus = memberStatus.inVehicle;
-                Ped vehicleDriver = watchedPed.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver);
+                Vehicle curVehicle = watchedPed.CurrentVehicle;
+                Ped vehicleDriver = curVehicle.GetPedOnSeat(VehicleSeat.Driver);
                 if (vehicleDriver != watchedPed)
                 {
                     if (vehicleDriver != null)
                     {
                         if (!vehicleDriver.IsAlive || !vehicleDriver.IsInVehicle())
                         {
-                            //TODO check for mounted weapons
-                            watchedPed.Task.LeaveVehicle();
-                            curStatus = memberStatus.none;
+                            if (!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) && !hasDriveByGun)
+                            {
+                                watchedPed.Task.LeaveVehicle();
+                                curStatus = memberStatus.none;
+                            }
                         }
                         else
                         {
                             if (ModOptions.instance.fightingEnabled && CanFight())
                             {
                                 PickATarget(100);
+                                if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) && !hasDriveByGun)
+                                {
+                                    watchedPed.Task.LeaveVehicle();
+                                    curStatus = memberStatus.none;
+                                }
                                 curStatus = memberStatus.inVehicle;
                             }
                         }
@@ -153,7 +163,7 @@ namespace GTA.GangAndTurfMod
                 }else
                 {
                     //if our vehicle has already been marked as deletable... maybe we can go too
-                    if (!watchedPed.CurrentVehicle.IsPersistent)
+                    if (!curVehicle.IsPersistent)
                     {
                         if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
@@ -166,7 +176,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
                             {
-                                watchedPed.Task.WarpOutOfVehicle(watchedPed.CurrentVehicle);
+                                watchedPed.Task.WarpOutOfVehicle(curVehicle);
                             }
                         }
                     }
@@ -200,21 +210,11 @@ namespace GTA.GangAndTurfMod
         /// decrements gangManager's living members count, also tells the war manager about it,
         /// clears this script's references, removes the ped's blip and marks the ped as no longer needed
         /// </summary>
-        public void Die(bool alsoDelete = false)
+        public void Die(bool alsoFlee = false)
         {
             
             if (watchedPed != null)
             {
-                if (Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
-                {
-                    //check if we're drivers; if we are, mark us and our passengers as "dead"
-                    SpawnedDrivingGangMember driverAI = GangManager.instance.GetTargetMemberDrivingAI(watchedPed);
-
-                    if(driverAI != null)
-                    {
-                        driverAI.EveryoneLeaveVehicle(true);
-                    }
-                }
 
                 if (GangWarManager.instance.isOccurring)
                 {
@@ -234,13 +234,18 @@ namespace GTA.GangAndTurfMod
                     watchedPed.CurrentBlip.Remove();
                 }
 
-                if (alsoDelete && watchedPed.IsAlive)
+                if (alsoFlee && watchedPed.IsAlive)
                 {
-                    watchedPed.Delete();
+                    watchedPed.MarkAsNoLongerNeeded();
+                    if(watchedPed != null)
+                    {
+                        watchedPed.Task.ReactAndFlee(Game.Player.Character);
+                    }
                 }
                 else
                 {
                     watchedPed.MarkAsNoLongerNeeded();
+
                 }
                 
             }
@@ -288,10 +293,21 @@ namespace GTA.GangAndTurfMod
             ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates + RandoMath.CachedRandom.Next(100);
         }
 
-        public SpawnedGangMember(Ped watchedPed)
+        public SpawnedGangMember(Ped watchedPed, Gang myGang, bool hasDriveByGun)
         {
-            this.watchedPed = watchedPed;
+            AttachData(watchedPed, myGang, hasDriveByGun);
             ResetUpdateInterval();
+        }
+
+        /// <summary>
+        /// sets our watched ped, gang and other info that can be useful
+        /// </summary>
+        /// <param name="targetPed"></param>
+        public void AttachData(Ped targetPed, Gang ourGang, bool hasDriveByGun)
+        {
+            this.watchedPed = targetPed;
+            this.myGang = ourGang;
+            this.hasDriveByGun = hasDriveByGun;
         }
 
         /// <summary>

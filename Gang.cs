@@ -280,7 +280,11 @@ namespace GTA.GangAndTurfMod
             int weaponValue = 200;
             if(gangWeaponHashes.Count > 0)
             {
-                weaponValue = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes)).price;
+                ModOptions.BuyableWeapon randomWeap = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes));
+                if(randomWeap != null)
+                {
+                    weaponValue = randomWeap.price;
+                }
             }
             return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
                 weaponValue / 200 +

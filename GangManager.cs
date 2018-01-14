@@ -218,8 +218,10 @@ namespace GTA.GangAndTurfMod
                     
                     if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
                     {
+                        //max is one update per frame in order to avoid crashes (it shouldn't make them dumb or anything)
                         livingMembers[i].Update();
                         livingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingMembers[i].ticksBetweenUpdates / 3);
+                        break;
                     }
                 }
             }
@@ -232,8 +234,10 @@ namespace GTA.GangAndTurfMod
                     livingDrivingMembers[i].ticksSinceLastUpdate++;
                     if (livingDrivingMembers[i].ticksSinceLastUpdate >= livingDrivingMembers[i].ticksBetweenUpdates)
                     {
+                        //max is one vehicle update per frame in order to avoid crashes
                         livingDrivingMembers[i].Update();
                         livingDrivingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingDrivingMembers[i].ticksBetweenUpdates / 3);
+                        break;
                     }
                 }
             }
@@ -275,6 +279,8 @@ namespace GTA.GangAndTurfMod
 
                         }
                     }
+
+                    break; //max is one update per tick
                 }
             }
 
@@ -422,7 +428,7 @@ namespace GTA.GangAndTurfMod
                 {
                     targetGang.moneyAvailable += (int)((curGangZones[j].value + 1) *
                         ModOptions.instance.baseRewardPerZoneOwned *
-                        (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count));
+                        (1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count) * ModOptions.instance.extraProfitForAIGangsFactor);
                 }
 
             }
@@ -1036,8 +1042,8 @@ namespace GTA.GangAndTurfMod
 
             int attempts = 0;
 
-            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(referencePos + RandoMath.RandomDirection(true) *
-                          ModOptions.instance.GetAcceptableMemberSpawnDistance()));
+            chosenPos = World.GetNextPositionOnSidewalk(referencePos + RandoMath.RandomDirection(true) *
+                          ModOptions.instance.GetAcceptableMemberSpawnDistance());
             float distFromRef = World.GetDistance(referencePos, chosenPos);
             while ((distFromRef > ModOptions.instance.maxDistanceMemberSpawnFromPlayer ||
                 distFromRef < ModOptions.instance.minDistanceMemberSpawnFromPlayer) && attempts <= 5)
@@ -1062,8 +1068,8 @@ namespace GTA.GangAndTurfMod
 
             int attempts = 0;
 
-            chosenPos = World.GetNextPositionOnSidewalk(World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
-                          averageDistanceFromReference));
+            chosenPos = World.GetNextPositionOnSidewalk(referencePoint + RandoMath.RandomDirection(true) *
+                          averageDistanceFromReference);
             float distFromRef = World.GetDistance(referencePoint, chosenPos);
             while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
                 (repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
@@ -1166,6 +1172,7 @@ namespace GTA.GangAndTurfMod
                     Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, ownerGang.name + " member");
                     Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
 
+                    bool hasDriveByGun = false; //used for when the member has to decide between staying inside a vehicle or not
 
                     //give a weapon
                     if (ownerGang.gangWeaponHashes.Count > 0)
@@ -1174,7 +1181,9 @@ namespace GTA.GangAndTurfMod
                         newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, false, true);
                         if (!ModOptions.instance.membersSpawnWithMeleeOnly)
                         {
-                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons), 1000, false, true);
+                            WeaponHash driveByGun = ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons);
+                            hasDriveByGun = driveByGun != WeaponHash.Unarmed;
+                            newPed.Weapons.Give(driveByGun, 1000, false, true);
                             newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
 
                             //and one extra
@@ -1224,8 +1233,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (livingMembers[i].watchedPed == null)
                             {
-                                livingMembers[i].watchedPed = newPed;
-                                livingMembers[i].myGang = ownerGang;
+                                livingMembers[i].AttachData(newPed, ownerGang, hasDriveByGun);
                                 couldEnlistWithoutAdding = true;
                                 break;
                             }
@@ -1234,8 +1242,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
                             {
-                                SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
-                                newAddition.myGang = ownerGang;
+                                SpawnedGangMember newAddition = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
                                 livingMembers.Add(newAddition);
                             }
                             else
@@ -1250,8 +1257,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
                         {
-                            SpawnedGangMember newAddition = new SpawnedGangMember(newPed);
-                            newAddition.myGang = ownerGang;
+                            SpawnedGangMember newAddition = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
                             livingMembers.Add(newAddition);
                         }
                         else
@@ -1311,7 +1317,7 @@ namespace GTA.GangAndTurfMod
                             }
                         }
 
-                        EnlistDrivingMember(driver, newVehicle, destPos, playerIsDest);
+                        EnlistDrivingMember(driver, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest);
 
                         if (deactivatePersistent)
                         {
@@ -1350,7 +1356,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool playerIsDest = false)
+        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false)
         {
             //enlist this new driver in the spawned list!
             if (livingDrivingMembers.Count > 0)
@@ -1360,28 +1366,21 @@ namespace GTA.GangAndTurfMod
                 {
                     if (livingDrivingMembers[i].watchedPed == null)
                     {
-                        livingDrivingMembers[i].watchedPed = pedToEnlist;
-                        livingDrivingMembers[i].vehicleIAmDriving = vehicleDriven;
-                        livingDrivingMembers[i].destination = destPos;
-                        livingDrivingMembers[i].updatesWhileGoingToDest = 0;
-                        livingDrivingMembers[i].SetWatchedPassengers();
-                        livingDrivingMembers[i].playerAsDest = playerIsDest;
+                        livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
                         couldEnlistWithoutAdding = true;
                         break;
                     }
                 }
                 if (!couldEnlistWithoutAdding)
                 {
-                    SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, playerIsDest);
-                    newDriver.SetWatchedPassengers();
+                    SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
                     livingDrivingMembers.Add(newDriver);
                 }
 
             }
             else
             {
-                SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, playerIsDest);
-                newDriver.SetWatchedPassengers();
+                SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
                 livingDrivingMembers.Add(newDriver);
             }
 

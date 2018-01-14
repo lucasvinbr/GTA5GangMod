@@ -76,7 +76,7 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             //we get some money then, at least to keep trying to fight
-                            watchedGang.moneyAvailable += ModOptions.instance.baseCostToTakeTurf * 5;
+                            watchedGang.moneyAvailable += (int) (ModOptions.instance.baseCostToTakeTurf * 5 * ModOptions.instance.extraProfitForAIGangsFactor);
                         }
                         
                     }
