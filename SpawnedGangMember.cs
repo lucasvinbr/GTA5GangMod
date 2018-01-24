@@ -148,11 +148,16 @@ namespace GTA.GangAndTurfMod
                         {
                             if (ModOptions.instance.fightingEnabled && CanFight())
                             {
-                                PickATarget(100);
-                                if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) && !hasDriveByGun)
+                                //if we're not following the player, not inside a vehicle with a mounted weap,
+                                //not equipped with a drive-by gun AND close to an enemy, leave the vehicle!
+                                //...but don't leave vehicles while they are moving too fast
+                                if(PickATarget(30) && !watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
+                                    !hasDriveByGun)
                                 {
-                                    watchedPed.Task.LeaveVehicle();
-                                    curStatus = memberStatus.none;
+                                    if(curVehicle.Speed < 5) {
+                                        watchedPed.Task.LeaveVehicle();
+                                        curStatus = memberStatus.none;
+                                    }
                                 }
                                 curStatus = memberStatus.inVehicle;
                             }
@@ -259,7 +264,7 @@ namespace GTA.GangAndTurfMod
 
         public bool PickATarget(float radius = 50)
         {
-            //a method that tries to make the target idle melee fighter pick other idle fighters as targets (by luck)
+            //a method that tries to make the target fighter pick a random enemy as target
             //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
 
             //get a random ped from the hostile ones nearby
