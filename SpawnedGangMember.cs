@@ -215,7 +215,7 @@ namespace GTA.GangAndTurfMod
         /// decrements gangManager's living members count, also tells the war manager about it,
         /// clears this script's references, removes the ped's blip and marks the ped as no longer needed
         /// </summary>
-        public void Die(bool alsoFlee = false)
+        public void Die(bool alsoDelete = false)
         {
             
             if (watchedPed != null)
@@ -239,13 +239,9 @@ namespace GTA.GangAndTurfMod
                     watchedPed.CurrentBlip.Remove();
                 }
 
-                if (alsoFlee && watchedPed.IsAlive)
+                if (alsoDelete)
                 {
-                    watchedPed.MarkAsNoLongerNeeded();
-                    if(watchedPed != null)
-                    {
-                        watchedPed.Task.ReactAndFlee(Game.Player.Character);
-                    }
+                    watchedPed.Delete();
                 }
                 else
                 {
