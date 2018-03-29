@@ -51,6 +51,11 @@ namespace GTA.GangAndTurfMod
         private int moneyFromLastProtagonist = 0;
         private int defaultMaxHealth = 200;
 
+        //bools below are toggled true for one Tick if an Update function for the respective type was run
+        private bool memberUpdateRanThisFrame = false;
+        private bool vehUpdateRanThisFrame = false;
+        private bool gangAIUpdateRanThisFrame = false;
+
         public delegate void SuccessfulMemberSpawnDelegate();
 
         #region setup/save stuff
@@ -210,35 +215,45 @@ namespace GTA.GangAndTurfMod
         public void Tick()
         {
             //tick living members...
+            memberUpdateRanThisFrame = false;
             for (int i = 0; i < livingMembers.Count; i++)
             {
                 if (livingMembers[i].watchedPed != null)
                 {
                     livingMembers[i].ticksSinceLastUpdate++;
-                    
-                    if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
+
+                    if (!memberUpdateRanThisFrame)
                     {
-                        //max is one update per frame in order to avoid crashes (it shouldn't make them dumb or anything)
-                        livingMembers[i].Update();
-                        livingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingMembers[i].ticksBetweenUpdates / 3);
-                        break;
+                        if (livingMembers[i].ticksSinceLastUpdate >= livingMembers[i].ticksBetweenUpdates)
+                        {
+                            //max is one update per frame in order to avoid crashes (it shouldn't make them dumb or anything)
+                            livingMembers[i].Update();
+                            livingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingMembers[i].ticksBetweenUpdates / 3);
+                            memberUpdateRanThisFrame = true;
+                        }
                     }
+                    
                 }
             }
 
             //tick living driving members...
+            vehUpdateRanThisFrame = false;
             for (int i = 0; i < livingDrivingMembers.Count; i++)
             {
                 if (livingDrivingMembers[i].watchedPed != null && livingDrivingMembers[i].vehicleIAmDriving != null)
                 {
                     livingDrivingMembers[i].ticksSinceLastUpdate++;
-                    if (livingDrivingMembers[i].ticksSinceLastUpdate >= livingDrivingMembers[i].ticksBetweenUpdates)
+                    if (!vehUpdateRanThisFrame)
                     {
-                        //max is one vehicle update per frame in order to avoid crashes
-                        livingDrivingMembers[i].Update();
-                        livingDrivingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingDrivingMembers[i].ticksBetweenUpdates / 3);
-                        break;
+                        if (livingDrivingMembers[i].ticksSinceLastUpdate >= livingDrivingMembers[i].ticksBetweenUpdates)
+                        {
+                            //max is one vehicle update per frame in order to avoid crashes
+                            livingDrivingMembers[i].Update();
+                            livingDrivingMembers[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(livingDrivingMembers[i].ticksBetweenUpdates / 3);
+                            vehUpdateRanThisFrame = true;
+                        }
                     }
+                    
                 }
             }
 
@@ -257,31 +272,36 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         void TickGangs()
         {
+            gangAIUpdateRanThisFrame = false;
             for (int i = 0; i < enemyGangs.Count; i++)
             {
                 enemyGangs[i].ticksSinceLastUpdate++;
-                if (enemyGangs[i].ticksSinceLastUpdate >= enemyGangs[i].ticksBetweenUpdates)
+                if (!gangAIUpdateRanThisFrame)
                 {
-                    enemyGangs[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(enemyGangs[i].ticksBetweenUpdates / 3);
-                    enemyGangs[i].Update();
-
-                    //lets also check if there aren't too many gangs around
-                    //if there aren't, we might create a new one...
-                    if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs - 1)
+                    if (enemyGangs[i].ticksSinceLastUpdate >= enemyGangs[i].ticksBetweenUpdates)
                     {
-                        if (RandoMath.CachedRandom.Next(enemyGangs.Count) == 0)
+                        enemyGangs[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(enemyGangs[i].ticksBetweenUpdates / 3);
+                        enemyGangs[i].Update();
+
+                        //lets also check if there aren't too many gangs around
+                        //if there aren't, we might create a new one...
+                        if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs - 1)
                         {
-                            Gang createdGang = CreateNewEnemyGang();
-                            if (createdGang != null)
+                            if (RandoMath.CachedRandom.Next(enemyGangs.Count) == 0)
                             {
-                                enemyGangs.Add(new GangAI(createdGang));
+                                Gang createdGang = CreateNewEnemyGang();
+                                if (createdGang != null)
+                                {
+                                    enemyGangs.Add(new GangAI(createdGang));
+                                }
+
                             }
-
                         }
-                    }
 
-                    break; //max is one update per tick
+                        gangAIUpdateRanThisFrame = true; //max is one update per tick
+                    }
                 }
+               
             }
 
             ticksSinceLastReward++;
