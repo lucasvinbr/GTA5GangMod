@@ -75,7 +75,7 @@ namespace GTA.GangAndTurfMod
                 if (!watchedPed.IsInCombat && ModOptions.instance.fightingEnabled && !watchedPed.IsInGroup && ((RandoMath.RandomBool() && CanFight()) || Game.Player.IsTargetting(watchedPed) || 
                     watchedPed.HasBeenDamagedBy(Game.Player.Character)))
                 {
-                    PickATarget();
+                    PickATarget(50, watchedPed.HasBeenDamagedBy(Game.Player.Character));
                 }
 
                 //if one enters combat, everyone does
@@ -174,7 +174,7 @@ namespace GTA.GangAndTurfMod
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
                         {
                             //we're too far to be important
-                            Die();
+                            Die(true); //TODO check if this can be bad
                             return;
                         }
                         else
@@ -258,16 +258,22 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public bool PickATarget(float radius = 50)
+        /// <summary>
+        /// a method that tries to make the target fighter pick a random enemy as target
+        /// in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
+        /// </summary>
+        /// <param name="radius">radius to look for enemies</param>
+        /// <param name="alwaysConsiderPlayer">add the player as an option, even if he's not inside the radius</param>
+        /// <returns>true if we found an enemy, false otherwise</returns>
+        public bool PickATarget(float radius = 50, bool alwaysConsiderPlayer = false)
         {
-            //a method that tries to make the target fighter pick a random enemy as target
-            //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
-
+            //TODO make the radius configurable
             //get a random ped from the hostile ones nearby
             List<Ped> hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
-
-            //add enemy gang members to the list, no matter where they are, so that we can attack the ones far away too
-            hostileNearbyPeds.AddRange(GangManager.instance.GetMembersNotFromMyGang(myGang));
+            if (alwaysConsiderPlayer)
+            {
+                hostileNearbyPeds.Add(Game.Player.Character); //TODO check if this is troublesome if we get to hurt one of our own members
+            }
 
             if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
             {
