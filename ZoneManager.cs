@@ -262,7 +262,6 @@ namespace GTA.GangAndTurfMod
                 case zoneBlipDisplay.allZones:
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {
-                        //zoneData.zoneList[i].AttachedBlip.Scale = 1;
                         CreateAttachedBlip(zoneData.zoneList[i]);
                         UpdateZoneBlip(zoneData.zoneList[i]);
                     }
@@ -273,13 +272,11 @@ namespace GTA.GangAndTurfMod
                     {
                         if (i < 5)
                         {
-                            //zoneData.zoneList[i].AttachedBlip.Scale = 1;
                             CreateAttachedBlip(zoneData.zoneList[i]);
                             UpdateZoneBlip(zoneData.zoneList[i]);
                         }
                         else
                         {
-                            //zoneData.zoneList[i].AttachedBlip.Scale = 0;
                             if (zoneData.zoneList[i].AttachedBlip != null)
                             {
                                 zoneData.zoneList[i].AttachedBlip.Remove();
@@ -392,7 +389,6 @@ namespace GTA.GangAndTurfMod
             float smallestDistance = 0;
             //we start our top 3 closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
             //the result may not be the 3 closest zones, but thats okay
-            TurfZone aRandomFillerZone = RandoMath.GetRandomElementFromList(zoneData.zoneList);
             List<TurfZone> top3ClosestZones = new List<TurfZone> { targetZone, targetZone, targetZone };
             int timesFoundBetterZone = 0;
             for (int i = 0; i < zoneData.zoneList.Count; i++)
@@ -424,38 +420,40 @@ namespace GTA.GangAndTurfMod
 
         public TurfZone GetRandomZone(bool preferablyNeutralZone = false)
         {
-            if(zoneData.zoneList.Count > 0)
+            if (!preferablyNeutralZone)
             {
-                List<TurfZone> possibleTurfChoices = new List<TurfZone>();
-
-                possibleTurfChoices.AddRange(zoneData.zoneList);
-
-                for(int i = 0; i < zoneData.zoneList.Count; i++)
-                {
-                    if(possibleTurfChoices.Count == 0)
-                    {
-                        //we've run out of options! abort
-                        break;
-                    }
-                    TurfZone chosenZone = RandoMath.GetRandomElementFromList(possibleTurfChoices);
-                    if(!preferablyNeutralZone || chosenZone.ownerGangName == "none")
-                    {
-                        return chosenZone;
-                    }
-                    else
-                    {
-                        possibleTurfChoices.Remove(chosenZone);
-                    }
-                }
-
-                //if we couldn't find a neutral zone, just get any zone
-                return zoneData.zoneList[RandoMath.CachedRandom.Next(0, zoneData.zoneList.Count)];
+                return RandoMath.GetRandomElementFromList(zoneData.zoneList);
             }
             else
             {
-                return null;
+                if(zoneData.zoneList.Count > 0)
+                {
+                    List<TurfZone> possibleTurfChoices = new List<TurfZone>();
+
+                    possibleTurfChoices.AddRange(zoneData.zoneList);
+
+                    for(int i = 0; i < zoneData.zoneList.Count; i++)
+                    {
+                        if(possibleTurfChoices.Count == 0)
+                        {
+                            //we've run out of options! abort
+                            break;
+                        }
+                        TurfZone chosenZone = RandoMath.GetRandomElementFromList(possibleTurfChoices);
+                        if(!preferablyNeutralZone || chosenZone.ownerGangName == "none")
+                        {
+                            return chosenZone;
+                        }
+                        else
+                        {
+                            possibleTurfChoices.Remove(chosenZone);
+                        }
+                    }
+
+                    //if we couldn't find a neutral zone, just get any zone
+                    return GetRandomZone(false);
+                }
             }
-            
         }
 
        
