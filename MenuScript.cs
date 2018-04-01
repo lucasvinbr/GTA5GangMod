@@ -1044,14 +1044,10 @@ namespace GTA.GangAndTurfMod
 
                     Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
 
-                    Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                            spawnPos, destPos, true, false, true); //zix - im not convinced the set drive task below is used, seems to be handle by this constructor instead
+                    SpawnedDrivingGangMember spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
+                            spawnPos, destPos, true);
                     if (spawnedVehicle != null)
                     {
-                        //GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnPos);
-                        //spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver).Task.DriveTo(spawnedVehicle, destPos, 25, 100);
-                        //Function.Call(Hash.SET_DRIVE_TASK_DRIVING_STYLE, spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver), 4457020); //ignores roads, avoids obstacles
-
                         if (showMenu)
                         {
                             gangMenu.Visible = !gangMenu.Visible;

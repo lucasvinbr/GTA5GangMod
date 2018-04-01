@@ -48,7 +48,7 @@ namespace GTA.GangAndTurfMod
             {
                 return;
             }
-            if (!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
+            if (curStatus != memberStatus.inVehicle)
             {
                 if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
@@ -129,62 +129,25 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                curStatus = memberStatus.inVehicle;
-                Vehicle curVehicle = watchedPed.CurrentVehicle;
-                Ped vehicleDriver = curVehicle.GetPedOnSeat(VehicleSeat.Driver);
-                if (vehicleDriver != watchedPed)
+                if (watchedPed.IsInVehicle())
                 {
-                    if (vehicleDriver != null)
+                    Vehicle curVehicle = watchedPed.CurrentVehicle;
+                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent)...
                     {
-                        if (!vehicleDriver.IsAlive || !vehicleDriver.IsInVehicle())
-                        {
-                            if (!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) && !hasDriveByGun)
-                            {
-                                watchedPed.Task.LeaveVehicle();
-                                curStatus = memberStatus.none;
-                            }
-                        }
-                        else
-                        {
-                            if (ModOptions.instance.fightingEnabled && CanFight())
-                            {
-                                //if we're not following the player, not inside a vehicle with a mounted weap,
-                                //not equipped with a drive-by gun AND close to an enemy, leave the vehicle!
-                                //...but don't leave vehicles while they are moving too fast
-                                if(PickATarget(30) && !watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
-                                    !hasDriveByGun)
-                                {
-                                    if(curVehicle.Speed < 5) {
-                                        watchedPed.Task.LeaveVehicle();
-                                        curStatus = memberStatus.none;
-                                    }
-                                }
-                                curStatus = memberStatus.inVehicle;
-                            }
-                        }
-                        
+                        ThinkAboutLeavingVehicle();
                     }
-
-                }else
-                {
-                    //if our vehicle has already been marked as deletable... maybe we can go too
-                    if (!curVehicle.IsPersistent)
+                    else
                     {
-                        if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
-               ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
+                        if (ModOptions.instance.fightingEnabled && CanFight())
                         {
-                            //we're too far to be important
-                            Die(true); //TODO check if this can be bad
-                            return;
-                        }
-                        else
-                        {
-                            if (!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
-                            {
-                                watchedPed.Task.WarpOutOfVehicle(curVehicle);
-                            }
+                            PickATarget(30); //do some drive-by, maybe
                         }
                     }
+                    
+                }
+                else
+                {
+                    curStatus = memberStatus.none;
                 }
 
             }
@@ -278,11 +241,39 @@ namespace GTA.GangAndTurfMod
             if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
             {
                 watchedPed.Task.FightAgainst(RandoMath.GetRandomElementFromList(hostileNearbyPeds));
-                curStatus = memberStatus.combat;
+                if(curStatus != memberStatus.inVehicle)
+                {
+                    curStatus = memberStatus.combat;
+                }
                 return true;
             }
 
             return false;
+        }
+
+        public void ThinkAboutLeavingVehicle()
+        {
+            Vehicle curVehicle = watchedPed.CurrentVehicle;
+
+            if(curVehicle == null || !watchedPed.IsAlive) return; //no thinking if we're dead
+
+            //if we're not following the player, not inside a vehicle with a mounted weap
+            //and not equipped with a drive-by gun, leave the vehicle!
+            //...but don't leave vehicles while they are moving too fast
+            if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
+                !hasDriveByGun)
+            {
+                if (curVehicle.Speed < 5)
+                {
+                    watchedPed.Task.LeaveVehicle();
+                    curStatus = memberStatus.none;
+                    return;
+                }
+            }
+            
+
+            curStatus = memberStatus.inVehicle;
+
         }
 
         /// <summary>

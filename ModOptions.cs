@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using GTA.Native;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Resolvers;
 
 namespace GTA.GangAndTurfMod
 {
@@ -963,7 +966,5 @@ namespace GTA.GangAndTurfMod
                 VehicleColor.WornSeaWash,
             };
         }
-            
-                
     }
 }

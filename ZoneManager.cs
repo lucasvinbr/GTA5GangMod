@@ -453,7 +453,10 @@ namespace GTA.GangAndTurfMod
                     //if we couldn't find a neutral zone, just get any zone
                     return GetRandomZone(false);
                 }
+
             }
+
+            return null;
         }
 
        

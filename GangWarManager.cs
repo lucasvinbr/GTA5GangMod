@@ -497,14 +497,16 @@ namespace GTA.GangAndTurfMod
         #endregion
 
        
-
+        /// <summary>
+        ///    the battle was unfair if the player's gang had guns and the enemy gang hadn't
+        ///    in this case, there is a possibility of the defeated gang instantly getting pistols
+        ///    in order to at least not get decimated all the time
+        /// </summary>
         void CheckIfBattleWasUnfair()
         {
-            //the battle was unfair if the player's gang had guns and the enemy gang hadn't
-            //in this case, there is a possibility of the defeated gang instantly getting pistols
-            //in order to at least not get decimated all the time
 
-            if(enemyGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) == WeaponHash.Unarmed &&
+
+            if (enemyGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) == WeaponHash.Unarmed &&
                 GangManager.instance.PlayerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) != WeaponHash.Unarmed)
             {
                 if (RandoMath.RandomBool())
@@ -519,23 +521,24 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// spawns a vehicle that has the player as destination
         /// </summary>
-        public void SpawnAngryVehicle(bool isFriendly)
+        public SpawnedDrivingGangMember SpawnAngryVehicle(bool isFriendly)
         {
             Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar(),
                 playerPos = Game.Player.Character.Position;
 
-            Vehicle spawnedVehicle = null;
+            SpawnedDrivingGangMember spawnedVehicle = null;
             if (!isFriendly && spawnedEnemies - 4 < maxSpawnedEnemies)
             {
                 spawnedVehicle = GangManager.instance.SpawnGangVehicle(enemyGang,
-                    spawnPos, playerPos, true, false, true, IncrementEnemiesCount);
+                    spawnPos, playerPos, true, IncrementEnemiesCount);
             }
             else if(spawnedAllies - 4 < maxSpawnedAllies)
             {
                 spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                    spawnPos, playerPos, true, false, true, IncrementAlliesCount);
+                    spawnPos, playerPos, true, IncrementAlliesCount);
             }
-            
+
+            return spawnedVehicle;
         }
 
         public void SpawnMember(bool isFriendly)

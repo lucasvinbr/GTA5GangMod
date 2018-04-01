@@ -126,7 +126,6 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == Keys.Space)
                 {
-
                     if (gangManagerScript.HasChangedBody)
                     {
                         gangManagerScript.RespawnIfPossible();

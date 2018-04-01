@@ -26,7 +26,15 @@ namespace GTA.GangAndTurfMod
             {
                 if(destination != Vector3.Zero)
                 {
-                    RideToDest();
+                    //stop tracking this driver/vehicle if he/she leaves the vehicle
+                    if (!watchedPed.IsInVehicle(vehicleIAmDriving))
+                    {
+                        EveryoneLeaveVehicle();
+                    }
+                    else
+                    {
+                        RideToDest();
+                    }
                 }
                 else
                 {
@@ -41,18 +49,10 @@ namespace GTA.GangAndTurfMod
                         return;
                     }
 
-                    //the driver can also do some drive-by
-                    if (ModOptions.instance.gangMemberAggressiveness !=
-                    ModOptions.gangMemberAggressivenessMode.defensive && ModOptions.instance.fightingEnabled)
-                    {
-                        watchedPed.Task.FightAgainstHatedTargets(100);
-                    }
-
-
-                    //stop tracking this driver/vehicle if he/she leaves the vehicle
+                    //stop tracking this driver/vehicle if he/she leaves the vehicle or something goes wrong
                     if (!watchedPed.IsInVehicle())
                     {
-                        ClearAllRefs();
+                        EveryoneLeaveVehicle();
                         return;
                     }
 
@@ -83,14 +83,7 @@ namespace GTA.GangAndTurfMod
             {
                 //our vehicle has been destroyed/ our driver has died
 
-                for (int i = 0; i < myPassengers.Count; i++)
-                {
-                    if (myPassengers[i] != null && myPassengers[i].IsAlive && myPassengers[i].IsInVehicle(vehicleIAmDriving))
-                    {
-                        myPassengers[i].Task.LeaveVehicle();
-                    }
-                }
-                ClearAllRefs();
+                EveryoneLeaveVehicle(); //... if something/someone is left, they'll consider leaving
             }
             
         }
@@ -158,28 +151,27 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void EveryoneLeaveVehicle(bool doNotCareAboutMountedWeaps = false)
+        public void EveryoneLeaveVehicle()
         {
             //leave vehicle, everyone stops being important
             if (!watchedPed.IsPlayer)
             {
-                if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) || doNotCareAboutMountedWeaps)
+                SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
+                if(memberAI != null)
                 {
-                    watchedPed.Task.LeaveVehicle();
+                    memberAI.ThinkAboutLeavingVehicle();
                 }
-                
             }
 
             for (int i = 0; i < myPassengers.Count; i++)
             {
-                if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer)
+                if (!myPassengers[i].IsPlayer)
                 {
-
-                    if(!Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, myPassengers[i]) || doNotCareAboutMountedWeaps)
+                    SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i], true);
+                    if (memberAI != null)
                     {
-                        myPassengers[i].Task.LeaveVehicle();
+                        memberAI.ThinkAboutLeavingVehicle();
                     }
-                   
                 }
             }
 

@@ -724,7 +724,7 @@ namespace GTA.GangAndTurfMod
 
                 //lets parachute if no one is around
                 Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang,
-                   Game.Player.Character.Position + Vector3.WorldUp * 70);
+                   Game.Player.Character.Position + Vector3.WorldUp * 70).watchedPed;
                 if (spawnedPed != null)
                 {
                     TakePedBody(spawnedPed);
@@ -939,12 +939,19 @@ namespace GTA.GangAndTurfMod
             return returnedList;
         }
 
-        public SpawnedGangMember GetTargetMemberAI(Ped targetMember)
+        /// <summary>
+        /// gets the SpawnedGangMember object that is handling the target ped's AI, optionally returning null instead if the ped is dead
+        /// </summary>
+        /// <param name="targetPed"></param>
+        /// <param name="onlyGetIfIsAlive"></param>
+        /// <returns></returns>
+        public SpawnedGangMember GetTargetMemberAI(Ped targetPed, bool onlyGetIfIsAlive = false)
         {
-            if (targetMember == null) return null;
+            if (targetPed == null) return null;
+            if (!targetPed.IsAlive && onlyGetIfIsAlive) return null;
             for(int i = 0; i < livingMembers.Count; i++)
             {
-                if(livingMembers[i].watchedPed == targetMember)
+                if(livingMembers[i].watchedPed == targetPed)
                 {
                     return livingMembers[i];
                 }
@@ -1158,7 +1165,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public Ped SpawnGangMember(Gang ownerGang, Vector3 spawnPos, bool isImportant = true, bool deactivatePersistent = false, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null)
+        public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null)
         {
             if(livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
@@ -1214,19 +1221,6 @@ namespace GTA.GangAndTurfMod
                     //set the relationship group
                     newPed.RelationshipGroup = ownerGang.relationGroupIndex;
 
-
-
-                    if (!isImportant)
-                    {
-                        newPed.MarkAsNoLongerNeeded();
-                    }
-
-                    if (deactivatePersistent)
-                    {
-                        newPed.IsPersistent = false;
-                    }
-
-
                     newPed.NeverLeavesGroup = true;
 
                     newPed.BlockPermanentEvents = true;
@@ -1242,43 +1236,27 @@ namespace GTA.GangAndTurfMod
                    
                     newPed.CanSwitchWeapons = true;
                     newPed.CanWrithe = false; //no early dying
-                    //newPed.AlwaysKeepTask = true;
-
 
                     //enlist this new gang member in the spawned list!
-                    if (livingMembers.Count > 0)
-                    {
-                        bool couldEnlistWithoutAdding = false;
-                        for (int i = 0; i < livingMembers.Count; i++)
-                        {
-                            if (livingMembers[i].watchedPed == null)
-                            {
-                                livingMembers[i].AttachData(newPed, ownerGang, hasDriveByGun);
-                                couldEnlistWithoutAdding = true;
-                                break;
-                            }
-                        }
-                        if (!couldEnlistWithoutAdding)
-                        {
-                            if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
-                            {
-                                SpawnedGangMember newAddition = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
-                                livingMembers.Add(newAddition);
-                            }
-                            else
-                            {
-                                newPed.Delete();
-                                return null;
-                            }
-                        }
+                    SpawnedGangMember newMemberAI = null;
 
+                    bool couldEnlistWithoutAdding = false;
+                    for (int i = 0; i < livingMembers.Count; i++)
+                    {
+                        if (livingMembers[i].watchedPed == null)
+                        {
+                            livingMembers[i].AttachData(newPed, ownerGang, hasDriveByGun);
+                            newMemberAI = livingMembers[i];
+                            couldEnlistWithoutAdding = true;
+                            break;
+                        }
                     }
-                    else
+                    if (!couldEnlistWithoutAdding)
                     {
                         if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit)
                         {
-                            SpawnedGangMember newAddition = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
-                            livingMembers.Add(newAddition);
+                            newMemberAI = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
+                            livingMembers.Add(newMemberAI);
                         }
                         else
                         {
@@ -1286,21 +1264,20 @@ namespace GTA.GangAndTurfMod
                             return null;
                         }
                     }
+
+                    livingMembersCount++;
+                    if (onSuccessfulMemberSpawn != null) onSuccessfulMemberSpawn();
+                    return newMemberAI;
                 }
                 else
                 {
                     return null;
                 }
-
-                livingMembersCount++;
-                if (onSuccessfulMemberSpawn != null) onSuccessfulMemberSpawn();
-                return newPed;
             }
-
             return null;
         }
 
-        public Vehicle SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool isImportant = false, bool deactivatePersistent = false, bool playerIsDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
+        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
@@ -1315,41 +1292,35 @@ namespace GTA.GangAndTurfMod
                 {
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;
 
-                    if (!isImportant)
-                    {
-                        newVehicle.MarkAsNoLongerNeeded();
-                    }
 
-                    Ped driver = SpawnGangMember(ownerGang, spawnPos, true, onSuccessfulMemberSpawn : onSuccessfulPassengerSpawn);
+                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn : onSuccessfulPassengerSpawn);
+                    
                     if (driver != null)
                     {
-                        driver.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
+                        driver.curStatus = SpawnedGangMember.memberStatus.inVehicle;
+                        driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
 
                         int passengerCount = newVehicle.PassengerSeats;
                         if (destPos == Vector3.Zero && passengerCount > 4) passengerCount = 4; //limit ambient passengers in order to have less impact in ambient spawning
 
                         for (int i = 0; i < passengerCount; i++)
                         {
-                            Ped passenger = SpawnGangMember(ownerGang, spawnPos, true, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
+                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
                             if (passenger != null)
                             {
-                                passenger.SetIntoVehicle(newVehicle, VehicleSeat.Any);
+                                passenger.curStatus = SpawnedGangMember.memberStatus.inVehicle;
+                                passenger.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Any);
                             }
                         }
 
-                        EnlistDrivingMember(driver, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest);
-
-                        if (deactivatePersistent)
-                        {
-                            newVehicle.IsPersistent = false;
-                        }
+                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest);
 
                         newVehicle.AddBlip();
                         newVehicle.CurrentBlip.IsShortRange = true;
 
                         Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
 
-                        return newVehicle;
+                        return driverAI;
                     }
                     else
                     {
@@ -1366,7 +1337,7 @@ namespace GTA.GangAndTurfMod
 
         public Ped SpawnParachutingMember(Gang ownerGang, Vector3 spawnPos, Vector3 destPos)
         {
-            Ped spawnedPed = SpawnGangMember(ownerGang, spawnPos);
+            Ped spawnedPed = SpawnGangMember(ownerGang, spawnPos).watchedPed;
             if (spawnedPed != null)
             {
                 spawnedPed.Task.ParachuteTo(destPos);
@@ -1376,35 +1347,28 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        void EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false)
+        SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false)
         {
-            //enlist this new driver in the spawned list!
-            if (livingDrivingMembers.Count > 0)
-            {
-                bool couldEnlistWithoutAdding = false;
-                for (int i = 0; i < livingDrivingMembers.Count; i++)
-                {
-                    if (livingDrivingMembers[i].watchedPed == null)
-                    {
-                        livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
-                        couldEnlistWithoutAdding = true;
-                        break;
-                    }
-                }
-                if (!couldEnlistWithoutAdding)
-                {
-                    SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
-                    livingDrivingMembers.Add(newDriver);
-                }
+            SpawnedDrivingGangMember newDriverAI = null;
 
-            }
-            else
+            bool couldEnlistWithoutAdding = false;
+            for (int i = 0; i < livingDrivingMembers.Count; i++)
             {
-                SpawnedDrivingGangMember newDriver = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
-                livingDrivingMembers.Add(newDriver);
+                if (livingDrivingMembers[i].watchedPed == null)
+                {
+                    newDriverAI = livingDrivingMembers[i];
+                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
+                    couldEnlistWithoutAdding = true;
+                    break;
+                }
+            }
+            if (!couldEnlistWithoutAdding)
+            {
+                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
+                livingDrivingMembers.Add(newDriverAI);
             }
 
-
+            return newDriverAI;
         }
         #endregion
     }

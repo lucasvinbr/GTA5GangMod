@@ -43,7 +43,7 @@ namespace GTA.GangAndTurfMod
                     GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
                        playerPos + Math.Vector3.WorldUp * 50, playerPos);
                     GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                        GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true, false, true);
+                        GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
                     postWarBackupsRemaining--;
                 }
 
@@ -85,7 +85,7 @@ namespace GTA.GangAndTurfMod
         public void SpawnAmbientMember(Gang curGang)
         {
             Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
-            Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
+            Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos).watchedPed;
             if (newMember != null)
             {
                 newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
@@ -94,15 +94,16 @@ namespace GTA.GangAndTurfMod
 
         public void SpawnAmbientVehicle(Gang curGang)
         {
-            Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
-                                GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
-            if (spawnedVehicle != null)
+            Vector3 vehSpawnPoint = GangManager.instance.FindGoodSpawnPointForCar();
+            SpawnedDrivingGangMember spawnedVehicleAI = GangManager.instance.SpawnGangVehicle(curGang,
+                                vehSpawnPoint , Vector3.Zero, true);
+            if (spawnedVehicleAI != null)
             {
-                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
-                Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
+                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
+                Ped driver = spawnedVehicleAI.watchedPed;
                 if (driver != null) //if, for some reason, we don't have a driver, do nothing
                 {
-                    driver.Task.CruiseWithVehicle(spawnedVehicle, 8, (int) DrivingStyle.AvoidTraffic);
+                    driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 8, (int) DrivingStyle.AvoidTraffic);
                 }
             }
         }
