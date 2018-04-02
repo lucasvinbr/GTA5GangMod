@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod
                 
                 if (Game.Player.WantedLevel > Game.MaxWantedLevel) Game.Player.WantedLevel--;
 
-                if(postWarBackupsRemaining > 0 && curTurfZone == GangWarManager.instance.warZone)
+                if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
                     Vector3 playerPos = Game.Player.Character.Position;
                     GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,

@@ -41,7 +41,7 @@ namespace GTA.GangAndTurfMod
                     //we are just wandering arond
 
                     //if there is a war going on and we're in the war zone, get to the player to help/kill him!
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == ZoneManager.instance.GetCurrentTurfZone())
+                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
                         playerAsDest = true;
                         updatesWhileGoingToDest = 0;

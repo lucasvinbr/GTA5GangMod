@@ -52,6 +52,29 @@ namespace GTA.GangAndTurfMod
             {
                 if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
+                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+                    {
+                        //instead of idling while in a war, members should head for one of the spawn points
+                        if(myGang == GangManager.instance.PlayerGang)
+                        {
+                            if (GangWarManager.instance.enemySpawnPoints != null)
+                            {
+                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.enemySpawnPoints);
+                                watchedPed.Task.RunTo(ourDestination);
+                            }
+                        }
+                        else
+                        {
+                            if (GangWarManager.instance.alliedSpawnPoints != null)
+                            {
+                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
+                                watchedPed.Task.RunTo(ourDestination);
+                            }
+                        }
+
+                        curStatus = memberStatus.idle;
+                        ticksSinceLastIdleChange = 0;
+                    }
                     if(curStatus != memberStatus.idle || ticksSinceLastIdleChange > ticksBetweenIdleChange)
                     {
                         curStatus = memberStatus.idle;

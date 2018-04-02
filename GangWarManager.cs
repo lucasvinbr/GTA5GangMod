@@ -60,13 +60,15 @@ namespace GTA.GangAndTurfMod
 
         public TurfZone warZone;
 
+        public bool playerNearWarzone = false;
+
         public Gang enemyGang;
 
         public static GangWarManager instance;
 
         private Blip warBlip, alliedSpawnBlip, enemySpawnBlip;
 
-        private Vector3[] enemySpawnPoints, alliedSpawnPoints;
+        public Vector3[] enemySpawnPoints, alliedSpawnPoints;
 
         private bool spawnPointsSet = false;
 
@@ -103,7 +105,7 @@ namespace GTA.GangAndTurfMod
                 this.enemyGang = enemyGang;
                 this.warZone = warZone;
                 this.curWarType = theWarType;
-
+                playerNearWarzone = false;
                 spawnPointsSet = false;
 
                 warBlip = World.CreateBlip(warZone.zoneBlipPosition);
@@ -322,6 +324,7 @@ namespace GTA.GangAndTurfMod
             warBlip.Remove();
             shouldDisplayReinforcementsTexts = false;
             isOccurring = false;
+            playerNearWarzone = false;
             AmbientGangMemberSpawner.instance.enabled = true;
             GangManager.instance.GetGangAI(enemyGang).ticksSinceLastFightWithPlayer = 0;
 
@@ -549,12 +552,12 @@ namespace GTA.GangAndTurfMod
 
             if (isFriendly)
             {
-                GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang, spawnPos, onSuccessfulMemberSpawn: IncrementAlliesCount);
+                spawnedMember = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang, spawnPos, onSuccessfulMemberSpawn: IncrementAlliesCount).watchedPed;
             }
             else
             {
                 if (spawnedEnemies < maxSpawnedEnemies)
-                    GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount);
+                    spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount).watchedPed;
                 else return;
             }
                 
@@ -567,7 +570,16 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    spawnedMember.Task.FightAgainst(Game.Player.Character);
+                    if(alliedSpawnPoints != null)
+                    {
+                        Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
+                        spawnedMember.Task.RunTo(ourDestination);
+                    }
+                    else
+                    {
+                        spawnedMember.Task.RunTo(Game.Player.Character.Position);
+                    }
+                    
                 }
                 
             }
@@ -722,7 +734,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (IsPlayerCloseToWar())
                 {
-
+                    playerNearWarzone = true;
                     shouldDisplayReinforcementsTexts = true;
                     ticksSinceLastCarSpawn++;
                     ticksSinceLastBalanceCheck++;
@@ -785,6 +797,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
+                    playerNearWarzone = false;
                     shouldDisplayReinforcementsTexts = false;
                     curTicksAwayFromBattle++;
                     AmbientGangMemberSpawner.instance.enabled = true;
