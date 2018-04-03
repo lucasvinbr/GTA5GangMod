@@ -12,7 +12,6 @@ namespace GTA.GangAndTurfMod
     /// a zone that can be taken over by a gang.
     /// members from that gang will spawn if you are inside their zone
     /// </summary>
-    [System.Serializable]
     public class TurfZone
     {
         public string zoneName, ownerGangName;

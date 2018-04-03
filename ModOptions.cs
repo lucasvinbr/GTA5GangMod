@@ -123,7 +123,7 @@ namespace GTA.GangAndTurfMod
 
         public void SaveOptions(bool notifyMsg = true)
         {
-            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions", notifyMsg);
+            PersistenceHandler.SaveToFile(this, "ModOptions", notifyMsg);
         }
 
         public Keys openGangMenuKey = Keys.B,
@@ -256,7 +256,6 @@ namespace GTA.GangAndTurfMod
         public List<VehicleColor> extraPlayerExclusiveColors;
 
         //XMLserializer does not like dictionaries
-        [System.Serializable]
         public class BuyableWeapon
         {
             public WeaponHash wepHash;
@@ -275,7 +274,6 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        [System.Serializable]
         public class GangColorTranslation
         {
             public List<VehicleColor> vehicleColors;

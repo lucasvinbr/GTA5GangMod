@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
 {
-    [System.Serializable]
     public class PotentialGangVehicle
     {
         public int modelHash;
 
+        [XmlIgnore]
         public static PotentialCarPool CarPool
         {
             get
@@ -51,7 +52,7 @@ namespace GTA.GangAndTurfMod
             if (!CarPool.HasIdenticalEntry(newCar))
             {
                 CarPool.carList.Add(newCar);
-                PersistenceHandler.SaveToFile<PotentialCarPool>(CarPool, "VehiclePool");
+                PersistenceHandler.SaveToFile(CarPool, "VehiclePool");
                 return true;
             }
 
@@ -65,7 +66,7 @@ namespace GTA.GangAndTurfMod
             if (CarPool.HasIdenticalEntry(newCar, ref identicalEntryIndex))
             {
                 CarPool.carList.RemoveAt(identicalEntryIndex);
-                PersistenceHandler.SaveToFile<PotentialCarPool>(CarPool, "VehiclePool");
+                PersistenceHandler.SaveToFile(CarPool, "VehiclePool");
                 return true;
             }
 
@@ -88,7 +89,6 @@ namespace GTA.GangAndTurfMod
         }
     }
 
-    [System.Serializable]
     public class PotentialCarPool
     {
         public List<PotentialGangVehicle> carList;

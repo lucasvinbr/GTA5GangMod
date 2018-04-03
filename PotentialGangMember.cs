@@ -47,6 +47,8 @@ namespace GTA.GangAndTurfMod
         public int legsDrawableIndex, legsTextureIndex;
         public dressStyle myStyle;
         public memberColor linkedColor;
+
+        [XmlIgnore]
         public static PotentialMemberPool MemberPool {
             get
             {
@@ -151,7 +153,7 @@ namespace GTA.GangAndTurfMod
             if (!MemberPool.HasIdenticalEntry(newMember))
             {
                 MemberPool.memberList.Add(newMember);
-                PersistenceHandler.SaveToFile<PotentialMemberPool>(MemberPool, "MemberPool");
+                PersistenceHandler.SaveToFile(MemberPool, "MemberPool");
                 return true;
             }
 
@@ -165,7 +167,7 @@ namespace GTA.GangAndTurfMod
             if (similarEntry != null)
             {
                 MemberPool.memberList.Remove(similarEntry);
-                PersistenceHandler.SaveToFile<PotentialMemberPool>(MemberPool, "MemberPool");
+                PersistenceHandler.SaveToFile(MemberPool, "MemberPool");
                 return true;
             }
 
@@ -208,7 +210,6 @@ namespace GTA.GangAndTurfMod
             return returnedMember;
         }
 
-        [System.Serializable]
         public class PotentialMemberPool
         {
             public List<PotentialGangMember> memberList;

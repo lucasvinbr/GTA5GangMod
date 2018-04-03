@@ -12,7 +12,6 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// basically a potential gang member with more data to be saved
     /// </summary>
-    [Serializable]
     public class FreemodePotentialGangMember : PotentialGangMember
     {
         /// <summary>

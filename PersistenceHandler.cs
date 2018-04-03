@@ -50,7 +50,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-
+                
                 StreamWriter writer = new StreamWriter(filePath);
                 serializer.Serialize(writer, dataToSave);
                 writer.Close();

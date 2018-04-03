@@ -59,7 +59,6 @@ namespace GTA.GangAndTurfMod
         public delegate void SuccessfulMemberSpawnDelegate();
 
         #region setup/save stuff
-        [System.Serializable]
         public class GangData
         {
 
@@ -186,7 +185,7 @@ namespace GTA.GangAndTurfMod
 
         public void SaveGangData(bool notifySuccess = true)
         {
-            PersistenceHandler.SaveToFile<GangData>(gangData, "GangData", notifySuccess);
+            PersistenceHandler.SaveToFile(gangData, "GangData", notifySuccess);
         }
         #endregion
 

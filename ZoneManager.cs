@@ -26,7 +26,6 @@ namespace GTA.GangAndTurfMod
 
         #region setup/save stuff
 
-        [System.Serializable]
         public class TurfZoneData
         {
             public List<TurfZone> zoneList;
@@ -37,7 +36,6 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        [System.Serializable]
         public class AreaBlip
         {
             public Math.Vector3 position;
@@ -85,7 +83,7 @@ namespace GTA.GangAndTurfMod
 
         public void SaveZoneData(bool notifySuccess = true)
         {
-            PersistenceHandler.SaveToFile<TurfZoneData>(zoneData, "TurfZoneData", notifySuccess);
+            PersistenceHandler.SaveToFile(zoneData, "TurfZoneData", notifySuccess);
         }
 
         public void UpdateZoneData(TurfZone newTurfZone)
