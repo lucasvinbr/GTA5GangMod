@@ -67,11 +67,13 @@ namespace GTA.GangAndTurfMod
 
         public static T GetRandomElementFromList<T>(List<T> theList)
         {
+            if (theList == null) return default(T);
             return theList[CachedRandom.Next(theList.Count)];
         }
 
         public static T GetRandomElementFromArray<T>(T[] theArray)
         {
+            if (theArray == null) return default(T);
             return theArray[CachedRandom.Next(theArray.Length)];
         }
 

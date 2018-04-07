@@ -211,8 +211,11 @@ namespace GTA.GangAndTurfMod
 
         #endregion
 
+
+        public static bool debugAlwaysFalseBool = false;
         public void Tick()
         {
+            debugAlwaysFalseBool = false;
             //tick living members...
             memberUpdateRanThisFrame = false;
             for (int i = 0; i < livingMembers.Count; i++)
@@ -261,6 +264,11 @@ namespace GTA.GangAndTurfMod
             if (HasChangedBody)
             {
                 TickMindControl();
+            }
+
+            if (debugAlwaysFalseBool)
+            {
+                UI.Notify("the always false bool is true!");
             }
         }
 
@@ -608,7 +616,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (GangWarManager.instance.isOccurring)
                         {
-                            GangWarManager.instance.OnAllyDeath(true);
+                            GangWarManager.instance.OnAllyDeath();
                         }
                     }
                     hasDiedWithChangedBody = true;
@@ -722,12 +730,12 @@ namespace GTA.GangAndTurfMod
                 }
 
                 //lets parachute if no one is around
-                Ped spawnedPed = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang,
-                   Game.Player.Character.Position + Vector3.WorldUp * 70).watchedPed;
-                if (spawnedPed != null)
+                SpawnedGangMember spawnedPara = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang,
+                   Game.Player.Character.Position + Vector3.WorldUp * 70);
+                if (spawnedPara != null)
                 {
-                    TakePedBody(spawnedPed);
-                    spawnedPed.Task.UseParachute();
+                    TakePedBody(spawnedPara.watchedPed);
+                    spawnedPara.watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
                     DiscardDeadBody(oldPed);
                 }
 
@@ -1336,11 +1344,11 @@ namespace GTA.GangAndTurfMod
 
         public Ped SpawnParachutingMember(Gang ownerGang, Vector3 spawnPos, Vector3 destPos)
         {
-            Ped spawnedPed = SpawnGangMember(ownerGang, spawnPos).watchedPed;
-            if (spawnedPed != null)
+            SpawnedGangMember spawnedPara = SpawnGangMember(ownerGang, spawnPos);
+            if (spawnedPara != null)
             {
-                spawnedPed.Task.ParachuteTo(destPos);
-                return spawnedPed;
+                spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+                return spawnedPara.watchedPed;
             }
 
             return null;

@@ -20,6 +20,7 @@ namespace GTA.GangAndTurfMod
         {
             try
             {
+                Logger.Log("attempting file load: " + fileName);
                 XmlSerializer serializer = new XmlSerializer(typeof(T));
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
                 if (File.Exists(filePath))
@@ -42,6 +43,7 @@ namespace GTA.GangAndTurfMod
         {
             try
             {
+                Logger.Log("attempting file save: " + fileName);
                 XmlSerializer serializer = new XmlSerializer(typeof(T));
 
                 if (!Directory.Exists(Application.StartupPath + "/gangModData/"))

@@ -57,6 +57,7 @@
     <Compile Include="Gang.cs" />
     <Compile Include="GangAI.cs" />
     <Compile Include="GangWarManager.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="ModCore.cs" />
     <Compile Include="ModOptions.cs" />
     <Compile Include="PotentialGangVehicle.cs" />

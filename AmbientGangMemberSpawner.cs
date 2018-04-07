@@ -22,6 +22,7 @@ namespace GTA.GangAndTurfMod
 
         void OnTick(object sender, EventArgs e)
         {
+            GangManager.debugAlwaysFalseBool = true;
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
@@ -85,10 +86,10 @@ namespace GTA.GangAndTurfMod
         public void SpawnAmbientMember(Gang curGang)
         {
             Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
-            Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos).watchedPed;
+            SpawnedGangMember newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
             if (newMember != null)
             {
-                newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
+                newMember.watchedPed.Task.GoTo(World.GetNextPositionOnSidewalk(spawnPos));
             }
         }
 

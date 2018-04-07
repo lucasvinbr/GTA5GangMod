@@ -92,16 +92,16 @@ namespace GTA.GangAndTurfMod
         {
 
             if (playerAsDest) destination = Game.Player.Character.Position;
+            bool playerInVehicle = Game.Player.Character.IsInVehicle();
 
             //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 25) //tweaked to match my changes below -- zix
             {
                 //leave the vehicle if we wanted to get to the player and he's on foot or if we just had to get somewhere
-                if (!playerAsDest || Game.Player.Character.CurrentVehicle == null)
+                if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
                     EveryoneLeaveVehicle();
                 }
-
             }
             else
             {
@@ -110,7 +110,7 @@ namespace GTA.GangAndTurfMod
                 //give up, drop passengers and go away... but only if we're not chasing the player
                 //and he/she isn't on a vehicle
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
-                    (!playerAsDest || Game.Player.Character.CurrentVehicle == null))
+                    (!playerAsDest || !playerInVehicle))
                 {
                     if (playerAsDest) //zix - extra config options
                     {
@@ -129,7 +129,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (!watchedPed.IsPlayer)
                     {
-                        if (playerAsDest && Game.Player.Character.CurrentVehicle != null)
+                        if (playerAsDest && playerInVehicle)
                         {
                             watchedPed.Task.ClearAll();
                             if (isFriendlyToPlayer)

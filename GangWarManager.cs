@@ -154,14 +154,6 @@ namespace GTA.GangAndTurfMod
 
                 isOccurring = true;
 
-                //if the enemy is the attacker, try placing spawn points around the zone's blip position, which should be a good reference point
-                if(theWarType == warType.defendingFromEnemy &&
-                    (World.GetZoneName(Game.Player.Character.Position) == warZone.zoneName ||
-                World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 100))
-                {
-                    SetSpawnPoints(warZone.zoneBlipPosition);
-                }
-
                 
 
                 //BANG-like sound
@@ -183,6 +175,11 @@ namespace GTA.GangAndTurfMod
                         GangManager.CalculateAttackerReinforcements(enemyGang, attackStrength).ToString(),
                         " against our ",
                         GangManager.CalculateDefenderReinforcements(GangManager.instance.PlayerGang, warZone).ToString()));
+                    //spawns are set around the zone blip if we are defending
+                    if(World.GetDistance(Game.Player.Character.Position, warZone.zoneBlipPosition) < 100)
+                    {
+                        SetSpawnPoints(warZone.zoneBlipPosition);
+                    }
                 }
 
                 return true;
@@ -548,16 +545,24 @@ namespace GTA.GangAndTurfMod
         {
             Vector3 spawnPos = isFriendly ? 
                 RandoMath.GetRandomElementFromArray(alliedSpawnPoints) : RandoMath.GetRandomElementFromArray(enemySpawnPoints);
-            Ped spawnedMember = null;
+            if (spawnPos == default(Vector3)) return; //this means we don't have spawn points set yet
+            SpawnedGangMember spawnedMember = null;
 
             if (isFriendly)
             {
-                spawnedMember = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang, spawnPos, onSuccessfulMemberSpawn: IncrementAlliesCount).watchedPed;
+                if (spawnedAllies < maxSpawnedAllies)
+                {
+                    spawnedMember = GangManager.instance.SpawnGangMember(GangManager.instance.PlayerGang, spawnPos, onSuccessfulMemberSpawn: IncrementAlliesCount);
+                }
+                else return;
+                
             }
             else
             {
                 if (spawnedEnemies < maxSpawnedEnemies)
-                    spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount).watchedPed;
+                {
+                    spawnedMember = GangManager.instance.SpawnGangMember(enemyGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount);
+                }
                 else return;
             }
                 
@@ -566,18 +571,18 @@ namespace GTA.GangAndTurfMod
             {
                 if (isFriendly)
                 {
-                    spawnedMember.Task.RunTo(Game.Player.Character.Position);
+                    spawnedMember.watchedPed.Task.RunTo(Game.Player.Character.Position);
                 }
                 else
                 {
                     if(alliedSpawnPoints != null)
                     {
                         Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
-                        spawnedMember.Task.RunTo(ourDestination);
+                        spawnedMember.watchedPed.Task.RunTo(ourDestination);
                     }
                     else
                     {
-                        spawnedMember.Task.RunTo(Game.Player.Character.Position);
+                        spawnedMember.watchedPed.Task.RunTo(Game.Player.Character.Position);
                     }
                     
                 }
@@ -625,28 +630,20 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void OnAllyDeath(bool itWasThePlayer = false)
+        public void OnAllyDeath()
         {
             //check if the player was in or near the warzone when the death happened 
             if (IsPlayerCloseToWar())
             {
-                alliedReinforcements = RandoMath.Max(alliedReinforcements - 1, 0);
+                alliedReinforcements--;
 
-                alliedNumText.Caption = alliedReinforcements.ToString();
-                //we can't lose by running out of reinforcements only.
-                //the player must fall or the war be skipped for it to end as a defeat
-
-                if (alliedReinforcements > 0)
+                if (alliedReinforcements <= 0)
                 {
-                    //UI.ShowSubtitle(alliedReinforcements.ToString() + " of us remain!", 900);
+                    EndWar(false);
                 }
                 else
                 {
-                    if (itWasThePlayer)
-                    {
-                        //then it's a defeat
-                        EndWar(false);
-                    }
+                    alliedNumText.Caption = alliedReinforcements.ToString();
                 }
             }
         }
@@ -730,6 +727,7 @@ namespace GTA.GangAndTurfMod
 
         void OnTick(object sender, EventArgs e)
         {
+            GangManager.debugAlwaysFalseBool = true;
             if (isOccurring)
             {
                 if (IsPlayerCloseToWar())

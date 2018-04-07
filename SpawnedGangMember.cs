@@ -280,11 +280,13 @@ namespace GTA.GangAndTurfMod
 
             if(curVehicle == null || !watchedPed.IsAlive) return; //no thinking if we're dead
 
+            bool isDriver = curVehicle.Driver == watchedPed;
+
             //if we're not following the player, not inside a vehicle with a mounted weap
             //and not equipped with a drive-by gun, leave the vehicle!
             //...but don't leave vehicles while they are moving too fast
             if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
-                !hasDriveByGun)
+                (!hasDriveByGun || (!curVehicle.IsPersistent && isDriver)))
             {
                 if (curVehicle.Speed < 5)
                 {
@@ -296,6 +298,12 @@ namespace GTA.GangAndTurfMod
             
 
             curStatus = memberStatus.inVehicle;
+
+            if(isDriver)
+            {
+                //stop the vehicle if possible, so that we can leave if we want to
+                watchedPed.Task.DriveTo(curVehicle, watchedPed.Position, 5, 1);
+            }
 
         }
 

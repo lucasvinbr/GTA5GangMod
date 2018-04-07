@@ -28,6 +28,8 @@ namespace GTA.GangAndTurfMod
 
             this.KeyUp += onKeyUp;
             this.Tick += OnTick;
+
+            Logger.Log("mod started!");
         }
 
         void OnTick(object sender, EventArgs e)
