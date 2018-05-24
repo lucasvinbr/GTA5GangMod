@@ -23,19 +23,23 @@ namespace GTA.GangAndTurfMod
                 Logger.Log("attempting file load: " + fileName);
                 XmlSerializer serializer = new XmlSerializer(typeof(T));
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-                if (File.Exists(filePath))
-                {
-                    FileStream readStream = new FileStream(filePath, FileMode.Open);
-                    T loadedData = (T)serializer.Deserialize(readStream);
-                    readStream.Close();
-                    return loadedData;
-                }
-                else return default(T);
+				if (File.Exists(filePath)) {
+					FileStream readStream = new FileStream(filePath, FileMode.Open);
+					T loadedData = (T)serializer.Deserialize(readStream);
+					readStream.Close();
+					Logger.Log("loaded " + fileName + "!");
+					return loadedData;
+				}
+				else {
+					Logger.Log("file " + fileName + " doesn't exist; loading a default setup");
+					return default(T);
+				}
             }
             catch (Exception e)
             {
                 UI.Notify("an error occurred when trying to load xml file " + fileName + "! error: " + e.ToString());
-                return default(T);
+				Logger.Log("loading file " + fileName + " failed! error: " + e.ToString());
+				return default(T);
             }
         }
 
@@ -49,7 +53,8 @@ namespace GTA.GangAndTurfMod
                 if (!Directory.Exists(Application.StartupPath + "/gangModData/"))
                 {
                     Directory.CreateDirectory(Application.StartupPath + "/gangModData/");
-                }
+					Logger.Log("created directory to save file: " + fileName);
+				}
 
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
                 
@@ -60,10 +65,14 @@ namespace GTA.GangAndTurfMod
                 {
                     UI.ShowSubtitle("saved at: " + filePath);
                 }
-            }catch(Exception e)
+
+				Logger.Log("saved file successfully: " + fileName);
+			}
+			catch(Exception e)
             {
                 UI.Notify("an error occurred while trying to save gang mod data! error: " + e.ToString());
-            }
+				Logger.Log("failed to save file: " + fileName + "! Error: " + e.ToString());
+			}
             
         }
     }

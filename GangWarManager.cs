@@ -389,7 +389,7 @@ namespace GTA.GangAndTurfMod
         {
             Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
-            enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(referencePoint,
+            enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPointInStreet(referencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(), minDistanceFromReference,
                 30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
@@ -418,30 +418,30 @@ namespace GTA.GangAndTurfMod
             //the defenders' spawn point should be closer to the reference point than the attacker
             if(curWarType == warType.defendingFromEnemy)
             {
-                alliedSpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                alliedSpawnPoints[0] = GangManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
                 50, 5);
-                enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                 30, alliedSpawnPoints[0], ModOptions.instance.maxDistanceMemberSpawnFromPlayer);
             }
             else
             {
-                enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
                 50, 5, repulsor: Game.Player.Character.Position, minDistanceFromRepulsor: 30);
-                alliedSpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+                alliedSpawnPoints[0] = GangManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                 30, enemySpawnPoints[0], ModOptions.instance.maxDistanceMemberSpawnFromPlayer);
             }
             
             for (int i = 1; i < 3; i++)
             {
-                alliedSpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
+                alliedSpawnPoints[i] = GangManager.instance.FindCustomSpawnPointInStreet(alliedSpawnPoints[0], 20, 10, 20);
             }
 
             
             for (int i = 1; i < 3; i++)
             {
-                enemySpawnPoints[i] = GangManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
+                enemySpawnPoints[i] = GangManager.instance.FindCustomSpawnPointInStreet(enemySpawnPoints[0], 20, 10, 20);
             }
 
             //and the spawn point blips, so that we don't have to hunt where our troops will come from

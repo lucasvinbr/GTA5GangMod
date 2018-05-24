@@ -38,10 +38,29 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    //we are just wandering arond
+					//we are just wandering arond
+					//if we get too far from the player, despawn
+					if (World.GetDistance(vehicleIAmDriving.Position, Game.Player.Character.Position) >
+							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f) {
 
-                    //if there is a war going on and we're in the war zone, get to the player to help/kill him!
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+						for (int i = 0; i < myPassengers.Count; i++) {
+							if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer) {
+								SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
+								if (memberAI != null) memberAI.Die();
+							}
+
+						}
+
+						if (!watchedPed.IsPlayer) {
+							SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
+							if (memberAI != null) memberAI.Die();
+						}
+						ClearAllRefs();
+						return;
+					}
+
+					//if there is a war going on and we're in the war zone, get to the player to help/kill him!
+					if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
                         playerAsDest = true;
                         updatesWhileGoingToDest = 0;
@@ -54,28 +73,6 @@ namespace GTA.GangAndTurfMod
                     {
                         EveryoneLeaveVehicle();
                         return;
-                    }
-
-                    //if we get too far from the player, despawn
-                    if(World.GetDistance(vehicleIAmDriving.Position, Game.Player.Character.Position) > 
-                            ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f){
-
-                        for (int i = 0; i < myPassengers.Count; i++)
-                        {
-                            if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer)
-                            {
-                                SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
-                                if (memberAI != null) memberAI.Die();
-                            }
-                            
-                        }
-
-                        if (!watchedPed.IsPlayer)
-                        {
-                            SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
-                            if (memberAI != null) memberAI.Die();
-                        }
-                        ClearAllRefs();
                     }
                 }
             }

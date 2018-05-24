@@ -138,5 +138,33 @@ namespace GTA.GangAndTurfMod
             if (x >= y) return x;
             else return y;
         }
-    }
+
+		/// <summary>
+		/// makes sure the value is between, or one of, min and max
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static int TrimValue(int value, int min, int max) {
+			value = Max(min, value);
+			value = Min(max, value);
+
+			return value;
+		}
+
+		/// <summary>
+		/// makes sure the value is between, or one of, min and max
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static float TrimValue(float value, float min, float max) {
+			value = Max(min, value);
+			value = Min(max, value);
+
+			return value;
+		}
+	}
 }

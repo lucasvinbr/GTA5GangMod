@@ -195,7 +195,9 @@ namespace GTA.GangAndTurfMod
             {
                 gangManagerScript.RestorePlayerBody();
             }
-            
-        }
+
+			Logger.Log("mod aborted!");
+
+		}
     }
 }

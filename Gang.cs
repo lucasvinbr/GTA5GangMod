@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA.Native;
+using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
 {
@@ -11,7 +9,6 @@ namespace GTA.GangAndTurfMod
     /// the Gang!
     /// gangs have names, colors, turf, money and stats about cars and gang peds
     /// </summary>
-    [System.Serializable]
     public class Gang
     {
         public string name;
@@ -21,7 +18,7 @@ namespace GTA.GangAndTurfMod
         public bool isPlayerOwned = false;
 
         //the gang's relationshipgroup
-        //it's not really saved, so it is set up differently on every run (and reloading of scripts)
+		[XmlIgnore]
         public int relationGroupIndex;
 
         public int memberAccuracyLevel = 1;
@@ -121,7 +118,33 @@ namespace GTA.GangAndTurfMod
             ZoneManager.instance.UpdateZoneData(takenZone);
         }
 
-        public bool AddMemberVariation(PotentialGangMember newMember)
+		/// <summary>
+		///this checks if the gangs member, blip and car colors are consistent, like black, black and black.
+		///if left unassigned, the blip color is 0 and the car color is metallic black:
+		///a sign that somethings wrong, because 0 is white blip color
+		/// </summary>
+		public void EnforceGangColorConsistency() {
+			ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
+			if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.memberColor.white) ||
+				(vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black)) {
+				blipColor = RandoMath.GetRandomElementFromArray(ourColor.blipColors);
+				vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
+				GangManager.instance.SaveGangData(false);
+			}
+		}
+
+		/// <summary>
+		/// checks and adjusts (if necessary) this gang's levels in order to make it conform to the current modOptions
+		/// </summary>
+		public void AdjustStatsToModOptions() {
+			memberHealth = RandoMath.TrimValue(memberHealth, ModOptions.instance.startingGangMemberHealth, ModOptions.instance.maxGangMemberHealth);
+			memberArmor = RandoMath.TrimValue(memberArmor, 0, ModOptions.instance.maxGangMemberArmor);
+			memberAccuracyLevel = RandoMath.TrimValue(memberAccuracyLevel, 0, ModOptions.instance.maxGangMemberAccuracy);
+			baseTurfValue = RandoMath.TrimValue(baseTurfValue, 0, ModOptions.instance.maxTurfValue);
+			GangManager.instance.SaveGangData(false);
+		}
+
+		public bool AddMemberVariation(PotentialGangMember newMember)
         {
             for(int i = 0; i < memberVariations.Count; i++)
             {
@@ -252,21 +275,6 @@ namespace GTA.GangAndTurfMod
                 {
                     gangWeaponHashes.Add(WeaponHash.Pistol);
                 }
-            }
-        }
-
-        public void EnforceGangColorConsistency()
-        {
-            //this checks if the gangs member, blip and car colors are consistent, like black, black and black
-            //if left unassigned, the blip color is 0 and the car color is metallic black
-            //a sign that somethings wrong, because 0 is white blip color
-            ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
-            if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.memberColor.white) ||
-                (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black))
-            {                
-                blipColor = RandoMath.GetRandomElementFromArray(ourColor.blipColors);
-                vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
-                GangManager.instance.SaveGangData(false);
             }
         }
 

@@ -50,7 +50,14 @@ namespace GTA.GangAndTurfMod
             }
             if (curStatus != memberStatus.inVehicle)
             {
-                if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
+				if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
+			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
+					//we're too far to be important
+					Die();
+					return;
+				}
+
+				if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
@@ -139,15 +146,6 @@ namespace GTA.GangAndTurfMod
 
                     }
                 }
-
-                if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
-               ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
-                {
-                    //we're too far to be important
-                    Die();
-                    return;
-                }
-
 
             }
             else

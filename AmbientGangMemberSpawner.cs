@@ -41,10 +41,11 @@ namespace GTA.GangAndTurfMod
                 if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
                     Vector3 playerPos = Game.Player.Character.Position;
-                    GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
-                       playerPos + Math.Vector3.WorldUp * 50, playerPos);
-                    GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                        GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
+                    if(GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
+                       playerPos + Vector3.WorldUp * 50, playerPos) == null) {
+						GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
+						GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
+					}
                     postWarBackupsRemaining--;
                 }
 

@@ -98,9 +98,11 @@ namespace GTA.GangAndTurfMod
                 }
 
                 CreateNewEnemyGang();
-            }
+			}else {
+				PlayerGang.AdjustStatsToModOptions();
+			}
 
-            if (gangData.gangs.Count == 1 && ModOptions.instance.maxCoexistingGangs > 1)
+			if (gangData.gangs.Count == 1 && ModOptions.instance.maxCoexistingGangs > 1)
             {
                 //we're alone.. add an enemy!
                 CreateNewEnemyGang();
@@ -123,15 +125,6 @@ namespace GTA.GangAndTurfMod
                 {
                     World.SetRelationshipBetweenGroups(Relationship.Companion, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
-
-                    ////also, make the player gang friendly to mission characters
-                    //for(int missionIndex = 2; missionIndex < 9; missionIndex++)
-                    //{
-                    //    int specialHash = Function.Call<int>(Hash.GET_HASH_KEY, "MISSION" + missionIndex.ToString());
-                    //    World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, specialHash);
-                    //    World.SetRelationshipBetweenGroups(Relationship.Respect, specialHash, gangData.gangs[i].relationGroupIndex);
-                    //}
-                    
                 }
                 else
                 {
@@ -145,8 +138,11 @@ namespace GTA.GangAndTurfMod
                     //lets also see if their colors are consistent
                     gangData.gangs[i].EnforceGangColorConsistency();
 
-                    //if we're not player owned, we hate the player!
-                    World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+					//aaaand check if our current stats still conform to the min/max statuses defined in ModOptions
+					gangData.gangs[i].AdjustStatsToModOptions();
+
+					//if we're not player owned, we hate the player!
+					World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                     World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
                     
                     //add this gang to the enemy gangs
@@ -766,7 +762,6 @@ namespace GTA.GangAndTurfMod
                 oldPed.Health = oldPed.Armor + 100;
                 oldPed.RelationshipGroup = PlayerGang.relationGroupIndex;
                 oldPed.Task.ClearAllImmediately();
-                oldPed.Task.FightAgainstHatedTargets(80);
             }
 
             hasDiedWithChangedBody = false;
@@ -1109,7 +1104,6 @@ namespace GTA.GangAndTurfMod
                 (repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
                 attempts <= maxAttempts)
             {
-                // UI.Notify("too far"); or too close
                 chosenPos = World.GetNextPositionOnSidewalk(referencePoint + RandoMath.RandomDirection(true) *
                     averageDistanceFromReference);
                 distFromRef = World.GetDistance(referencePoint, chosenPos);
@@ -1119,7 +1113,32 @@ namespace GTA.GangAndTurfMod
             return chosenPos;
         }
 
-        public Vector3 FindGoodSpawnPointForCar()
+		/// <summary>
+		/// finds a spawn point that is close to the specified reference point and, optionally, far from the specified repulsor.
+		/// this version uses "GetNextPositionOnStreet"
+		/// </summary>
+		/// <returns></returns>
+		public Vector3 FindCustomSpawnPointInStreet(Vector3 referencePoint, float averageDistanceFromReference, float minDistanceFromReference, int maxAttempts = 10, Vector3? repulsor = null, float minDistanceFromRepulsor = 0) {
+			Vector3 chosenPos = Vector3.Zero;
+
+			int attempts = 0;
+
+			chosenPos = World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
+						  averageDistanceFromReference);
+			float distFromRef = World.GetDistance(referencePoint, chosenPos);
+			while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
+				(repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
+				attempts <= maxAttempts) {
+				chosenPos = World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
+						  averageDistanceFromReference);
+				distFromRef = World.GetDistance(referencePoint, chosenPos);
+				attempts++;
+			}
+
+			return chosenPos;
+		}
+
+		public Vector3 FindGoodSpawnPointForCar()
         {
             Vector3 chosenPos = Vector3.Zero;
             Vector3 playerPos = Game.Player.Character.Position;
@@ -1136,7 +1155,7 @@ namespace GTA.GangAndTurfMod
             {
                 // UI.Notify("too far"); or too close
                 //just spawn it then, don't mind being on the street because the player might be on the mountains or the desert
-                chosenPos = World.GetNextPositionOnSidewalk(playerPos + RandoMath.RandomDirection(true) *
+                chosenPos = World.GetNextPositionOnStreet(playerPos + RandoMath.RandomDirection(true) *
                     ModOptions.instance.GetAcceptableCarSpawnDistance());
                 distFromPlayer = World.GetDistance(playerPos, chosenPos);
                 attempts++;
