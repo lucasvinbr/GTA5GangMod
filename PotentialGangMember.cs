@@ -47,6 +47,8 @@ namespace GTA.GangAndTurfMod
         public int legsDrawableIndex, legsTextureIndex;
         public dressStyle myStyle;
         public memberColor linkedColor;
+
+        [XmlIgnore]
         public static PotentialMemberPool MemberPool {
             get
             {
@@ -133,8 +135,16 @@ namespace GTA.GangAndTurfMod
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
             }
 
-            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
-            Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+            if(torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
+            }
+            
+            if(legsDrawableIndex != -1 && legsTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+            }
+            
         }
 
         public static bool AddMemberAndSavePool(PotentialGangMember newMember)
@@ -143,7 +153,7 @@ namespace GTA.GangAndTurfMod
             if (!MemberPool.HasIdenticalEntry(newMember))
             {
                 MemberPool.memberList.Add(newMember);
-                PersistenceHandler.SaveToFile<PotentialMemberPool>(MemberPool, "MemberPool");
+                PersistenceHandler.SaveToFile(MemberPool, "MemberPool");
                 return true;
             }
 
@@ -157,7 +167,7 @@ namespace GTA.GangAndTurfMod
             if (similarEntry != null)
             {
                 MemberPool.memberList.Remove(similarEntry);
-                PersistenceHandler.SaveToFile<PotentialMemberPool>(MemberPool, "MemberPool");
+                PersistenceHandler.SaveToFile(MemberPool, "MemberPool");
                 return true;
             }
 
@@ -200,7 +210,6 @@ namespace GTA.GangAndTurfMod
             return returnedMember;
         }
 
-        [System.Serializable]
         public class PotentialMemberPool
         {
             public List<PotentialGangMember> memberList;

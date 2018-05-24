@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using GTA.Native;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Resolvers;
 
 namespace GTA.GangAndTurfMod
 {
@@ -54,6 +57,7 @@ namespace GTA.GangAndTurfMod
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
                 this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
                 this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
+                this.ticksBetweenEnemySpawnReplacement = loadedOptions.ticksBetweenEnemySpawnReplacement;
 
                 this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
@@ -83,6 +87,7 @@ namespace GTA.GangAndTurfMod
 
                 this.notificationsEnabled = loadedOptions.notificationsEnabled;
                 this.fightingEnabled = loadedOptions.fightingEnabled;
+                this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
                 this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
                 this.forceSpawnCars = loadedOptions.forceSpawnCars;
@@ -93,6 +98,7 @@ namespace GTA.GangAndTurfMod
                 this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
                 this.extraProfitForAIGangsFactor = loadedOptions.extraProfitForAIGangsFactor;
                 this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
+                this.msBaseIntervalBetweenAmbientSpawns = loadedOptions.msBaseIntervalBetweenAmbientSpawns;
                 this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
                 this.numSpawnsReservedForCarsDuringWars = loadedOptions.numSpawnsReservedForCarsDuringWars;
                 this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
@@ -117,7 +123,7 @@ namespace GTA.GangAndTurfMod
 
         public void SaveOptions(bool notifyMsg = true)
         {
-            PersistenceHandler.SaveToFile<ModOptions>(this, "ModOptions", notifyMsg);
+            PersistenceHandler.SaveToFile(this, "ModOptions", notifyMsg);
         }
 
         public Keys openGangMenuKey = Keys.B,
@@ -145,6 +151,7 @@ namespace GTA.GangAndTurfMod
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
         public int killsBetweenEnemySpawnReplacement = 25;
+        public int ticksBetweenEnemySpawnReplacement = 3600;
 
         public int ticksBetweenTurfRewards = 45000;
         public int ticksBetweenGangAIUpdates = 15000;
@@ -174,7 +181,7 @@ namespace GTA.GangAndTurfMod
         public int ticksCooldownParachutingMember = 600;
 
         public bool notificationsEnabled = true;
-        public bool fightingEnabled = true, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
+        public bool fightingEnabled = true, membersSpawnWithMeleeOnly = false, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
         public bool forceSpawnCars = false;
         public bool joypadControls = false;
 
@@ -186,6 +193,7 @@ namespace GTA.GangAndTurfMod
         public int maxCoexistingGangs = 7;
         public float extraProfitForAIGangsFactor = 1.5f;
         public int spawnedMembersBeforeAmbientGenStops = 20;
+        public int msBaseIntervalBetweenAmbientSpawns = 15000;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int numSpawnsReservedForCarsDuringWars = 1;
         public int minDistanceMemberSpawnFromPlayer = 50;
@@ -208,8 +216,11 @@ namespace GTA.GangAndTurfMod
             WeaponHash.PistolMk2,
             WeaponHash.Pistol50,
             WeaponHash.Revolver,
+            WeaponHash.DoubleActionRevolver,
+            WeaponHash.RevolverMk2,
             WeaponHash.SawnOffShotgun,
             WeaponHash.SNSPistol,
+            WeaponHash.SNSPistolMk2,
             WeaponHash.VintagePistol,
             WeaponHash.MicroSMG
         };
@@ -245,7 +256,6 @@ namespace GTA.GangAndTurfMod
         public List<VehicleColor> extraPlayerExclusiveColors;
 
         //XMLserializer does not like dictionaries
-        [System.Serializable]
         public class BuyableWeapon
         {
             public WeaponHash wepHash;
@@ -264,7 +274,6 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        [System.Serializable]
         public class GangColorTranslation
         {
             public List<VehicleColor> vehicleColors;
@@ -507,6 +516,7 @@ namespace GTA.GangAndTurfMod
             baseNumKillsBeforeWarVictory = 25;
             extraKillsPerTurfValue = 15;
             killsBetweenEnemySpawnReplacement = 25;
+            ticksBetweenEnemySpawnReplacement = 3600;
 
             ticksBetweenTurfRewards = 45000;
             ticksBetweenGangAIUpdates = 15000;
@@ -536,6 +546,7 @@ namespace GTA.GangAndTurfMod
 
             notificationsEnabled = true;
             fightingEnabled = true;
+            membersSpawnWithMeleeOnly = false;
             warAgainstPlayerEnabled = true;
             ambientSpawningEnabled = true;
             forceSpawnCars = false;
@@ -546,6 +557,7 @@ namespace GTA.GangAndTurfMod
             maxCoexistingGangs = 7;
             extraProfitForAIGangsFactor = 1.5f;
             spawnedMembersBeforeAmbientGenStops = 20;
+            msBaseIntervalBetweenAmbientSpawns = 15000;
             spawnedMemberLimit = 30; //max number of living gang members at any time
             numSpawnsReservedForCarsDuringWars = 1;
             minDistanceMemberSpawnFromPlayer = 50;
@@ -586,6 +598,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.AssaultShotgun, 250000),
             new BuyableWeapon(WeaponHash.AssaultSMG, 190000),
             new BuyableWeapon(WeaponHash.BullpupRifle, 230000),
+            new BuyableWeapon(WeaponHash.BullpupRifleMk2, 285000),
             new BuyableWeapon(WeaponHash.BullpupShotgun, 265000),
             new BuyableWeapon(WeaponHash.CarbineRifle, 150000),
             new BuyableWeapon(WeaponHash.CarbineRifleMk2, 210000),
@@ -595,6 +608,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
+            new BuyableWeapon(WeaponHash.DoubleActionRevolver, 120000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
             new BuyableWeapon(WeaponHash.Firework, 1000000),
             new BuyableWeapon(WeaponHash.FlareGun, 600000),
@@ -608,6 +622,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.MachinePistol, 65000),
             new BuyableWeapon(WeaponHash.MarksmanPistol, 50000),
             new BuyableWeapon(WeaponHash.MarksmanRifle, 250000),
+            new BuyableWeapon(WeaponHash.MarksmanRifleMk2, 310000),
             new BuyableWeapon(WeaponHash.MG, 290000),
             new BuyableWeapon(WeaponHash.MicroSMG, 90000),
             new BuyableWeapon(WeaponHash.Minigun, 400000),
@@ -617,15 +632,19 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Pistol50, 70000),
             new BuyableWeapon(WeaponHash.PistolMk2, 65000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
+            new BuyableWeapon(WeaponHash.PumpShotgunMk2, 135000),
             new BuyableWeapon(WeaponHash.Railgun, 5100000),
             new BuyableWeapon(WeaponHash.Revolver, 80000),
+            new BuyableWeapon(WeaponHash.RevolverMk2, 100000),
             new BuyableWeapon(WeaponHash.RPG, 1200000),
             new BuyableWeapon(WeaponHash.SawnOffShotgun, 95000),
             new BuyableWeapon(WeaponHash.SMG, 115000),
             new BuyableWeapon(WeaponHash.SMGMk2, 155000),
             new BuyableWeapon(WeaponHash.SniperRifle, 230000),
             new BuyableWeapon(WeaponHash.SNSPistol, 27000),
+            new BuyableWeapon(WeaponHash.SNSPistolMk2, 38000),
             new BuyableWeapon(WeaponHash.SpecialCarbine, 230000),
+            new BuyableWeapon(WeaponHash.SpecialCarbineMk2, 290000),
             new BuyableWeapon(WeaponHash.StunGun, 45000),
             new BuyableWeapon(WeaponHash.SweeperShotgun, 230000),
             new BuyableWeapon(WeaponHash.VintagePistol, 50000),
@@ -945,7 +964,5 @@ namespace GTA.GangAndTurfMod
                 VehicleColor.WornSeaWash,
             };
         }
-            
-                
     }
 }

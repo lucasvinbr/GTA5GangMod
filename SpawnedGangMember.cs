@@ -40,16 +40,48 @@ namespace GTA.GangAndTurfMod
 
         public memberStatus curStatus = memberStatus.none;
 
+        public bool hasDriveByGun = false;
+
         public override void Update()
         {
             if ((myGang.isPlayerOwned && watchedPed.IsInAir) || watchedPed.IsPlayer)
             {
                 return;
             }
-            if (!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, watchedPed, false))
+            if (curStatus != memberStatus.inVehicle)
             {
-                if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
+				if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
+			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
+					//we're too far to be important
+					Die();
+					return;
+				}
+
+				if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
+                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+                    {
+                        //instead of idling while in a war, members should head for one of the spawn points
+                        if(myGang == GangManager.instance.PlayerGang)
+                        {
+                            if (GangWarManager.instance.enemySpawnPoints != null)
+                            {
+                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.enemySpawnPoints);
+                                watchedPed.Task.RunTo(ourDestination);
+                            }
+                        }
+                        else
+                        {
+                            if (GangWarManager.instance.alliedSpawnPoints != null)
+                            {
+                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
+                                watchedPed.Task.RunTo(ourDestination);
+                            }
+                        }
+
+                        curStatus = memberStatus.idle;
+                        ticksSinceLastIdleChange = 0;
+                    }
                     if(curStatus != memberStatus.idle || ticksSinceLastIdleChange > ticksBetweenIdleChange)
                     {
                         curStatus = memberStatus.idle;
@@ -73,7 +105,7 @@ namespace GTA.GangAndTurfMod
                 if (!watchedPed.IsInCombat && ModOptions.instance.fightingEnabled && !watchedPed.IsInGroup && ((RandoMath.RandomBool() && CanFight()) || Game.Player.IsTargetting(watchedPed) || 
                     watchedPed.HasBeenDamagedBy(Game.Player.Character)))
                 {
-                    PickATarget();
+                    PickATarget(50, watchedPed.HasBeenDamagedBy(Game.Player.Character));
                 }
 
                 //if one enters combat, everyone does
@@ -83,7 +115,7 @@ namespace GTA.GangAndTurfMod
                     {
                         foreach (SpawnedGangMember member in GangManager.instance.livingMembers)
                         {
-                            if (member.watchedPed != null)
+                            if (member.watchedPed != null && member.watchedPed.IsAlive)
                             {
                                 if (!member.watchedPed.IsInCombat &&
                                 !member.watchedPed.IsInAir && !member.watchedPed.IsPlayer && !member.watchedPed.IsInVehicle())
@@ -115,54 +147,28 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
-               ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
-                {
-                    //we're too far to be important
-                    Die();
-                    return;
-                }
-
-
             }
             else
             {
-                curStatus = memberStatus.inVehicle;
-                Ped vehicleDriver = watchedPed.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver);
-                if (vehicleDriver != watchedPed)
+                if (watchedPed.IsInVehicle())
                 {
-                    if (vehicleDriver != null)
+                    Vehicle curVehicle = watchedPed.CurrentVehicle;
+                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent)...
                     {
-                        if (!vehicleDriver.IsAlive || !vehicleDriver.IsInVehicle())
-                        {
-                            //TODO check for mounted weapons
-                            watchedPed.Task.LeaveVehicle();
-                            curStatus = memberStatus.none;
-                        }
-                        else
-                        {
-                            if (ModOptions.instance.fightingEnabled && CanFight())
-                            {
-                                PickATarget(100);
-                                curStatus = memberStatus.inVehicle;
-                            }
-                        }
-                        
+                        ThinkAboutLeavingVehicle();
                     }
-
-                }else
-                {
-                    //if our vehicle has already been marked as deletable... maybe we can go too
-                    if (!watchedPed.CurrentVehicle.IsPersistent)
+                    else
                     {
-                        if (World.GetDistance(Game.Player.Character.Position, watchedPed.Position) >
-               ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
+                        if (ModOptions.instance.fightingEnabled && CanFight())
                         {
-                            //we're too far to be important
-                            Die();
-                            return;
+                            PickATarget(30); //do some drive-by, maybe
                         }
                     }
+                    
+                }
+                else
+                {
+                    curStatus = memberStatus.none;
                 }
 
             }
@@ -193,10 +199,12 @@ namespace GTA.GangAndTurfMod
         /// decrements gangManager's living members count, also tells the war manager about it,
         /// clears this script's references, removes the ped's blip and marks the ped as no longer needed
         /// </summary>
-        public void Die(bool fleeIfAlive = false)
+        public void Die(bool alsoDelete = false)
         {
+            
             if (watchedPed != null)
             {
+
                 if (GangWarManager.instance.isOccurring)
                 {
                     if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
@@ -215,12 +223,16 @@ namespace GTA.GangAndTurfMod
                     watchedPed.CurrentBlip.Remove();
                 }
 
-                this.watchedPed.MarkAsNoLongerNeeded();
-
-                if (fleeIfAlive && watchedPed.IsAlive)
+                if (alsoDelete)
                 {
-                    watchedPed.Task.FleeFrom(Game.Player.Character);
+                    watchedPed.Delete();
                 }
+                else
+                {
+                    watchedPed.MarkAsNoLongerNeeded();
+
+                }
+                
             }
 
             this.myGang = null;
@@ -230,25 +242,67 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public bool PickATarget(float radius = 50)
+        /// <summary>
+        /// a method that tries to make the target fighter pick a random enemy as target
+        /// in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
+        /// </summary>
+        /// <param name="radius">radius to look for enemies</param>
+        /// <param name="alwaysConsiderPlayer">add the player as an option, even if he's not inside the radius</param>
+        /// <returns>true if we found an enemy, false otherwise</returns>
+        public bool PickATarget(float radius = 50, bool alwaysConsiderPlayer = false)
         {
-            //a method that tries to make the target idle melee fighter pick other idle fighters as targets (by luck)
-            //in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
-
+            //TODO make the radius configurable
             //get a random ped from the hostile ones nearby
             List<Ped> hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
-
-            //add enemy gang members to the list, no matter where they are, so that we can attack the ones far away too
-            hostileNearbyPeds.AddRange(GangManager.instance.GetMembersNotFromMyGang(myGang));
+            if (alwaysConsiderPlayer)
+            {
+                hostileNearbyPeds.Add(Game.Player.Character); //TODO check if this is troublesome if we get to hurt one of our own members
+            }
 
             if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
             {
                 watchedPed.Task.FightAgainst(RandoMath.GetRandomElementFromList(hostileNearbyPeds));
-                curStatus = memberStatus.combat;
+                if(curStatus != memberStatus.inVehicle)
+                {
+                    curStatus = memberStatus.combat;
+                }
                 return true;
             }
 
             return false;
+        }
+
+        public void ThinkAboutLeavingVehicle()
+        {
+            Vehicle curVehicle = watchedPed.CurrentVehicle;
+
+            if(curVehicle == null || !watchedPed.IsAlive) return; //no thinking if we're dead
+
+            bool isDriver = curVehicle.Driver == watchedPed;
+
+            //if we're not following the player, not inside a vehicle with a mounted weap
+            //and not equipped with a drive-by gun, leave the vehicle!
+            //...but don't leave vehicles while they are moving too fast
+            if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
+                (!hasDriveByGun || (!curVehicle.IsPersistent && isDriver)))
+            {
+                if (curVehicle.Speed < 5)
+                {
+                    watchedPed.Task.LeaveVehicle();
+                    curStatus = memberStatus.none;
+                    return;
+                }
+            }
+            
+
+            curStatus = memberStatus.inVehicle;
+
+            if(isDriver)
+            {
+                //stop the vehicle if possible, so that we can leave if we want to
+                watchedPed.Task.DriveTo(curVehicle, watchedPed.Position, 5, 1);
+            }
+
         }
 
         /// <summary>
@@ -266,10 +320,21 @@ namespace GTA.GangAndTurfMod
             ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates + RandoMath.CachedRandom.Next(100);
         }
 
-        public SpawnedGangMember(Ped watchedPed)
+        public SpawnedGangMember(Ped watchedPed, Gang myGang, bool hasDriveByGun)
         {
-            this.watchedPed = watchedPed;
+            AttachData(watchedPed, myGang, hasDriveByGun);
             ResetUpdateInterval();
+        }
+
+        /// <summary>
+        /// sets our watched ped, gang and other info that can be useful
+        /// </summary>
+        /// <param name="targetPed"></param>
+        public void AttachData(Ped targetPed, Gang ourGang, bool hasDriveByGun)
+        {
+            this.watchedPed = targetPed;
+            this.myGang = ourGang;
+            this.hasDriveByGun = hasDriveByGun;
         }
 
         /// <summary>

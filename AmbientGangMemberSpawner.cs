@@ -22,7 +22,8 @@ namespace GTA.GangAndTurfMod
 
         void OnTick(object sender, EventArgs e)
         {
-            Wait(4000 + RandoMath.CachedRandom.Next(2000));
+            GangManager.debugAlwaysFalseBool = true;
+            Wait(3000 + RandoMath.CachedRandom.Next(1000));
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
@@ -37,13 +38,14 @@ namespace GTA.GangAndTurfMod
                 
                 if (Game.Player.WantedLevel > Game.MaxWantedLevel) Game.Player.WantedLevel--;
 
-                if(postWarBackupsRemaining > 0 && curTurfZone == GangWarManager.instance.warZone)
+                if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
                     Vector3 playerPos = Game.Player.Character.Position;
-                    GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
-                       playerPos + Math.Vector3.WorldUp * 50, playerPos);
-                    GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                        GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true, false, true);
+                    if(GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
+                       playerPos + Vector3.WorldUp * 50, playerPos) == null) {
+						GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
+						GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
+					}
                     postWarBackupsRemaining--;
                 }
 
@@ -61,30 +63,15 @@ namespace GTA.GangAndTurfMod
                             Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 70) || playerVehicle == null)
                             {
-                                Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
-                                Ped newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
-                                if (newMember != null)
-                                {
-                                    newMember.Task.GoTo(World.GetNextPositionOnSidewalk(newMember.Position));
-                                }
+                                SpawnAmbientMember(curGang);
                             }
                             if (RandoMath.CachedRandom.Next(0, 5) < 3)
                             {
                                 Wait(100 + RandoMath.CachedRandom.Next(300));
-                                Vehicle spawnedVehicle = GangManager.instance.SpawnGangVehicle(curGang,
-                                GangManager.instance.FindGoodSpawnPointForCar(), Vector3.Zero, true, false, false);
-                                if (spawnedVehicle != null)
-                                {
-                                    GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle, spawnedVehicle.Position);
-                                    Ped driver = spawnedVehicle.GetPedOnSeat(VehicleSeat.Driver);
-                                    if (driver != null) //if, for some reason, we don't have a driver, do nothing
-                                    {
-                                        driver.Task.CruiseWithVehicle(spawnedVehicle, 20, (int)DrivingStyle.Rushed);
-                                    }
-                                }
+                                SpawnAmbientVehicle(curGang);
                             }
 
-                            Wait(1000 + RandoMath.CachedRandom.Next(40000) / (curTurfZone.value * curTurfZone.value + 1));
+                            Wait(1 + RandoMath.CachedRandom.Next(RandoMath.Max(1, ModOptions.instance.msBaseIntervalBetweenAmbientSpawns / 2), ModOptions.instance.msBaseIntervalBetweenAmbientSpawns) / (curTurfZone.value + 1));
                         }
                     }
                     else
@@ -93,6 +80,32 @@ namespace GTA.GangAndTurfMod
                         Game.MaxWantedLevel = 6;
                     }
 
+                }
+            }
+        }
+
+        public void SpawnAmbientMember(Gang curGang)
+        {
+            Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
+            SpawnedGangMember newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
+            if (newMember != null)
+            {
+                newMember.watchedPed.Task.GoTo(World.GetNextPositionOnSidewalk(spawnPos));
+            }
+        }
+
+        public void SpawnAmbientVehicle(Gang curGang)
+        {
+            Vector3 vehSpawnPoint = GangManager.instance.FindGoodSpawnPointForCar();
+            SpawnedDrivingGangMember spawnedVehicleAI = GangManager.instance.SpawnGangVehicle(curGang,
+                                vehSpawnPoint , Vector3.Zero, true);
+            if (spawnedVehicleAI != null)
+            {
+                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
+                Ped driver = spawnedVehicleAI.watchedPed;
+                if (driver != null) //if, for some reason, we don't have a driver, do nothing
+                {
+                    driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 8, (int) DrivingStyle.AvoidTraffic);
                 }
             }
         }
