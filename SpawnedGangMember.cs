@@ -283,8 +283,7 @@ namespace GTA.GangAndTurfMod
             //if we're not following the player, not inside a vehicle with a mounted weap
             //and not equipped with a drive-by gun, leave the vehicle!
             //...but don't leave vehicles while they are moving too fast
-            if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed) &&
-                (!hasDriveByGun || (!curVehicle.IsPersistent && isDriver)))
+            if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
             {
                 if (curVehicle.Speed < 5)
                 {
