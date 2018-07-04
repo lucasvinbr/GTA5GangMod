@@ -40,7 +40,7 @@ namespace GTA.GangAndTurfMod
                 {
 					//we are just wandering arond
 					//if we get too far from the player, despawn
-					if (World.GetDistance(vehicleIAmDriving.Position, Game.Player.Character.Position) >
+					if (World.GetDistance(vehicleIAmDriving.Position, GangManager.CurrentPlayerCharacter.Position) >
 							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f) {
 
 						for (int i = 0; i < myPassengers.Count; i++) {
@@ -88,8 +88,8 @@ namespace GTA.GangAndTurfMod
         void RideToDest()
         {
 
-            if (playerAsDest) destination = Game.Player.Character.Position;
-            bool playerInVehicle = Game.Player.Character.IsInVehicle();
+            if (playerAsDest) destination = GangManager.CurrentPlayerCharacter.Position;
+            bool playerInVehicle = GangManager.CurrentPlayerCharacter.IsInVehicle();
 
             //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 25) //tweaked to match my changes below -- zix
@@ -116,7 +116,7 @@ namespace GTA.GangAndTurfMod
                         if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
                             watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
                         {
-                            vehicleIAmDriving.Position = World.GetNextPositionOnStreet(Game.Player.Character.Position, true);
+                            vehicleIAmDriving.Position = World.GetNextPositionOnStreet(GangManager.CurrentPlayerCharacter.Position, true);
                         }
                         
                     }
@@ -131,11 +131,11 @@ namespace GTA.GangAndTurfMod
                             watchedPed.Task.ClearAll();
                             if (isFriendlyToPlayer)
                             {
-                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, Game.Player.Character.CurrentVehicle, -1, -1, 4457020, 30, 0, 35);
+                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, GangManager.CurrentPlayerCharacter.CurrentVehicle, -1, -1, 4457020, 30, 0, 35);
                             }
                             else
                             {
-                                watchedPed.Task.VehicleChase(Game.Player.Character);
+                                watchedPed.Task.VehicleChase(GangManager.CurrentPlayerCharacter);
                             }
                         }
                         else

@@ -178,9 +178,9 @@ namespace GTA.GangAndTurfMod
         {
             if (!menuPool.IsAnyMenuOpen())
             {
-                if(Game.Player.Character.CurrentVehicle == null)
+                if(GangManager.CurrentPlayerCharacter.CurrentVehicle == null)
                 {
-                    closestPed = World.GetClosestPed(Game.Player.Character.Position + Game.Player.Character.ForwardVector * 6.0f, 5.5f);
+                    closestPed = World.GetClosestPed(GangManager.CurrentPlayerCharacter.Position + GangManager.CurrentPlayerCharacter.ForwardVector * 6.0f, 5.5f);
                     if (closestPed != null)
                     {
                         UI.ShowSubtitle("ped selected!");
@@ -189,7 +189,7 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         UI.ShowSubtitle("Couldn't find a ped in front of you! You have selected yourself.");
-                        closestPed = Game.Player.Character;
+                        closestPed = GangManager.CurrentPlayerCharacter;
                         World.AddExplosion(closestPed.Position, ExplosionType.Extinguisher, 1.0f, 0.1f);
                     }
 
@@ -279,7 +279,7 @@ namespace GTA.GangAndTurfMod
 
         void UpdateZoneUpgradeBtn()
         {
-            string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+            string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
             TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
             if (curZone == null)
             {
@@ -333,7 +333,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == saveZoneBtn)
                 {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                    string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
                     if (curZone == null)
                     {
@@ -342,7 +342,7 @@ namespace GTA.GangAndTurfMod
                     }
 
                     //update the zone's blip position even if it already existed
-                    curZone.zoneBlipPosition = Game.Player.Character.Position;
+                    curZone.zoneBlipPosition = GangManager.CurrentPlayerCharacter.Position;
                     ZoneManager.instance.UpdateZoneData(curZone);
                     UI.ShowSubtitle("Zone Data Updated!");
                 }
@@ -360,7 +360,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == takeZoneButton)
                 {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                    string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
                     if (curZone == null)
                     {
@@ -403,24 +403,24 @@ namespace GTA.GangAndTurfMod
             Gang enemyGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
             Gang playerGang = GangManager.instance.PlayerGang;
             int defenderNumbers = GangManager.CalculateDefenderReinforcements(enemyGang, targetZone);
-            warLightAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.attackStrength.light);
-            warMedAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.attackStrength.medium);
-            warLargeAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.attackStrength.large);
-            warMassAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.attackStrength.massive);
+            warLightAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.light);
+            warMedAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.medium);
+            warLargeAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.large);
+            warMassAtkCost = GangManager.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.massive);
 
             warLightAtkBtn.Text = "Light Attack - " + warLightAtkCost.ToString();
             warMedAtkBtn.Text = "Medium Attack - " + warMedAtkCost.ToString();
             warLargeAtkBtn.Text = "Large Attack - " + warLargeAtkCost.ToString();
             warMassAtkBtn.Text = "Massive Attack - " + warMassAtkCost.ToString();
 
-            warLightAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.attackStrength.light, defenderNumbers);
-            warMedAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.attackStrength.medium, defenderNumbers);
-            warLargeAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.attackStrength.large, defenderNumbers);
-            warMassAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.attackStrength.massive, defenderNumbers);
+            warLightAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.light, defenderNumbers);
+            warMedAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.medium, defenderNumbers);
+            warLargeAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.large, defenderNumbers);
+            warMassAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.massive, defenderNumbers);
 
         }
 
-        string GetReinforcementsComparisonMsg(GangWarManager.attackStrength atkStrength, int defenderNumbers)
+        string GetReinforcementsComparisonMsg(GangWarManager.AttackStrength atkStrength, int defenderNumbers)
         {
             return string.Concat("We will have ",
                 GangManager.CalculateAttackerReinforcements(GangManager.instance.PlayerGang, atkStrength), " members against their ",
@@ -445,23 +445,23 @@ namespace GTA.GangAndTurfMod
 
             warAttackStrengthMenu.OnItemSelect += (sender, item, index) =>
             {
-                string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
                 TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
                 if (item == warLightAtkBtn)
                 {
-                    if (TryStartWar(warLightAtkCost, curZone, GangWarManager.attackStrength.light)) warAttackStrengthMenu.Visible = false;
+                    if (TryStartWar(warLightAtkCost, curZone, GangWarManager.AttackStrength.light)) warAttackStrengthMenu.Visible = false;
                 }
                 if (item == warMedAtkBtn)
                 {
-                    if (TryStartWar(warMedAtkCost, curZone, GangWarManager.attackStrength.medium)) warAttackStrengthMenu.Visible = false;
+                    if (TryStartWar(warMedAtkCost, curZone, GangWarManager.AttackStrength.medium)) warAttackStrengthMenu.Visible = false;
                 }
                 if (item == warLargeAtkBtn)
                 {
-                    if (TryStartWar(warLargeAtkCost, curZone, GangWarManager.attackStrength.large)) warAttackStrengthMenu.Visible = false;
+                    if (TryStartWar(warLargeAtkCost, curZone, GangWarManager.AttackStrength.large)) warAttackStrengthMenu.Visible = false;
                 }
                 if (item == warMassAtkBtn)
                 {
-                    if (TryStartWar(warMassAtkCost, curZone, GangWarManager.attackStrength.massive)) warAttackStrengthMenu.Visible = false;
+                    if (TryStartWar(warMassAtkCost, curZone, GangWarManager.AttackStrength.massive)) warAttackStrengthMenu.Visible = false;
                 }
                 else
                 {
@@ -470,7 +470,7 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        bool TryStartWar(int atkCost, TurfZone targetZone, GangWarManager.attackStrength atkStrength)
+        bool TryStartWar(int atkCost, TurfZone targetZone, GangWarManager.AttackStrength atkStrength)
         {
             if(targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
             {
@@ -483,7 +483,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (ModOptions.instance.fightingEnabled)
                 {
-                    if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(targetZone.ownerGangName), targetZone, GangWarManager.warType.attackingEnemy, atkStrength))
+                    if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(targetZone.ownerGangName), targetZone, GangWarManager.WarType.attackingEnemy, atkStrength))
                     {
                         UI.ShowSubtitle("A war is already in progress.");
                         return false;
@@ -515,7 +515,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == upgradeZoneValueBtn)
                 {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                    string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
                     if (curZone == null)
                     {
@@ -564,7 +564,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    string curZoneName = World.GetZoneName(Game.Player.Character.Position);
+                    string curZoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
                     TurfZone curZone = ZoneManager.instance.GetZoneByName(curZoneName);
                     if (curZone == null)
                     {
@@ -913,7 +913,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    Vehicle curVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
                         if (PotentialGangVehicle.AddVehicleAndSavePool(new PotentialGangVehicle(curVehicle.Model.Hash)))
@@ -941,7 +941,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    Vehicle curVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
                         if (GangManager.instance.PlayerGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
@@ -969,7 +969,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    Vehicle curVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
                         if (GangManager.instance.PlayerGang.RemoveGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
@@ -997,7 +997,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    Vehicle curVehicle = Game.Player.Character.CurrentVehicle;
+                    Vehicle curVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
                         PotentialGangVehicle removedVehicle = new PotentialGangVehicle(curVehicle.Model.Hash);
@@ -1040,7 +1040,7 @@ namespace GTA.GangAndTurfMod
                 Gang playergang = GangManager.instance.PlayerGang;
                 if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                 {
-                    Math.Vector3 destPos = Game.Player.Character.Position;
+                    Math.Vector3 destPos = GangManager.CurrentPlayerCharacter.Position;
 
                     Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
 
@@ -1101,7 +1101,7 @@ namespace GTA.GangAndTurfMod
                         //only allow spawning if the player has turf
                         if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                         {
-                            Math.Vector3 playerPos = Game.Player.Character.Position;
+                            Math.Vector3 playerPos = GangManager.CurrentPlayerCharacter.Position;
                             Ped spawnedPed = GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
                        playerPos + Math.Vector3.WorldUp * 50, playerPos);
                             if (spawnedPed != null)
@@ -1164,11 +1164,11 @@ namespace GTA.GangAndTurfMod
 
                     if (item == resetAlliedSpawnBtn)
                     {
-                        if (GangWarManager.instance.IsPlayerCloseToWar())
+                        if (GangWarManager.instance.playerNearWarzone)
                         {
-                            if (!Game.Player.Character.IsInAir)
+                            if (!GangManager.CurrentPlayerCharacter.IsInAir)
                             {
-                                GangWarManager.instance.ForceSetAlliedSpawnPoints(Game.Player.Character.Position);
+                                GangWarManager.instance.ForceSetAlliedSpawnPoints(GangManager.CurrentPlayerCharacter.Position);
                             }
                             else
                             {
@@ -1184,11 +1184,11 @@ namespace GTA.GangAndTurfMod
                     {
                         for(int i = 0; i < setSpecificSpawnBtns.Length; i++)
                         {
-                            if (GangWarManager.instance.IsPlayerCloseToWar())
+                            if (GangWarManager.instance.playerNearWarzone)
                             {
-                                if (!Game.Player.Character.IsInAir)
+                                if (!GangManager.CurrentPlayerCharacter.IsInAir)
                                 {
-                                    GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, Game.Player.Character.Position);
+                                    GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, GangManager.CurrentPlayerCharacter.Position);
                                 }
                                 else
                                 {
@@ -1454,7 +1454,7 @@ namespace GTA.GangAndTurfMod
 
             carColorsMenu.OnIndexChange += (sender, index) =>
             {
-                Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
+                Vehicle playerVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                 if (playerVehicle != null)
                 {
                     playerVehicle.PrimaryColor = carColorsArray[index];

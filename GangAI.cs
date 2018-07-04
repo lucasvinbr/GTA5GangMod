@@ -17,6 +17,7 @@ namespace GTA.GangAndTurfMod
 
         public override void Update()
         {
+			Logger.Log("gang ai update: begin");
             if (!GangWarManager.instance.isOccurring ||
                 (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang != watchedGang))
             {
@@ -82,8 +83,10 @@ namespace GTA.GangAndTurfMod
                     }
                 }
             }
-            
-        }
+
+			Logger.Log("gang ai update: end");
+
+		}
 
         void TryExpand()
         {
@@ -260,7 +263,7 @@ namespace GTA.GangAndTurfMod
                     //then figure out how large our attack should be.
                     //if we can afford that attack, we do it
                     int defenderStrength = GangManager.CalculateDefenderStrength(ownerGang, targetZone);
-                    GangWarManager.attackStrength requiredStrength = GangManager.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
+                    GangWarManager.AttackStrength requiredStrength = GangManager.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
                     int atkCost = GangManager.CalculateAttackCost(watchedGang, requiredStrength);
                     if (watchedGang.moneyAvailable >= atkCost){
                         if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
@@ -271,7 +274,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
-                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy, requiredStrength);
+                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
                             }
                         }
                         else
@@ -297,7 +300,7 @@ namespace GTA.GangAndTurfMod
                         //if we're out of turf and cant afford a decent attack, lets just attack anyway
                         //we use a light attack and do it even if that means our money gets negative.
                         //this should make gangs get back in the game or be wiped out instead of just staying away
-                        atkCost = GangManager.CalculateAttackCost(watchedGang, GangWarManager.attackStrength.light);
+                        atkCost = GangManager.CalculateAttackCost(watchedGang, GangWarManager.AttackStrength.light);
                         if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
                         {
                             if (ModOptions.instance.fightingEnabled &&
@@ -306,7 +309,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
-                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.warType.defendingFromEnemy, requiredStrength);
+                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
                             }
                         }
                         else

@@ -20,8 +20,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>true</RegisterForComInterop>
+    <RegisterForComInterop>false</RegisterForComInterop>
     <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -58,11 +60,11 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NativeUI, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2, Version=2.10.1.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="ScriptHookVDotNet2, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
@@ -82,17 +84,14 @@
     <Compile Include="FreemodePotentialGangMember.cs" />
     <Compile Include="Gang.cs" />
     <Compile Include="GangAI.cs" />
+    <Compile Include="GangVehicleUpdater .cs" />
+    <Compile Include="GangMemberUpdater.cs" />
     <Compile Include="GangWarManager.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ModCore.cs" />
     <Compile Include="ModOptions.cs" />
     <Compile Include="PotentialGangVehicle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-    </Compile>
     <Compile Include="UpdatedClass.cs" />
     <Compile Include="PotentialGangMember.cs" />
     <Compile Include="MenuScript.cs" />
@@ -103,15 +102,6 @@
     <Compile Include="SpawnedGangMember.cs" />
     <Compile Include="TurfZone.cs" />
     <Compile Include="ZoneManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

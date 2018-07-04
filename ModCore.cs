@@ -26,10 +26,13 @@ namespace GTA.GangAndTurfMod
 
             this.Aborted += OnAbort;
 
-            this.KeyUp += onKeyUp;
+            this.KeyUp += OnKeyUp;
             this.Tick += OnTick;
 
             Logger.Log("mod started!");
+
+			GangMemberUpdater.Initialize();
+			GangVehicleUpdater.Initialize();
         }
 
         void OnTick(object sender, EventArgs e)
@@ -74,7 +77,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        private void onKeyUp(object sender, KeyEventArgs e)
+        private void OnKeyUp(object sender, KeyEventArgs e)
         {
             if (menuScript.curInputType == MenuScript.desiredInputType.changeKeyBinding)
             {

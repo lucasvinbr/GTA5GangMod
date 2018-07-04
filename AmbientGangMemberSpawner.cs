@@ -22,8 +22,8 @@ namespace GTA.GangAndTurfMod
 
         void OnTick(object sender, EventArgs e)
         {
-            GangManager.debugAlwaysFalseBool = true;
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
+			Logger.Log("ambient spawner tick: begin");
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
@@ -40,7 +40,7 @@ namespace GTA.GangAndTurfMod
 
                 if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
-                    Vector3 playerPos = Game.Player.Character.Position;
+                    Vector3 playerPos = GangManager.CurrentPlayerCharacter.Position;
                     if(GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
                        playerPos + Vector3.WorldUp * 50, playerPos) == null) {
 						GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
@@ -60,7 +60,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (GangManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
-                            Vehicle playerVehicle = Game.Player.Character.CurrentVehicle;
+                            Vehicle playerVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 70) || playerVehicle == null)
                             {
                                 SpawnAmbientMember(curGang);
@@ -82,7 +82,9 @@ namespace GTA.GangAndTurfMod
 
                 }
             }
-        }
+
+			Logger.Log("ambient spawner tick: end");
+		}
 
         public void SpawnAmbientMember(Gang curGang)
         {
