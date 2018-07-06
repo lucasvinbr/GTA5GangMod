@@ -24,11 +24,12 @@ namespace GTA.GangAndTurfMod
                 XmlSerializer serializer = new XmlSerializer(typeof(T));
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
 				if (File.Exists(filePath)) {
-					FileStream readStream = new FileStream(filePath, FileMode.Open);
-					T loadedData = (T)serializer.Deserialize(readStream);
-					readStream.Close();
-					Logger.Log("loaded " + fileName + "!");
-					return loadedData;
+					using (FileStream readStream = new FileStream(filePath, FileMode.Open)) {
+						T loadedData = (T)serializer.Deserialize(readStream);
+						readStream.Close();
+						Logger.Log("loaded " + fileName + "!");
+						return loadedData;
+					}
 				}
 				else {
 					Logger.Log("file " + fileName + " doesn't exist; loading a default setup");
@@ -57,10 +58,12 @@ namespace GTA.GangAndTurfMod
 				}
 
                 string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-                
-                StreamWriter writer = new StreamWriter(filePath);
-                serializer.Serialize(writer, dataToSave);
-                writer.Close();
+
+				using (StreamWriter writer = new StreamWriter(filePath)) {
+					serializer.Serialize(writer, dataToSave);
+					writer.Close();
+				}
+					
                 if (notifyMsg)
                 {
                     UI.ShowSubtitle("saved at: " + filePath);

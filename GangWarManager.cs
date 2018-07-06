@@ -578,29 +578,6 @@ namespace GTA.GangAndTurfMod
                 }
                 else return;
             }
-                
-
-            if (spawnedMember != null)
-            {
-                if (isFriendly)
-                {
-                    spawnedMember.watchedPed.Task.RunTo(GangManager.CurrentPlayerCharacter.Position);
-                }
-                else
-                {
-                    if(alliedSpawnPoints != null)
-                    {
-                        Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
-                        spawnedMember.watchedPed.Task.RunTo(ourDestination);
-                    }
-                    else
-                    {
-                        spawnedMember.watchedPed.Task.RunTo(GangManager.CurrentPlayerCharacter.Position);
-                    }
-                    
-                }
-                
-            }
         }
 
         void IncrementAlliesCount() { spawnedAllies++; }
@@ -664,7 +641,9 @@ namespace GTA.GangAndTurfMod
         public void TryWarBalancing(bool cullFriendlies)
         {
 			Logger.Log("war balancing: start");
-            List<SpawnedGangMember> spawnedMembers = 
+			Logger.Log("war balancing: end");
+			return;
+			List<SpawnedGangMember> spawnedMembers = 
                 GangManager.instance.GetSpawnedMembersOfGang(cullFriendlies ? GangManager.instance.PlayerGang : enemyGang);
 
             for(int i = 0; i < spawnedMembers.Count; i++)
@@ -749,7 +728,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (IsPlayerCloseToWar())
                 {
-					Logger.Log("warmanager inside war tick: begin");
+					Logger.Log("warmanager inside war tick: begin. spAllies: " + spawnedAllies.ToString() + " spEnemies: " + spawnedEnemies.ToString());
                     playerNearWarzone = true;
                     shouldDisplayReinforcementsTexts = true;
                     ticksSinceLastCarSpawn++;

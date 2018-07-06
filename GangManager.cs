@@ -650,14 +650,9 @@ namespace GTA.GangAndTurfMod
         void DiscardDeadBody(Ped theBody)
         {
             hasDiedWithChangedBody = false;
+			theBody.RelationshipGroup = PlayerGang.relationGroupIndex;
             theBody.IsInvincible = false;
-            SpawnedGangMember bodyAI = GetTargetMemberAI(theBody);
-            if(bodyAI != null)
-            {
-                bodyAI.Die();
-            }
             theBody.Health = 0;
-            theBody.MarkAsNoLongerNeeded();
             theBody.Kill();
         }
 
@@ -855,25 +850,25 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang, bool onlyGetIfInsideVehicle = false)
         {
+			return new List<SpawnedGangMember>();
             List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
 
             for (int i = 0; i < livingMembers.Count; i++)
             {
-                if (livingMembers[i].myGang == desiredGang)
-                {
-                    if(onlyGetIfInsideVehicle)
-                    {
-                        if(Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, livingMembers[i].watchedPed, false))
-                        {
-                            returnedList.Add(livingMembers[i]);
-                        }
-                    }
-                    else
-                    {
-                        returnedList.Add(livingMembers[i]);
-                    }
-                    
-                }
+				if(livingMembers[i] != null) {
+					if (livingMembers[i].myGang == desiredGang) {
+						if (onlyGetIfInsideVehicle) {
+							if (Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, livingMembers[i].watchedPed, false)) {
+								returnedList.Add(livingMembers[i]);
+							}
+						}
+						else {
+							returnedList.Add(livingMembers[i]);
+						}
+
+					}
+				}
+                
             }
 
             return returnedList;
@@ -1217,7 +1212,7 @@ namespace GTA.GangAndTurfMod
 
                     livingMembersCount++;
 					onSuccessfulMemberSpawn?.Invoke();
-					Logger.Log("spawn member: end (success)");
+					Logger.Log("spawn member: end (success). livingMembers list size = " + livingMembers.Count);
 					return newMemberAI;
                 }
                 else

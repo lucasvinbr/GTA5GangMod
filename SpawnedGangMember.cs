@@ -107,53 +107,8 @@ namespace GTA.GangAndTurfMod
 					}    
                 }
 
+             
                 
-                if (!watchedPed.IsInCombat && ModOptions.instance.fightingEnabled && !watchedPed.IsInGroup && ((RandoMath.RandomBool() && CanFight()) || Game.Player.IsTargetting(watchedPed) || 
-                    watchedPed.HasBeenDamagedBy(GangManager.CurrentPlayerCharacter)))
-                {
-                    PickATarget(70, watchedPed.HasBeenDamagedBy(GangManager.CurrentPlayerCharacter));
-                }
-
-                //if one enters combat, everyone does
-                if (ModOptions.instance.fightingEnabled)
-                {
-                    //if (watchedPed.IsInCombat)
-                    //{
-                    //    foreach (SpawnedGangMember member in GangManager.instance.livingMembers)
-                    //    {
-                    //        if (member.watchedPed != null && member.watchedPed.IsAlive)
-                    //        {
-                    //            if (!member.watchedPed.IsInCombat &&
-                    //            !member.watchedPed.IsInAir && !member.watchedPed.IsPlayer && !member.watchedPed.IsInVehicle())
-                    //            {
-                    //                member.PickATarget();
-                    //            }
-                    //        }
-
-
-                    //    }
-                    //}
-                    //else
-                    //{
-                        if (myGang.isPlayerOwned && !GangWarManager.instance.playerNearWarzone)
-                        {
-						Logger.Log("friendly member help player: start");
-                            //help the player if he's in trouble and we're not
-                            foreach (Ped ped in World.GetNearbyPeds(GangManager.CurrentPlayerCharacter.Position, 50))
-                            {
-                                if (ped.IsInCombatAgainst(GangManager.CurrentPlayerCharacter) && (myGang.relationGroupIndex != ped.RelationshipGroup))
-                                {
-                                    watchedPed.Task.FightAgainst(ped);
-                                    curStatus = MemberStatus.combat;
-                                    break;
-                                }
-                            }
-						Logger.Log("friendly member help player: end");
-
-						}
-
-                    //}
-                }
 
             }
             else

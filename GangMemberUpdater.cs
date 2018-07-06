@@ -18,16 +18,19 @@ namespace GTA.GangAndTurfMod {
 
 		public List<SpawnedGangMember> memberList;
 
+		private bool updateRanThisFrame = false;
+
 
 		void OnTick(object sender, EventArgs e) {
+			updateRanThisFrame = false;
 			for (int i = 0; i < memberList.Count; i++) {
 				if (memberList[i].watchedPed != null) {
-					//memberList[i].ticksSinceLastUpdate++;
-					//if (memberList[i].ticksSinceLastUpdate >= memberList[i].ticksBetweenUpdates) {
-					memberList[i].Update();
-					//	memberList[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(memberList[i].ticksBetweenUpdates / 3);
-					//}
-					Wait(35);
+					memberList[i].ticksSinceLastUpdate++;
+					if (!updateRanThisFrame && memberList[i].ticksSinceLastUpdate >= memberList[i].ticksBetweenUpdates) {
+						memberList[i].Update();
+						updateRanThisFrame = true;
+						memberList[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(memberList[i].ticksBetweenUpdates / 3);
+					}
 				}
 			}
 		}
