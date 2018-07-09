@@ -1404,7 +1404,6 @@ namespace GTA.GangAndTurfMod
                         if (playerGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
                         {
                             playerGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
-                            playerGang.gangWeaponHashes.Sort(playerGang.CompareGunsByPrice);
                             GangManager.instance.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Weapon Removed!");
@@ -1415,7 +1414,6 @@ namespace GTA.GangAndTurfMod
                             if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
                             {
                                 playerGang.gangWeaponHashes.Add(kvp.Key.wepHash);
-                                playerGang.gangWeaponHashes.Sort(playerGang.CompareGunsByPrice);
                                 GangManager.instance.SaveGangData();
                                 UI.ShowSubtitle("Weapon Bought!");
                                 item.Checked = true;
@@ -1634,7 +1632,7 @@ namespace GTA.GangAndTurfMod
 
         void AddEnableFightingToggle()
         {
-            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Fights Enabled?", ModOptions.instance.fightingEnabled, "If unchecked, members from different gangs won't attack each other (including the player). Gang wars also won't happen.");
+            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Wars Enabled?", ModOptions.instance.fightingEnabled, "If unchecked, Gang wars won't happen.");
 
             modSettingsSubMenu.AddItem(fightingToggle);
             modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>

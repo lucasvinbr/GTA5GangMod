@@ -120,15 +120,16 @@ namespace GTA.GangAndTurfMod
                 CreateNewEnemyGang();
             }
 
-            SetUpGangRelations();
+            SetUpAllGangs();
 
 			timeLastReward = ModCore.curGameTime;
 
         }
         /// <summary>
-        /// basically makes all gangs hate each other
+        /// basically sets relationship groups for all gangs, makes them hate each other and starts the AI for enemy gangs.
+		/// also runs a few consistency checks on the gangs, like if their stats are conforming to the limits defined in modoptions
         /// </summary>
-        void SetUpGangRelations()
+        void SetUpAllGangs()
         {
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
@@ -156,9 +157,7 @@ namespace GTA.GangAndTurfMod
 					//aaaand check if our current stats still conform to the min/max statuses defined in ModOptions
 					gangData.gangs[i].AdjustStatsToModOptions();
 
-					//if we're not player owned, we hate the player!
-					World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                    World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+					
                     
                     //add this gang to the enemy gangs
                     //and start the AI for it
@@ -167,19 +166,47 @@ namespace GTA.GangAndTurfMod
 
             }
 
-            //and the relations themselves
-            for (int i = gangData.gangs.Count - 1; i > -1; i--)
-            {
-                for(int j = 0; j < i; j++)
-                {
-                    World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
-                    World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
-                }
-            }
-
+			//set gang relations...
+			SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
             //all gangs hate cops if set to very aggressive
             SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.GangMemberAggressivenessMode.veryAgressive);
         }
+
+		/// <summary>
+		/// sets relations between gangs to a certain level according to the aggressiveness
+		/// </summary>
+		/// <param name="aggrLevel"></param>
+		public void SetGangRelationsAccordingToAggrLevel(ModOptions.GangMemberAggressivenessMode aggrLevel) {
+			Relationship targetRelationLevel = Relationship.Hate;
+			Gang excludedGang = null;
+			if (GangWarManager.instance.isOccurring) {
+				excludedGang = GangWarManager.instance.enemyGang;
+			}
+			switch (aggrLevel) {
+				case ModOptions.GangMemberAggressivenessMode.veryAgressive:
+					targetRelationLevel = Relationship.Hate;
+					break;
+				case ModOptions.GangMemberAggressivenessMode.agressive:
+					targetRelationLevel = Relationship.Dislike;
+					break;
+				case ModOptions.GangMemberAggressivenessMode.defensive:
+					targetRelationLevel = Relationship.Neutral;
+					break;
+			}
+			for (int i = gangData.gangs.Count - 1; i > -1; i--) {
+				for (int j = 0; j < i; j++) {
+					if((gangData.gangs[i] != excludedGang || gangData.gangs[j] != PlayerGang) &&
+						(gangData.gangs[j] != excludedGang || gangData.gangs[i] != PlayerGang)) {
+						World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
+						World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+					}
+				}
+				if (!gangData.gangs[i].isPlayerOwned && gangData.gangs[i] != excludedGang) {
+					World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+					World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+				}
+			}
+		}
 
         public void SetCopRelations(bool hate)
         {

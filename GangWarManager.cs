@@ -187,6 +187,8 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
+				SetHateRelationsBetweenGangs();
+
                 return true;
             }
             else
@@ -340,6 +342,9 @@ namespace GTA.GangAndTurfMod
                 alliedSpawnBlip.Remove();
                 enemySpawnBlip.Remove();
             }
+
+			//reset relations to whatever is set in modoptions
+			GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
 
         }
 
@@ -537,7 +542,6 @@ namespace GTA.GangAndTurfMod
                 if (RandoMath.RandomBool())
                 {
                     enemyGang.gangWeaponHashes.Add(RandoMath.GetRandomElementFromList(ModOptions.instance.driveByWeapons));
-                    enemyGang.gangWeaponHashes.Sort(enemyGang.CompareGunsByPrice);
                     GangManager.instance.SaveGangData(false);
                 }
             }
@@ -735,6 +739,16 @@ namespace GTA.GangAndTurfMod
                 World.GetDistance(GangManager.CurrentPlayerCharacter.Position, warZone.zoneBlipPosition) < 
                 ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
         }
+
+		/// <summary>
+		/// forces the hate relation level between the involved gangs (includes the player)
+		/// </summary>
+		public void SetHateRelationsBetweenGangs() {
+				World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, GangManager.instance.PlayerGang.relationGroupIndex);
+				World.SetRelationshipBetweenGroups(Relationship.Hate, GangManager.instance.PlayerGang.relationGroupIndex, enemyGang.relationGroupIndex);
+				World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
+				World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, enemyGang.relationGroupIndex);
+		}
 
         void OnTick(object sender, EventArgs e)
         {

@@ -20,7 +20,6 @@ namespace GTA.GangAndTurfMod
             //everyone tries to expand before anything else;
             //that way, we don't end up with isolated gangs or some kind of peace
             myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
-            myZones.Sort(ZoneManager.CompareZonesByValue);
             TryExpand();
 
             switch (watchedGang.upgradeTendency)
@@ -126,7 +125,6 @@ namespace GTA.GangAndTurfMod
                 {
                     watchedGang.moneyAvailable -= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price;
                     watchedGang.gangWeaponHashes.Add(chosenWeapon);
-                    watchedGang.gangWeaponHashes.Sort(watchedGang.CompareGunsByPrice);
                     GangManager.instance.SaveGangData(false);
                 }
             }
