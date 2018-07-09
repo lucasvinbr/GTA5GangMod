@@ -18,9 +18,13 @@ namespace GTA.GangAndTurfMod
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
+		public static int curGameTime;
+
         public ModCore()
         {
-            zoneManagerScript = new ZoneManager();
+			curGameTime = Game.GameTime;
+
+			zoneManagerScript = new ZoneManager();
             gangManagerScript = new GangManager();
             menuScript = new MenuScript();
 
@@ -33,10 +37,12 @@ namespace GTA.GangAndTurfMod
 
 			GangMemberUpdater.Initialize();
 			GangVehicleUpdater.Initialize();
+
         }
 
         void OnTick(object sender, EventArgs e)
         {
+			curGameTime = Game.GameTime;
             gangManagerScript.Tick();
             menuScript.Tick();
 
@@ -79,12 +85,12 @@ namespace GTA.GangAndTurfMod
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (menuScript.curInputType == MenuScript.desiredInputType.changeKeyBinding)
+            if (menuScript.curInputType == MenuScript.DesiredInputType.changeKeyBinding)
             {
                 if (e.KeyCode != Keys.Enter)
                 {
                     ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
-                    menuScript.curInputType = MenuScript.desiredInputType.none;
+                    menuScript.curInputType = MenuScript.DesiredInputType.none;
                     menuScript.RefreshKeyBindings();
                 }
             }
@@ -170,8 +176,6 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-
-
                 //maybe we're just/also targeting a car then?
                 List<SpawnedDrivingGangMember> playerGangDrivers = gangManagerScript.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
                 for (int i = 0; i < playerGangDrivers.Count; i++)
@@ -180,6 +184,7 @@ namespace GTA.GangAndTurfMod
                     {
                         //car should now behave as a backup vehicle: come close and drop passengers if player is on foot, follow player if not
                         playerGangDrivers[i].playerAsDest = true;
+						playerGangDrivers[i].mustReachDest = true;
                         playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
                         playerGangDrivers[i].Update();
                         UI.Notify("Car told to back you up!");
@@ -192,12 +197,11 @@ namespace GTA.GangAndTurfMod
         void OnAbort(object sender, EventArgs e)
         {
             UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
-            zoneManagerScript.ChangeBlipDisplay(ZoneManager.zoneBlipDisplay.none);
-            gangManagerScript.RemoveAllMembers();
-            if (gangManagerScript.HasChangedBody)
-            {
-                gangManagerScript.RestorePlayerBody();
-            }
+            zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
+			if (gangManagerScript.HasChangedBody) {
+				gangManagerScript.RestorePlayerBody();
+			}
+			gangManagerScript.RemoveAllMembers();
 
 			Logger.Log("mod aborted!");
 

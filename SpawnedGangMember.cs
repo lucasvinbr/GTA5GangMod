@@ -52,6 +52,7 @@ namespace GTA.GangAndTurfMod
             }
             if (curStatus != MemberStatus.inVehicle)
             {
+				watchedPed.BlockPermanentEvents = false;
 				if (World.GetDistance(GangManager.CurrentPlayerCharacter.Position, watchedPed.Position) >
 			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
 					//we're too far to be important
@@ -116,17 +117,16 @@ namespace GTA.GangAndTurfMod
                 if (watchedPed.IsInVehicle())
                 {
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
-                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent)...
+                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent, no longer with driver AI attached)...
                     {
-                        ThinkAboutLeavingVehicle();
-                    }
-                    else
-                    {
-                        if (ModOptions.instance.fightingEnabled && CanFight())
-                        {
-                            PickATarget(50); //do some drive-by, maybe
-                        }
-                    }
+						if (World.GetDistance(GangManager.CurrentPlayerCharacter.Position, watchedPed.Position) >
+			   ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3) {
+							//we're too far to be important
+							Die();
+							Logger.Log("member update: end (in vehicle: too far, despawn)");
+							return;
+						}
+					}
                     
                 }
                 else
@@ -207,74 +207,6 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// a method that tries to make the target fighter pick a random enemy as target
-        /// in order to stop them from just staring at a 1 on 1 fight or just picking the player as target all the time
-        /// </summary>
-        /// <param name="radius">radius to look for enemies</param>
-        /// <param name="alwaysConsiderPlayer">add the player as an option, even if he's not inside the radius</param>
-        /// <returns>true if we found an enemy, false otherwise</returns>
-        public bool PickATarget(float radius = 50, bool alwaysConsiderPlayer = false)
-        {
-			//TODO make the radius configurable (via xml)
-			//get a random ped from the hostile ones nearby
-			//watchedPed.Task.FightAgainstHatedTargets(radius);
-
-			if (curStatus != MemberStatus.inVehicle) {
-				curStatus = MemberStatus.combat;
-			}
-			return true;
-            //List<Ped> hostileNearbyPeds = GangManager.instance.GetHostilePedsAround(watchedPed.Position, watchedPed, radius);
-            //if (alwaysConsiderPlayer)
-            //{
-            //    hostileNearbyPeds.Add(GangManager.CurrentPlayerCharacter); //TODO check if this is troublesome if we get to hurt one of our own members
-            //}
-
-            //if(hostileNearbyPeds != null && hostileNearbyPeds.Count > 0)
-            //{
-            //    watchedPed.Task.FightAgainst(RandoMath.GetRandomElementFromList(hostileNearbyPeds));
-            //    if(curStatus != memberStatus.inVehicle)
-            //    {
-            //        curStatus = memberStatus.combat;
-            //    }
-            //    return true;
-            //}
-
-            //return false;
-        }
-
-        public void ThinkAboutLeavingVehicle()
-        {
-            Vehicle curVehicle = watchedPed.CurrentVehicle;
-
-            if(curVehicle == null || !watchedPed.IsAlive) return; //no thinking if we're dead
-
-            bool isDriver = curVehicle.Driver == watchedPed;
-
-            //if we're not following the player, not inside a vehicle with a mounted weap
-            //and not equipped with a drive-by gun, leave the vehicle!
-            //...but don't leave vehicles while they are moving too fast
-            if (!watchedPed.IsInGroup && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, watchedPed))
-            {
-                if (curVehicle.Speed < 5)
-                {
-                    watchedPed.Task.LeaveVehicle();
-                    curStatus = MemberStatus.none;
-                    return;
-                }
-            }
-            
-
-            curStatus = MemberStatus.inVehicle;
-
-            if(isDriver)
-            {
-                //stop the vehicle if possible, so that we can leave if we want to
-                watchedPed.Task.DriveTo(curVehicle, watchedPed.Position, 5, 1);
-            }
-
-        }
-
-        /// <summary>
         /// does an ambient animation, like smoking
         /// </summary>
         public void DoAnIdleAnim()
@@ -313,7 +245,7 @@ namespace GTA.GangAndTurfMod
         public bool CanFight()
         {
             return (ModOptions.instance.gangMemberAggressiveness !=
-                    ModOptions.gangMemberAggressivenessMode.defensive || 
+                    ModOptions.GangMemberAggressivenessMode.defensive || 
                     (GangWarManager.instance.isOccurring && (myGang == GangWarManager.instance.enemyGang || myGang == GangManager.instance.PlayerGang)));
         }
 

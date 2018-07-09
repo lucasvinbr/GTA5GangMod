@@ -40,7 +40,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public int[] headOverlayIndexes;
 
-        public enum freemodeGender
+        public enum FreemodeGender
         {
             any,
             male,
@@ -55,8 +55,8 @@ namespace GTA.GangAndTurfMod
             propDrawableIndexes = new int[3];
             propTextureIndexes = new int[3];
             modelHash = -1;
-            myStyle = dressStyle.special;
-            linkedColor = memberColor.white;
+            myStyle = DressStyle.special;
+            linkedColor = MemberColor.white;
             torsoDrawableIndex = -1;
             torsoTextureIndex = -1;
             legsDrawableIndex = -1;
@@ -66,7 +66,7 @@ namespace GTA.GangAndTurfMod
             headTextureIndex = -1;
         }
 
-        public FreemodePotentialGangMember(Ped targetPed, dressStyle myStyle, memberColor linkedColor) : base(targetPed, myStyle, linkedColor)
+        public FreemodePotentialGangMember(Ped targetPed, DressStyle myStyle, MemberColor linkedColor) : base(targetPed, myStyle, linkedColor)
         {
             headOverlayIndexes = new int[13];
             extraDrawableIndexes = new int[8];
@@ -155,13 +155,13 @@ namespace GTA.GangAndTurfMod
             
         }
 
-        public static int GetAFaceIndex(freemodeGender desiredGender)
+        public static int GetAFaceIndex(FreemodeGender desiredGender)
         {
             int returnedIndex = 0;
-            if(desiredGender == freemodeGender.any)
+            if(desiredGender == FreemodeGender.any)
             {
                 returnedIndex = RandoMath.CachedRandom.Next(numberOfFaceIndexes);
-            }else if(desiredGender == freemodeGender.female)
+            }else if(desiredGender == FreemodeGender.female)
             {
                 returnedIndex = RandoMath.CachedRandom.Next(21, 43);
                 if (returnedIndex == 42) returnedIndex = 45;
@@ -177,14 +177,14 @@ namespace GTA.GangAndTurfMod
 
         public static void SetPedFaceBlend(Ped targetPed)
         {
-            freemodeGender pedGender = freemodeGender.any;
+            FreemodeGender pedGender = FreemodeGender.any;
             if(targetPed.Model == PedHash.FreemodeMale01)
             {
-                pedGender = freemodeGender.male;
+                pedGender = FreemodeGender.male;
             }
             else if(targetPed.Model == PedHash.FreemodeFemale01)
             {
-                pedGender = freemodeGender.female;
+                pedGender = FreemodeGender.female;
             }
             else
             {

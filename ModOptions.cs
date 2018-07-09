@@ -32,7 +32,9 @@ namespace GTA.GangAndTurfMod
             ModOptions loadedOptions = PersistenceHandler.LoadFromFile<ModOptions>("ModOptions");
             if (loadedOptions != null)
             {
-                //get the loaded options
+				//get the loaded options
+				this.msAutoSaveInterval = loadedOptions.msAutoSaveInterval;
+
                 this.gangMemberAggressiveness = loadedOptions.gangMemberAggressiveness;
 
                 this.addToGroupKey = loadedOptions.addToGroupKey;
@@ -59,9 +61,9 @@ namespace GTA.GangAndTurfMod
                 this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
                 this.ticksBetweenEnemySpawnReplacement = loadedOptions.ticksBetweenEnemySpawnReplacement;
 
-                this.ticksBetweenTurfRewards = loadedOptions.ticksBetweenTurfRewards;
+                this.msTimeBetweenTurfRewards = loadedOptions.msTimeBetweenTurfRewards;
                 this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
-                this.minGangAITicksBetweenBattlesWithSameGang = loadedOptions.minGangAITicksBetweenBattlesWithSameGang;
+                this.minMsTimeBetweenAttacksOnPlayerTurf = loadedOptions.minMsTimeBetweenAttacksOnPlayerTurf;
                 this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
                 this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
                 this.maxTurfValue = loadedOptions.maxTurfValue;
@@ -76,6 +78,10 @@ namespace GTA.GangAndTurfMod
                 this.baseCostToUpgradeArmor = loadedOptions.baseCostToUpgradeArmor;
                 this.baseCostToUpgradeHealth = loadedOptions.baseCostToUpgradeHealth;
                 this.baseCostToUpgradeAccuracy = loadedOptions.baseCostToUpgradeAccuracy;
+
+				this.wanderingDriverDrivingStyle = loadedOptions.wanderingDriverDrivingStyle;
+				this.driverWithDestinationDrivingStyle = loadedOptions.driverWithDestinationDrivingStyle;
+
                 this.numUpgradesUntilMaxMemberAttribute = loadedOptions.numUpgradesUntilMaxMemberAttribute;
                 this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
                 this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
@@ -86,7 +92,8 @@ namespace GTA.GangAndTurfMod
                 this.maxWantedLevelInMaxedGangTurf = loadedOptions.maxWantedLevelInMaxedGangTurf;
 
                 this.notificationsEnabled = loadedOptions.notificationsEnabled;
-                this.fightingEnabled = loadedOptions.fightingEnabled;
+				this.loggerEnabled = loadedOptions.loggerEnabled;
+				this.fightingEnabled = loadedOptions.fightingEnabled;
                 this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
                 this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
@@ -131,14 +138,16 @@ namespace GTA.GangAndTurfMod
             mindControlKey = Keys.J,
             addToGroupKey = Keys.H;
 
-        public enum gangMemberAggressivenessMode
+        public enum GangMemberAggressivenessMode
         {
             veryAgressive,
             agressive,
             defensive
         }
 
-        public gangMemberAggressivenessMode gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
+		public int msAutoSaveInterval = 3000;
+
+        public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
         public int startingGangMemberHealth = 20;
         public int maxGangMemberHealth = 120;
@@ -153,9 +162,9 @@ namespace GTA.GangAndTurfMod
         public int killsBetweenEnemySpawnReplacement = 25;
         public int ticksBetweenEnemySpawnReplacement = 3600;
 
-        public int ticksBetweenTurfRewards = 45000;
+        public int msTimeBetweenTurfRewards = 180000;
         public int ticksBetweenGangAIUpdates = 15000;
-        public int minGangAITicksBetweenBattlesWithSameGang = 4;
+        public int minMsTimeBetweenAttacksOnPlayerTurf = 600000;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 1200;
         public int maxTurfValue = 10;
@@ -174,13 +183,20 @@ namespace GTA.GangAndTurfMod
         public int baseCostToUpgradeArmor = 35000;
         public int baseCostToUpgradeHealth = 20000;
         public int baseCostToUpgradeAccuracy = 40000;
-        public int numUpgradesUntilMaxMemberAttribute = 10;
+
+		//special thanks to Eddlm for the driving style data! 
+		//more info here: https://gtaforums.com/topic/822314-guide-driving-styles/
+		public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 16 + 32 + 128 + 256;
+		public int driverWithDestinationDrivingStyle = 4 + 8 + 16 + 32 + 512 + 262144;
+
+		public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
         public int ticksCooldownBackupCar = 1000;
         public int ticksCooldownParachutingMember = 600;
 
         public bool notificationsEnabled = true;
+		public bool loggerEnabled = false;
         public bool fightingEnabled = true, membersSpawnWithMeleeOnly = false, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
         public bool forceSpawnCars = false;
         public bool joypadControls = false;
@@ -277,7 +293,7 @@ namespace GTA.GangAndTurfMod
         public class GangColorTranslation
         {
             public List<VehicleColor> vehicleColors;
-            public PotentialGangMember.memberColor baseColor;
+            public PotentialGangMember.MemberColor baseColor;
             public int[] blipColors;
 
             public GangColorTranslation()
@@ -285,7 +301,7 @@ namespace GTA.GangAndTurfMod
                 vehicleColors = new List<VehicleColor>();
             }
 
-            public GangColorTranslation(PotentialGangMember.memberColor baseColor, List<VehicleColor> vehicleColors, int[] blipColors)
+            public GangColorTranslation(PotentialGangMember.MemberColor baseColor, List<VehicleColor> vehicleColors, int[] blipColors)
             {
                 this.baseColor = baseColor;
                 this.vehicleColors = vehicleColors;
@@ -308,7 +324,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public GangColorTranslation GetGangColorTranslation(PotentialGangMember.memberColor baseColor)
+        public GangColorTranslation GetGangColorTranslation(PotentialGangMember.MemberColor baseColor)
         {
             for (int i = 0; i < similarColors.Count; i++)
             {
@@ -398,7 +414,7 @@ namespace GTA.GangAndTurfMod
 
         #endregion
 
-        public PotentialGangMember.memberColor TranslateVehicleToMemberColor(VehicleColor vehColor)
+        public PotentialGangMember.MemberColor TranslateVehicleToMemberColor(VehicleColor vehColor)
         {
             for (int i = 0; i < similarColors.Count; i++)
             {
@@ -408,7 +424,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            return PotentialGangMember.memberColor.white;
+            return PotentialGangMember.MemberColor.white;
         }
 
         public void SetupPrimaryWeapons()
@@ -437,7 +453,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SetKey(MenuScript.changeableKeyBinding keyToChange, Keys newKey)
+        public void SetKey(MenuScript.ChangeableKeyBinding keyToChange, Keys newKey)
         {
             if(newKey == Keys.Escape || newKey == Keys.ShiftKey ||
                 newKey == Keys.Insert || newKey == Keys.ControlKey)
@@ -446,16 +462,16 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
-            //verify if this key isn't being used by the other commands from this mod
-            //if not, set the chosen key as the new one for the command!
-            List<Keys> curKeys = new List<Keys>();
-            
-            curKeys.Add(openGangMenuKey);
-            curKeys.Add(openZoneMenuKey);
-            curKeys.Add(mindControlKey);
-            curKeys.Add(addToGroupKey);
+			//verify if this key isn't being used by the other commands from this mod
+			//if not, set the chosen key as the new one for the command!
+			List<Keys> curKeys = new List<Keys> {
+				openGangMenuKey,
+				openZoneMenuKey,
+				mindControlKey,
+				addToGroupKey
+			};
 
-            if (curKeys.Contains(newKey))
+			if (curKeys.Contains(newKey))
             {
                 UI.ShowSubtitle("That key is already being used by this mod's commands.");
                 return;
@@ -464,16 +480,16 @@ namespace GTA.GangAndTurfMod
             {
                 switch (keyToChange)
                 {
-                    case MenuScript.changeableKeyBinding.AddGroupBtn:
+                    case MenuScript.ChangeableKeyBinding.AddGroupBtn:
                         addToGroupKey = newKey;
                         break;
-                    case MenuScript.changeableKeyBinding.GangMenuBtn:
+                    case MenuScript.ChangeableKeyBinding.GangMenuBtn:
                         openGangMenuKey = newKey;
                         break;
-                    case MenuScript.changeableKeyBinding.MindControlBtn:
+                    case MenuScript.ChangeableKeyBinding.MindControlBtn:
                         mindControlKey = newKey;
                         break;
-                    case MenuScript.changeableKeyBinding.ZoneMenuBtn:
+                    case MenuScript.ChangeableKeyBinding.ZoneMenuBtn:
                         openZoneMenuKey = newKey;
                         break;
                 }
@@ -483,11 +499,11 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SetMemberAggressiveness(gangMemberAggressivenessMode newMode)
+        public void SetMemberAggressiveness(GangMemberAggressivenessMode newMode)
         {
             gangMemberAggressiveness = newMode;
             //makes everyone hate cops if set to very aggressive
-            GangManager.instance.SetCopRelations(newMode == gangMemberAggressivenessMode.veryAgressive);
+            GangManager.instance.SetCopRelations(newMode == GangMemberAggressivenessMode.veryAgressive);
             MenuScript.instance.aggOption.Index = (int)newMode;
 
             SaveOptions(false);
@@ -498,12 +514,14 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void SetAllValuesToDefault()
         {
+			msAutoSaveInterval = 3000;
+
             openGangMenuKey = Keys.B;
             openZoneMenuKey = Keys.N;
             mindControlKey = Keys.J;
             addToGroupKey = Keys.H;
 
-            gangMemberAggressiveness = gangMemberAggressivenessMode.veryAgressive;
+            gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
             startingGangMemberHealth = 20;
             maxGangMemberHealth = 120;
@@ -518,9 +536,10 @@ namespace GTA.GangAndTurfMod
             killsBetweenEnemySpawnReplacement = 25;
             ticksBetweenEnemySpawnReplacement = 3600;
 
-            ticksBetweenTurfRewards = 45000;
+            msTimeBetweenTurfRewards = 180000;
             ticksBetweenGangAIUpdates = 15000;
-            minGangAITicksBetweenBattlesWithSameGang = 4;
+			minMsTimeBetweenAttacksOnPlayerTurf = 600000;
+            
             ticksBetweenGangMemberAIUpdates = 100;
             baseRewardPerZoneOwned = 1200;
             maxTurfValue = 10;
@@ -535,7 +554,11 @@ namespace GTA.GangAndTurfMod
             baseCostToUpgradeArmor = 35000;
             baseCostToUpgradeHealth = 20000;
             baseCostToUpgradeAccuracy = 40000;
-            numUpgradesUntilMaxMemberAttribute = 10;
+
+			wanderingDriverDrivingStyle = 1 + 2 + 8 + 16 + 32 + 128 + 256;
+			driverWithDestinationDrivingStyle = 4 + 8 + 16 + 32 + 512 + 262144;
+
+			numUpgradesUntilMaxMemberAttribute = 10;
             costToCallBackupCar = 900;
             costToCallParachutingMember = 250;
             ticksCooldownBackupCar = 1000;
@@ -545,6 +568,7 @@ namespace GTA.GangAndTurfMod
             maxWantedLevelInMaxedGangTurf = 0;
 
             notificationsEnabled = true;
+			loggerEnabled = false;
             fightingEnabled = true;
             membersSpawnWithMeleeOnly = false;
             warAgainstPlayerEnabled = true;
@@ -820,7 +844,7 @@ namespace GTA.GangAndTurfMod
         {
                 similarColors = new List<GangColorTranslation>
             {
-                new GangColorTranslation(PotentialGangMember.memberColor.black, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.black, new List<VehicleColor> {
                      VehicleColor.BrushedBlackSteel,
                     VehicleColor.MatteBlack,
                     VehicleColor.MetallicBlack,
@@ -830,7 +854,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.ModshopBlack1
                 }, new int[]{40}
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.blue, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.blue, new List<VehicleColor> {
                      VehicleColor.Blue,
                     VehicleColor.EpsilonBlue,
                     VehicleColor.MatteBlue,
@@ -847,7 +871,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MetallicUltraBlue
                 }, new int[]{3, 12, 15, 18, 26, 30, 38, 42, 54, 57, 63, 67, 68, 74, 77, 78, 84}
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.green, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.green, new List<VehicleColor> {
                      VehicleColor.Green,
                     VehicleColor.HunterGreen,
                     VehicleColor.MatteFoliageGreen,
@@ -862,19 +886,19 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.WornGreen,
                 }, new int[]{2, 11, 25, 43, 52, 69, 82}
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.pink, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.pink, new List<VehicleColor> {
                      VehicleColor.HotPink,
                     VehicleColor.MetallicVermillionPink,
                 }, new int[]{8, 23, 34, 35, 41, 48, 61 }
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.purple, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.purple, new List<VehicleColor> {
                      VehicleColor.MatteDarkPurple,
                     VehicleColor.MattePurple,
                     VehicleColor.MetallicPurple,
                     VehicleColor.MetallicPurpleBlue,
                 }, new int[]{19, 7, 27, 50, 58, 83}
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.red, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.red, new List<VehicleColor> {
                      VehicleColor.MatteDarkRed,
                     VehicleColor.MatteRed,
                     VehicleColor.MetallicBlazeRed,
@@ -895,7 +919,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.WornRed,
                 }, new int[]{1, 6, 49, 59, 75, 76 }
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.white, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.white, new List<VehicleColor> {
                      VehicleColor.MatteWhite,
                     VehicleColor.MetallicFrostWhite,
                     VehicleColor.MetallicWhite,
@@ -906,7 +930,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MetallicDarkIvory,
                 }, new int[]{0, 4, 13, 37, 45 }
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.yellow, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.yellow, new List<VehicleColor> {
                      VehicleColor.MatteYellow,
                     VehicleColor.MetallicRaceYellow,
                     VehicleColor.MetallicTaxiYellow,
@@ -919,7 +943,7 @@ namespace GTA.GangAndTurfMod
                     VehicleColor.MatteDesertTan,
                 }, new int[]{66, 5, 28, 16, 36, 33, 46, 56, 60, 70, 71, 73, 81 }
                ),
-                new GangColorTranslation(PotentialGangMember.memberColor.gray, new List<VehicleColor> {
+                new GangColorTranslation(PotentialGangMember.MemberColor.gray, new List<VehicleColor> {
                      VehicleColor.MatteGray,
                    VehicleColor.MatteLightGray,
                    VehicleColor.MetallicAnthraciteGray,

@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         MenuPool menuPool;
         UIMenu zonesMenu, gangMenu, memberMenu, carMenu, gangOptionsSubMenu, 
-            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu, weaponsMenu, specificGangRegistrationSubMenu;
+            modSettingsSubMenu, warAttackStrengthMenu, warOptionsSubMenu, weaponsMenu, specificGangMemberRegSubMenu, specificCarRegSubMenu;
         Ped closestPed;
         
         int memberStyle = 0, memberColor = 0;
@@ -82,14 +82,14 @@ namespace GTA.GangAndTurfMod
 
         public UIMenuListItem aggOption;
 
-        public enum desiredInputType
+        public enum DesiredInputType
         {
             none,
             enterGangName,
             changeKeyBinding
         }
 
-        public enum changeableKeyBinding
+        public enum ChangeableKeyBinding
         {
             GangMenuBtn,
             ZoneMenuBtn,
@@ -97,8 +97,8 @@ namespace GTA.GangAndTurfMod
             AddGroupBtn,
         }
 
-        public desiredInputType curInputType = desiredInputType.none;
-        public changeableKeyBinding targetKeyBindToChange = changeableKeyBinding.AddGroupBtn;
+        public DesiredInputType curInputType = DesiredInputType.none;
+        public ChangeableKeyBinding targetKeyBindToChange = ChangeableKeyBinding.AddGroupBtn;
 
         public static MenuScript instance;
 
@@ -136,6 +136,7 @@ namespace GTA.GangAndTurfMod
             
             AddSaveVehicleButton();
             AddRegisterPlayerVehicleButton();
+			AddRegisterEnemyVehicleButton();
             AddRemovePlayerVehicleButton();
             AddRemoveVehicleEverywhereButton();
 
@@ -194,15 +195,14 @@ namespace GTA.GangAndTurfMod
                     }
 
                     memberMenu.Visible = !memberMenu.Visible;
-                    RefreshNewEnemyMemberMenuContent();
                 }
                 else
                 {
                     UI.ShowSubtitle("vehicle selected!");
                     carMenu.Visible = !carMenu.Visible;
                 }
-                
-            }
+				RefreshNewEnemyMenuContent();
+			}
         }
 
         public void OpenZoneMenu()
@@ -221,7 +221,7 @@ namespace GTA.GangAndTurfMod
         {
             menuPool.ProcessMenus();
 
-            if (curInputType == desiredInputType.enterGangName)
+            if (curInputType == DesiredInputType.enterGangName)
             {
                 int inputFieldSituation = Function.Call<int>(Hash.UPDATE_ONSCREEN_KEYBOARD);
                 if(inputFieldSituation == 1)
@@ -240,11 +240,11 @@ namespace GTA.GangAndTurfMod
                         UI.ShowSubtitle("That name is not allowed, sorry! (It may be in use already)");
                     }
 
-                    curInputType = desiredInputType.none;
+                    curInputType = DesiredInputType.none;
                 }
                 else if(inputFieldSituation == 2 || inputFieldSituation == 3)
                 {
-                    curInputType = desiredInputType.none;
+                    curInputType = DesiredInputType.none;
                 }
             }
 
@@ -656,7 +656,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if(closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
-                        if (PotentialGangMember.AddMemberAndSavePool(new FreemodePotentialGangMember(closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        if (PotentialGangMember.AddMemberAndSavePool(new FreemodePotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Potential freemode member added!");
                         }
@@ -667,7 +667,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        if (PotentialGangMember.AddMemberAndSavePool(new PotentialGangMember(closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        if (PotentialGangMember.AddMemberAndSavePool(new PotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Potential member added!");
                         }
@@ -692,7 +692,7 @@ namespace GTA.GangAndTurfMod
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
                         if (GangManager.instance.PlayerGang.AddMemberVariation(new FreemodePotentialGangMember
-                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Freemode Member added successfully!");
                         }
@@ -704,7 +704,7 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         if (GangManager.instance.PlayerGang.AddMemberVariation(new PotentialGangMember
-                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member added successfully!");
                         }
@@ -720,11 +720,9 @@ namespace GTA.GangAndTurfMod
 
         void AddNewEnemyMemberSubMenu()
         {
-            specificGangRegistrationSubMenu = menuPool.AddSubMenu(memberMenu, "Save ped type for a specific enemy gang...");
+            specificGangMemberRegSubMenu = menuPool.AddSubMenu(memberMenu, "Save ped type for a specific enemy gang...");
 
-            RefreshNewEnemyMemberMenuContent();
-
-            specificGangRegistrationSubMenu.OnItemSelect += (sender, item, index) =>
+            specificGangMemberRegSubMenu.OnItemSelect += (sender, item, index) =>
             {
                 Gang pickedGang = GangManager.instance.GetGangByName(item.Text);
                 if (pickedGang != null)
@@ -732,7 +730,7 @@ namespace GTA.GangAndTurfMod
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
                         if (pickedGang.AddMemberVariation(new FreemodePotentialGangMember
-                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Freemode Member added successfully!");
                         }
@@ -744,7 +742,7 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         if (pickedGang.AddMemberVariation(new PotentialGangMember
-                       (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member added successfully!");
                         }
@@ -759,11 +757,12 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// removes all options and then adds all gangs that are not controlled by the player as chooseable options in the "Save ped type for a specific gang..." submenu
+        /// removes all options and then adds all gangs that are not controlled by the player as chooseable options in the "Save for a specific gang" submenus
         /// </summary>
-        public void RefreshNewEnemyMemberMenuContent()
+        public void RefreshNewEnemyMenuContent()
         {
-            specificGangRegistrationSubMenu.Clear();
+            specificGangMemberRegSubMenu.Clear();
+			specificCarRegSubMenu.Clear();
 
             List<Gang> gangsList = GangManager.instance.gangData.gangs;
 
@@ -771,12 +770,15 @@ namespace GTA.GangAndTurfMod
             {
                 if (!gangsList[i].isPlayerOwned)
                 {
-                    specificGangRegistrationSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
-                }
+                    specificGangMemberRegSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
+					specificCarRegSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
+				}
             }
 
-            specificGangRegistrationSubMenu.RefreshIndex();
-        }
+            specificGangMemberRegSubMenu.RefreshIndex();
+			specificCarRegSubMenu.RefreshIndex();
+
+		}
 
         void AddRemoveGangMemberButton()
         {
@@ -795,7 +797,7 @@ namespace GTA.GangAndTurfMod
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
                         if (ownerGang.RemoveMemberVariation(new FreemodePotentialGangMember
-                        (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member removed successfully!");
                         }
@@ -807,7 +809,7 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         if (ownerGang.RemoveMemberVariation(new PotentialGangMember
-                        (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor)))
+                        (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
                             UI.ShowSubtitle("Member removed successfully!");
                         }
@@ -831,7 +833,7 @@ namespace GTA.GangAndTurfMod
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
                     {
                         FreemodePotentialGangMember memberToRemove = new FreemodePotentialGangMember
-                   (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor);
+                   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor);
 
                         if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
                         {
@@ -850,7 +852,7 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         PotentialGangMember memberToRemove = new PotentialGangMember
-                   (closestPed, (PotentialGangMember.dressStyle)memberStyle, (PotentialGangMember.memberColor)memberColor);
+                   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor);
 
                         if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
                         {
@@ -961,7 +963,30 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        void AddRemovePlayerVehicleButton()
+		void AddRegisterEnemyVehicleButton() {
+			specificCarRegSubMenu = menuPool.AddSubMenu(carMenu, "Register vehicle for a specific enemy gang...");
+
+			specificCarRegSubMenu.OnItemSelect += (sender, item, index)=> {
+				Gang pickedGang = GangManager.instance.GetGangByName(item.Text);
+				if (pickedGang != null) {
+					Vehicle curVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
+					if (curVehicle != null) {
+						if (pickedGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash))) {
+							UI.ShowSubtitle("Gang vehicle added!");
+						}
+						else {
+							UI.ShowSubtitle("That vehicle is already registered for that gang.");
+						}
+					}
+					else {
+						UI.ShowSubtitle("You are not inside a vehicle.");
+					}
+				}
+			};
+		}
+
+
+		void AddRemovePlayerVehicleButton()
         {
             UIMenuItem newButton = new UIMenuItem("Remove Vehicle Type from your Gang", "Removes the vehicle type you are driving from the possible vehicle types for your gang.");
             carMenu.AddItem(newButton);
@@ -1045,7 +1070,7 @@ namespace GTA.GangAndTurfMod
                     Math.Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForCar();
 
                     SpawnedDrivingGangMember spawnedVehicle = GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                            spawnPos, destPos, true);
+                            spawnPos, destPos, true, true);
                     if (spawnedVehicle != null)
                     {
                         if (showMenu)
@@ -1540,7 +1565,7 @@ namespace GTA.GangAndTurfMod
                 {
                     gangOptionsSubMenu.Visible = !gangOptionsSubMenu.Visible;
                     Function.Call(Hash.DISPLAY_ONSCREEN_KEYBOARD, false, "FMMC_KEY_TIP12N", "", "Gang Name", "", "", "", 30);
-                    curInputType = desiredInputType.enterGangName;
+                    curInputType = DesiredInputType.enterGangName;
                 }
             };
         }
@@ -1602,7 +1627,7 @@ namespace GTA.GangAndTurfMod
             { 
                 if (item == aggOption) 
                 {
-                    ModOptions.instance.SetMemberAggressiveness((ModOptions.gangMemberAggressivenessMode)index);
+                    ModOptions.instance.SetMemberAggressiveness((ModOptions.GangMemberAggressivenessMode)index);
                 } 
             }; 
      } 
@@ -1751,23 +1776,23 @@ namespace GTA.GangAndTurfMod
             bindingsMenu.OnItemSelect += (sender, item, index) =>
             {
                 UI.ShowSubtitle("Press the new key for this command.");
-                curInputType = desiredInputType.changeKeyBinding;
+                curInputType = DesiredInputType.changeKeyBinding;
 
                 if (item == openGangMenuBtn)
                 {
-                    targetKeyBindToChange = changeableKeyBinding.GangMenuBtn;
+                    targetKeyBindToChange = ChangeableKeyBinding.GangMenuBtn;
                 }
                 if (item == openZoneMenuBtn)
                 {
-                    targetKeyBindToChange = changeableKeyBinding.ZoneMenuBtn;
+                    targetKeyBindToChange = ChangeableKeyBinding.ZoneMenuBtn;
                 }
                 if (item == addToGroupBtn)
                 {
-                    targetKeyBindToChange = changeableKeyBinding.AddGroupBtn;
+                    targetKeyBindToChange = ChangeableKeyBinding.AddGroupBtn;
                 }
                 if (item == mindControlBtn)
                 {
-                    targetKeyBindToChange = changeableKeyBinding.MindControlBtn;
+                    targetKeyBindToChange = ChangeableKeyBinding.MindControlBtn;
                 }
             };
         }

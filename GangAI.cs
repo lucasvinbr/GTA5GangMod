@@ -13,16 +13,9 @@ namespace GTA.GangAndTurfMod
 
         private List<TurfZone> myZones;
 
-        public int ticksSinceLastFightWithPlayer = 0;
-
         public override void Update()
         {
 			Logger.Log("gang ai update: begin");
-            if (!GangWarManager.instance.isOccurring ||
-                (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang != watchedGang))
-            {
-                ticksSinceLastFightWithPlayer++;
-            }
             
             //everyone tries to expand before anything else;
             //that way, we don't end up with isolated gangs or some kind of peace
@@ -210,7 +203,7 @@ namespace GTA.GangAndTurfMod
             int lastCheckedValue = ModOptions.instance.maxTurfValue;
             for(int i = 0; i < myZones.Count; i++)
             {
-                if (myZones[i].value == lastCheckedValue) continue; //we already know we can't afford upgrading from this turf level
+                if (myZones[i].value >= lastCheckedValue) continue; //we already know we can't afford upgrading from this turf level
 
                 if (watchedGang.moneyAvailable >= GangManager.CalculateTurfValueUpgradeCost(myZones[i].value))
                 {
@@ -232,10 +225,9 @@ namespace GTA.GangAndTurfMod
             if (targetZone.ownerGangName == "none")
             {
                 //this zone is neutral, lets just take it
-                //we make it cheaper for the AI to get neutral zones in order to not make the world a gangless place haha
-                if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf / 10)
+                if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf / 10;
+                    watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
                     watchedGang.TakeZone(targetZone);
                 }
             }
@@ -246,9 +238,9 @@ namespace GTA.GangAndTurfMod
                 {
                     ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
                     //this zone was controlled by a gang that no longer exists. it is neutral now
-                    if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf / 10)
+                    if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf)
                     {
-                        watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf / 10;
+                        watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
                         watchedGang.TakeZone(targetZone);
                     }
                 }
@@ -270,7 +262,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (ModOptions.instance.fightingEnabled &&
                             ModOptions.instance.warAgainstPlayerEnabled &&
-                            ticksSinceLastFightWithPlayer > ModOptions.instance.minGangAITicksBetweenBattlesWithSameGang)
+                            GangWarManager.instance.CanStartWarAgainstPlayer)
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
@@ -285,12 +277,12 @@ namespace GTA.GangAndTurfMod
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(ownerGang, true) *
+                                watchedGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(ownerGang, targetZone.value, true) *
                                     ModOptions.instance.extraProfitForAIGangsFactor);
                             }
                             else
                             {
-                                ownerGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(watchedGang, false) *
+                                ownerGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(watchedGang, (int) requiredStrength, false) *
                                     ModOptions.instance.extraProfitForAIGangsFactor);
                             }
 
@@ -305,7 +297,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (ModOptions.instance.fightingEnabled &&
                             ModOptions.instance.warAgainstPlayerEnabled &&
-                            ticksSinceLastFightWithPlayer > ModOptions.instance.minGangAITicksBetweenBattlesWithSameGang)
+                            GangWarManager.instance.CanStartWarAgainstPlayer)
                             {
                                 //the player may be in big trouble now
                                 watchedGang.moneyAvailable -= atkCost;
@@ -320,12 +312,12 @@ namespace GTA.GangAndTurfMod
                                 defenderStrength / RandoMath.CachedRandom.Next(1, 15))
                             {
                                 watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(ownerGang, true) *
+                                watchedGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(ownerGang, targetZone.value, true) *
                                     ModOptions.instance.extraProfitForAIGangsFactor);
                             }
                             else
                             {
-                                ownerGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(watchedGang, false) *
+                                ownerGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(watchedGang, (int)requiredStrength, false) *
                                     ModOptions.instance.extraProfitForAIGangsFactor);
                             }
                         }
@@ -334,11 +326,11 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+		/// <summary>
+		/// if this gang seems to be new, makes it take up to 3 neutral zones
+		/// </summary>
         void DoInitialTakeover()
         {
-            //if this gang seems to be new,
-            //makes this gang instantly take up to 8 neutral territories
-            //it may be short on luck and take less hahaha
 
             if (watchedGang.gangWeaponHashes.Count > 0 || ZoneManager.instance.GetZonesControlledByGang(watchedGang.name).Count > 2)
             {
@@ -352,7 +344,7 @@ namespace GTA.GangAndTurfMod
             {
                 watchedGang.TakeZone(chosenZone, false);
                 //we took one, now we should spread the influence around it
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     TurfZone nearbyZone = ZoneManager.instance.GetClosestZoneToTargetZone(chosenZone, true);
                     if (nearbyZone.ownerGangName == "none")

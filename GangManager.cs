@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod
 
         private Gang cachedPlayerGang;
 
-        private int ticksSinceLastReward = 0;
+        private int timeLastReward = 0;
 
         /// <summary>
         /// the number of currently alive members.
@@ -122,6 +122,8 @@ namespace GTA.GangAndTurfMod
 
             SetUpGangRelations();
 
+			timeLastReward = ModCore.curGameTime;
+
         }
         /// <summary>
         /// basically makes all gangs hate each other
@@ -176,7 +178,7 @@ namespace GTA.GangAndTurfMod
             }
 
             //all gangs hate cops if set to very aggressive
-            SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.gangMemberAggressivenessMode.veryAgressive);
+            SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.GangMemberAggressivenessMode.veryAgressive);
         }
 
         public void SetCopRelations(bool hate)
@@ -194,7 +196,10 @@ namespace GTA.GangAndTurfMod
 
         public void SaveGangData(bool notifySuccess = true)
         {
-            PersistenceHandler.SaveToFile(gangData, "GangData", notifySuccess);
+			AutoSaver.instance.gangDataDirty = true;
+			if (notifySuccess) {
+				AutoSaver.instance.gangDataNotifySave = true;
+			}
         }
         #endregion
 
@@ -223,7 +228,6 @@ namespace GTA.GangAndTurfMod
 
         public void Tick()
         {
-
             TickGangs();
 
             if (HasChangedBody)
@@ -233,12 +237,13 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        #region gang general control stuff
+		#region gang general control stuff
 
-        /// <summary>
-        /// this controls the gang AI decisions and rewards for the player and AI gangs
-        /// </summary>
-        void TickGangs()
+
+		/// <summary>
+		/// this controls the gang AI decisions and rewards for the player and AI gangs
+		/// </summary>
+		void TickGangs()
         {
             gangAIUpdateRanThisFrame = false;
             for (int i = 0; i < enemyGangs.Count; i++)
@@ -271,19 +276,15 @@ namespace GTA.GangAndTurfMod
                
             }
 
-            ticksSinceLastReward++;
-            if (ticksSinceLastReward >= ModOptions.instance.ticksBetweenTurfRewards)
-            {
-                ticksSinceLastReward = 0;
-                //each gang wins money according to the amount of owned zones and their values
-                for (int i = 0; i < enemyGangs.Count; i++)
-                {
-                    GiveTurfRewardToGang(enemyGangs[i].watchedGang);
-                }
+			if (ModCore.curGameTime - timeLastReward > ModOptions.instance.msTimeBetweenTurfRewards) {
+				timeLastReward = ModCore.curGameTime;
+				for (int i = 0; i < enemyGangs.Count; i++) {
+					GiveTurfRewardToGang(enemyGangs[i].watchedGang);
+				}
 
-                //this also counts for the player's gang
-                GiveTurfRewardToGang(PlayerGang);
-            }
+				//this also counts for the player's gang
+				GiveTurfRewardToGang(PlayerGang);
+			}
         }
 
         /// <summary>
@@ -312,16 +313,16 @@ namespace GTA.GangAndTurfMod
                 RandoMath.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
             } while (GetGangByName(gangName) != null);
 
-            PotentialGangMember.memberColor gangColor = (PotentialGangMember.memberColor)RandoMath.CachedRandom.Next(9);
+            PotentialGangMember.MemberColor gangColor = (PotentialGangMember.MemberColor)RandoMath.CachedRandom.Next(9);
 
-            //the new gang takes the wealthiest gang around as reference to define its starting money.
-            //that does not mean it will be the new wealthiest one, hehe (but it may)
-            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors),
-                false, (int) (RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * (RandoMath.CachedRandom.Next(1,11) / 6.5f)));
+			//the new gang takes the wealthiest gang around as reference to define its starting money.
+			//that does not mean it will be the new wealthiest one, hehe (but it may)
+			Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors),
+				false, (int)(RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * (RandoMath.CachedRandom.Next(1, 11) / 6.5f))) {
+				blipColor = RandoMath.GetRandomElementFromArray(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors)
+			};
 
-            newGang.blipColor = RandoMath.GetRandomElementFromArray(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors);
-
-            GetMembersForGang(newGang);
+			GetMembersForGang(newGang);
 
             //relations...
             newGang.relationGroupIndex = World.AddRelationshipGroup(gangName);
@@ -351,8 +352,8 @@ namespace GTA.GangAndTurfMod
 
         public void GetMembersForGang(Gang targetGang)
         {
-            PotentialGangMember.memberColor gangColor = ModOptions.instance.TranslateVehicleToMemberColor(targetGang.vehicleColor);
-            PotentialGangMember.dressStyle gangStyle = (PotentialGangMember.dressStyle)RandoMath.CachedRandom.Next(3);
+            PotentialGangMember.MemberColor gangColor = ModOptions.instance.TranslateVehicleToMemberColor(targetGang.vehicleColor);
+            PotentialGangMember.DressStyle gangStyle = (PotentialGangMember.DressStyle)RandoMath.CachedRandom.Next(3);
             for (int i = 0; i < RandoMath.CachedRandom.Next(2, 6); i++)
             {
                 PotentialGangMember newMember = PotentialGangMember.GetMemberFromPool(gangStyle, gangColor);
@@ -372,6 +373,8 @@ namespace GTA.GangAndTurfMod
         {
             UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
             enemyGangs.Remove(aiWatchingTheGang);
+			//save the fallen gang in a file
+			PersistenceHandler.SaveAppendToFile(aiWatchingTheGang.watchedGang, "wipedOutGangs");
             gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
             if(enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)
             {
@@ -506,7 +509,7 @@ namespace GTA.GangAndTurfMod
 
         public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone)
         {
-            return defenderGang.GetFixedStrengthValue() * contestedZone.value;
+            return defenderGang.GetFixedStrengthValue() * (contestedZone.value + 1);
         }
 
         public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone)
@@ -520,14 +523,14 @@ namespace GTA.GangAndTurfMod
         /// and the enemy strength (with variation) to define the "loot"
         /// </summary>
         /// <returns></returns>
-        public static int CalculateBattleRewards(Gang ourEnemy, bool weWereAttacking)
+        public static int CalculateBattleRewards(Gang ourEnemy, int battleScale, bool weWereAttacking)
         {
             int baseReward = ModOptions.instance.rewardForTakingEnemyTurf;
             if(weWereAttacking)
             {
                 baseReward /= 2;
             }
-            return baseReward + ourEnemy.GetGangVariedStrengthValue();
+            return (baseReward + ourEnemy.GetGangVariedStrengthValue()) * (battleScale + 1);
         }
 
         #endregion
@@ -549,7 +552,7 @@ namespace GTA.GangAndTurfMod
             if (!theOriginalPed.IsAlive)
             {
                 RestorePlayerBody();
-                CurrentPlayerCharacter.Kill();
+                Game.Player.Character.Kill();
                 return;
             }
 
@@ -671,7 +674,7 @@ namespace GTA.GangAndTurfMod
 
                 for(int i = 0; i < respawnOptions.Count; i++)
                 {
-                    if (respawnOptions[i].IsAlive)
+                    if (respawnOptions[i].IsAlive && !respawnOptions[i].IsInVehicle())
                     {
                         //we have a new body then
                         TakePedBody(respawnOptions[i]);
@@ -681,7 +684,7 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                //lets parachute if no one is around
+                //lets parachute if no one outside a veh is around
                 SpawnedGangMember spawnedPara = SpawnGangMember(PlayerGang,
                    CurrentPlayerCharacter.Position + Vector3.WorldUp * 70);
                 if (spawnedPara != null)
@@ -850,7 +853,6 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang, bool onlyGetIfInsideVehicle = false)
         {
-			return new List<SpawnedGangMember>();
             List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
 
             for (int i = 0; i < livingMembers.Count; i++)
@@ -1224,9 +1226,8 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
+        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool mustReachDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
         {
-			return null; //TODO remove this! it's here for debugging purposes
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
                 //don't start spawning, we're on the limit already or we failed to find a good spawn point or we haven't started up our data properly yet
@@ -1262,7 +1263,7 @@ namespace GTA.GangAndTurfMod
                             }
                         }
 
-                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest);
+                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest, mustReachDest);
 
                         newVehicle.AddBlip();
                         newVehicle.CurrentBlip.IsShortRange = true;
@@ -1290,14 +1291,15 @@ namespace GTA.GangAndTurfMod
             SpawnedGangMember spawnedPara = SpawnGangMember(ownerGang, spawnPos);
             if (spawnedPara != null)
             {
-                spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+				spawnedPara.watchedPed.BlockPermanentEvents = true;
+				spawnedPara.watchedPed.Task.ParachuteTo(destPos);
                 return spawnedPara.watchedPed;
             }
 
             return null;
         }
 
-        SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false)
+        SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool mustReachDest = false)
         {
             SpawnedDrivingGangMember newDriverAI = null;
 
@@ -1307,14 +1309,14 @@ namespace GTA.GangAndTurfMod
                 if (livingDrivingMembers[i].watchedPed == null)
                 {
                     newDriverAI = livingDrivingMembers[i];
-                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
+                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, mustReachDest);
                     couldEnlistWithoutAdding = true;
                     break;
                 }
             }
             if (!couldEnlistWithoutAdding)
             {
-                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest);
+                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, mustReachDest);
                 livingDrivingMembers.Add(newDriverAI);
             }
 

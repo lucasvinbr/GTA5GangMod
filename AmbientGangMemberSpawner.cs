@@ -20,13 +20,13 @@ namespace GTA.GangAndTurfMod
 
         public int postWarBackupsRemaining = 0;
 
+
         void OnTick(object sender, EventArgs e)
         {
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
 			Logger.Log("ambient spawner tick: begin");
-			UI.ShowSubtitle((GC.GetTotalMemory(true)/1024).ToString());
             ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
-
+			
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
             if (curTurfZone != null)
             {
@@ -62,7 +62,7 @@ namespace GTA.GangAndTurfMod
                         if (GangManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
                             Vehicle playerVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
-                            if ((playerVehicle != null && playerVehicle.Speed < 70) || playerVehicle == null)
+                            if ((playerVehicle != null && playerVehicle.Speed < 30) || playerVehicle == null)
                             {
                                 SpawnAmbientMember(curGang);
                             }
@@ -104,7 +104,7 @@ namespace GTA.GangAndTurfMod
                 Ped driver = spawnedVehicleAI.watchedPed;
                 if (driver != null) //if, for some reason, we don't have a driver, do nothing
                 {
-                    driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 8, (int) DrivingStyle.AvoidTraffic);
+                    driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, ModOptions.instance.wanderingDriverDrivingStyle);
                 }
             }
         }

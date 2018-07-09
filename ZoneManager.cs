@@ -15,14 +15,14 @@ namespace GTA.GangAndTurfMod
     public class ZoneManager
     {
         
-        public enum zoneBlipDisplay
+        public enum ZoneBlipDisplay
         {
             none,
             fiveClosest,
             allZones,
         }
 
-        public zoneBlipDisplay curBlipDisplay = zoneBlipDisplay.none;
+        public ZoneBlipDisplay curBlipDisplay = ZoneBlipDisplay.none;
 
         #region setup/save stuff
 
@@ -56,7 +56,7 @@ namespace GTA.GangAndTurfMod
         }
 
         public static ZoneManager instance;
-        TurfZoneData zoneData;
+        public TurfZoneData zoneData;
 
 
         public ZoneManager()
@@ -83,8 +83,11 @@ namespace GTA.GangAndTurfMod
 
         public void SaveZoneData(bool notifySuccess = true)
         {
-            PersistenceHandler.SaveToFile(zoneData, "TurfZoneData", notifySuccess);
-        }
+			AutoSaver.instance.zoneDataDirty = true;
+			if (notifySuccess) {
+				AutoSaver.instance.zoneDataNotifySave = true;
+			}
+		}
 
         public void UpdateZoneData(TurfZone newTurfZone)
         {
@@ -222,20 +225,20 @@ namespace GTA.GangAndTurfMod
         public void ChangeBlipDisplay()
         {
             curBlipDisplay++;
-            if(curBlipDisplay > zoneBlipDisplay.allZones)
+            if(curBlipDisplay > ZoneBlipDisplay.allZones)
             {
-                curBlipDisplay = zoneBlipDisplay.none;
+                curBlipDisplay = ZoneBlipDisplay.none;
             }
 
             RefreshZoneBlips();
         }
 
-        public void ChangeBlipDisplay(zoneBlipDisplay desiredDisplayType)
+        public void ChangeBlipDisplay(ZoneBlipDisplay desiredDisplayType)
         {
             curBlipDisplay = desiredDisplayType;
-            if (curBlipDisplay > zoneBlipDisplay.allZones)
+            if (curBlipDisplay > ZoneBlipDisplay.allZones)
             {
-                curBlipDisplay = zoneBlipDisplay.none;
+                curBlipDisplay = ZoneBlipDisplay.none;
             }
 
             RefreshZoneBlips();
@@ -245,7 +248,7 @@ namespace GTA.GangAndTurfMod
         {
             switch (curBlipDisplay)
             {
-                case zoneBlipDisplay.none:
+                case ZoneBlipDisplay.none:
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {
                         //zoneData.zoneList[i].AttachedBlip.Scale = 0;
@@ -257,14 +260,14 @@ namespace GTA.GangAndTurfMod
                         
                     }
                     break;
-                case zoneBlipDisplay.allZones:
+                case ZoneBlipDisplay.allZones:
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {
                         CreateAttachedBlip(zoneData.zoneList[i]);
                         UpdateZoneBlip(zoneData.zoneList[i]);
                     }
                     break;
-                case zoneBlipDisplay.fiveClosest:
+                case ZoneBlipDisplay.fiveClosest:
                     zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
                     for (int i = 0; i < zoneData.zoneList.Count; i++)
                     {

@@ -125,8 +125,8 @@ namespace GTA.GangAndTurfMod
 		/// </summary>
 		public void EnforceGangColorConsistency() {
 			ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
-			if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.memberColor.white) ||
-				(vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.memberColor.black)) {
+			if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.MemberColor.white) ||
+				(vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.MemberColor.black)) {
 				blipColor = RandoMath.GetRandomElementFromArray(ourColor.blipColors);
 				vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
 				GangManager.instance.SaveGangData(false);

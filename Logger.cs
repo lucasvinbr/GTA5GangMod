@@ -12,7 +12,11 @@ namespace GTA.GangAndTurfMod
     {
         public static void Log(object message)
         {
-            File.AppendAllText("GangAndTurfMod-" + DateTime.Today.ToString("yyyy-MM-dd") + ".log", DateTime.Now + " : " + message + Environment.NewLine);
+			if (ModOptions.instance == null) return;
+			if (ModOptions.instance.loggerEnabled) {
+				File.AppendAllText("GangAndTurfMod-" + DateTime.Today.ToString("yyyy-MM-dd") + ".log", DateTime.Now + " : " + message + Environment.NewLine);
+			}
+            
         }
     }
 }

@@ -19,17 +19,22 @@ namespace GTA.GangAndTurfMod
         public int updateLimitWhileGoing = 50;
 
         public bool playerAsDest = false;
+		public bool mustReachDest = false;
 
         public override void Update()
         {
             if (vehicleIAmDriving.IsAlive && watchedPed.IsAlive)
             {
+				if (mustReachDest) {
+					watchedPed.BlockPermanentEvents = true; //our driver shouldn't get distracted
+				}
+
                 if(destination != Vector3.Zero)
                 {
                     //stop tracking this driver/vehicle if he/she leaves the vehicle
                     if (!watchedPed.IsInVehicle(vehicleIAmDriving))
                     {
-                        EveryoneLeaveVehicle();
+                        ClearAllRefs();
                     }
                     else
                     {
@@ -41,7 +46,7 @@ namespace GTA.GangAndTurfMod
 					//we are just wandering arond
 					//if we get too far from the player, despawn
 					if (World.GetDistance(vehicleIAmDriving.Position, GangManager.CurrentPlayerCharacter.Position) >
-							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.5f) {
+							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2.5f) {
 
 						for (int i = 0; i < myPassengers.Count; i++) {
 							if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer) {
@@ -71,16 +76,16 @@ namespace GTA.GangAndTurfMod
                     //stop tracking this driver/vehicle if he/she leaves the vehicle or something goes wrong
                     if (!watchedPed.IsInVehicle())
                     {
-                        EveryoneLeaveVehicle();
+						ClearAllRefs();
                         return;
                     }
                 }
             }
             else
             {
-                //our vehicle has been destroyed/ our driver has died
+				//our vehicle has been destroyed/ our driver has died
 
-                EveryoneLeaveVehicle(); //... if something/someone is left, they'll consider leaving
+				ClearAllRefs();
             }
             
         }
@@ -94,11 +99,15 @@ namespace GTA.GangAndTurfMod
             //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 25) //tweaked to match my changes below -- zix
             {
-                //leave the vehicle if we wanted to get to the player and he's on foot or if we just had to get somewhere
-                if (!playerAsDest || (playerAsDest && !playerInVehicle))
-                {
-                    EveryoneLeaveVehicle();
-                }
+                //leave the vehicle if we are a backup vehicle and the player's on foot or if we just had to get somewhere
+				if(!playerAsDest || (playerAsDest && !playerInVehicle)) {
+					if (mustReachDest) {
+						DriverLeaveVehicle();
+					}
+					else {
+						ClearAllRefs();
+					}
+				}
             }
             else
             {
@@ -109,7 +118,7 @@ namespace GTA.GangAndTurfMod
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
                     (!playerAsDest || !playerInVehicle))
                 {
-                    if (playerAsDest) //zix - extra config options
+                    if (playerAsDest && mustReachDest) //zix - extra config options
                     {
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
@@ -120,7 +129,12 @@ namespace GTA.GangAndTurfMod
                         }
                         
                     }
-                    EveryoneLeaveVehicle();
+					if (playerAsDest) {
+						DriverLeaveVehicle();
+					}
+					else {
+						ClearAllRefs();
+					}
                 }
                 else
                 {
@@ -131,7 +145,7 @@ namespace GTA.GangAndTurfMod
                             watchedPed.Task.ClearAll();
                             if (isFriendlyToPlayer)
                             {
-                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, GangManager.CurrentPlayerCharacter.CurrentVehicle, -1, -1, 4457020, 30, 0, 35);
+                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, GangManager.CurrentPlayerCharacter.CurrentVehicle, -1, -1, ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
                             }
                             else
                             {
@@ -141,35 +155,23 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 25, 50, 4457020);
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, 50, ModOptions.instance.driverWithDestinationDrivingStyle);
                         }
                     }
                 }
             }
         }
 
-        public void EveryoneLeaveVehicle()
+		/// <summary>
+		/// tells the driver to leave the vehicle, then clearAllRefs
+		/// </summary>
+        public void DriverLeaveVehicle()
         {
             //leave vehicle, everyone stops being important
             if (!watchedPed.IsPlayer)
             {
-                SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
-                if(memberAI != null)
-                {
-                    memberAI.ThinkAboutLeavingVehicle();
-                }
-            }
-
-            for (int i = 0; i < myPassengers.Count; i++)
-            {
-                if (!myPassengers[i].IsPlayer)
-                {
-                    SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i], true);
-                    if (memberAI != null)
-                    {
-                        memberAI.ThinkAboutLeavingVehicle();
-                    }
-                }
+				watchedPed.Task.LeaveVehicle();
+				watchedPed.BlockPermanentEvents = false;
             }
 
             ClearAllRefs();
@@ -195,18 +197,19 @@ namespace GTA.GangAndTurfMod
             myPassengers.Clear();
         }
 
-        public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false)
+        public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool mustReachDest = false)
         {
             this.ticksBetweenUpdates = 50;
-            AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest);
+            AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, mustReachDest);
         }
 
-        public void AttachData(Ped targetPed, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest)
+        public void AttachData(Ped targetPed, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool mustReachDest)
         {
             this.watchedPed = targetPed;
             this.vehicleIAmDriving = targetVehicle;
             this.destination = theDest;
             this.playerAsDest = playerIsDest;
+			this.mustReachDest = mustReachDest;
             this.isFriendlyToPlayer = isFriendlyToPlayer;
             updatesWhileGoingToDest = 0;
             SetWatchedPassengers();

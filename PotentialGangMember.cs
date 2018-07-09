@@ -15,7 +15,7 @@ namespace GTA.GangAndTurfMod
     [XmlInclude(typeof(FreemodePotentialGangMember))]
     public class PotentialGangMember
     {
-       public enum dressStyle
+       public enum DressStyle
         {
             business,
             street,
@@ -23,7 +23,7 @@ namespace GTA.GangAndTurfMod
             special
         }
 
-        public enum memberColor
+        public enum MemberColor
         {
             white,
             black,
@@ -45,8 +45,8 @@ namespace GTA.GangAndTurfMod
         public int headDrawableIndex, headTextureIndex;
         public int torsoDrawableIndex, torsoTextureIndex;
         public int legsDrawableIndex, legsTextureIndex;
-        public dressStyle myStyle;
-        public memberColor linkedColor;
+        public DressStyle myStyle;
+        public MemberColor linkedColor;
 
         [XmlIgnore]
         public static PotentialMemberPool MemberPool {
@@ -70,7 +70,7 @@ namespace GTA.GangAndTurfMod
 
         private static PotentialMemberPool memberPool;
 
-        public PotentialGangMember(int modelHash, dressStyle myStyle, memberColor linkedColor,
+        public PotentialGangMember(int modelHash, DressStyle myStyle, MemberColor linkedColor,
              int headDrawableIndex = -1, int headTextureIndex = -1, int hairDrawableIndex = -1,
             int torsoDrawableIndex = -1,int torsoTextureIndex = -1, int legsDrawableIndex = -1, int legsTextureIndex = -1)
         {
@@ -86,7 +86,7 @@ namespace GTA.GangAndTurfMod
             this.legsTextureIndex = legsTextureIndex;
         }
 
-        public PotentialGangMember(Ped sourcePed, dressStyle myStyle, memberColor linkedColor)
+        public PotentialGangMember(Ped sourcePed, DressStyle myStyle, MemberColor linkedColor)
         {
             this.myStyle = myStyle;
             this.linkedColor = linkedColor;
@@ -108,8 +108,8 @@ namespace GTA.GangAndTurfMod
         public PotentialGangMember()
         {
             this.modelHash = -1;
-            this.myStyle = dressStyle.special;
-            this.linkedColor = memberColor.white;
+            this.myStyle = DressStyle.special;
+            this.linkedColor = MemberColor.white;
             this.torsoDrawableIndex = -1;
             this.torsoTextureIndex = -1;
             this.legsDrawableIndex = -1;
@@ -174,7 +174,7 @@ namespace GTA.GangAndTurfMod
             return false;
         }
 
-        public static PotentialGangMember GetMemberFromPool(dressStyle style, memberColor color)
+        public static PotentialGangMember GetMemberFromPool(DressStyle style, MemberColor color)
         {
             PotentialGangMember returnedMember;
 

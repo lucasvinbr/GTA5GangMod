@@ -18,17 +18,19 @@ namespace GTA.GangAndTurfMod {
 
 		public List<SpawnedDrivingGangMember> driverList;
 
+		private bool updateRanThisFrame = false;
 
 		void OnTick(object sender, EventArgs e) {
+			updateRanThisFrame = false;
 			for (int i = 0; i < driverList.Count; i++) {
 				if (driverList[i].watchedPed != null && driverList[i].vehicleIAmDriving != null) {
 					driverList[i].ticksSinceLastUpdate++;
-					if (driverList[i].ticksSinceLastUpdate >= driverList[i].ticksBetweenUpdates) {
+					if (!updateRanThisFrame && driverList[i].ticksSinceLastUpdate >= driverList[i].ticksBetweenUpdates) {
 						//max is one vehicle update per frame in order to avoid crashes
+						updateRanThisFrame = true;
 						driverList[i].Update();
 						driverList[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(driverList[i].ticksBetweenUpdates / 3);
 					}
-					Wait(35);
 				}
 				
 			}
