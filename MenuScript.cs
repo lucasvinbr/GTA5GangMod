@@ -1587,6 +1587,7 @@ namespace GTA.GangAndTurfMod
             AddKeyBindingMenu();
             AddGamepadControlsToggle();
             AddForceAIGangsTickButton();
+			AddForceAIAttackButton();
             AddReloadOptionsButton();
             AddResetWeaponOptionsButton();
             AddResetOptionsButton();
@@ -1808,7 +1809,37 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        void AddReloadOptionsButton()
+		void AddForceAIAttackButton() {
+			UIMenuItem newButton = new UIMenuItem("Force an AI Gang to Attack this zone", "If you control the current zone, makes a random AI Gang attack it, starting a war. The AI gang won't spend money to make this attack.");
+			modSettingsSubMenu.AddItem(newButton);
+			modSettingsSubMenu.OnItemSelect += (sender, item, index) => {
+				if (item == newButton) {
+					GangAI enemyAttackerAI = RandoMath.GetRandomElementFromList(GangManager.instance.enemyGangs);
+					if(enemyAttackerAI != null) {
+						TurfZone curZone = ZoneManager.instance.GetCurrentTurfZone();
+						if(curZone != null) {
+							if(curZone.ownerGangName == GangManager.instance.PlayerGang.name) {
+								if(!GangWarManager.instance.StartWar(enemyAttackerAI.watchedGang, curZone,
+									GangWarManager.WarType.defendingFromEnemy, GangWarManager.AttackStrength.medium)) {
+									UI.ShowSubtitle("Couldn't start a war. Is a war already in progress?");
+								}
+							}
+							else {
+								UI.ShowSubtitle("The zone you are in is not controlled by your gang.");
+							}
+						}
+						else {
+							UI.ShowSubtitle("The zone you are in has not been marked as takeable.");
+						}
+					}
+					else {
+						UI.ShowSubtitle("There aren't any enemy gangs in San Andreas!");
+					}
+				}
+			};
+		}
+
+		void AddReloadOptionsButton()
         {
             UIMenuItem newButton = new UIMenuItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
             modSettingsSubMenu.AddItem(newButton);

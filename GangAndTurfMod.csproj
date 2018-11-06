@@ -80,6 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WorldLocChecker.cs" />
     <Compile Include="AmbientGangMemberSpawner.cs" />
     <Compile Include="FreemodePotentialGangMember.cs" />
     <Compile Include="Gang.cs" />

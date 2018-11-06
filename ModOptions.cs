@@ -90,8 +90,9 @@ namespace GTA.GangAndTurfMod
 
                 this.minWantedFactorWhenInGangTurf = loadedOptions.minWantedFactorWhenInGangTurf;
                 this.maxWantedLevelInMaxedGangTurf = loadedOptions.maxWantedLevelInMaxedGangTurf;
+				this.freezeWantedLevelDuringWars = loadedOptions.freezeWantedLevelDuringWars;
 
-                this.notificationsEnabled = loadedOptions.notificationsEnabled;
+				this.notificationsEnabled = loadedOptions.notificationsEnabled;
 				this.loggerEnabled = loadedOptions.loggerEnabled;
 				this.fightingEnabled = loadedOptions.fightingEnabled;
                 this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
@@ -203,8 +204,9 @@ namespace GTA.GangAndTurfMod
 
         public float minWantedFactorWhenInGangTurf = 0.0f;
         public int maxWantedLevelInMaxedGangTurf = 0;
+		public bool freezeWantedLevelDuringWars = true;
 
-        public bool gangsStartWithPistols = true;
+		public bool gangsStartWithPistols = true;
         public bool gangsCanBeWipedOut = true;
         public int maxCoexistingGangs = 7;
         public float extraProfitForAIGangsFactor = 1.5f;
@@ -341,14 +343,15 @@ namespace GTA.GangAndTurfMod
         /// returns a random distance between the minimum and maximum distances that a member can spawn from the player
         /// </summary>
         /// <returns></returns>
-        public int GetAcceptableMemberSpawnDistance()
+        public int GetAcceptableMemberSpawnDistance(int paddingFromMax = 0)
         {
             if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
             {
                 maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 2;
                 SaveOptions(false);
             }
-            return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer, maxDistanceMemberSpawnFromPlayer);
+            return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer,
+				RandoMath.Max(minDistanceCarSpawnFromPlayer + paddingFromMax, maxDistanceMemberSpawnFromPlayer - paddingFromMax));
         }
 
         /// <summary>
@@ -567,6 +570,7 @@ namespace GTA.GangAndTurfMod
 
             minWantedFactorWhenInGangTurf = 0.0f;
             maxWantedLevelInMaxedGangTurf = 0;
+			freezeWantedLevelDuringWars = true;
 
             notificationsEnabled = true;
 			loggerEnabled = false;

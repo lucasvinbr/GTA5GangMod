@@ -62,6 +62,8 @@ namespace GTA.GangAndTurfMod
 			}
 		}
 
+		public static bool playerIsAwayFromRoads = false;
+
         private int moneyFromLastProtagonist = 0;
         private int defaultMaxHealth = 200;
 
@@ -1057,7 +1059,7 @@ namespace GTA.GangAndTurfMod
             }
 
             chosenPos = World.GetNextPositionOnSidewalk(referencePos + RandoMath.RandomDirection(true) *
-                          ModOptions.instance.GetAcceptableMemberSpawnDistance());
+                          ModOptions.instance.GetAcceptableMemberSpawnDistance(10));
 
             return chosenPos;
         }
@@ -1095,17 +1097,25 @@ namespace GTA.GangAndTurfMod
 		/// <returns></returns>
 		public Vector3 FindCustomSpawnPointInStreet(Vector3 referencePoint, float averageDistanceFromReference, float minDistanceFromReference, int maxAttempts = 10, Vector3? repulsor = null, float minDistanceFromRepulsor = 0) {
 			Vector3 chosenPos = Vector3.Zero;
+			Vector3 getNextPosTarget = Vector3.Zero;
 
 			int attempts = 0;
 
-			chosenPos = World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
-						  averageDistanceFromReference);
+			getNextPosTarget = referencePoint + RandoMath.RandomDirection(true) *
+						  averageDistanceFromReference;
+
+			chosenPos = playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+				World.GetNextPositionOnStreet(getNextPosTarget);
 			float distFromRef = World.GetDistance(referencePoint, chosenPos);
 			while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
 				(repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
 				attempts <= maxAttempts) {
-				chosenPos = World.GetNextPositionOnStreet(referencePoint + RandoMath.RandomDirection(true) *
-						  averageDistanceFromReference);
+
+				getNextPosTarget = referencePoint + RandoMath.RandomDirection(true) *
+						  averageDistanceFromReference;
+				chosenPos = playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+					World.GetNextPositionOnStreet(getNextPosTarget);
+
 				distFromRef = World.GetDistance(referencePoint, chosenPos);
 				attempts++;
 			}
@@ -1115,14 +1125,13 @@ namespace GTA.GangAndTurfMod
 
 		public Vector3 FindGoodSpawnPointForCar()
         {
-            Vector3 chosenPos = Vector3.Zero;
-            Vector3 playerPos = CurrentPlayerCharacter.Position;
+			Vector3 getNextPosTarget = Vector3.Zero;
 
-            chosenPos = World.GetNextPositionOnStreet
-                          (playerPos + RandoMath.RandomDirection(true) *
-                          ModOptions.instance.GetAcceptableCarSpawnDistance());
+			getNextPosTarget = CurrentPlayerCharacter.Position + RandoMath.RandomDirection(true) *
+						  ModOptions.instance.GetAcceptableCarSpawnDistance();
 
-            return chosenPos;
+			return playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+					World.GetNextPositionOnStreet(getNextPosTarget);
         }
 
         /// <summary>

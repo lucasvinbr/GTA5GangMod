@@ -25,7 +25,6 @@ namespace GTA.GangAndTurfMod
         {
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
 			Logger.Log("ambient spawner tick: begin");
-            ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 			
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
             if (curTurfZone != null)
