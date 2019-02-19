@@ -433,7 +433,7 @@ namespace GTA.GangAndTurfMod
             Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
             enemySpawnPoints[0] = GangManager.instance.FindCustomSpawnPoint(referencePoint,
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(30), minDistanceFromReference,
+                ModOptions.instance.GetAcceptableMemberSpawnDistance(40), minDistanceFromReference,
                 1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
             if(enemySpawnPoints[0] == Vector3.Zero)

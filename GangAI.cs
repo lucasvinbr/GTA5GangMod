@@ -82,8 +82,10 @@ namespace GTA.GangAndTurfMod
 
         void TryExpand()
         {
-            //lets attack!
-            //pick a random zone owned by us, get the closest hostile zone and attempt to take it
+			//lets attack!
+			//pick a random zone owned by us, get the closest hostile zone and attempt to take it
+			//..but only if the player hasn't disabled expansion
+			if (ModOptions.instance.preventAIExpansion) return;
 
             if (myZones.Count > 0)
             {
@@ -251,8 +253,8 @@ namespace GTA.GangAndTurfMod
 				}
 			}
 			else {
-				if ((GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == targetZone) || !ModOptions.instance.fightingEnabled) {
-					//don't mess with this zone then, it's a warzone... or wars have been disabled
+				if (GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == targetZone) {
+					//don't mess with this zone then, it's a warzone
 					return;
 				}
 				//we check how well defended this zone is,

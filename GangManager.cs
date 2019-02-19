@@ -1058,7 +1058,7 @@ namespace GTA.GangAndTurfMod
                 referencePos = referencePosition.Value;
             }
 
-            chosenPos = World.GetNextPositionOnSidewalk(referencePos + RandoMath.RandomDirection(true) *
+            chosenPos = World.GetSafeCoordForPed(referencePos + RandoMath.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableMemberSpawnDistance(10));
 
             return chosenPos;
@@ -1074,15 +1074,15 @@ namespace GTA.GangAndTurfMod
 
             int attempts = 0;
 
-            chosenPos = World.GetNextPositionOnSidewalk(referencePoint + RandoMath.RandomDirection(true) *
-                          averageDistanceFromReference);
+            chosenPos = World.GetSafeCoordForPed(referencePoint + RandoMath.RandomDirection(true) *
+                          averageDistanceFromReference, false);
             float distFromRef = World.GetDistance(referencePoint, chosenPos);
-            while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
+            while (((distFromRef > averageDistanceFromReference * 3 || (distFromRef < minDistanceFromReference)) ||
                 (repulsor != null && World.GetDistance(repulsor.Value, chosenPos) < minDistanceFromRepulsor)) &&
                 attempts <= maxAttempts)
             {
-                chosenPos = World.GetNextPositionOnSidewalk(referencePoint + RandoMath.RandomDirection(true) *
-                    averageDistanceFromReference);
+                chosenPos = World.GetSafeCoordForPed(referencePoint + RandoMath.RandomDirection(true) *
+                    averageDistanceFromReference, false);
                 distFromRef = World.GetDistance(referencePoint, chosenPos);
                 attempts++;
             }
@@ -1176,16 +1176,19 @@ namespace GTA.GangAndTurfMod
 
                     newPed.Money = RandoMath.CachedRandom.Next(60);
 
-                    //set the blip
-                    newPed.AddBlip();
-                    newPed.CurrentBlip.IsShortRange = true;
-                    newPed.CurrentBlip.Scale = 0.65f;
-                    Function.Call(Hash.SET_BLIP_COLOUR, newPed.CurrentBlip, ownerGang.blipColor);
+					//set the blip, if enabled
+					if (ModOptions.instance.showGangMemberBlips) {
+						newPed.AddBlip();
+						newPed.CurrentBlip.IsShortRange = true;
+						newPed.CurrentBlip.Scale = 0.65f;
+						Function.Call(Hash.SET_BLIP_COLOUR, newPed.CurrentBlip, ownerGang.blipColor);
 
-                    //set blip name - got to use native, the c# blip.name returns error ingame
-                    Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, ownerGang.name + " member");
-                    Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
+						//set blip name - got to use native, the c# blip.name returns error ingame
+						Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+						Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, ownerGang.name + " member");
+						Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
+					}
+                    
 
                     bool hasDriveByGun = false; //used for when the member has to decide between staying inside a vehicle or not
 
@@ -1301,10 +1304,13 @@ namespace GTA.GangAndTurfMod
 
                         SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == PlayerGang, playerIsDest, mustReachDest);
 
-                        newVehicle.AddBlip();
-                        newVehicle.CurrentBlip.IsShortRange = true;
+						if (ModOptions.instance.showGangMemberBlips) {
+							newVehicle.AddBlip();
+							newVehicle.CurrentBlip.IsShortRange = true;
 
-                        Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
+							Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
+						}
+                        
 						Logger.Log("spawn car: end (success)");
 						return driverAI;
                     }

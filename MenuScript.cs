@@ -432,7 +432,7 @@ namespace GTA.GangAndTurfMod
 
             Gang playerGang = GangManager.instance.PlayerGang;
 
-            warLightAtkBtn = new UIMenuItem("Attack", "Attack."); //those are updated when this menu is opened (UpdateGangWarAtkOptions)
+            warLightAtkBtn = new UIMenuItem("Attack", "Attack. (Text set elsewhere)"); //those are updated when this menu is opened (UpdateGangWarAtkOptions)
             warMedAtkBtn = new UIMenuItem("Attack", "Attack.");
             warLargeAtkBtn = new UIMenuItem("Attack", "Attack.");
             warMassAtkBtn = new UIMenuItem("Attack", "Attack.");
@@ -481,21 +481,14 @@ namespace GTA.GangAndTurfMod
 
             if (GangManager.instance.AddOrSubtractMoneyToProtagonist(-atkCost, true))
             {
-                if (ModOptions.instance.fightingEnabled)
+                if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(targetZone.ownerGangName), targetZone, GangWarManager.WarType.attackingEnemy, atkStrength))
                 {
-                    if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(targetZone.ownerGangName), targetZone, GangWarManager.WarType.attackingEnemy, atkStrength))
-                    {
-                        UI.ShowSubtitle("A war is already in progress.");
-                        return false;
-                    }
-                    else
-                    {
-                        GangManager.instance.AddOrSubtractMoneyToProtagonist(-atkCost);
-                    }
+                    UI.ShowSubtitle("A war is already in progress.");
+                    return false;
                 }
                 else
                 {
-                    UI.ShowSubtitle("Gang Fights must be enabled in order to start a war!");
+                    GangManager.instance.AddOrSubtractMoneyToProtagonist(-atkCost);
                 }
                 return true;
             }
@@ -1579,7 +1572,8 @@ namespace GTA.GangAndTurfMod
             AddNotificationsToggle();
             AddMemberAggressivenessControl();
             AddEnableAmbientSpawnToggle();
-            AddEnableFightingToggle();
+            AddAiExpansionToggle();
+			AddShowMemberBlipsToggle();
             AddMeleeOnlyToggle();
             AddEnableWarVersusPlayerToggle();
             AddEnableCarTeleportToggle();
@@ -1631,25 +1625,17 @@ namespace GTA.GangAndTurfMod
             }; 
      } 
 
-        void AddEnableFightingToggle()
+        void AddAiExpansionToggle()
         {
-            UIMenuCheckboxItem fightingToggle = new UIMenuCheckboxItem("Gang Wars Enabled?", ModOptions.instance.fightingEnabled, "If unchecked, Gang wars won't happen.");
+            UIMenuCheckboxItem aiToggle = new UIMenuCheckboxItem("Prevent AI Gangs' Expansion?", ModOptions.instance.preventAIExpansion, "If checked, AI Gangs won't start wars or take neutral zones.");
 
-            modSettingsSubMenu.AddItem(fightingToggle);
+            modSettingsSubMenu.AddItem(aiToggle);
             modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) =>
             {
-                if (item == fightingToggle)
+                if (item == aiToggle)
                 {
-                    if (!GangWarManager.instance.isOccurring)
-                    {
-                        ModOptions.instance.fightingEnabled = checked_;
-                        ModOptions.instance.SaveOptions(false);
-                    }
-                    else
-                    {
-                        UI.ShowSubtitle("There's a war going on, this option can't be changed now.");
-                        fightingToggle.Checked = !checked_;
-                    }
+                    ModOptions.instance.preventAIExpansion = checked_;
+                    ModOptions.instance.SaveOptions(false);
                 }
 
             };
@@ -1703,7 +1689,20 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        void AddEnableCarTeleportToggle()
+		void AddShowMemberBlipsToggle() {
+			UIMenuCheckboxItem blipToggle = new UIMenuCheckboxItem("Show Member and Car Blips?", ModOptions.instance.showGangMemberBlips, "If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)");
+
+			modSettingsSubMenu.AddItem(blipToggle);
+			modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) => {
+				if (item == blipToggle) {
+					ModOptions.instance.showGangMemberBlips = checked_;
+					ModOptions.instance.SaveOptions(false);
+				}
+
+			};
+		}
+
+		void AddEnableCarTeleportToggle()
         {
             UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Backup cars can teleport to always arrive?", ModOptions.instance.forceSpawnCars, "If enabled, backup cars, after taking too long to get to the player, will teleport close by. This will only affect friendly vehicles.");
 

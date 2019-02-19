@@ -43,7 +43,7 @@ namespace GTA.GangAndTurfMod
                 theDirection = Math.Vector3.RandomXYZ();
             }
 
-            theDirection.Normalize();
+            //theDirection.Normalize();
             return theDirection;
         }
 

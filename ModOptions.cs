@@ -94,12 +94,14 @@ namespace GTA.GangAndTurfMod
 
 				this.notificationsEnabled = loadedOptions.notificationsEnabled;
 				this.loggerEnabled = loadedOptions.loggerEnabled;
-				this.fightingEnabled = loadedOptions.fightingEnabled;
+				this.preventAIExpansion = loadedOptions.preventAIExpansion;
                 this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
                 this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
                 this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
                 this.forceSpawnCars = loadedOptions.forceSpawnCars;
                 this.joypadControls = loadedOptions.joypadControls;
+
+				this.showGangMemberBlips = loadedOptions.showGangMemberBlips;
 
                 this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
                 this.gangsCanBeWipedOut = loadedOptions.gangsCanBeWipedOut;
@@ -141,9 +143,11 @@ namespace GTA.GangAndTurfMod
 
         public enum GangMemberAggressivenessMode
         {
-            veryAgressive,
-            agressive,
-            defensive
+            veryAgressive = 0, //legacy typos... hahaha
+			veryAggressive = 0,
+            agressive = 1,
+			aggressive = 1,
+            defensive = 2
         }
 
 		public int msAutoSaveInterval = 3000;
@@ -198,9 +202,11 @@ namespace GTA.GangAndTurfMod
 
         public bool notificationsEnabled = true;
 		public bool loggerEnabled = false;
-        public bool fightingEnabled = true, membersSpawnWithMeleeOnly = false, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
+        public bool preventAIExpansion = true, membersSpawnWithMeleeOnly = false, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
         public bool forceSpawnCars = false;
         public bool joypadControls = false;
+
+		public bool showGangMemberBlips = true;
 
         public float minWantedFactorWhenInGangTurf = 0.0f;
         public int maxWantedLevelInMaxedGangTurf = 0;
@@ -343,7 +349,7 @@ namespace GTA.GangAndTurfMod
         /// returns a random distance between the minimum and maximum distances that a member can spawn from the player
         /// </summary>
         /// <returns></returns>
-        public int GetAcceptableMemberSpawnDistance(int paddingFromMax = 0)
+        public int GetAcceptableMemberSpawnDistance(int paddingFromLimits = 0)
         {
             if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer)
             {
@@ -351,7 +357,7 @@ namespace GTA.GangAndTurfMod
                 SaveOptions(false);
             }
             return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer,
-				RandoMath.Max(minDistanceCarSpawnFromPlayer + paddingFromMax, maxDistanceMemberSpawnFromPlayer - paddingFromMax));
+				RandoMath.Max(minDistanceCarSpawnFromPlayer + paddingFromLimits, maxDistanceMemberSpawnFromPlayer - paddingFromLimits));
         }
 
         /// <summary>
@@ -574,12 +580,15 @@ namespace GTA.GangAndTurfMod
 
             notificationsEnabled = true;
 			loggerEnabled = false;
-            fightingEnabled = true;
+
+            preventAIExpansion = true;
             membersSpawnWithMeleeOnly = false;
             warAgainstPlayerEnabled = true;
             ambientSpawningEnabled = true;
             forceSpawnCars = false;
             joypadControls = false;
+
+			showGangMemberBlips = true;
 
             gangsStartWithPistols = true;
             gangsCanBeWipedOut = true;
@@ -604,6 +613,7 @@ namespace GTA.GangAndTurfMod
             buyableWeapons = new List<BuyableWeapon>()
         {
             //--melee
+			
             new BuyableWeapon(WeaponHash.Bat, 1000),
             new BuyableWeapon(WeaponHash.BattleAxe, 4500),
             new BuyableWeapon(WeaponHash.Bottle, 500),
@@ -619,7 +629,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.PoolCue, 730),
             new BuyableWeapon(WeaponHash.SwitchBlade, 1100),
             new BuyableWeapon(WeaponHash.Wrench, 560),
-            //--guns
+			//--guns
             new BuyableWeapon(WeaponHash.AdvancedRifle, 200000),
             new BuyableWeapon(WeaponHash.APPistol, 60000),
             new BuyableWeapon(WeaponHash.AssaultRifle, 120000),
@@ -634,14 +644,14 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CombatMG, 220000),
             new BuyableWeapon(WeaponHash.CombatMGMk2, 245000),
             new BuyableWeapon(WeaponHash.CombatPDW, 205000),
-            new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
-            new BuyableWeapon(WeaponHash.CompactRifle, 175000),
+			new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
+			new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleActionRevolver, 120000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
             new BuyableWeapon(WeaponHash.Firework, 1000000),
             new BuyableWeapon(WeaponHash.FlareGun, 600000),
-            new BuyableWeapon(WeaponHash.GrenadeLauncher, 950000),
+			new BuyableWeapon(WeaponHash.GrenadeLauncher, 950000),
             new BuyableWeapon(WeaponHash.Gusenberg, 200000),
             new BuyableWeapon(WeaponHash.HeavyPistol, 55000),
             new BuyableWeapon(WeaponHash.HeavyShotgun, 180000),
@@ -662,7 +672,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.PistolMk2, 65000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
             new BuyableWeapon(WeaponHash.PumpShotgunMk2, 135000),
-            new BuyableWeapon(WeaponHash.Railgun, 5100000),
+			new BuyableWeapon(WeaponHash.Railgun, 5100000),
             new BuyableWeapon(WeaponHash.Revolver, 80000),
             new BuyableWeapon(WeaponHash.RevolverMk2, 100000),
             new BuyableWeapon(WeaponHash.RPG, 1200000),
@@ -676,8 +686,11 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.SpecialCarbineMk2, 290000),
             new BuyableWeapon(WeaponHash.StunGun, 45000),
             new BuyableWeapon(WeaponHash.SweeperShotgun, 230000),
-            new BuyableWeapon(WeaponHash.VintagePistol, 50000),
-        };
+			new BuyableWeapon(WeaponHash.UnholyHellbringer, 5100000),
+			new BuyableWeapon(WeaponHash.UpNAtomizer, 4100000),
+			new BuyableWeapon(WeaponHash.VintagePistol, 50000),
+			new BuyableWeapon(WeaponHash.Widowmaker, 5100000),
+		};
         }
 
 
@@ -686,9 +699,6 @@ namespace GTA.GangAndTurfMod
 
             possibleGangFirstNames = new List<string>
             {
-
-
-
                 "666",
                 "American",
                 "Angry",
