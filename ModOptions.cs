@@ -55,7 +55,8 @@ namespace GTA.GangAndTurfMod
 
                 this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
                 this.maxDistToWarBlipBeforePlayerLeavesWar = loadedOptions.maxDistToWarBlipBeforePlayerLeavesWar;
-                this.postWarBackupsAmount = loadedOptions.postWarBackupsAmount;
+				this.ticksBeforeWarEndWithPlayerAway = loadedOptions.ticksBeforeWarEndWithPlayerAway;
+				this.postWarBackupsAmount = loadedOptions.postWarBackupsAmount;
                 this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
                 this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
                 this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
@@ -161,7 +162,8 @@ namespace GTA.GangAndTurfMod
 
         public bool emptyZoneDuringWar = true;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
-        public int postWarBackupsAmount = 5;
+		public int ticksBeforeWarEndWithPlayerAway = 30000;
+		public int postWarBackupsAmount = 5;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
         public int killsBetweenEnemySpawnReplacement = 25;
@@ -540,6 +542,7 @@ namespace GTA.GangAndTurfMod
 
             emptyZoneDuringWar = true;
             maxDistToWarBlipBeforePlayerLeavesWar = 300;
+			ticksBeforeWarEndWithPlayerAway = 30000;
             postWarBackupsAmount = 5;
             baseNumKillsBeforeWarVictory = 25;
             extraKillsPerTurfValue = 15;

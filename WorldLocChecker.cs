@@ -8,26 +8,40 @@ using GTA.Native;
 
 
 /// <summary>
-/// a script that checks the player's location once in a while in order to update blips and other stuff.
-/// Used to be part of the AmbientGangMemberSpawner
+/// a script that checks the player's location once in a while in order to update blips and other stuff
 /// </summary>
-namespace GTA.GangAndTurfMod
-{
-    class WorldLocChecker : Script
-    {
+namespace GTA.GangAndTurfMod {
+	class WorldLocChecker : Script {
 
-        public static WorldLocChecker instance;
+		public static WorldLocChecker instance;
 
 		int offroadAttempts = 0;
 		Vector3 offroadCheckVector;
 		Vector3 playerPos;
 
-        void OnTick(object sender, EventArgs e)
+		public static bool PlayerIsAwayFromRoads {
+			get{
+				if(instance != null) {
+					return instance.playerIsAwayFromRoads;
+				}
+				else {
+					return true;
+				}
+			}
+		}
+
+		/// <summary>
+		/// the way spawns are made changes in some cases according to this
+		/// </summary>
+		private bool playerIsAwayFromRoads = false;
+
+
+		void OnTick(object sender, EventArgs e)
         {
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
             ZoneManager.instance.RefreshZoneBlips();
 			//check if we're offroad
-			GangManager.playerIsAwayFromRoads = false;
+			playerIsAwayFromRoads = false;
 			offroadAttempts = 0;
 			playerPos = GangManager.CurrentPlayerCharacter.Position;
 			offroadCheckVector = World.GetNextPositionOnStreet
@@ -42,7 +56,7 @@ namespace GTA.GangAndTurfMod
 			}
 
 			if(offroadAttempts >= 3) {
-				GangManager.playerIsAwayFromRoads = true;
+				playerIsAwayFromRoads = true;
 			}
 		}
 

@@ -12,7 +12,8 @@ namespace GTA.GangAndTurfMod {
 		public static GangMemberUpdater instance;
 
 		/// <summary>
-		/// the updater must wait for the gangManager before it starts looking for members to update
+		/// the updater must wait for the gangManager to initialize before it starts looking for members to update,
+		/// so it starts disabled
 		/// </summary>
 		public bool enabled = false;
 
@@ -35,12 +36,18 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-		public static void Initialize() {
-			instance.memberList = GangManager.instance.livingMembers;
-			instance.enabled = true;
+		public static bool Initialize() {
+			if(instance != null) {
+				instance.memberList = GangManager.instance.livingMembers;
+				instance.enabled = true;
+				return true;
+			}
+			else {
+				return false;
+			}
+			
 		}
 
-		
 		public GangMemberUpdater() {
 			this.Tick += OnTick;
 			instance = this;

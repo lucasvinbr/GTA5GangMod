@@ -10,7 +10,7 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// the script is responsble for ticking and detecting input for the more sensitive scripts.
     /// some, like the gang war manager, are still ticking on their own.
-    /// this one exists to make sure these ones start running in the correct order
+    /// this one exists to make sure the sensitive ones start running in the correct order
     /// </summary>
     class ModCore : Script
     {
@@ -35,9 +35,19 @@ namespace GTA.GangAndTurfMod
 
             Logger.Log("mod started!");
 
-			GangMemberUpdater.Initialize();
-			GangVehicleUpdater.Initialize();
+			bool successfulInit = GangMemberUpdater.Initialize();
 
+			while (successfulInit == false) {
+				Yield();
+				successfulInit = GangMemberUpdater.Initialize();
+			}
+
+			successfulInit = GangVehicleUpdater.Initialize();
+
+			while (successfulInit == false) {
+				Yield();
+				successfulInit = GangVehicleUpdater.Initialize();
+			}
         }
 
         void OnTick(object sender, EventArgs e)
@@ -99,7 +109,7 @@ namespace GTA.GangAndTurfMod
 
                 if (e.KeyCode == ModOptions.instance.openGangMenuKey)
                 {
-                    //numpad keys dont seem to go along well with shift
+                    //note: numpad keys dont seem to go along well with shift
                     if (e.Modifiers == Keys.None)
                     {
                         menuScript.OpenGangMenu();

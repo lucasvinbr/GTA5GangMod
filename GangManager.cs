@@ -26,10 +26,14 @@ namespace GTA.GangAndTurfMod
         {
             get
             {
-                if(cachedPlayerGang == null)
-                {
+                if(cachedPlayerGang == null) { 
                     cachedPlayerGang = GetPlayerGang();
                 }
+
+				//if, somehow, we still don't have a player gang around, make a new one!
+				if(cachedPlayerGang == null) {
+					cachedPlayerGang = CreateNewPlayerGang();
+				}
 
                 return cachedPlayerGang;
             }
@@ -62,7 +66,6 @@ namespace GTA.GangAndTurfMod
 			}
 		}
 
-		public static bool playerIsAwayFromRoads = false;
 
         private int moneyFromLastProtagonist = 0;
         private int defaultMaxHealth = 200;
@@ -100,16 +103,8 @@ namespace GTA.GangAndTurfMod
             {
                 gangData = new GangData();
 
-                Gang playerGang = new Gang("Player's Gang", VehicleColor.BrushedGold, true);
-                //setup gangs
-                gangData.gangs.Add(playerGang);
-
-                playerGang.blipColor = (int) BlipColor.Yellow;
-
-                if (ModOptions.instance.gangsStartWithPistols)
-                {
-                    playerGang.gangWeaponHashes.Add(WeaponHash.Pistol);
-                }
+				//setup initial gangs... the player's and an enemy
+				CreateNewPlayerGang();
 
                 CreateNewEnemyGang();
 			}else {
@@ -326,6 +321,30 @@ namespace GTA.GangAndTurfMod
                 enemyGangs[i].Update();
             }
         }
+
+		/// <summary>
+		/// creates a new "player's gang" (there should be only one!)
+		/// and adds it to the gangdata gangs list
+		/// </summary>
+		/// <param name="notifyMsg"></param>
+		/// <returns></returns>
+		public Gang CreateNewPlayerGang(bool notifyMsg = true) {
+			Gang playerGang = new Gang("Player's Gang", VehicleColor.BrushedGold, true);
+			//setup gangs
+			gangData.gangs.Add(playerGang);
+
+			playerGang.blipColor = (int)BlipColor.Yellow;
+
+			if (ModOptions.instance.gangsStartWithPistols) {
+				playerGang.gangWeaponHashes.Add(WeaponHash.Pistol);
+			}
+
+			if (notifyMsg) {
+				UI.Notify("Created new gang for the player!");
+			}
+
+			return playerGang;
+		}
 
         public Gang CreateNewEnemyGang(bool notifyMsg = true)
         {
@@ -1104,7 +1123,7 @@ namespace GTA.GangAndTurfMod
 			getNextPosTarget = referencePoint + RandoMath.RandomDirection(true) *
 						  averageDistanceFromReference;
 
-			chosenPos = playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+			chosenPos = WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
 				World.GetNextPositionOnStreet(getNextPosTarget);
 			float distFromRef = World.GetDistance(referencePoint, chosenPos);
 			while (((distFromRef > averageDistanceFromReference * 5 || (distFromRef < minDistanceFromReference)) ||
@@ -1113,7 +1132,7 @@ namespace GTA.GangAndTurfMod
 
 				getNextPosTarget = referencePoint + RandoMath.RandomDirection(true) *
 						  averageDistanceFromReference;
-				chosenPos = playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+				chosenPos = WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
 					World.GetNextPositionOnStreet(getNextPosTarget);
 
 				distFromRef = World.GetDistance(referencePoint, chosenPos);
@@ -1130,7 +1149,7 @@ namespace GTA.GangAndTurfMod
 			getNextPosTarget = CurrentPlayerCharacter.Position + RandoMath.RandomDirection(true) *
 						  ModOptions.instance.GetAcceptableCarSpawnDistance();
 
-			return playerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+			return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
 					World.GetNextPositionOnStreet(getNextPosTarget);
         }
 

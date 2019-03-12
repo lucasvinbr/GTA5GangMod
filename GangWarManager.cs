@@ -45,11 +45,15 @@ namespace GTA.GangAndTurfMod
 
         private float spawnedMembersProportion;
 
-        private int ticksBeforeAutoResolution = 30000, ticksSinceLastCarSpawn = 0, minTicksBetweenCarSpawns = 20, ticksSinceLastEnemyRelocation = 0;
+		private const int MIN_TICKS_BETWEEN_CAR_SPAWNS = 20;
 
-        //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
-        //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
-        private int ticksSinceLastBalanceCheck = 0, ticksBetweenBalanceChecks = 8;
+        private int ticksSinceLastCarSpawn = 0, ticksSinceLastEnemyRelocation = 0;
+
+		//balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
+		//we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
+		private const int TICKS_BETWEEN_BALANCE_CHECKS = 8;
+
+        private int ticksSinceLastBalanceCheck = 0;
 
 		private int timeLastWarAgainstPlayer = 0;
 
@@ -815,14 +819,14 @@ namespace GTA.GangAndTurfMod
                     AmbientGangMemberSpawner.instance.enabled = false;
 
                     
-                    if (ticksSinceLastCarSpawn > minTicksBetweenCarSpawns && RandoMath.RandomBool())
+                    if (ticksSinceLastCarSpawn > MIN_TICKS_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
                     {
                         SpawnAngryVehicle(RandoMath.RandomBool());
 
                         ticksSinceLastCarSpawn = 0;
                     }
 
-                    if(ticksSinceLastBalanceCheck > ticksBetweenBalanceChecks)
+                    if(ticksSinceLastBalanceCheck > TICKS_BETWEEN_BALANCE_CHECKS)
                     {
                         ticksSinceLastBalanceCheck = 0;
                         if(spawnedAllies > maxSpawnedAllies)
@@ -866,7 +870,7 @@ namespace GTA.GangAndTurfMod
                     shouldDisplayReinforcementsTexts = false;
                     curTicksAwayFromBattle++;
                     AmbientGangMemberSpawner.instance.enabled = true;
-                    if (curTicksAwayFromBattle > ticksBeforeAutoResolution)
+                    if (curTicksAwayFromBattle > ModOptions.instance.ticksBeforeWarEndWithPlayerAway)
                     {
                         EndWar(SkipWar(0.65f));
                     }
