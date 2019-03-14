@@ -38,7 +38,7 @@ namespace GTA.GangAndTurfMod {
 
 		public static bool Initialize() {
 			if (instance != null) {
-				instance.driverList = GangManager.instance.livingDrivingMembers;
+				instance.driverList = SpawnManager.instance.livingDrivingMembers;
 				instance.enabled = true;
 				return true;
 			}

@@ -109,7 +109,7 @@ namespace GTA.GangAndTurfMod
 
         public void OutputCurrentZoneInfo()
         {
-            string zoneName = World.GetZoneName(GangManager.CurrentPlayerCharacter.Position);
+            string zoneName = World.GetZoneName(MindControl.CurrentPlayerCharacter.Position);
             string zoneInfoMsg = "Current zone is " + zoneName + ".";
             TurfZone currentZone = GetZoneByName(zoneName);
 
@@ -165,7 +165,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    Vector3 playerPos = GangManager.CurrentPlayerCharacter.Position;
+                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
                     return World.GetDistance(x.zoneBlipPosition, playerPos).
                         CompareTo(World.GetDistance(y.zoneBlipPosition, playerPos));
                 }
@@ -367,7 +367,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public TurfZone GetCurrentTurfZone()
         {
-            return GetZoneByName(World.GetZoneName(GangManager.CurrentPlayerCharacter.Position));
+            return GetZoneByName(World.GetZoneName(MindControl.CurrentPlayerCharacter.Position));
         }
 
         public List<TurfZone> GetZonesControlledByGang(string desiredGangName)

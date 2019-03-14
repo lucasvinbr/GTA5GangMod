@@ -43,7 +43,7 @@ namespace GTA.GangAndTurfMod {
 			//check if we're offroad
 			playerIsAwayFromRoads = false;
 			offroadAttempts = 0;
-			playerPos = GangManager.CurrentPlayerCharacter.Position;
+			playerPos = MindControl.CurrentPlayerCharacter.Position;
 			offroadCheckVector = World.GetNextPositionOnStreet
 						  (playerPos + RandoMath.RandomDirection(true) * ModOptions.instance.maxDistanceCarSpawnFromPlayer);
 			//UI.Notify(playerPos.ToString() + " from " + offroadCheckVector.ToString());

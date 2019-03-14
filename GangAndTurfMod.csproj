@@ -80,30 +80,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WorldLocChecker.cs" />
-    <Compile Include="AmbientGangMemberSpawner.cs" />
-    <Compile Include="FreemodePotentialGangMember.cs" />
-    <Compile Include="Gang.cs" />
-    <Compile Include="GangAI.cs" />
-    <Compile Include="AutoSaver.cs" />
-    <Compile Include="GangVehicleUpdater .cs" />
-    <Compile Include="GangMemberUpdater.cs" />
-    <Compile Include="GangWarManager.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="ModCore.cs" />
-    <Compile Include="ModOptions.cs" />
-    <Compile Include="PotentialGangVehicle.cs" />
+    <Compile Include="src\AmbientGangMemberSpawner.cs" />
+    <Compile Include="src\MindControl.cs" />
+    <Compile Include="src\SpawnManager.cs" />
+    <Compile Include="src\persistence\AutoSaver.cs" />
+    <Compile Include="src\persistence\saveable_objs\FreemodePotentialGangMember.cs" />
+    <Compile Include="src\persistence\saveable_objs\Gang.cs" />
+    <Compile Include="src\GangAI.cs" />
+    <Compile Include="src\utils\GangCalculations.cs" />
+    <Compile Include="src\GangManager.cs" />
+    <Compile Include="src\GangMemberUpdater.cs" />
+    <Compile Include="src\GangVehicleUpdater .cs" />
+    <Compile Include="src\GangWarManager.cs" />
+    <Compile Include="src\utils\Logger.cs" />
+    <Compile Include="src\MenuScript.cs" />
+    <Compile Include="src\ModCore.cs" />
+    <Compile Include="src\persistence\saveable_objs\ModOptions.cs" />
+    <Compile Include="src\persistence\PersistenceHandler.cs" />
+    <Compile Include="src\persistence\saveable_objs\PotentialGangMember.cs" />
+    <Compile Include="src\persistence\saveable_objs\PotentialGangVehicle.cs" />
+    <Compile Include="src\utils\RandoMath.cs" />
+    <Compile Include="src\SpawnedDrivingGangMember.cs" />
+    <Compile Include="src\SpawnedGangMember.cs" />
+    <Compile Include="src\persistence\saveable_objs\TurfZone.cs" />
+    <Compile Include="src\UpdatedClass.cs" />
+    <Compile Include="src\WorldLocChecker.cs" />
+    <Compile Include="src\ZoneManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UpdatedClass.cs" />
-    <Compile Include="PotentialGangMember.cs" />
-    <Compile Include="MenuScript.cs" />
-    <Compile Include="PersistenceHandler.cs" />
-    <Compile Include="RandoMath.cs" />
-    <Compile Include="GangManager.cs" />
-    <Compile Include="SpawnedDrivingGangMember.cs" />
-    <Compile Include="SpawnedGangMember.cs" />
-    <Compile Include="TurfZone.cs" />
-    <Compile Include="ZoneManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

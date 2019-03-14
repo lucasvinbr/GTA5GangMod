@@ -45,7 +45,7 @@ namespace GTA.GangAndTurfMod
         public override void Update()
         {
 			Logger.Log("member update: start");
-			if ((watchedPed.IsInAir) || GangManager.CurrentPlayerCharacter == watchedPed)
+			if ((watchedPed.IsInAir) || MindControl.CurrentPlayerCharacter == watchedPed)
             {
 				Logger.Log("member update: end (isPlayer or etc)");
 				return;
@@ -53,7 +53,7 @@ namespace GTA.GangAndTurfMod
             if (curStatus != MemberStatus.inVehicle)
             {
 				watchedPed.BlockPermanentEvents = false;
-				if (World.GetDistance(GangManager.CurrentPlayerCharacter.Position, watchedPed.Position) >
+				if (World.GetDistance(MindControl.CurrentPlayerCharacter.Position, watchedPed.Position) >
 			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
 					//we're too far to be important
 					Die();
@@ -119,7 +119,7 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
                     if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent, no longer with driver AI attached)...
                     {
-						if (World.GetDistance(GangManager.CurrentPlayerCharacter.Position, watchedPed.Position) >
+						if (World.GetDistance(MindControl.CurrentPlayerCharacter.Position, watchedPed.Position) >
 			   ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3) {
 							//we're too far to be important
 							Die();
@@ -202,7 +202,7 @@ namespace GTA.GangAndTurfMod
             this.myGang = null;
             this.watchedPed = null;
             curStatus = MemberStatus.none;
-            GangManager.instance.livingMembersCount--;
+			SpawnManager.instance.livingMembersCount--;
 
         }
 

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <ReferencePath>
     </ReferencePath>
+    <ProjectView>ShowAllFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>

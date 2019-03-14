@@ -15,6 +15,7 @@ namespace GTA.GangAndTurfMod
     class ModCore : Script
     {
         public GangManager gangManagerScript;
+		public MindControl mindControlScript;
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
@@ -26,6 +27,7 @@ namespace GTA.GangAndTurfMod
 
 			zoneManagerScript = new ZoneManager();
             gangManagerScript = new GangManager();
+			mindControlScript = new MindControl();
             menuScript = new MenuScript();
 
             this.Aborted += OnAbort;
@@ -54,6 +56,7 @@ namespace GTA.GangAndTurfMod
         {
 			curGameTime = Game.GameTime;
             gangManagerScript.Tick();
+			mindControlScript.Tick();
             menuScript.Tick();
 
             //war stuff that should happen every frame
@@ -143,13 +146,13 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == ModOptions.instance.mindControlKey)
                 {
-                    gangManagerScript.TryBodyChange();
+                    mindControlScript.TryBodyChange();
                 }
                 else if (e.KeyCode == Keys.Space)
                 {
-                    if (gangManagerScript.HasChangedBody)
+                    if (mindControlScript.HasChangedBody)
                     {
-                        gangManagerScript.RespawnIfPossible();
+						mindControlScript.RespawnIfPossible();
                     }
                 }
             }
@@ -164,7 +167,7 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
             if (hit.HitEntity != null)
             {
-                List<Ped> playerGangMembers = gangManagerScript.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
+                List<Ped> playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
                     if (playerGangMembers[i] == hit.HitEntity)
@@ -187,7 +190,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 //maybe we're just/also targeting a car then?
-                List<SpawnedDrivingGangMember> playerGangDrivers = gangManagerScript.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
+                List<SpawnedDrivingGangMember> playerGangDrivers = SpawnManager.instance.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
                 for (int i = 0; i < playerGangDrivers.Count; i++)
                 {
                     if (playerGangDrivers[i].vehicleIAmDriving != null && playerGangDrivers[i].vehicleIAmDriving == hit.HitEntity)
@@ -208,10 +211,10 @@ namespace GTA.GangAndTurfMod
         {
             UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
-			if (gangManagerScript.HasChangedBody) {
-				gangManagerScript.RestorePlayerBody();
+			if (mindControlScript.HasChangedBody) {
+				mindControlScript.RestorePlayerBody();
 			}
-			gangManagerScript.RemoveAllMembers();
+			SpawnManager.instance.RemoveAllMembers();
 
 			Logger.Log("mod aborted!");
 
