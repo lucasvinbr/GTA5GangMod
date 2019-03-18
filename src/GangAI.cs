@@ -289,8 +289,9 @@ namespace GTA.GangAndTurfMod
 				}
 				else {
 					watchedGang.moneyAvailable -= atkCost;
+					int attackStrength = GangCalculations.CalculateAttackerStrength(watchedGang, requiredStrength);
 					//roll dices... favor the defenders a little here
-					if (atkCost / ModOptions.instance.baseCostToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
+					if (attackStrength / RandoMath.CachedRandom.Next(1, 22) >
 						defenderStrength / RandoMath.CachedRandom.Next(1, 15)) {
 						watchedGang.TakeZone(targetZone);
 						watchedGang.moneyAvailable += (int)(GangCalculations.CalculateBattleRewards(ownerGang, targetZone.value, true) *

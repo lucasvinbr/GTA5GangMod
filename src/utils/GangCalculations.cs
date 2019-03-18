@@ -39,17 +39,15 @@ namespace GTA.GangAndTurfMod
 		public static int CalculateAttackCost(Gang attackerGang, GangWarManager.AttackStrength attackType) {
 			int attackTypeInt = (int)attackType;
 			int pow2NonZeroAttackType = (attackTypeInt * attackTypeInt + 1);
-			return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt +
+			return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt * attackTypeInt +
 				attackerGang.GetFixedStrengthValue() * pow2NonZeroAttackType;
 		}
 
 		public static GangWarManager.AttackStrength CalculateRequiredAttackStrength(Gang attackerGang, int defenderStrength) {
 			GangWarManager.AttackStrength requiredAtk = GangWarManager.AttackStrength.light;
 
-			int attackerGangStrength = attackerGang.GetFixedStrengthValue();
-
 			for (int i = 0; i < 3; i++) {
-				if (attackerGangStrength * (i * i + 1) > defenderStrength) {
+				if (CalculateAttackerStrength(attackerGang, requiredAtk) >= defenderStrength) {
 					break;
 				}
 				else {
@@ -65,13 +63,33 @@ namespace GTA.GangAndTurfMod
 				attackerGang.GetReinforcementsValue() / 100;
 		}
 
-		public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone) {
-			return defenderGang.GetFixedStrengthValue() * (contestedZone.value + 1);
-		}
-
 		public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone) {
 			return ModOptions.instance.extraKillsPerTurfValue * targetZone.value + ModOptions.instance.baseNumKillsBeforeWarVictory +
 				defenderGang.GetReinforcementsValue() / 100;
+		}
+
+		/// <summary>
+		/// gets the reinforcement count for the defenders and estimates a total power based on that number and
+		/// the gang's fixed strength value
+		/// </summary>
+		/// <param name="defenderGang"></param>
+		/// <param name="contestedZone"></param>
+		/// <returns></returns>
+		public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone) {
+			return defenderGang.GetFixedStrengthValue() * 
+				CalculateDefenderReinforcements(defenderGang, contestedZone);
+		}
+
+		/// <summary>
+		/// gets the reinforcement count for the attackers and estimates a total power based on that number and
+		/// the gang's fixed strength value
+		/// </summary>
+		/// <param name="defenderGang"></param>
+		/// <param name="contestedZone"></param>
+		/// <returns></returns>
+		public static int CalculateAttackerStrength(Gang attackerGang, GangWarManager.AttackStrength attackType) {
+			return attackerGang.GetFixedStrengthValue() *
+				CalculateAttackerReinforcements(attackerGang, attackType);
 		}
 
 		/// <summary>

@@ -1157,8 +1157,10 @@ namespace GTA.GangAndTurfMod
                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
             UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn points to your region",
                 "If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets all 3 spawn points to your location: one exactly where you are and 2 nearby.");
+			UIMenuItem resetEnemySpawnBtn = new UIMenuItem("Force reset enemy spawn points",
+				"If a war is currently occurring, the enemy spawn points will be randomly set to a nearby location. Use this if they end up spawning somewhere unreachable.");
 
-            warOptionsSubMenu.AddItem(skipWarBtn);
+			warOptionsSubMenu.AddItem(skipWarBtn);
             warOptionsSubMenu.AddItem(resetAlliedSpawnBtn);
 
             UIMenuItem[] setSpecificSpawnBtns = new UIMenuItem[3];
@@ -1169,6 +1171,8 @@ namespace GTA.GangAndTurfMod
                         (i + 1).ToString(), " to your exact location."));
                 warOptionsSubMenu.AddItem(setSpecificSpawnBtns[i]);
             }
+
+			warOptionsSubMenu.AddItem(resetEnemySpawnBtn);
 
             warOptionsSubMenu.OnItemSelect += (sender, item, index) =>
             {
@@ -1199,7 +1203,21 @@ namespace GTA.GangAndTurfMod
                         }
                     }
                     else
-                    {
+
+					if (item == resetEnemySpawnBtn) {
+						if (GangWarManager.instance.playerNearWarzone) {
+							if (GangWarManager.instance.ReplaceEnemySpawnPoint()) {
+								UI.ShowSubtitle("Enemy spawn point reset succeeded!");
+							}
+							else {
+								UI.ShowSubtitle("Enemy spawn point reset failed (try again)!");
+							}
+						}
+						else {
+							UI.ShowSubtitle("You must be in the contested zone or close to the war blip before resetting spawn points!");
+						}
+					}
+					else {
                         for(int i = 0; i < setSpecificSpawnBtns.Length; i++)
                         {
 							if(item == setSpecificSpawnBtns[i]) {

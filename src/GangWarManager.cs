@@ -425,23 +425,50 @@ namespace GTA.GangAndTurfMod
 			}
         }
 
-        public void ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)
+		/// <summary>
+		/// tries to replace the enemy spawn point based on the allied spawn point, returning true if succeeds
+		/// </summary>
+		/// <returns></returns>
+		public bool ReplaceEnemySpawnPoint() {
+			return ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+		}
+
+		/// <summary>
+		/// tries to replace the enemy spawn point based on the provided ref point, returning true if succeeds
+		/// </summary>
+		/// <returns></returns>
+		public bool ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)
         {
 			Logger.Log("enemy spawn relocation: start");
             Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
-            enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(referencePoint,
+            enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(referencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(40), minDistanceFromReference,
                 1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
-            if(enemySpawnPoints[0] == Vector3.Zero)
-            {
-                //we failed to get a new point, lets keep the last one
-                enemySpawnPoints[0] = currentSpawnPoint;
+			if (enemySpawnPoints[0] == Vector3.Zero) {
+				//we failed to get a new point, lets keep the last one
+				enemySpawnPoints[0] = currentSpawnPoint;
 				ticksSinceLastEnemyRelocation = 0;
 				Logger.Log("enemy spawn relocation: end (fail)");
-				return;
-            }
+				return false;
+			}
+			else if (alliedSpawnPoints[0] != null &&
+			   World.GetDistance(enemySpawnPoints[0], alliedSpawnPoints[0]) >= ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
+				//the spawn is too far from the player's gang spawn!
+				//relocate
+				enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(referencePoint,
+				ModOptions.instance.GetAcceptableMemberSpawnDistance(40), minDistanceFromReference,
+				1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
+
+				//then check again if we failed...
+				if (enemySpawnPoints[0] == Vector3.Zero) {
+					enemySpawnPoints[0] = currentSpawnPoint;
+					ticksSinceLastEnemyRelocation = 0;
+					Logger.Log("enemy spawn relocation: end (fail after getting one too far)");
+					return false;
+				}
+			}
 
             for (int i = 1; i < 3; i++)
             {
@@ -455,6 +482,7 @@ namespace GTA.GangAndTurfMod
 
 			ticksSinceLastEnemyRelocation = 0;
 			Logger.Log("enemy spawn relocation: end (ok)");
+			return true;
 		}
 
         void SetSpawnPoints(Vector3 initialReferencePoint)
@@ -464,17 +492,17 @@ namespace GTA.GangAndTurfMod
             //the defenders' spawn point should be closer to the reference point than the attacker
             if(curWarType == WarType.defendingFromEnemy)
             {
-                alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
+                alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
                 50, 5);
-                enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
+                enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(30), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                 30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
             }
             else
             {
-                enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
+                enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
                 50, 5, repulsor: MindControl.CurrentPlayerCharacter.Position, minDistanceFromRepulsor: 30);
-                alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(initialReferencePoint,
+                alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
                 ModOptions.instance.GetAcceptableMemberSpawnDistance(30), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                 30, enemySpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
             }
@@ -483,14 +511,14 @@ namespace GTA.GangAndTurfMod
 
 			for (int i = 1; i < 3; i++)
             {
-                alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPointInStreet(alliedSpawnPoints[0], 20, 10, 20);
+                alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
 				CreatePlayerSpawnBlip(i);
             }
 
             
             for (int i = 1; i < 3; i++)
             {
-                enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPointInStreet(enemySpawnPoints[0], 20, 10, 20);
+                enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
             }
 
 			//and the base blips for both sides
