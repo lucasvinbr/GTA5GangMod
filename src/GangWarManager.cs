@@ -70,7 +70,7 @@ namespace GTA.GangAndTurfMod
 
         public Gang enemyGang;
 
-        private Blip warBlip, enemySpawnBlip;
+        private Blip warBlip, warAreaBlip, enemySpawnBlip;
 
 		private Blip[] alliedSpawnBlips;
 
@@ -123,9 +123,15 @@ namespace GTA.GangAndTurfMod
                 warBlip.IsFlashing = true;
                 warBlip.Sprite = BlipSprite.Deathmatch;
                 warBlip.Color = BlipColor.Red;
-                warBlip.Position += Vector3.WorldUp * 5; //an attempt to make the war blip be drawn over the zone blip
-                
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+
+				warAreaBlip = World.CreateBlip(warZone.zoneBlipPosition, 
+					ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
+				warAreaBlip.Sprite = BlipSprite.BigCircle;
+				warAreaBlip.Color = BlipColor.Red;
+				warAreaBlip.Alpha = 175;
+
+
+				Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Gang War (versus " + enemyGang.name + ")");
                 Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
@@ -328,6 +334,7 @@ namespace GTA.GangAndTurfMod
             CheckIfBattleWasUnfair();
             Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "ScreenFlash", "WastedSounds");
             warBlip.Remove();
+			warAreaBlip.Remove();
             shouldDisplayReinforcementsTexts = false;
             isOccurring = false;
             playerNearWarzone = false;
@@ -908,6 +915,7 @@ namespace GTA.GangAndTurfMod
             if(warBlip != null)
             {
                 warBlip.Remove();
+				warAreaBlip.Remove();
             }
 
 			foreach (Blip alliedBlip in alliedSpawnBlips) {
