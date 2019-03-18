@@ -36,9 +36,15 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-		public static void Initialize() {
-			instance.driverList = GangManager.instance.livingDrivingMembers;
-			instance.enabled = true;
+		public static bool Initialize() {
+			if (instance != null) {
+				instance.driverList = SpawnManager.instance.livingDrivingMembers;
+				instance.enabled = true;
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		

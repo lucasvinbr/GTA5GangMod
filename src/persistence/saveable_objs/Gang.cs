@@ -308,7 +308,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public int GetFixedStrengthValue()
         {
-            return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
+            return ZoneManager.instance.GetZonesControlledByGang(name).Count * 40 +
                 memberAccuracyLevel * 10 +
                 memberArmor +
                 memberHealth;

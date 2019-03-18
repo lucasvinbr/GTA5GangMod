@@ -25,7 +25,6 @@ namespace GTA.GangAndTurfMod
         {
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
 			Logger.Log("ambient spawner tick: begin");
-            ZoneManager.instance.RefreshZoneBlips(); //since this runs once in a while, let's also refresh the zone blips
 			
             TurfZone curTurfZone = ZoneManager.instance.GetCurrentTurfZone();
             if (curTurfZone != null)
@@ -41,11 +40,11 @@ namespace GTA.GangAndTurfMod
 
                 if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
-                    Vector3 playerPos = GangManager.CurrentPlayerCharacter.Position;
-                    if(GangManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
+                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
+                    if(SpawnManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
                        playerPos + Vector3.WorldUp * 50, playerPos) == null) {
-						GangManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-						GangManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
+						SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
+						SpawnManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
 					}
                     postWarBackupsRemaining--;
                 }
@@ -59,9 +58,9 @@ namespace GTA.GangAndTurfMod
 
                     if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
-                        if (GangManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
+                        if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
-                            Vehicle playerVehicle = GangManager.CurrentPlayerCharacter.CurrentVehicle;
+                            Vehicle playerVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 30) || playerVehicle == null)
                             {
                                 SpawnAmbientMember(curGang);
@@ -89,18 +88,18 @@ namespace GTA.GangAndTurfMod
 
         public void SpawnAmbientMember(Gang curGang)
         {
-            Vector3 spawnPos = GangManager.instance.FindGoodSpawnPointForMember();
-            SpawnedGangMember newMember = GangManager.instance.SpawnGangMember(curGang, spawnPos);
+            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForMember();
+            SpawnedGangMember newMember = SpawnManager.instance.SpawnGangMember(curGang, spawnPos);
         }
 
         public void SpawnAmbientVehicle(Gang curGang)
         {
-            Vector3 vehSpawnPoint = GangManager.instance.FindGoodSpawnPointForCar();
-            SpawnedDrivingGangMember spawnedVehicleAI = GangManager.instance.SpawnGangVehicle(curGang,
+            Vector3 vehSpawnPoint = SpawnManager.instance.FindGoodSpawnPointForCar();
+            SpawnedDrivingGangMember spawnedVehicleAI = SpawnManager.instance.SpawnGangVehicle(curGang,
                                 vehSpawnPoint , Vector3.Zero, true);
             if (spawnedVehicleAI != null)
             {
-                GangManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
+				SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
                 Ped driver = spawnedVehicleAI.watchedPed;
                 if (driver != null) //if, for some reason, we don't have a driver, do nothing
                 {

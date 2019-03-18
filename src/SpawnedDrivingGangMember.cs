@@ -45,19 +45,19 @@ namespace GTA.GangAndTurfMod
                 {
 					//we are just wandering arond
 					//if we get too far from the player, despawn
-					if (World.GetDistance(vehicleIAmDriving.Position, GangManager.CurrentPlayerCharacter.Position) >
+					if (World.GetDistance(vehicleIAmDriving.Position, MindControl.CurrentPlayerCharacter.Position) >
 							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2.5f) {
 
 						for (int i = 0; i < myPassengers.Count; i++) {
 							if (myPassengers[i] != null && myPassengers[i].IsAlive && !myPassengers[i].IsPlayer) {
-								SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(myPassengers[i]);
+								SpawnedGangMember memberAI = SpawnManager.instance.GetTargetMemberAI(myPassengers[i]);
 								if (memberAI != null) memberAI.Die();
 							}
 
 						}
 
 						if (!watchedPed.IsPlayer) {
-							SpawnedGangMember memberAI = GangManager.instance.GetTargetMemberAI(watchedPed);
+							SpawnedGangMember memberAI = SpawnManager.instance.GetTargetMemberAI(watchedPed);
 							if (memberAI != null) memberAI.Die();
 						}
 						ClearAllRefs();
@@ -93,8 +93,8 @@ namespace GTA.GangAndTurfMod
         void RideToDest()
         {
 
-            if (playerAsDest) destination = GangManager.CurrentPlayerCharacter.Position;
-            bool playerInVehicle = GangManager.CurrentPlayerCharacter.IsInVehicle();
+            if (playerAsDest) destination = MindControl.CurrentPlayerCharacter.Position;
+            bool playerInVehicle = MindControl.CurrentPlayerCharacter.IsInVehicle();
 
             //if we're close to the destination...
             if (vehicleIAmDriving.Position.DistanceTo(destination) < 25) //tweaked to match my changes below -- zix
@@ -125,7 +125,7 @@ namespace GTA.GangAndTurfMod
                         if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
                             watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
                         {
-                            vehicleIAmDriving.Position = World.GetNextPositionOnStreet(GangManager.CurrentPlayerCharacter.Position, true);
+                            vehicleIAmDriving.Position = World.GetNextPositionOnStreet(MindControl.CurrentPlayerCharacter.Position, true);
                         }
                         
                     }
@@ -145,11 +145,11 @@ namespace GTA.GangAndTurfMod
                             watchedPed.Task.ClearAll();
                             if (isFriendlyToPlayer)
                             {
-                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, GangManager.CurrentPlayerCharacter.CurrentVehicle, -1, -1, ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
+                                Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving, MindControl.CurrentPlayerCharacter.CurrentVehicle, -1, -1, ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
                             }
                             else
                             {
-                                watchedPed.Task.VehicleChase(GangManager.CurrentPlayerCharacter);
+                                watchedPed.Task.VehicleChase(MindControl.CurrentPlayerCharacter);
                             }
                         }
                         else

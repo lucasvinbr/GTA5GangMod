@@ -82,8 +82,10 @@ namespace GTA.GangAndTurfMod
 
         void TryExpand()
         {
-            //lets attack!
-            //pick a random zone owned by us, get the closest hostile zone and attempt to take it
+			//lets attack!
+			//pick a random zone owned by us, get the closest hostile zone and attempt to take it
+			//..but only if the player hasn't disabled expansion
+			if (ModOptions.instance.preventAIExpansion) return;
 
             if (myZones.Count > 0)
             {
@@ -137,9 +139,9 @@ namespace GTA.GangAndTurfMod
             {
                 case 0: //accuracy!
                     if (watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
-                watchedGang.moneyAvailable >= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
+                watchedGang.moneyAvailable >= GangCalculations.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
                     {
-                        watchedGang.moneyAvailable -= GangManager.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
+                        watchedGang.moneyAvailable -= GangCalculations.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
                         watchedGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
                         if (watchedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                         {
@@ -151,9 +153,9 @@ namespace GTA.GangAndTurfMod
                     break;
                 case 1: //armor!
                     if (watchedGang.memberArmor < ModOptions.instance.maxGangMemberArmor &&
-                            watchedGang.moneyAvailable >= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor))
+                            watchedGang.moneyAvailable >= GangCalculations.CalculateArmorUpgradeCost(watchedGang.memberArmor))
                     {
-                        watchedGang.moneyAvailable -= GangManager.CalculateArmorUpgradeCost(watchedGang.memberArmor);
+                        watchedGang.moneyAvailable -= GangCalculations.CalculateArmorUpgradeCost(watchedGang.memberArmor);
                         watchedGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
 
                         if (watchedGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
@@ -167,9 +169,9 @@ namespace GTA.GangAndTurfMod
                 
                 default: //health!
                     if (watchedGang.memberHealth < ModOptions.instance.maxGangMemberHealth &&
-                            watchedGang.moneyAvailable >= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth))
+                            watchedGang.moneyAvailable >= GangCalculations.CalculateHealthUpgradeCost(watchedGang.memberHealth))
                     {
-                        watchedGang.moneyAvailable -= GangManager.CalculateHealthUpgradeCost(watchedGang.memberHealth);
+                        watchedGang.moneyAvailable -= GangCalculations.CalculateHealthUpgradeCost(watchedGang.memberHealth);
                         watchedGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
 
                         if (watchedGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
@@ -186,12 +188,13 @@ namespace GTA.GangAndTurfMod
 
         void TryUpgradeZones()
         {
-            //upgrade the whole gang strength if possible!
-            //lets not get more upgrades here than the player. it may get too hard for the player to catch up otherwise
-            if (watchedGang.moneyAvailable >= GangManager.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue) &&
+			int upgradeCost = GangCalculations.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue);
+			//upgrade the whole gang strength if possible!
+			//lets not get more upgrades here than the player. it may get too hard for the player to catch up otherwise
+			if (watchedGang.moneyAvailable >= upgradeCost &&
                 watchedGang.baseTurfValue <= GangManager.instance.PlayerGang.baseTurfValue - 1)
             {
-                watchedGang.moneyAvailable -= GangManager.CalculateGangValueUpgradeCost(watchedGang.baseTurfValue);
+                watchedGang.moneyAvailable -= upgradeCost;
                 watchedGang.baseTurfValue++;
                 GangManager.instance.SaveGangData(false);
                 return;
@@ -202,10 +205,10 @@ namespace GTA.GangAndTurfMod
             for(int i = 0; i < myZones.Count; i++)
             {
                 if (myZones[i].value >= lastCheckedValue) continue; //we already know we can't afford upgrading from this turf level
-
-                if (watchedGang.moneyAvailable >= GangManager.CalculateTurfValueUpgradeCost(myZones[i].value))
+				upgradeCost = GangCalculations.CalculateTurfValueUpgradeCost(myZones[i].value);
+				if (watchedGang.moneyAvailable >= upgradeCost)
                 {
-                    watchedGang.moneyAvailable -= GangManager.CalculateTurfValueUpgradeCost(myZones[i].value);
+                    watchedGang.moneyAvailable -= upgradeCost;
                     myZones[i].value++;
                     ZoneManager.instance.SaveZoneData(false);
                     return;
@@ -230,99 +233,78 @@ namespace GTA.GangAndTurfMod
                 }
             }
             else {
-                Gang ownerGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
-
-                if (ownerGang == null)
-                {
-                    ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
-                    //this zone was controlled by a gang that no longer exists. it is neutral now
-                    if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf)
-                    {
-                        watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
-                        watchedGang.TakeZone(targetZone);
-                    }
-                }
-                else
-                {
-                    if(GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == targetZone)
-                    {
-                        //don't mess with this zone then, it's a warzone
-                        return;
-                    }
-                    //we check how well defended this zone is,
-                    //then figure out how large our attack should be.
-                    //if we can afford that attack, we do it
-                    int defenderStrength = GangManager.CalculateDefenderStrength(ownerGang, targetZone);
-                    GangWarManager.AttackStrength requiredStrength = GangManager.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
-                    int atkCost = GangManager.CalculateAttackCost(watchedGang, requiredStrength);
-                    if (watchedGang.moneyAvailable >= atkCost){
-                        if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
-                        {
-                            if (ModOptions.instance.fightingEnabled &&
-                            ModOptions.instance.warAgainstPlayerEnabled &&
-                            GangWarManager.instance.CanStartWarAgainstPlayer)
-                            {
-                                //the player may be in big trouble now
-                                watchedGang.moneyAvailable -= atkCost;
-                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
-                            }
-                        }
-                        else
-                        {
-                            watchedGang.moneyAvailable -= atkCost;
-                            //roll dices... favor the defenders a little here
-                            if (atkCost / ModOptions.instance.baseCostToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
-                                defenderStrength / RandoMath.CachedRandom.Next(1, 15))
-                            {
-                                watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(ownerGang, targetZone.value, true) *
-                                    ModOptions.instance.extraProfitForAIGangsFactor);
-                            }
-                            else
-                            {
-                                ownerGang.moneyAvailable += (int) (GangManager.CalculateBattleRewards(watchedGang, (int) requiredStrength, false) *
-                                    ModOptions.instance.extraProfitForAIGangsFactor);
-                            }
-
-                        }
-                    }else if(myZones.Count == 0)
-                    {
-                        //if we're out of turf and cant afford a decent attack, lets just attack anyway
-                        //we use a light attack and do it even if that means our money gets negative.
-                        //this should make gangs get back in the game or be wiped out instead of just staying away
-                        atkCost = GangManager.CalculateAttackCost(watchedGang, GangWarManager.AttackStrength.light);
-                        if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
-                        {
-                            if (ModOptions.instance.fightingEnabled &&
-                            ModOptions.instance.warAgainstPlayerEnabled &&
-                            GangWarManager.instance.CanStartWarAgainstPlayer)
-                            {
-                                //the player may be in big trouble now
-                                watchedGang.moneyAvailable -= atkCost;
-                                GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
-                            }
-                        }
-                        else
-                        {
-                            watchedGang.moneyAvailable -= atkCost;
-                            //roll dices... favor the defenders a little here
-                            if (atkCost / ModOptions.instance.baseCostToTakeTurf * RandoMath.CachedRandom.Next(1, 20) >
-                                defenderStrength / RandoMath.CachedRandom.Next(1, 15))
-                            {
-                                watchedGang.TakeZone(targetZone);
-                                watchedGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(ownerGang, targetZone.value, true) *
-                                    ModOptions.instance.extraProfitForAIGangsFactor);
-                            }
-                            else
-                            {
-                                ownerGang.moneyAvailable += (int)(GangManager.CalculateBattleRewards(watchedGang, (int)requiredStrength, false) *
-                                    ModOptions.instance.extraProfitForAIGangsFactor);
-                            }
-                        }
-                    }
-                }
+				TryStartFightForZone(targetZone);
             }
         }
+
+		/// <summary>
+		/// if fighting is enabled and the targetzone is controlled by an enemy, attack it! ... But only if it's affordable.
+		/// if we're desperate we do it anyway
+		/// </summary>
+		/// <param name="targetZone"></param>
+		void TryStartFightForZone(TurfZone targetZone) {
+			Gang ownerGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
+
+			if (ownerGang == null) {
+				ZoneManager.instance.GiveGangZonesToAnother(targetZone.ownerGangName, "none");
+				//this zone was controlled by a gang that no longer exists. it is neutral now
+				if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf) {
+					watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
+					watchedGang.TakeZone(targetZone);
+				}
+			}
+			else {
+				if (GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == targetZone) {
+					//don't mess with this zone then, it's a warzone
+					return;
+				}
+				//we check how well defended this zone is,
+				//then figure out how large our attack should be.
+				//if we can afford that attack, we do it
+				int defenderStrength = GangCalculations.CalculateDefenderStrength(ownerGang, targetZone);
+				GangWarManager.AttackStrength requiredStrength = 
+					GangCalculations.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
+				int atkCost = GangCalculations.CalculateAttackCost(watchedGang, requiredStrength);
+
+				if(watchedGang.moneyAvailable < atkCost){
+					if (myZones.Count == 0) {
+						//if we're out of turf and cant afford a decent attack, lets just attack anyway
+						//we use a light attack and do it even if that means our money gets negative.
+						//this should make gangs get back in the game or be wiped out instead of just staying away
+						requiredStrength = GangWarManager.AttackStrength.light;
+						atkCost = GangCalculations.CalculateAttackCost(watchedGang, requiredStrength);
+					}
+					else {
+						return; //hopefully we can just find a cheaper fight
+					}
+				}
+
+				if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name) {
+					if (ModOptions.instance.warAgainstPlayerEnabled &&
+					GangWarManager.instance.CanStartWarAgainstPlayer) {
+						//the player may be in big trouble now
+						watchedGang.moneyAvailable -= atkCost;
+						GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
+					}
+				}
+				else {
+					watchedGang.moneyAvailable -= atkCost;
+					int attackStrength = GangCalculations.CalculateAttackerStrength(watchedGang, requiredStrength);
+					//roll dices... favor the defenders a little here
+					if (attackStrength / RandoMath.CachedRandom.Next(1, 22) >
+						defenderStrength / RandoMath.CachedRandom.Next(1, 15)) {
+						watchedGang.TakeZone(targetZone);
+						watchedGang.moneyAvailable += (int)(GangCalculations.CalculateBattleRewards(ownerGang, targetZone.value, true) *
+							ModOptions.instance.extraProfitForAIGangsFactor);
+					}
+					else {
+						ownerGang.moneyAvailable += (int)(GangCalculations.CalculateBattleRewards(watchedGang, (int)requiredStrength, false) *
+							ModOptions.instance.extraProfitForAIGangsFactor);
+					}
+
+				}
+			}
+		}
 
 		/// <summary>
 		/// if this gang seems to be new, makes it take up to 3 neutral zones
@@ -363,6 +345,7 @@ namespace GTA.GangAndTurfMod
         public void ResetUpdateInterval()
         {
             ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangAIUpdates + RandoMath.CachedRandom.Next(100);
+			ticksSinceLastUpdate = ticksBetweenUpdates;
         }
 
         public GangAI(Gang watchedGang)
