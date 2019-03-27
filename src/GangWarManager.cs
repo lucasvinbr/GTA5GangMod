@@ -179,7 +179,7 @@ namespace GTA.GangAndTurfMod
                     UI.ShowSubtitle("The " + enemyGang.name + " are coming!");
 
                     //if we are attacking, set spawns around the player!
-                    SetSpawnPoints(MindControl.CurrentPlayerCharacter.Position);
+                    SetSpawnPoints(MindControl.SafePositionNearPlayer);
                 }
                 else
                 {
@@ -365,7 +365,7 @@ namespace GTA.GangAndTurfMod
 			get
 			{
 				return (ModCore.curGameTime - timeLastWarAgainstPlayer > ModOptions.instance.minMsTimeBetweenAttacksOnPlayerTurf) &&
-					MindControl.CurrentPlayerCharacter.IsAlive; //starting a war against the player when we're in the "wasted" screen will instantly end it
+					MindControl.CurrentPlayerCharacter.IsAlive; //starting a war against the player when we're in the "wasted" screen would instantly end it
 			}
 		}
 
@@ -602,6 +602,25 @@ namespace GTA.GangAndTurfMod
 			alliedSpawnBlips[spawnIndex] = theNewBlip;
 		}
 
+		/// <summary>
+		/// if spawns are set, returns a random spawn that can be allied or hostile
+		/// </summary>
+		/// <returns></returns>
+		public Vector3 GetRandomSpawnPoint() {
+			if (spawnPointsSet) {
+				if (RandoMath.RandomBool()) {
+					return RandoMath.GetRandomElementFromArray(alliedSpawnPoints);
+				}
+				else {
+					return RandoMath.GetRandomElementFromArray(enemySpawnPoints);
+				}
+			}
+			else {
+				return Vector3.Zero;
+			}
+			
+		}
+
         #endregion
 
        
@@ -630,8 +649,8 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public SpawnedDrivingGangMember SpawnAngryVehicle(bool isFriendly)
         {
-            Math.Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(),
-                playerPos = MindControl.CurrentPlayerCharacter.Position;
+            Math.Vector3 playerPos = MindControl.SafePositionNearPlayer,
+				spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos);
 
 			if (spawnPos == Vector3.Zero) return null;
 
@@ -639,12 +658,12 @@ namespace GTA.GangAndTurfMod
             if (!isFriendly && spawnedEnemies - 4 < maxSpawnedEnemies)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(enemyGang,
-                    spawnPos, playerPos, true, false, IncrementEnemiesCount);
+                    spawnPos, playerPos, false, false, IncrementEnemiesCount);
             }
             else if(spawnedAllies - 4 < maxSpawnedAllies)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                    spawnPos, playerPos, true, false, IncrementAlliesCount);
+                    spawnPos, playerPos, false, false, IncrementAlliesCount);
             }
 
             return spawnedVehicle;
@@ -744,7 +763,7 @@ namespace GTA.GangAndTurfMod
                 //don't attempt to cull a friendly driving member because they could be a backup car called by the player...
                 //and the player can probably take more advantage of any stuck friendly vehicle than the AI can
                 if((!cullFriendlies || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, spawnedMembers[i].watchedPed, false)) &&
-                    World.GetDistance(MindControl.CurrentPlayerCharacter.Position, spawnedMembers[i].watchedPed.Position) >
+					MindControl.CurrentPlayerCharacter.Position.DistanceTo2D(spawnedMembers[i].watchedPed.Position) >
                 ModOptions.instance.minDistanceMemberSpawnFromPlayer && !spawnedMembers[i].watchedPed.IsOnScreen)
                 {
                     spawnedMembers[i].Die(true);
@@ -772,7 +791,7 @@ namespace GTA.GangAndTurfMod
 			for (int i = 0; i < enemiesInsideCars.Count; i++)
             {
                 if (enemiesInsideCars[i].watchedPed != null &&
-                    World.GetDistance(MindControl.CurrentPlayerCharacter.Position, enemiesInsideCars[i].watchedPed.Position) >
+					MindControl.CurrentPlayerCharacter.Position.DistanceTo2D(enemiesInsideCars[i].watchedPed.Position) >
                 ModOptions.instance.minDistanceMemberSpawnFromPlayer && !enemiesInsideCars[i].watchedPed.IsOnScreen)
                 {
                     enemiesInsideCars[i].Die(true);
@@ -810,7 +829,7 @@ namespace GTA.GangAndTurfMod
         public bool IsPlayerCloseToWar()
         {
             return (World.GetZoneName(MindControl.CurrentPlayerCharacter.Position) == warZone.zoneName ||
-                World.GetDistance(MindControl.CurrentPlayerCharacter.Position, warZone.zoneBlipPosition) < 
+				warZone.zoneBlipPosition.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) < 
                 ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
         }
 

@@ -1058,9 +1058,9 @@ namespace GTA.GangAndTurfMod
                 Gang playergang = GangManager.instance.PlayerGang;
                 if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                 {
-                    Math.Vector3 destPos = MindControl.CurrentPlayerCharacter.Position;
+                    Math.Vector3 destPos = MindControl.SafePositionNearPlayer;
 
-                    Math.Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar();
+                    Math.Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(destPos);
 
                     SpawnedDrivingGangMember spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
                             spawnPos, destPos, true, true);
@@ -1119,9 +1119,8 @@ namespace GTA.GangAndTurfMod
                         //only allow spawning if the player has turf
                         if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
                         {
-                            Math.Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
                             Ped spawnedPed = SpawnManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
-                       playerPos + Math.Vector3.WorldUp * 50, playerPos);
+                       MindControl.CurrentPlayerCharacter.Position + Math.Vector3.WorldUp * 50, MindControl.SafePositionNearPlayer);
                             if (spawnedPed != null)
                             {
                                 ticksSinceLastParaBkp = 0;
@@ -1188,15 +1187,8 @@ namespace GTA.GangAndTurfMod
                     {
                         if (GangWarManager.instance.playerNearWarzone)
                         {
-                            if (!MindControl.CurrentPlayerCharacter.IsInAir)
-                            {
-                                GangWarManager.instance.ForceSetAlliedSpawnPoints(MindControl.CurrentPlayerCharacter.Position);
-                            }
-                            else
-                            {
-                                GangWarManager.instance.ForceSetAlliedSpawnPoints(SpawnManager.instance.FindGoodSpawnPointForMember());
-                            }
-                        }
+							GangWarManager.instance.ForceSetAlliedSpawnPoints(MindControl.SafePositionNearPlayer);
+						}
                         else
                         {
                             UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
@@ -1222,12 +1214,7 @@ namespace GTA.GangAndTurfMod
                         {
 							if(item == setSpecificSpawnBtns[i]) {
 								if (GangWarManager.instance.playerNearWarzone) {
-									if (!MindControl.CurrentPlayerCharacter.IsInAir) {
-										GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, MindControl.CurrentPlayerCharacter.Position);
-									}
-									else {
-										UI.ShowSubtitle("You must be on the ground before setting the spawn point!");
-									}
+									GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, MindControl.SafePositionNearPlayer);
 								}
 								else {
 									UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");

@@ -11,16 +11,19 @@ using GTA.Math;
 
 namespace GTA.GangAndTurfMod
 {
-    /// <summary>
-    /// this script controls most things related to the mind control feature
-    /// </summary>
-    public class MindControl {
+	/// <summary>
+	/// this script controls most things related to the mind control feature
+	/// </summary>
+	public class MindControl {
 
-        public static MindControl instance;
+		public static MindControl instance;
 
-        public SpawnedGangMember currentlyControlledMember = null;
-        public bool hasDiedWithChangedBody = false;
-        public Ped theOriginalPed;
+		public SpawnedGangMember currentlyControlledMember = null;
+		public bool hasDiedWithChangedBody = false;
+		public Ped theOriginalPed;
+
+		private int moneyFromLastProtagonist = 0;
+		private int defaultMaxHealth = 200;
 
 		/// <summary>
 		/// the character currently controlled by the player. 
@@ -39,9 +42,37 @@ namespace GTA.GangAndTurfMod
 			}
 		}
 
+		private static RaycastResult rayResult;
 
-        private int moneyFromLastProtagonist = 0;
-        private int defaultMaxHealth = 200;
+		/// <summary>
+		/// if the cur. player char is flying,
+		/// gets a safe spot on the ground instead of the player pos
+		/// </summary>
+		public static Vector3 SafePositionNearPlayer
+		{
+			get {
+				if (CurrentPlayerCharacter.IsInAir || CurrentPlayerCharacter.IsInFlyingVehicle) {
+					rayResult = World.Raycast(CurrentPlayerCharacter.Position, Vector3.WorldDown, 99999.0f, IntersectOptions.Map);
+					if (rayResult.DitHitAnything) {
+						Logger.Log("SafePositionNearPlayer: ray ok!");
+						return rayResult.HitCoords;
+					}
+					else {
+						Logger.Log("SafePositionNearPlayer: Eddlmizing!");
+						Vector3 safePos = CurrentPlayerCharacter.Position;
+						safePos.Z = 0;
+						return SpawnManager.GenerateSpawnPos(
+						safePos, SpawnManager.Nodetype.AnyRoad, false);
+					}
+				}
+				else {
+					return CurrentPlayerCharacter.Position;
+				}
+			}
+		}
+
+
+
 
 
         public MindControl()

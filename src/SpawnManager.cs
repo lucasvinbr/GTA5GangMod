@@ -76,11 +76,68 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        #endregion
+		#endregion
 
-        #region getters
+		#region Eddlm's spawnpos generator
 
-        public List<Ped> GetSpawnedPedsOfGang(Gang desiredGang)
+		//from: https://gtaforums.com/topic/843561-pathfind-node-types
+		//with some personal preference edits
+
+		public enum Nodetype {
+			Road,
+			AnyRoad,
+			Offroad,
+			Water
+		}
+
+		/// <summary>
+		/// gets the closest vehicle node of the desired type, 
+		/// optionally returning the next pos on sidewalk instead of the node pos.
+		/// All credit goes to Eddlm!
+		/// </summary>
+		/// <param name="desiredPos"></param>
+		/// <param name="roadtype"></param>
+		/// <param name="sidewalk"></param>
+		/// <returns></returns>
+		public static Vector3 GenerateSpawnPos(Vector3 desiredPos, Nodetype roadtype, bool sidewalk) {
+			Vector3 finalpos = Vector3.Zero;
+			bool forceOffroad = false;
+			OutputArgument outArgA = new OutputArgument();
+			int nodeNumber = 1;
+			int roadTypeAsInt = 0;
+			switch (roadtype) {
+				case Nodetype.Offroad:
+					roadTypeAsInt = 1;
+					forceOffroad = true;
+					break;
+				default:
+					roadTypeAsInt = (int)roadtype;
+					break;
+			}
+
+			int nodeID = Function.Call<int>(
+				Hash.GET_NTH_CLOSEST_VEHICLE_NODE_ID, desiredPos.X, desiredPos.Y, desiredPos.Z,
+				nodeNumber, roadTypeAsInt, 300f, 300f);
+			if (forceOffroad) {
+				while (!Function.Call<bool>(Hash._GET_IS_SLOW_ROAD_FLAG, nodeID) && nodeNumber < 500) {
+					nodeNumber++;
+					nodeID = Function.Call<int>(Hash.GET_NTH_CLOSEST_VEHICLE_NODE_ID,
+						desiredPos.X, desiredPos.Y, desiredPos.Z, nodeNumber, roadTypeAsInt, 300f, 300f);
+				}
+			}
+
+			Function.Call(Hash.GET_VEHICLE_NODE_POSITION, nodeID, outArgA);
+			finalpos = outArgA.GetResult<Vector3>();
+			if (sidewalk) finalpos = World.GetNextPositionOnSidewalk(finalpos);
+
+			return finalpos;
+		}
+
+		#endregion
+
+		#region getters
+
+		public List<Ped> GetSpawnedPedsOfGang(Gang desiredGang)
         {
             List<Ped> returnedList = new List<Ped>();
 
@@ -253,12 +310,8 @@ namespace GTA.GangAndTurfMod
         public Vector3 FindGoodSpawnPointForMember(Vector3? referencePosition = null)
         {
             Vector3 chosenPos = Vector3.Zero;
-            Vector3 referencePos = MindControl.CurrentPlayerCharacter.Position;
+            Vector3 referencePos = referencePosition ?? MindControl.SafePositionNearPlayer;
 
-            if(referencePosition != null)
-            {
-                referencePos = referencePosition.Value;
-            }
 
             chosenPos = World.GetSafeCoordForPed(referencePos + RandoMath.RandomDirection(true) *
                           ModOptions.instance.GetAcceptableMemberSpawnDistance(10));
@@ -325,11 +378,18 @@ namespace GTA.GangAndTurfMod
 			return chosenPos;
 		}
 
-		public Vector3 FindGoodSpawnPointForCar()
+		/// <summary>
+		/// finds a nice spot neither too close or far from the reference pos, or the player safe pos if not provided.
+		/// use the safe pos as parameter if you've already got it before calling this func!
+		/// </summary>
+		/// <param name="referencePos"></param>
+		/// <returns></returns>
+		public Vector3 FindGoodSpawnPointForCar(Vector3? referencePos = null)
         {
+			Vector3 refPos = referencePos ?? MindControl.SafePositionNearPlayer;
 			Vector3 getNextPosTarget = Vector3.Zero;
 
-			getNextPosTarget = MindControl.CurrentPlayerCharacter.Position + RandoMath.RandomDirection(true) *
+			getNextPosTarget = refPos + RandoMath.RandomDirection(true) *
 						  ModOptions.instance.GetAcceptableCarSpawnDistance();
 
 			return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
@@ -345,7 +405,7 @@ namespace GTA.GangAndTurfMod
         public void TryPlaceVehicleOnStreet(Vehicle targetVehicle, Vector3 originalPos)
         {
             targetVehicle.PlaceOnNextStreet();
-            float distFromPlayer = World.GetDistance(MindControl.CurrentPlayerCharacter.Position, targetVehicle.Position);
+            float distFromPlayer = targetVehicle.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position);
 
             if(distFromPlayer > ModOptions.instance.maxDistanceCarSpawnFromPlayer ||
                 distFromPlayer < ModOptions.instance.minDistanceCarSpawnFromPlayer)
@@ -543,7 +603,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool mustReachDest = false)
+        SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool deliveringCar = false)
         {
             SpawnedDrivingGangMember newDriverAI = null;
 
@@ -553,14 +613,14 @@ namespace GTA.GangAndTurfMod
                 if (livingDrivingMembers[i].watchedPed == null)
                 {
                     newDriverAI = livingDrivingMembers[i];
-                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, mustReachDest);
+                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
                     couldEnlistWithoutAdding = true;
                     break;
                 }
             }
             if (!couldEnlistWithoutAdding)
             {
-                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, mustReachDest);
+                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
                 livingDrivingMembers.Add(newDriverAI);
             }
 

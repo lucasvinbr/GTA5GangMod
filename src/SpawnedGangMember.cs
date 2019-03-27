@@ -53,8 +53,8 @@ namespace GTA.GangAndTurfMod
             if (curStatus != MemberStatus.inVehicle)
             {
 				watchedPed.BlockPermanentEvents = false;
-				if (World.GetDistance(MindControl.CurrentPlayerCharacter.Position, watchedPed.Position) >
-			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer) {
+				if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
+			   ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f) {
 					//we're too far to be important
 					Die();
 					Logger.Log("member update: end (too far, despawn)");
@@ -119,7 +119,7 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
                     if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent, no longer with driver AI attached)...
                     {
-						if (World.GetDistance(MindControl.CurrentPlayerCharacter.Position, watchedPed.Position) >
+						if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
 			   ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3) {
 							//we're too far to be important
 							Die();

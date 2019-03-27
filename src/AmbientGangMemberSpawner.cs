@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using GTA.Math;
 using GTA.Native;
 
+/// <summary>
+/// this script takes care of spawning roaming gang members and vehicles in gang zones.
+/// It also regulates police influence according to the settings in ModOptions
+/// </summary>
 namespace GTA.GangAndTurfMod
 {
     class AmbientGangMemberSpawner : Script
@@ -40,11 +44,12 @@ namespace GTA.GangAndTurfMod
 
                 if(postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone)
                 {
-                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
+                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position,
+						safePlayerPos = MindControl.SafePositionNearPlayer;
                     if(SpawnManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
-                       playerPos + Vector3.WorldUp * 50, playerPos) == null) {
+                       playerPos + Vector3.WorldUp * 50, safePlayerPos) == null) {
 						SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-						SpawnManager.instance.FindGoodSpawnPointForCar(), playerPos, true);
+						SpawnManager.instance.FindGoodSpawnPointForCar(safePlayerPos), safePlayerPos);
 					}
                     postWarBackupsRemaining--;
                 }
@@ -88,13 +93,15 @@ namespace GTA.GangAndTurfMod
 
         public void SpawnAmbientMember(Gang curGang)
         {
-            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForMember();
+            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForMember
+				(MindControl.CurrentPlayerCharacter.Position);
             SpawnedGangMember newMember = SpawnManager.instance.SpawnGangMember(curGang, spawnPos);
         }
 
         public void SpawnAmbientVehicle(Gang curGang)
         {
-            Vector3 vehSpawnPoint = SpawnManager.instance.FindGoodSpawnPointForCar();
+            Vector3 vehSpawnPoint = SpawnManager.instance.FindGoodSpawnPointForCar
+				(MindControl.CurrentPlayerCharacter.Position);
             SpawnedDrivingGangMember spawnedVehicleAI = SpawnManager.instance.SpawnGangVehicle(curGang,
                                 vehSpawnPoint , Vector3.Zero, true);
             if (spawnedVehicleAI != null)

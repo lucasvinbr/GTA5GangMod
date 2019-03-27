@@ -167,7 +167,23 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
             if (hit.HitEntity != null)
             {
-                List<Ped> playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
+				
+				List<SpawnedDrivingGangMember> playerGangDrivers = SpawnManager.instance.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
+				for (int i = 0; i < playerGangDrivers.Count; i++) {
+					if (playerGangDrivers[i].vehicleIAmDriving != null && 
+						(playerGangDrivers[i].vehicleIAmDriving == hit.HitEntity || playerGangDrivers[i].watchedPed == hit.HitEntity)) {
+						//car should now behave as a backup vehicle: come close and drop passengers if player is on foot, follow player if not
+						playerGangDrivers[i].playerAsDest = true;
+						playerGangDrivers[i].deliveringCar = true;
+						playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
+						playerGangDrivers[i].Update();
+						UI.Notify("Car told to back you up!");
+						return;
+					}
+				}
+
+				//maybe we're just targeting a ped then?
+				List<Ped> playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
                     if (playerGangMembers[i] == hit.HitEntity)
@@ -189,21 +205,8 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                //maybe we're just/also targeting a car then?
-                List<SpawnedDrivingGangMember> playerGangDrivers = SpawnManager.instance.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
-                for (int i = 0; i < playerGangDrivers.Count; i++)
-                {
-                    if (playerGangDrivers[i].vehicleIAmDriving != null && playerGangDrivers[i].vehicleIAmDriving == hit.HitEntity)
-                    {
-                        //car should now behave as a backup vehicle: come close and drop passengers if player is on foot, follow player if not
-                        playerGangDrivers[i].playerAsDest = true;
-						playerGangDrivers[i].mustReachDest = true;
-                        playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
-                        playerGangDrivers[i].Update();
-                        UI.Notify("Car told to back you up!");
-                        break;
-                    }
-                }
+                
+                
             }
         }
 

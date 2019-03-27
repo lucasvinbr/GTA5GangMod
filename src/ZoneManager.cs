@@ -166,8 +166,8 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
-                    return World.GetDistance(x.zoneBlipPosition, playerPos).
-                        CompareTo(World.GetDistance(y.zoneBlipPosition, playerPos));
+                    return playerPos.DistanceTo2D(x.zoneBlipPosition).
+                        CompareTo(playerPos.DistanceTo2D(y.zoneBlipPosition));
                 }
             }
         }
