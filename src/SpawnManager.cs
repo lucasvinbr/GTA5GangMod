@@ -527,7 +527,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool mustReachDest = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
+        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
@@ -564,7 +564,7 @@ namespace GTA.GangAndTurfMod
                             }
                         }
 
-                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, mustReachDest);
+                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, isDeliveringCar);
 
 						if (ModOptions.instance.showGangMemberBlips) {
 							newVehicle.AddBlip();

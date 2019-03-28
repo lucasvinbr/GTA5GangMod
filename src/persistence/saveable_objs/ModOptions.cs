@@ -193,8 +193,8 @@ namespace GTA.GangAndTurfMod
 
 		//special thanks to Eddlm for the driving style data! 
 		//more info here: https://gtaforums.com/topic/822314-guide-driving-styles/
-		public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 16 + 32 + 128 + 256;
-		public int driverWithDestinationDrivingStyle = 4 + 8 + 16 + 32 + 512 + 262144;
+		public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
+		public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
 
 		public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;

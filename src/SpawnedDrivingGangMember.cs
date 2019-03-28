@@ -20,7 +20,7 @@ namespace GTA.GangAndTurfMod
 
         public bool playerAsDest = false;
 
-		public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 200;
+		public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
 
 		private float targetSpeed;
 		private float distToDest;
@@ -110,7 +110,7 @@ namespace GTA.GangAndTurfMod
 			distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
 
 			//if we're close to the destination...
-			if (distToDest < 25) //tweaked to match my changes below -- zix
+			if (distToDest < RADIUS_DESTINATION_ARRIVED) //tweaked to match my changes below -- zix
 			{
 				//leave the vehicle if we are a backup vehicle and the player's on foot or if we just had to get somewhere
 				if (!playerAsDest || (playerAsDest && !playerInVehicle)) {
@@ -118,7 +118,7 @@ namespace GTA.GangAndTurfMod
 						DriverLeaveVehicle();
 					}
 					else {
-						ClearAllRefs();
+						ClearAllRefs(true);
 					}
 				}
 			}
@@ -143,7 +143,7 @@ namespace GTA.GangAndTurfMod
 						DriverLeaveVehicle();
 					}
 					else {
-						ClearAllRefs();
+						ClearAllRefs(true);
 					}
 				}
 				else {
@@ -215,9 +215,10 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// nullifies/clears references to the vehicle, driver and passengers
+        /// nullifies/clears references to the vehicle, driver and passengers, 
+		/// optionally telling the driver to roam
         /// </summary>
-        public void ClearAllRefs()
+        public void ClearAllRefs(bool makeDriverRoamPostClear = false)
         {
             if (vehicleIAmDriving != null)
             {
@@ -230,6 +231,10 @@ namespace GTA.GangAndTurfMod
                 vehicleIAmDriving = null;
             }
             
+			if(makeDriverRoamPostClear && watchedPed.IsInVehicle()) {
+				watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15, 
+					ModOptions.instance.wanderingDriverDrivingStyle);
+			}
             watchedPed = null;
             myPassengers.Clear();
         }

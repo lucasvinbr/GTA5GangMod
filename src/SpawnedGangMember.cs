@@ -29,7 +29,7 @@ namespace GTA.GangAndTurfMod
         public enum MemberStatus
         {
             none,
-            idle,
+            onFootThinking,
             combat,
             inVehicle
         }
@@ -88,12 +88,12 @@ namespace GTA.GangAndTurfMod
                             }
                         }
 
-                        curStatus = MemberStatus.idle;
+                        curStatus = MemberStatus.onFootThinking;
                         ticksSinceLastIdleChange = 0;
 					}
 					else {
-						if (curStatus != MemberStatus.idle || ticksSinceLastIdleChange > ticksBetweenIdleChange) {
-							curStatus = MemberStatus.idle;
+						if (curStatus != MemberStatus.onFootThinking || ticksSinceLastIdleChange > ticksBetweenIdleChange) {
+							curStatus = MemberStatus.onFootThinking;
 							if (RandoMath.RandomBool()) {
 								watchedPed.Task.WanderAround();
 							}
@@ -125,6 +125,13 @@ namespace GTA.GangAndTurfMod
 							Die();
 							Logger.Log("member update: end (in vehicle: too far, despawn)");
 							return;
+						}
+
+						if (curVehicle.IsSeatFree(VehicleSeat.Driver)) {
+							//possibly leave the vehicle if the driver has left already
+							if (RandoMath.RandomBool()) {
+								watchedPed.Task.LeaveVehicle();
+							}
 						}
 					}
                     

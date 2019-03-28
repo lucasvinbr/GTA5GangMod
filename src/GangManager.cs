@@ -360,11 +360,12 @@ namespace GTA.GangAndTurfMod
         public void KillGang(GangAI aiWatchingTheGang)
         {
             UI.Notify("The " + aiWatchingTheGang.watchedGang.name + " have been wiped out!");
-            enemyGangs.Remove(aiWatchingTheGang);
+
 			//save the fallen gang in a file
-			PersistenceHandler.SaveAppendToFile(aiWatchingTheGang.watchedGang, "wipedOutGangs");
-            gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
-            if(enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)
+			AddGangToWipedOutList(aiWatchingTheGang.watchedGang);
+			gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
+			enemyGangs.Remove(aiWatchingTheGang);
+			if (enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)
             {
                 //create a new gang right away... but do it silently to not demotivate the player too much
                 Gang createdGang = CreateNewEnemyGang(false);
@@ -375,6 +376,20 @@ namespace GTA.GangAndTurfMod
             }
             SaveGangData(false);
         }
+
+		/// <summary>
+		/// adds the gang to a xml file that contains a list of gangs that have been wiped out,
+		///  so that the player can reuse their data in the future
+		/// </summary>
+		/// <param name="gangToAdd"></param>
+		public void AddGangToWipedOutList(Gang gangToAdd) {
+			List<Gang> WOList = PersistenceHandler.LoadFromFile<List<Gang>>("wipedOutGangsList");
+			if(WOList == null) {
+				WOList = new List<Gang>();
+			}
+			WOList.Add(gangToAdd);
+			PersistenceHandler.SaveToFile(WOList, "wipedOutGangsList");
+		}
 
         public void GiveTurfRewardToGang(Gang targetGang)
         {

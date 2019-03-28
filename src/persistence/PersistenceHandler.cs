@@ -83,35 +83,5 @@ namespace GTA.GangAndTurfMod
 			}
             
         }
-
-		public static void SaveAppendToFile<T>(T dataToAppend, string fileName) {
-			try {
-				Logger.Log("attempting file xml data append: " + fileName);
-				XmlSerializer serializer = new XmlSerializer(typeof(T));
-				
-				if (!Directory.Exists(Application.StartupPath + "/gangModData/")) {
-					Directory.CreateDirectory(Application.StartupPath + "/gangModData/");
-					Logger.Log("created directory to save file: " + fileName);
-				}
-				string filePath = Application.StartupPath + "/gangModData/" + fileName + ".xml";
-
-
-				XmlWriterSettings appendXMLSettings = new XmlWriterSettings {
-					OmitXmlDeclaration = true,
-					ConformanceLevel = ConformanceLevel.Fragment
-				};
-
-				using (XmlWriter writer = XmlWriter.Create(filePath, appendXMLSettings)) {
-					serializer.Serialize(writer, dataToAppend);
-					writer.Close();
-				}
-
-				Logger.Log("saved file successfully (Append): " + fileName);
-			}
-			catch (Exception e) {
-				UI.Notify("an error occurred while trying to save gang mod data! error: " + e.ToString());
-				Logger.Log("failed to save file: " + fileName + "! Error: " + e.ToString());
-			}
-		}
     }
 }
