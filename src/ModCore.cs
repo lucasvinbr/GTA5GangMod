@@ -163,34 +163,69 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void RecruitGangMember()
         {
-            RaycastResult hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+			RaycastResult hit;
+			if (MindControl.CurrentPlayerCharacter.IsInVehicle()) {
+				hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
+					MindControl.CurrentPlayerCharacter.CurrentVehicle);
+			}
+			else {
+				hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+			}
+            
             if (hit.HitEntity != null)
             {
-				Vehicle hitVeh = (Vehicle)hit.HitEntity;
 				List<Ped> playerGangMembers = null;
 
-				if (hitVeh != null) {
-					List<SpawnedDrivingGangMember> playerGangDrivers = SpawnManager.instance.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
-					for (int i = 0; i < playerGangDrivers.Count; i++) {
-						if (playerGangDrivers[i].vehicleIAmDriving != null &&
-							(playerGangDrivers[i].vehicleIAmDriving == hitVeh)) {
-							//car should now behave as a backup vehicle: come close and drop passengers if player is on foot, follow player if not
-							playerGangDrivers[i].playerAsDest = true;
-							playerGangDrivers[i].deliveringCar = true;
-							playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
-							playerGangDrivers[i].Update();
-							UI.Notify("Car told to back you up!");
-							return;
+				if (hit.HitEntity.Model.IsVehicle) {
+					Vehicle hitVeh = (Vehicle)hit.HitEntity;
+					//only do vehicle-related stuff if we're not inside said vehicle!
+					if (!MindControl.CurrentPlayerCharacter.IsInVehicle(hitVeh)) {
+						List<SpawnedDrivingGangMember> playerGangDrivers = SpawnManager.instance.GetSpawnedDriversOfGang(gangManagerScript.PlayerGang);
+						for (int i = 0; i < playerGangDrivers.Count; i++) {
+							if (playerGangDrivers[i].vehicleIAmDriving != null &&
+								(playerGangDrivers[i].vehicleIAmDriving == hitVeh)) {
+								//car should now behave as a backup vehicle: come close and drop passengers if player is on foot, follow player if not
+								playerGangDrivers[i].playerAsDest = true;
+								playerGangDrivers[i].deliveringCar = true;
+								playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
+								playerGangDrivers[i].Update();
+								UI.Notify("Car told to back you up!");
+								return;
+							}
+						}
+
+						//we've hit a vehicle that's not marked as a gang vehicle!
+						//maybe it's no longer persistent and refs have already been cleared
+						//in any case, try to find gang members inside it and tell them to leave
+						playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
+						for (int i = 0; i < playerGangMembers.Count; i++) {
+							if (playerGangMembers[i].IsInVehicle(hitVeh) && playerGangMembers[i].IsAlive) {
+
+								if (playerGangMembers[i].IsInGroup) {
+									Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
+									UI.Notify("A member has left your group");
+								}
+								else {
+									int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
+									playerGangMembers[i].Task.ClearAll();
+									Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
+									if (playerGangMembers[i].IsInGroup) {
+										UI.Notify("A member has joined your group");
+									}
+									else {
+										playerGangMembers[i].Task.LeaveVehicle();
+									}
+								}
+							}
 						}
 					}
+					
 
-					//we've hit a vehicle that's not marked as a gang vehicle!
-					//maybe it's no longer persistent and refs have already been cleared
-					//in any case, try to find gang members inside it and tell them to leave
+				}else if (hit.HitEntity.Model.IsPed) {
+					//maybe we're just targeting a ped then?
 					playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
 					for (int i = 0; i < playerGangMembers.Count; i++) {
-						if (playerGangMembers[i].IsInVehicle(hitVeh) && playerGangMembers[i].IsAlive) {
-							
+						if (playerGangMembers[i] == hit.HitEntity) {
 							if (playerGangMembers[i].IsInGroup) {
 								Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
 								UI.Notify("A member has left your group");
@@ -202,42 +237,11 @@ namespace GTA.GangAndTurfMod
 								if (playerGangMembers[i].IsInGroup) {
 									UI.Notify("A member has joined your group");
 								}
-								else {
-									playerGangMembers[i].Task.LeaveVehicle();
-								}
 							}
+							break;
 						}
 					}
-
 				}
-				
-
-				//maybe we're just targeting a ped then?
-				playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
-                for (int i = 0; i < playerGangMembers.Count; i++)
-                {
-                    if (playerGangMembers[i] == hit.HitEntity)
-                    {
-                        if (playerGangMembers[i].IsInGroup)
-                        {
-                            Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                            UI.Notify("A member has left your group");
-                        }
-                        else
-                        {
-							int playergrp = Function.Call<int>(Hash.GET_PLAYER_GROUP, Game.Player);
-							playerGangMembers[i].Task.ClearAll();
-                            Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
-							if (playerGangMembers[i].IsInGroup) {
-								UI.Notify("A member has joined your group");
-							}	
-                        }
-                        break;
-                    }
-                }
-
-                
-                
             }
         }
 
