@@ -60,11 +60,11 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="NativeUI, Version=1.8.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.9.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\ScriptHookVDotNet2.dll</HintPath>
     </Reference>

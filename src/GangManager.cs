@@ -63,8 +63,9 @@ namespace GTA.GangAndTurfMod
             enemyGangs = new List<GangAI>();
 
 			//classes below are all singletons, so no need to hold their ref here
-            new ModOptions();
 			new SpawnManager();
+			new ModOptions();
+			
 
             gangData = PersistenceHandler.LoadFromFile<GangData>("GangData");
             if (gangData == null)

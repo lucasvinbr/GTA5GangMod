@@ -117,10 +117,15 @@ namespace GTA.GangAndTurfMod
                 this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
                 this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
 
-                if (similarColors[0].blipColors == null)
-                {
-                    SetColorTranslationDefaultValues();
-                }
+				if(similarColors.Count == 0) {
+					SetColorTranslationDefaultValues();
+				}
+				else {
+					if (similarColors[0].blipColors == null) {
+						SetColorTranslationDefaultValues();
+					}
+				}
+                
                 SaveOptions();
             }
             else
@@ -858,9 +863,12 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+		/// <summary>
+		/// declares similarColors and extraPlayerExclusiveColors as new lists with default values
+		/// </summary>
         public void SetColorTranslationDefaultValues()
         {
-                similarColors = new List<GangColorTranslation>
+            similarColors = new List<GangColorTranslation>
             {
                 new GangColorTranslation(PotentialGangMember.MemberColor.black, new List<VehicleColor> {
                      VehicleColor.BrushedBlackSteel,
