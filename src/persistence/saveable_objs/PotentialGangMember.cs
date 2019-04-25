@@ -13,8 +13,7 @@ namespace GTA.GangAndTurfMod
     /// that way, when an AI gang is picking a color, it will pick members with a similar color
     /// </summary>
     [XmlInclude(typeof(FreemodePotentialGangMember))]
-    public class PotentialGangMember
-    {
+    public class PotentialGangMember {
        public enum DressStyle
         {
             business,

@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		public static bool Initialize() {
-			if(instance != null) {
+			if (instance != null) {
 				instance.memberList = SpawnManager.instance.livingMembers;
 				instance.enabled = true;
 				return true;
@@ -45,7 +45,7 @@ namespace GTA.GangAndTurfMod {
 			else {
 				return false;
 			}
-			
+
 		}
 
 		public GangMemberUpdater() {

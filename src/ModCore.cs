@@ -5,37 +5,34 @@ using System.Windows.Forms;
 using NativeUI;
 using System.Drawing;
 
-namespace GTA.GangAndTurfMod
-{
-    /// <summary>
-    /// the script is responsble for ticking and detecting input for the more sensitive scripts.
-    /// some, like the gang war manager, are still ticking on their own.
-    /// this one exists to make sure the sensitive ones start running in the correct order
-    /// </summary>
-    class ModCore : Script
-    {
-        public GangManager gangManagerScript;
+namespace GTA.GangAndTurfMod {
+	/// <summary>
+	/// the script is responsble for ticking and detecting input for the more sensitive scripts.
+	/// some, like the gang war manager, are still ticking on their own.
+	/// this one exists to make sure the sensitive ones start running in the correct order
+	/// </summary>
+	class ModCore : Script {
+		public GangManager gangManagerScript;
 		public MindControl mindControlScript;
-        public MenuScript menuScript;
-        public ZoneManager zoneManagerScript;
+		public MenuScript menuScript;
+		public ZoneManager zoneManagerScript;
 
 		public static int curGameTime;
 
-        public ModCore()
-        {
+		public ModCore() {
 			curGameTime = Game.GameTime;
 
 			zoneManagerScript = new ZoneManager();
-            gangManagerScript = new GangManager();
+			gangManagerScript = new GangManager();
 			mindControlScript = new MindControl();
-            menuScript = new MenuScript();
+			menuScript = new MenuScript();
 
-            this.Aborted += OnAbort;
+			this.Aborted += OnAbort;
 
-            this.KeyUp += OnKeyUp;
-            this.Tick += OnTick;
+			this.KeyUp += OnKeyUp;
+			this.Tick += OnTick;
 
-            Logger.Log("mod started!");
+			Logger.Log("mod started!", 2);
 
 			bool successfulInit = GangMemberUpdater.Initialize();
 
@@ -50,119 +47,95 @@ namespace GTA.GangAndTurfMod
 				Yield();
 				successfulInit = GangVehicleUpdater.Initialize();
 			}
-        }
+		}
 
-        void OnTick(object sender, EventArgs e)
-        {
+		void OnTick(object sender, EventArgs e) {
 			curGameTime = Game.GameTime;
-            gangManagerScript.Tick();
+			gangManagerScript.Tick();
 			mindControlScript.Tick();
-            menuScript.Tick();
+			menuScript.Tick();
 
-            //war stuff that should happen every frame
-            if (GangWarManager.instance.shouldDisplayReinforcementsTexts)
-            {
-                GangWarManager.instance.alliedNumText.Draw();
-                GangWarManager.instance.enemyNumText.Draw();
+			//war stuff that should happen every frame
+			if (GangWarManager.instance.shouldDisplayReinforcementsTexts) {
+				GangWarManager.instance.alliedNumText.Draw();
+				GangWarManager.instance.enemyNumText.Draw();
 
-                if (ModOptions.instance.emptyZoneDuringWar)
-                {
-                    Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
-                    Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
-                }
+				if (ModOptions.instance.emptyZoneDuringWar) {
+					Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+					Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0);
+				}
 
-            }
+			}
 
-            //zix attempt controller recruit
-            if (ModOptions.instance.joypadControls)
-            {
-                if (Game.IsControlPressed(0, GTA.Control.Aim) || Game.IsControlPressed(0, GTA.Control.AccurateAim))
-                {
-                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadRight))
-                    {
-                        RecruitGangMember();
-                    }
+			//zix attempt controller recruit
+			if (ModOptions.instance.joypadControls) {
+				if (Game.IsControlPressed(0, GTA.Control.Aim) || Game.IsControlPressed(0, GTA.Control.AccurateAim)) {
+					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadRight)) {
+						RecruitGangMember();
+					}
 
-                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft))
-                    {
-                        menuScript.CallCarBackup(false);
-                    }
+					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft)) {
+						menuScript.CallCarBackup(false);
+					}
 
-                    if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadUp))
-                    {
-                        zoneManagerScript.OutputCurrentZoneInfo();
-                    }
-                }
-            }
-        }
+					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadUp)) {
+						zoneManagerScript.OutputCurrentZoneInfo();
+					}
+				}
+			}
+		}
 
-        private void OnKeyUp(object sender, KeyEventArgs e)
-        {
-            if (menuScript.curInputType == MenuScript.DesiredInputType.changeKeyBinding)
-            {
-                if (e.KeyCode != Keys.Enter)
-                {
-                    ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
-                    menuScript.curInputType = MenuScript.DesiredInputType.none;
-                    menuScript.RefreshKeyBindings();
-                }
-            }
-            else
-            {
+		private void OnKeyUp(object sender, KeyEventArgs e) {
+			if (menuScript.curInputType == MenuScript.DesiredInputType.changeKeyBinding) {
+				if (e.KeyCode != Keys.Enter) {
+					ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
+					menuScript.curInputType = MenuScript.DesiredInputType.none;
+					menuScript.RefreshKeyBindings();
+				}
+			}
+			else {
 
-                if (e.KeyCode == ModOptions.instance.openGangMenuKey)
-                {
-                    //note: numpad keys dont seem to go along well with shift
-                    if (e.Modifiers == Keys.None)
-                    {
-                        menuScript.OpenGangMenu();
-                    }
-                    else if (e.Modifiers == Keys.Shift)
-                    {
-                        menuScript.OpenContextualRegistrationMenu();
-                    }
-                }
-                else if (e.KeyCode == ModOptions.instance.openZoneMenuKey)
-                {
-                    if (e.Modifiers == Keys.None)
-                    {
-                        zoneManagerScript.OutputCurrentZoneInfo();
-                    }
-                    else if (e.Modifiers == Keys.Shift)
-                    {
-                        zoneManagerScript.OutputCurrentZoneInfo();
-                        menuScript.OpenZoneMenu();
-                    }
-                    else if (e.Modifiers == Keys.Control)
-                    {
-                        zoneManagerScript.ChangeBlipDisplay();
-                    }
+				if (e.KeyCode == ModOptions.instance.openGangMenuKey) {
+					//note: numpad keys dont seem to go along well with shift
+					if (e.Modifiers == Keys.None) {
+						menuScript.OpenGangMenu();
+					}
+					else if (e.Modifiers == Keys.Shift) {
+						menuScript.OpenContextualRegistrationMenu();
+					}
+				}
+				else if (e.KeyCode == ModOptions.instance.openZoneMenuKey) {
+					if (e.Modifiers == Keys.None) {
+						zoneManagerScript.OutputCurrentZoneInfo();
+					}
+					else if (e.Modifiers == Keys.Shift) {
+						zoneManagerScript.OutputCurrentZoneInfo();
+						menuScript.OpenZoneMenu();
+					}
+					else if (e.Modifiers == Keys.Control) {
+						zoneManagerScript.ChangeBlipDisplay();
+					}
 
-                }
-                else if (e.KeyCode == ModOptions.instance.addToGroupKey)
-                {
-                    RecruitGangMember();
-                }
-                else if (e.KeyCode == ModOptions.instance.mindControlKey)
-                {
-                    mindControlScript.TryBodyChange();
-                }
-                else if (e.KeyCode == Keys.Space)
-                {
-                    if (mindControlScript.HasChangedBody)
-                    {
+				}
+				else if (e.KeyCode == ModOptions.instance.addToGroupKey) {
+					RecruitGangMember();
+				}
+				else if (e.KeyCode == ModOptions.instance.mindControlKey) {
+					mindControlScript.TryBodyChange();
+				}
+				else if (e.KeyCode == Keys.Space) {
+					if (mindControlScript.HasChangedBody) {
 						mindControlScript.RespawnIfPossible();
-                    }
-                }
-            }
+					}
+				}
+			}
 
-        }
+		}
 
-        /// <summary>
-        /// adds a friendly member the player is aiming at to the player's group, or tells a friendly vehicle to behave like a backup vehicle
-        /// </summary>
-        public void RecruitGangMember()
-        {
+		/// <summary>
+		/// adds a friendly member the player is aiming at to the player's group, or tells a friendly vehicle to behave like a backup vehicle
+		/// </summary>
+		public void RecruitGangMember() {
 			RaycastResult hit;
 			if (MindControl.CurrentPlayerCharacter.IsInVehicle()) {
 				hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
@@ -171,9 +144,8 @@ namespace GTA.GangAndTurfMod
 			else {
 				hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
 			}
-            
-            if (hit.HitEntity != null)
-            {
+
+			if (hit.HitEntity != null) {
 				List<Ped> playerGangMembers = null;
 
 				if (hit.HitEntity.Model.IsVehicle) {
@@ -219,9 +191,10 @@ namespace GTA.GangAndTurfMod
 							}
 						}
 					}
-					
 
-				}else if (hit.HitEntity.Model.IsPed) {
+
+				}
+				else if (hit.HitEntity.Model.IsPed) {
 					//maybe we're just targeting a ped then?
 					playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(gangManagerScript.PlayerGang);
 					for (int i = 0; i < playerGangMembers.Count; i++) {
@@ -242,20 +215,19 @@ namespace GTA.GangAndTurfMod
 						}
 					}
 				}
-            }
-        }
+			}
+		}
 
-        void OnAbort(object sender, EventArgs e)
-        {
-            UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
-            zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
+		void OnAbort(object sender, EventArgs e) {
+			UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
+			zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
 			if (mindControlScript.HasChangedBody) {
 				mindControlScript.RestorePlayerBody();
 			}
 			SpawnManager.instance.RemoveAllMembers();
 
-			Logger.Log("mod aborted!");
+			Logger.Log("mod aborted!", 2);
 
 		}
-    }
+	}
 }

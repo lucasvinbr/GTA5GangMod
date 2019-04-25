@@ -6,25 +6,23 @@ using System.Threading.Tasks;
 using GTA.Math;
 using GTA.Native;
 
-namespace GTA.GangAndTurfMod
-{
-    public class SpawnedDrivingGangMember : UpdatedClass
-    {
-        public Ped watchedPed;
-        public bool isFriendlyToPlayer = false; //important in order to know if we should follow or chase (aggressively) the player
-        public List<Ped> myPassengers = new List<Ped>();
-        public Vector3 destination;
-        public Vehicle vehicleIAmDriving;
-        public int updatesWhileGoingToDest;
-        public int updateLimitWhileGoing = 50;
+namespace GTA.GangAndTurfMod {
+	public class SpawnedDrivingGangMember : UpdatedClass {
+		public Ped watchedPed;
+		public bool isFriendlyToPlayer = false; //important in order to know if we should follow or chase (aggressively) the player
+		public List<Ped> myPassengers = new List<Ped>();
+		public Vector3 destination;
+		public Vehicle vehicleIAmDriving;
+		public int updatesWhileGoingToDest;
+		public int updateLimitWhileGoing = 50;
 
-        public bool playerAsDest = false;
+		public bool playerAsDest = false;
 
 		public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
 
 		private float targetSpeed;
 		private float distToDest;
-		
+
 
 		/// <summary>
 		/// if true, this driver will focus on getting to their destination and, when there, will leave the car...
@@ -152,12 +150,12 @@ namespace GTA.GangAndTurfMod
 
 							//teleport if we're failing to escort due to staying too far
 							//(should only happen with friendly vehicles and if forceSpawnCars is true)
-							if(ModOptions.instance.forceSpawnCars &&
+							if (ModOptions.instance.forceSpawnCars &&
 								watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex &&
 								vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
 								ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3 &&
 								!vehicleIAmDriving.IsOnScreen) {
-								Logger.Log("backup driver: relocation!");
+								Logger.Log("backup driver: relocation!", 3);
 								vehicleIAmDriving.Position = SpawnManager.instance.FindGoodSpawnPointForCar(destination);
 							}
 
@@ -176,14 +174,14 @@ namespace GTA.GangAndTurfMod
 										ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
 								}
 								else {
-									
+
 									Function.Call(Hash.SET_DRIVER_AGGRESSIVENESS, 1.0f);
 									watchedPed.Task.VehicleChase(MindControl.CurrentPlayerCharacter);
 								}
 							}
 						}
 						else {
-							if(distToDest > SLOW_DOWN_DIST) {
+							if (distToDest > SLOW_DOWN_DIST) {
 								targetSpeed = MAX_SPEED;
 							}
 							else {
@@ -202,42 +200,37 @@ namespace GTA.GangAndTurfMod
 		/// <summary>
 		/// tells the driver to leave the vehicle, then clearAllRefs
 		/// </summary>
-		public void DriverLeaveVehicle()
-        {
-            //leave vehicle, everyone stops being important
-            if (!watchedPed.IsPlayer)
-            {
+		public void DriverLeaveVehicle() {
+			//leave vehicle, everyone stops being important
+			if (!watchedPed.IsPlayer) {
 				watchedPed.Task.LeaveVehicle();
 				watchedPed.BlockPermanentEvents = false;
-            }
+			}
 
-            ClearAllRefs();
-        }
+			ClearAllRefs();
+		}
 
-        /// <summary>
-        /// nullifies/clears references to the vehicle, driver and passengers, 
+		/// <summary>
+		/// nullifies/clears references to the vehicle, driver and passengers, 
 		/// optionally telling the driver to roam
-        /// </summary>
-        public void ClearAllRefs(bool makeDriverRoamPostClear = false)
-        {
-            if (vehicleIAmDriving != null)
-            {
-                if (vehicleIAmDriving.CurrentBlip != null)
-                {
-                    vehicleIAmDriving.CurrentBlip.Remove();
-                }
+		/// </summary>
+		public void ClearAllRefs(bool makeDriverRoamPostClear = false) {
+			if (vehicleIAmDriving != null) {
+				if (vehicleIAmDriving.CurrentBlip != null) {
+					vehicleIAmDriving.CurrentBlip.Remove();
+				}
 
-                vehicleIAmDriving.IsPersistent = false;
-                vehicleIAmDriving = null;
-            }
-            
-			if(makeDriverRoamPostClear && watchedPed.IsInVehicle()) {
-				watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15, 
+				vehicleIAmDriving.IsPersistent = false;
+				vehicleIAmDriving = null;
+			}
+
+			if (makeDriverRoamPostClear && watchedPed.IsInVehicle()) {
+				watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
 					ModOptions.instance.wanderingDriverDrivingStyle);
 			}
-            watchedPed = null;
-            myPassengers.Clear();
-        }
+			watchedPed = null;
+			myPassengers.Clear();
+		}
 
 		/// <summary>
 		/// calls Die on the passengers' AI then clearsAllRefs
@@ -258,38 +251,34 @@ namespace GTA.GangAndTurfMod
 			ClearAllRefs();
 		}
 
-        public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool deliveringCar = false)
-        {
-            this.ticksBetweenUpdates = 50;
-            AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar);
-        }
+		public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool deliveringCar = false) {
+			this.ticksBetweenUpdates = 50;
+			AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar);
+		}
 
-        public void AttachData(Ped targetPed, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool deliveringCar)
-        {
-            this.watchedPed = targetPed;
-            this.vehicleIAmDriving = targetVehicle;
-            this.destination = theDest;
-            this.playerAsDest = playerIsDest;
+		public void AttachData(Ped targetPed, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool deliveringCar) {
+			this.watchedPed = targetPed;
+			this.vehicleIAmDriving = targetVehicle;
+			this.destination = theDest;
+			this.playerAsDest = playerIsDest;
 			this.deliveringCar = deliveringCar;
-            this.isFriendlyToPlayer = isFriendlyToPlayer;
+			this.isFriendlyToPlayer = isFriendlyToPlayer;
 			Function.Call(Hash.SET_DRIVER_ABILITY, watchedPed, 1.0f);
 			updatesWhileGoingToDest = 0;
-            SetWatchedPassengers();
-        }
+			SetWatchedPassengers();
+		}
 
-        /// <summary>
-        /// remember who our passengers are so that we can erase them later, even if they leave the car
-        /// </summary>
-        public void SetWatchedPassengers()
-        {
-            myPassengers.Clear();
-            for (int i = 0; i < vehicleIAmDriving.PassengerSeats; i++)
-            {
-                Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
-                myPassengers.Add(memberInSeat);
-                Function.Call(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat);
-            }
-        }
+		/// <summary>
+		/// remember who our passengers are so that we can erase them later, even if they leave the car
+		/// </summary>
+		public void SetWatchedPassengers() {
+			myPassengers.Clear();
+			for (int i = 0; i < vehicleIAmDriving.PassengerSeats; i++) {
+				Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
+				myPassengers.Add(memberInSeat);
+				Function.Call(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat);
+			}
+		}
 
-    }
+	}
 }

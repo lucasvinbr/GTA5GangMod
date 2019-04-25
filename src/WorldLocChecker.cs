@@ -19,9 +19,11 @@ namespace GTA.GangAndTurfMod {
 		Vector3 offroadCheckVector;
 		Vector3 playerPos;
 
-		public static bool PlayerIsAwayFromRoads {
-			get{
-				if(instance != null) {
+		public static bool PlayerIsAwayFromRoads
+		{
+			get
+			{
+				if (instance != null) {
 					return instance.playerIsAwayFromRoads;
 				}
 				else {
@@ -36,10 +38,9 @@ namespace GTA.GangAndTurfMod {
 		private bool playerIsAwayFromRoads = false;
 
 
-		void OnTick(object sender, EventArgs e)
-        {
-            Wait(3000 + RandoMath.CachedRandom.Next(1000));
-            ZoneManager.instance.RefreshZoneBlips();
+		void OnTick(object sender, EventArgs e) {
+			Wait(3000 + RandoMath.CachedRandom.Next(1000));
+			ZoneManager.instance.RefreshZoneBlips();
 			//check if we're offroad
 			playerIsAwayFromRoads = false;
 			offroadAttempts = 0;
@@ -47,7 +48,7 @@ namespace GTA.GangAndTurfMod {
 			offroadCheckVector = World.GetNextPositionOnStreet
 						  (playerPos + RandoMath.RandomDirection(true) * ModOptions.instance.maxDistanceCarSpawnFromPlayer);
 			//UI.Notify(playerPos.ToString() + " from " + offroadCheckVector.ToString());
-			while(offroadAttempts < 3 && 
+			while (offroadAttempts < 3 &&
 				World.GetDistance(playerPos, offroadCheckVector) > ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.3f) {
 				offroadAttempts++;
 				offroadCheckVector = World.GetNextPositionOnStreet
@@ -55,16 +56,15 @@ namespace GTA.GangAndTurfMod {
 						  ModOptions.instance.maxDistanceCarSpawnFromPlayer);
 			}
 
-			if(offroadAttempts >= 3) {
+			if (offroadAttempts >= 3) {
 				playerIsAwayFromRoads = true;
 			}
 		}
 
-        public WorldLocChecker()
-        {
-            this.Tick += OnTick;
-            instance = this;
-        }
+		public WorldLocChecker() {
+			this.Tick += OnTick;
+			instance = this;
+		}
 
-    }
+	}
 }

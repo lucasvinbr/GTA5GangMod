@@ -32,7 +32,7 @@ namespace GTA.GangAndTurfMod {
 						driverList[i].ticksSinceLastUpdate = 0 - RandoMath.CachedRandom.Next(driverList[i].ticksBetweenUpdates / 3);
 					}
 				}
-				
+
 			}
 		}
 
@@ -47,7 +47,7 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-		
+
 		public GangVehicleUpdater() {
 			this.Tick += OnTick;
 			instance = this;

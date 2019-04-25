@@ -9,13 +9,11 @@ using GTA.Native;
 using System.Drawing;
 using GTA.Math;
 
-namespace GTA.GangAndTurfMod
-{
-    /// <summary>
-    /// this script controls most things related to gang behavior and relations.
-    /// </summary>
-    public class GangCalculations
-    {
+namespace GTA.GangAndTurfMod {
+	/// <summary>
+	/// this script contains methods used to define and calculate values used in many aspects of the mod.
+	/// </summary>
+	public class GangCalculations {
 		public static int CalculateHealthUpgradeCost(int currentMemberHealth) {
 			return ModOptions.instance.baseCostToUpgradeHealth + (currentMemberHealth + 20) * (20 * (currentMemberHealth / 20) + 1);
 		}
@@ -76,7 +74,7 @@ namespace GTA.GangAndTurfMod
 		/// <param name="contestedZone"></param>
 		/// <returns></returns>
 		public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone) {
-			return defenderGang.GetFixedStrengthValue() * 
+			return defenderGang.GetFixedStrengthValue() *
 				CalculateDefenderReinforcements(defenderGang, contestedZone);
 		}
 

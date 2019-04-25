@@ -21,7 +21,7 @@ namespace GTA.GangAndTurfMod {
 
 		void OnTick(object sender, EventArgs e) {
 			if (ModOptions.instance == null) return;
-			if(ModOptions.instance.msAutoSaveInterval <= 0) { //reset if invalid
+			if (ModOptions.instance.msAutoSaveInterval <= 0) { //reset if invalid
 				ModOptions.instance.msAutoSaveInterval = 3000;
 			}
 			Wait(ModOptions.instance.msAutoSaveInterval);
@@ -39,7 +39,7 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-		
+
 		public AutoSaver() {
 			this.Tick += OnTick;
 			instance = this;
