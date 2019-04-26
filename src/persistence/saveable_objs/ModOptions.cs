@@ -61,6 +61,7 @@ namespace GTA.GangAndTurfMod {
 				this.minMsTimeBetweenAttacksOnPlayerTurf = loadedOptions.minMsTimeBetweenAttacksOnPlayerTurf;
 				this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
 				this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
+				this.maxRewardPerZoneOwned = loadedOptions.maxRewardPerZoneOwned;
 				this.maxTurfValue = loadedOptions.maxTurfValue;
 
 				this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
@@ -170,19 +171,20 @@ namespace GTA.GangAndTurfMod {
 		public int minMsTimeBetweenAttacksOnPlayerTurf = 600000;
 		public int ticksBetweenGangMemberAIUpdates = 100;
 		public int baseRewardPerZoneOwned = 1200;
+		public int maxRewardPerZoneOwned = 15000;
 		public int maxTurfValue = 10;
 
 		/// <summary>
 		/// percentage sum, per zone owned, over the total reward received.
 		/// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
 		/// </summary>
-		public float rewardMultiplierPerZone = 0.2f;
+		public float rewardMultiplierPerZone = 0.1f;
 
-		public int baseCostToTakeTurf = 4000;
+		public int baseCostToTakeTurf = 3000;
 		public int rewardForTakingEnemyTurf = 5000;
 
 		public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
-		public int baseCostToUpgradeSingleTurfValue = 15000;
+		public int baseCostToUpgradeSingleTurfValue = 2000;
 		public int baseCostToUpgradeArmor = 35000;
 		public int baseCostToUpgradeHealth = 20000;
 		public int baseCostToUpgradeAccuracy = 40000;
@@ -522,15 +524,16 @@ namespace GTA.GangAndTurfMod {
 
 			ticksBetweenGangMemberAIUpdates = 100;
 			baseRewardPerZoneOwned = 1200;
+			maxRewardPerZoneOwned = 15000;
 			maxTurfValue = 10;
 
-			rewardMultiplierPerZone = 0.2f;
+			rewardMultiplierPerZone = 0.1f;
 
-			baseCostToTakeTurf = 4000;
+			baseCostToTakeTurf = 3000;
 			rewardForTakingEnemyTurf = 5000;
 
 			baseCostToUpgradeGeneralGangTurfValue = 1000000;
-			baseCostToUpgradeSingleTurfValue = 15000;
+			baseCostToUpgradeSingleTurfValue = 2000;
 			baseCostToUpgradeArmor = 35000;
 			baseCostToUpgradeHealth = 20000;
 			baseCostToUpgradeAccuracy = 40000;

@@ -102,6 +102,16 @@ namespace GTA.GangAndTurfMod {
 			}
 			return (baseReward + ourEnemy.GetGangVariedStrengthValue()) * (battleScale + 1);
 		}
+
+		public static int CalculateRewardForZone(TurfZone zone, int ownerGangTurfsCount) {
+
+			float singleZoneReward = (((float)zone.value / RandoMath.Max(ModOptions.instance.maxTurfValue, 1)) *
+				(ModOptions.instance.maxRewardPerZoneOwned - ModOptions.instance.baseRewardPerZoneOwned)) +
+				ModOptions.instance.baseRewardPerZoneOwned;
+
+			return (int)((1 + ModOptions.instance.rewardMultiplierPerZone * ownerGangTurfsCount) * singleZoneReward);
+
+		}
 	}
 
 }

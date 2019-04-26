@@ -1556,6 +1556,7 @@ namespace GTA.GangAndTurfMod {
 				if (item == newButton) {
 					ModOptions.instance.LoadOptions();
 					GangManager.instance.ResetGangUpdateIntervals();
+					GangManager.instance.AdjustGangsToModOptions();
 					UpdateUpgradeCosts();
 					carBackupBtn.Text = "Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")";
 					this.paraBackupBtn.Text = "Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")";

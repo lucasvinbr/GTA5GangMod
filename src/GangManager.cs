@@ -72,7 +72,7 @@ namespace GTA.GangAndTurfMod {
 				CreateNewEnemyGang();
 			}
 			else {
-				PlayerGang.AdjustStatsToModOptions();
+				AdjustGangsToModOptions();
 			}
 
 			if (gangData.gangs.Count == 1 && ModOptions.instance.maxCoexistingGangs > 1) {
@@ -108,10 +108,6 @@ namespace GTA.GangAndTurfMod {
 
 					//lets also see if their colors are consistent
 					gangData.gangs[i].EnforceGangColorConsistency();
-
-					//aaaand check if our current stats still conform to the min/max statuses defined in ModOptions
-					gangData.gangs[i].AdjustStatsToModOptions();
-
 
 
 					//add this gang to the enemy gangs
@@ -174,6 +170,10 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
+		/// <summary>
+		/// marks the gangData file as "dirty", making its data be saved in the next autosave check
+		/// </summary>
+		/// <param name="notifySuccess"></param>
 		public void SaveGangData(bool notifySuccess = true) {
 			AutoSaver.instance.gangDataDirty = true;
 			if (notifySuccess) {
@@ -359,34 +359,42 @@ namespace GTA.GangAndTurfMod {
 		public void GiveTurfRewardToGang(Gang targetGang) {
 
 			List<TurfZone> curGangZones = ZoneManager.instance.GetZonesControlledByGang(targetGang.name);
+			int zonesCount = curGangZones.Count;
 			if (targetGang.isPlayerOwned) {
 				if (curGangZones.Count > 0) {
 					int rewardedCash = 0;
 
-					for (int i = 0; i < curGangZones.Count; i++) {
-						int zoneReward = (int)((ModOptions.instance.baseRewardPerZoneOwned *
-							(1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count)) +
-							((curGangZones[i].value + 1) * ModOptions.instance.baseRewardPerZoneOwned * 0.25f));
-
-						MindControl.instance.AddOrSubtractMoneyToProtagonist(zoneReward);
+					for (int i = 0; i < zonesCount; i++) {
+						int zoneReward = GangCalculations.CalculateRewardForZone(curGangZones[i], zonesCount);
 
 						rewardedCash += zoneReward;
 					}
+
+					MindControl.instance.AddOrSubtractMoneyToProtagonist(rewardedCash);
 					Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
 					UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
 				}
 			}
 			else {
-				for (int j = 0; j < curGangZones.Count; j++) {
-					targetGang.moneyAvailable += (int)((curGangZones[j].value + 1) *
-						ModOptions.instance.baseRewardPerZoneOwned *
-						(1 + ModOptions.instance.rewardMultiplierPerZone * curGangZones.Count) * ModOptions.instance.extraProfitForAIGangsFactor);
+				for (int i = 0; i < curGangZones.Count; i++) {
+					targetGang.moneyAvailable += (int)
+						(GangCalculations.CalculateRewardForZone(curGangZones[i], zonesCount) * 
+						ModOptions.instance.extraProfitForAIGangsFactor);
 				}
 
 			}
 
 		}
 
+		/// <summary>
+		/// adjust gangs' stats and weapons in order to conform with the ModOptions file
+		/// </summary>
+		public void AdjustGangsToModOptions() {
+			foreach(Gang g in gangData.gangs) {
+				g.AdjustStatsToModOptions();
+				g.AdjustWeaponChoicesToModOptions();
+			}
+		}
 
 		/// <summary>
 		/// when the player asks to reset mod options, we must reset these update intervals because they

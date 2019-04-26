@@ -157,8 +157,13 @@ namespace GTA.GangAndTurfMod {
 				spawnedAllies = SpawnManager.instance.GetSpawnedMembersOfGang(GangManager.instance.PlayerGang).Count;
 				spawnedEnemies = SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang).Count;
 
-				maxSpawnedAllies = (int)(RandoMath.Max((ModOptions.instance.spawnedMemberLimit / 2) * reinforcementsAdvantage, 5));
+				maxSpawnedAllies = (int)RandoMath.Max(
+					RandoMath.Min((ModOptions.instance.spawnedMemberLimit / 2) * reinforcementsAdvantage,
+					ModOptions.instance.spawnedMemberLimit - 5), 5);
 				maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, 5);
+
+				Logger.Log(string.Concat("war started! Reinf advantage: ", reinforcementsAdvantage.ToString(),
+					" maxAllies: ", maxSpawnedAllies.ToString(), " maxEnemies: ", maxSpawnedEnemies.ToString()), 3);
 
 				isOccurring = true;
 
@@ -408,7 +413,7 @@ namespace GTA.GangAndTurfMod {
 			Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
 			enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(referencePoint,
-				ModOptions.instance.GetAcceptableMemberSpawnDistance(40), minDistanceFromReference,
+				ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
 				1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
 			if (enemySpawnPoints[0] == Vector3.Zero) {
@@ -423,7 +428,7 @@ namespace GTA.GangAndTurfMod {
 				//the spawn is too far from the player's gang spawn!
 				//relocate
 				enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(referencePoint,
-				ModOptions.instance.GetAcceptableMemberSpawnDistance(40), minDistanceFromReference,
+				ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
 				1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
 				//then check again if we failed...
@@ -589,6 +594,7 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
+		#region spawn/death/culling handlers
 		/// <summary>
 		/// spawns a vehicle that has the player as destination
 		/// </summary>
@@ -739,6 +745,8 @@ namespace GTA.GangAndTurfMod {
 				if (spawnedEnemies < 0) spawnedEnemies = 0;
 			}
 		}
+
+		#endregion
 
 		/// <summary>
 		/// true if the player is in the war zone or close enough to the zone blip

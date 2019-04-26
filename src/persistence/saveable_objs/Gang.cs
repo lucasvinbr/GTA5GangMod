@@ -90,21 +90,6 @@ namespace GTA.GangAndTurfMod {
 			GangManager.instance.SaveGangData(false);
 		}
 
-
-		public void TakeZone(TurfZone takenZone, bool doNotify = true) {
-			if (doNotify && ModOptions.instance.notificationsEnabled) {
-				string notificationMsg = string.Concat("The ", name, " have taken ", takenZone.zoneName);
-				if (takenZone.ownerGangName != "none") {
-					notificationMsg = string.Concat(notificationMsg, " from the ", takenZone.ownerGangName);
-				}
-				notificationMsg = string.Concat(notificationMsg, "!");
-				UI.Notify(notificationMsg);
-			}
-			takenZone.value = baseTurfValue;
-			takenZone.ownerGangName = name;
-			ZoneManager.instance.UpdateZoneData(takenZone);
-		}
-
 		/// <summary>
 		///this checks if the gangs member, blip and car colors are consistent, like black, black and black.
 		///if left unassigned, the blip color is 0 and the car color is metallic black:
@@ -128,6 +113,26 @@ namespace GTA.GangAndTurfMod {
 			memberArmor = RandoMath.TrimValue(memberArmor, 0, ModOptions.instance.maxGangMemberArmor);
 			memberAccuracyLevel = RandoMath.TrimValue(memberAccuracyLevel, 0, ModOptions.instance.maxGangMemberAccuracy);
 			baseTurfValue = RandoMath.TrimValue(baseTurfValue, 0, ModOptions.instance.maxTurfValue);
+
+			GangManager.instance.SaveGangData(false);
+		}
+
+		/// <summary>
+		/// removes weapons from our preferred list if they're not in the buyables list...
+		/// then checks if we have too few preferred guns, adding some more if that's the case
+		/// </summary>
+		public void AdjustWeaponChoicesToModOptions() {
+			for(int i = preferredWeaponHashes.Count - 1; i >= 0; i--) {
+				if(ModOptions.instance.GetBuyableWeaponByHash(preferredWeaponHashes[i]) == null) {
+					gangWeaponHashes.Remove(preferredWeaponHashes[i]);
+					preferredWeaponHashes.RemoveAt(i);
+				}
+			}
+
+			if(preferredWeaponHashes.Count <= 2) {
+				SetPreferredWeapons();
+			}
+
 			GangManager.instance.SaveGangData(false);
 		}
 
@@ -241,6 +246,20 @@ namespace GTA.GangAndTurfMod {
 					gangWeaponHashes.Add(WeaponHash.Pistol);
 				}
 			}
+		}
+
+		public void TakeZone(TurfZone takenZone, bool doNotify = true) {
+			if (doNotify && ModOptions.instance.notificationsEnabled) {
+				string notificationMsg = string.Concat("The ", name, " have taken ", takenZone.zoneName);
+				if (takenZone.ownerGangName != "none") {
+					notificationMsg = string.Concat(notificationMsg, " from the ", takenZone.ownerGangName);
+				}
+				notificationMsg = string.Concat(notificationMsg, "!");
+				UI.Notify(notificationMsg);
+			}
+			takenZone.value = baseTurfValue;
+			takenZone.ownerGangName = name;
+			ZoneManager.instance.UpdateZoneData(takenZone);
 		}
 
 		/// <summary>
