@@ -386,14 +386,16 @@ namespace GTA.GangAndTurfMod {
 					RandoMath.GetRandomElementFromList(ownerGang.memberVariations);
 				Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
 				if (newPed != null) {
-					chosenMember.SetPedAppearance(newPed);
+                    chosenMember.SetPedAppearance(newPed);
 
-					newPed.Accuracy = ownerGang.memberAccuracyLevel;
-					newPed.MaxHealth = ownerGang.memberHealth;
-					newPed.Health = ownerGang.memberHealth;
-					newPed.Armor = ownerGang.memberArmor;
+                    newPed.Accuracy = ownerGang.memberAccuracyLevel;
 
-					newPed.Money = RandoMath.CachedRandom.Next(60);
+                    newPed.CanWrithe = false; //no early dying
+                    newPed.MaxHealth = 100 + ownerGang.memberHealth;
+                    newPed.Health = 100 + ownerGang.memberHealth;
+                    newPed.Armor = ownerGang.memberArmor;
+
+                    newPed.Money = RandoMath.CachedRandom.Next(60);
 
 					//set the blip, if enabled
 					if (ModOptions.instance.showGangMemberBlips) {
@@ -443,7 +445,6 @@ namespace GTA.GangAndTurfMod {
 					Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
 
 					newPed.CanSwitchWeapons = true;
-					newPed.CanWrithe = false; //no early dying
 
 					//enlist this new gang member in the spawned list!
 					SpawnedGangMember newMemberAI = null;
