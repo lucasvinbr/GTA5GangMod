@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("lucasvinbr")]
 [assembly: AssemblyProduct("GangNTurfMod")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.3.18.0")]
-[assembly: AssemblyFileVersion("1.3.18.0")]
+[assembly: AssemblyVersion("1.3.19.0")]
+[assembly: AssemblyFileVersion("1.3.19.0")]
