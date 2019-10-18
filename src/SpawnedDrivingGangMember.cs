@@ -220,7 +220,7 @@ namespace GTA.GangAndTurfMod {
 					vehicleIAmDriving.CurrentBlip.Remove();
 				}
 
-				vehicleIAmDriving.IsPersistent = false;
+				vehicleIAmDriving.MarkAsNoLongerNeeded();
 				vehicleIAmDriving = null;
 			}
 

@@ -106,11 +106,11 @@ namespace GTA.GangAndTurfMod {
 				return;
 			}
 
-			if (CurrentPlayerCharacter.Health > 4000 && CurrentPlayerCharacter.Health != 4900) {
-				CurrentPlayerCharacter.Armor -= (4900 - CurrentPlayerCharacter.Health);
+			if (CurrentPlayerCharacter.Health > 4000 && CurrentPlayerCharacter.Health != CurrentPlayerCharacter.MaxHealth) {
+				CurrentPlayerCharacter.Armor -= (CurrentPlayerCharacter.MaxHealth - CurrentPlayerCharacter.Health);
 			}
 
-			CurrentPlayerCharacter.Health = 5000;
+			CurrentPlayerCharacter.Health = CurrentPlayerCharacter.MaxHealth;
 
 			if (CurrentPlayerCharacter.Armor <= 0) //dead!
 			{
@@ -176,7 +176,7 @@ namespace GTA.GangAndTurfMod {
 			targetPed.Task.ClearAllImmediately();
 
 			Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
-			Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth;
+			Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth - 100;
 			targetPed.Armor += targetPed.Health;
 			targetPed.MaxHealth = 5000;
 			targetPed.Health = 5000;
