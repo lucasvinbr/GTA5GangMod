@@ -186,11 +186,11 @@ namespace GTA.GangAndTurfMod {
 					freeListEntry.legsTextureIndex == potentialEntry.legsTextureIndex &&
 					freeListEntry.torsoDrawableIndex == potentialEntry.torsoDrawableIndex &&
 					freeListEntry.torsoTextureIndex == potentialEntry.torsoTextureIndex &&
-					AreArrayContentsTheSame(freeListEntry.extraDrawableIndexes, potentialEntry.extraDrawableIndexes) &&
-					AreArrayContentsTheSame(freeListEntry.extraTextureIndexes, potentialEntry.extraTextureIndexes) &&
-					AreArrayContentsTheSame(freeListEntry.propDrawableIndexes, potentialEntry.propDrawableIndexes) &&
-					AreArrayContentsTheSame(freeListEntry.propTextureIndexes, potentialEntry.propTextureIndexes) &&
-					AreArrayContentsTheSame(freeListEntry.headOverlayIndexes, potentialEntry.headOverlayIndexes)) {
+					RandoMath.AreIntArrayContentsTheSame(freeListEntry.extraDrawableIndexes, potentialEntry.extraDrawableIndexes) &&
+                    RandoMath.AreIntArrayContentsTheSame(freeListEntry.extraTextureIndexes, potentialEntry.extraTextureIndexes) &&
+                    RandoMath.AreIntArrayContentsTheSame(freeListEntry.propDrawableIndexes, potentialEntry.propDrawableIndexes) &&
+                    RandoMath.AreIntArrayContentsTheSame(freeListEntry.propTextureIndexes, potentialEntry.propTextureIndexes) &&
+                    RandoMath.AreIntArrayContentsTheSame(freeListEntry.headOverlayIndexes, potentialEntry.headOverlayIndexes)) {
 						return freeListEntry;
 					}
 				}
@@ -200,16 +200,7 @@ namespace GTA.GangAndTurfMod {
 			return null;
 		}
 
-		static bool AreArrayContentsTheSame(int[] arrayX, int[] arrayY) {
-			if (arrayX == null || arrayY == null) return false;
-			if (arrayX.Length != arrayY.Length) return false;
-
-			for (int i = 0; i < arrayX.Length; i++) {
-				if (arrayX[i] != arrayY[i]) return false;
-			}
-
-			return true;
-		}
+		
 
 	}
 }

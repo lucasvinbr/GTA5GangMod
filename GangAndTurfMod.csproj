@@ -83,6 +83,7 @@
   <ItemGroup>
     <Compile Include="src\AmbientGangMemberSpawner.cs" />
     <Compile Include="src\MindControl.cs" />
+    <Compile Include="src\persistence\saveable_objs\ExtendedPotentialGangMember.cs" />
     <Compile Include="src\SpawnManager.cs" />
     <Compile Include="src\persistence\AutoSaver.cs" />
     <Compile Include="src\persistence\saveable_objs\FreemodePotentialGangMember.cs" />

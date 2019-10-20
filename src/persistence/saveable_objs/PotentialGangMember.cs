@@ -13,6 +13,7 @@ namespace GTA.GangAndTurfMod
     /// that way, when an AI gang is picking a color, it will pick members with a similar color
     /// </summary>
     [XmlInclude(typeof(FreemodePotentialGangMember))]
+    [XmlInclude(typeof(ExtendedPotentialGangMember))]
     public class PotentialGangMember {
        public enum DressStyle
         {
@@ -223,10 +224,13 @@ namespace GTA.GangAndTurfMod
                 if(potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
                 {
                     return FreemodePotentialGangMember.FreemodeSimilarEntryCheck(potentialEntry as FreemodePotentialGangMember) != null;
+                }else if (potentialEntry.GetType() == typeof(ExtendedPotentialGangMember))
+                {
+                    return ExtendedPotentialGangMember.ExtendedSimilarEntryCheck(potentialEntry as ExtendedPotentialGangMember) != null;
                 }
-                
 
-                for(int i = 0; i < memberList.Count; i++)
+
+                for (int i = 0; i < memberList.Count; i++)
                 {
                     if (memberList[i].modelHash == potentialEntry.modelHash &&
                         memberList[i].hairDrawableIndex == potentialEntry.hairDrawableIndex &&
@@ -254,6 +258,10 @@ namespace GTA.GangAndTurfMod
                 if (potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
                 {
                     return FreemodePotentialGangMember.FreemodeSimilarEntryCheck(potentialEntry as FreemodePotentialGangMember);
+                }
+                else if (potentialEntry.GetType() == typeof(ExtendedPotentialGangMember))
+                {
+                    return ExtendedPotentialGangMember.ExtendedSimilarEntryCheck(potentialEntry as ExtendedPotentialGangMember);
                 }
 
                 for (int i = 0; i < memberList.Count; i++)

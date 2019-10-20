@@ -25,6 +25,8 @@ namespace GTA.GangAndTurfMod {
 		int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost, curZoneValueUpgradeCost,
 			warLightAtkCost, warMedAtkCost, warLargeAtkCost, warMassAtkCost;
 
+        bool savePotentialMembersAsExtended = false;
+
 		Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> buyableWeaponCheckboxesDict =
 			new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
 
@@ -540,9 +542,12 @@ namespace GTA.GangAndTurfMod {
 
 			UIMenuListItem styleList = new UIMenuListItem("Member Dressing Style", memberStyles, 0, "The way the selected member is dressed. Used by the AI when picking members (if the AI gang's chosen style is the same as this member's, it may choose this member).");
 			UIMenuListItem colorList = new UIMenuListItem("Member Color", memberColors, 0, "The color the member will be assigned to. Used by the AI when picking members (if the AI gang's color is the same as this member's, it may choose this member).");
-			memberMenu.AddItem(styleList);
+            UIMenuCheckboxItem extendedModeToggle = new UIMenuCheckboxItem("Extended Save Mode", savePotentialMembersAsExtended, "If enabled, saves all clothing indexes for non-freemode peds. Can help with some addon peds.");
+
+            memberMenu.AddItem(styleList);
 			memberMenu.AddItem(colorList);
-			memberMenu.OnListChange += (sender, item, index) => {
+            memberMenu.AddItem(extendedModeToggle);
+            memberMenu.OnListChange += (sender, item, index) => {
 				if (item == styleList) {
 					memberStyle = item.Index;
 				}
@@ -552,9 +557,16 @@ namespace GTA.GangAndTurfMod {
 
 			};
 
-		}
+            memberMenu.OnCheckboxChange += (sender, item, checked_) => {
+                if (item == extendedModeToggle)
+                {
+                    savePotentialMembersAsExtended = checked_;
+                }
+            };
 
-		void AddSaveMemberButton() {
+        }
+
+        void AddSaveMemberButton() {
 			UIMenuItem newButton = new UIMenuItem("Save Potential Member for future AI gangs", "Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.");
 			memberMenu.AddItem(newButton);
 			memberMenu.OnItemSelect += (sender, item, index) => {
@@ -568,7 +580,11 @@ namespace GTA.GangAndTurfMod {
 						}
 					}
 					else {
-						if (PotentialGangMember.AddMemberAndSavePool(new PotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor))) {
+                        bool addAttempt = savePotentialMembersAsExtended ?
+                            PotentialGangMember.AddMemberAndSavePool(new ExtendedPotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)) :
+                            PotentialGangMember.AddMemberAndSavePool(new PotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor));
+
+                        if (addAttempt) {
 							UI.ShowSubtitle("Potential member added!");
 						}
 						else {
@@ -595,8 +611,14 @@ namespace GTA.GangAndTurfMod {
 						}
 					}
 					else {
-						if (GangManager.instance.PlayerGang.AddMemberVariation(new PotentialGangMember
-					   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor))) {
+                        bool addAttempt = savePotentialMembersAsExtended ?
+                            GangManager.instance.PlayerGang.AddMemberVariation(new ExtendedPotentialGangMember
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)) :
+                            GangManager.instance.PlayerGang.AddMemberVariation(new PotentialGangMember
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor));
+
+
+                        if (addAttempt) {
 							UI.ShowSubtitle("Member added successfully!");
 						}
 						else {
@@ -624,9 +646,16 @@ namespace GTA.GangAndTurfMod {
 						}
 					}
 					else {
-						if (pickedGang.AddMemberVariation(new PotentialGangMember
-					   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor))) {
-							UI.ShowSubtitle("Member added successfully!");
+                        bool addAttempt = savePotentialMembersAsExtended ?
+                            pickedGang.AddMemberVariation(new ExtendedPotentialGangMember
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)) :
+                            pickedGang.AddMemberVariation(new PotentialGangMember
+                       (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor));
+
+
+                        if (addAttempt)
+                        {
+                            UI.ShowSubtitle("Member added successfully!");
 						}
 						else {
 							UI.ShowSubtitle("That gang already has a similar member.");
@@ -679,7 +708,9 @@ namespace GTA.GangAndTurfMod {
 					}
 					else {
 						if (ownerGang.RemoveMemberVariation(new PotentialGangMember
-						(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor))) {
+						(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)) ||
+                        ownerGang.RemoveMemberVariation(new ExtendedPotentialGangMember
+                        (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor))) {
 							UI.ShowSubtitle("Member removed successfully!");
 						}
 						else {
@@ -713,8 +744,11 @@ namespace GTA.GangAndTurfMod {
 					else {
 						PotentialGangMember memberToRemove = new PotentialGangMember
 				   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor);
+                        ExtendedPotentialGangMember memberToRemoveEx = new ExtendedPotentialGangMember
+                   (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor);
 
-						if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove)) {
+                        if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove) ||
+                        PotentialGangMember.RemoveMemberAndSavePool(memberToRemoveEx)) {
 							UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
 						}
 						else {

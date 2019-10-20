@@ -150,5 +150,18 @@ namespace GTA.GangAndTurfMod {
 
 			return value;
 		}
-	}
+
+        public static bool AreIntArrayContentsTheSame(int[] arrayX, int[] arrayY)
+        {
+            if (arrayX == null || arrayY == null) return false;
+            if (arrayX.Length != arrayY.Length) return false;
+
+            for (int i = 0; i < arrayX.Length; i++)
+            {
+                if (arrayX[i] != arrayY[i]) return false;
+            }
+
+            return true;
+        }
+    }
 }
