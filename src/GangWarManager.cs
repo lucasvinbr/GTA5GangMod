@@ -33,7 +33,7 @@ namespace GTA.GangAndTurfMod {
 		private int curTicksAwayFromBattle = 0;
 
 		/// <summary>
-		/// numbers greater than 1 for player advantage, lesser for enemy advantage.
+		/// numbers closer to 1 for player advantage, less than 0.5 for enemy advantage.
 		/// this advantage affects the member respawns:
 		/// whoever has the greater advantage tends to have priority when spawning
 		/// </summary>
@@ -152,14 +152,15 @@ namespace GTA.GangAndTurfMod {
 
 				initialEnemyReinforcements = enemyReinforcements;
 
-				reinforcementsAdvantage = alliedReinforcements / (float)enemyReinforcements;
+				reinforcementsAdvantage = alliedReinforcements / (float)(enemyReinforcements + alliedReinforcements);
 
 				spawnedAllies = SpawnManager.instance.GetSpawnedMembersOfGang(GangManager.instance.PlayerGang).Count;
 				spawnedEnemies = SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang).Count;
 
-				maxSpawnedAllies = (int)RandoMath.Max(
-					RandoMath.Min((ModOptions.instance.spawnedMemberLimit / 2) * reinforcementsAdvantage,
-					ModOptions.instance.spawnedMemberLimit - 5), 5);
+				maxSpawnedAllies = (int)RandoMath.Max(RandoMath.Min(
+					(ModOptions.instance.spawnedMemberLimit) * reinforcementsAdvantage,
+					ModOptions.instance.spawnedMemberLimit - 5),
+					5);
 				maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, 5);
 
 				Logger.Log(string.Concat("war started! Reinf advantage: ", reinforcementsAdvantage.ToString(),
@@ -574,6 +575,22 @@ namespace GTA.GangAndTurfMod {
 
 		}
 
+
+		public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float threshold = 0.5f)
+		{
+			Vector3[] consideredSpawns = isEnemyTeam ? enemySpawnPoints : alliedSpawnPoints;
+
+			foreach(Vector3 spawn in consideredSpawns)
+			{
+				if(World.GetDistance(position, spawn) <= threshold)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		#endregion
 
 
@@ -694,8 +711,7 @@ namespace GTA.GangAndTurfMod {
 				//don't attempt to cull a friendly driving member because they could be a backup car called by the player...
 				//and the player can probably take more advantage of any stuck friendly vehicle than the AI can
 				if ((!cullFriendlies || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, spawnedMembers[i].watchedPed, false)) &&
-					MindControl.CurrentPlayerCharacter.Position.DistanceTo2D(spawnedMembers[i].watchedPed.Position) >
-				ModOptions.instance.minDistanceMemberSpawnFromPlayer && !spawnedMembers[i].watchedPed.IsOnScreen) {
+					!spawnedMembers[i].watchedPed.IsOnScreen) {
 					spawnedMembers[i].Die(true);
 					//make sure we don't exagerate!
 					//stop if we're back inside the limits

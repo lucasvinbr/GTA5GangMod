@@ -39,6 +39,8 @@ namespace GTA.GangAndTurfMod {
 
 		public bool hasDriveByGun = false;
 
+		private int stuckCounter = 0;
+
 		public override void Update() {
 			Logger.Log("member update: start", 5);
 			if ((watchedPed.IsInAir) || MindControl.CurrentPlayerCharacter == watchedPed) {
@@ -63,6 +65,17 @@ namespace GTA.GangAndTurfMod {
 								Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.enemySpawnPoints);
 								if (ourDestination != Vector3.Zero) {
 									watchedPed.Task.RunTo(ourDestination);
+									if(GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
+										watchedPed.Position, false)){
+										//maybe we're spawning inside a building?
+										stuckCounter++;
+										if(stuckCounter > 3)
+										{
+											UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+											watchedPed.Position = MindControl.SafePositionNearPlayer;
+											stuckCounter = 0;
+										}
+									}
 								}
 
 							}
@@ -72,6 +85,19 @@ namespace GTA.GangAndTurfMod {
 								Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
 								if (ourDestination != Vector3.Zero) {
 									watchedPed.Task.RunTo(ourDestination);
+									if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
+										watchedPed.Position, true))
+									{
+										//maybe we're spawning inside a building?
+										stuckCounter++;
+										if (stuckCounter > 3)
+										{
+											//maybe we'll be warped far away, but that's better than staying stuck
+											watchedPed.Position = World.GetNextPositionOnStreet(watchedPed.Position);
+											GangWarManager.instance.ReplaceEnemySpawnPoint();
+											stuckCounter = 0;
+										}
+									}
 								}
 							}
 						}
@@ -117,6 +143,7 @@ namespace GTA.GangAndTurfMod {
 							//possibly leave the vehicle if the driver has left already
 							if (RandoMath.RandomBool()) {
 								watchedPed.Task.LeaveVehicle();
+								stuckCounter = 0;
 							}
 						}
 					}
@@ -182,6 +209,7 @@ namespace GTA.GangAndTurfMod {
 			this.myGang = null;
 			this.watchedPed = null;
 			curStatus = MemberStatus.none;
+			stuckCounter = 0;
 			SpawnManager.instance.livingMembersCount--;
 
 		}
