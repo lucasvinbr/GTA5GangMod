@@ -431,18 +431,18 @@ namespace GTA.GangAndTurfMod {
 					//set the relationship group
 					newPed.RelationshipGroup = ownerGang.relationGroupIndex;
 
-					newPed.NeverLeavesGroup = true;
+					//newPed.NeverLeavesGroup = true;
 
 					//newPed.BlockPermanentEvents = true;
 					//newPed.StaysInVehicleWhenJacked = true;
 
-					Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
-					Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 100); //average combat ability
-																			 //Function.Call(Hash.SET_PED_FLEE_ATTRIBUTES, newPed, 0, 0); //clears the flee attributes?
+					//Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
+					//Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 100); //average combat ability
+					//														 //Function.Call(Hash.SET_PED_FLEE_ATTRIBUTES, newPed, 0, 0); //clears the flee attributes?
 
-					Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
-					Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
-					Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
+					//Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
+					//Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
+					//Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
 
 					newPed.CanSwitchWeapons = true;
 
