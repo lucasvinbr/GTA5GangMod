@@ -775,13 +775,17 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// forces the hate relation level between the involved gangs (includes the player)
+		/// forces the hate relation level between the involved gangs (includes the player, if not a spectator)
 		/// </summary>
 		public void SetHateRelationsBetweenGangs() {
 			World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, GangManager.instance.PlayerGang.relationGroupIndex);
 			World.SetRelationshipBetweenGroups(Relationship.Hate, GangManager.instance.PlayerGang.relationGroupIndex, enemyGang.relationGroupIndex);
-			World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
-			World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, enemyGang.relationGroupIndex);
+
+			if (!ModOptions.instance.playerIsASpectator)
+			{
+				World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
+				World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, enemyGang.relationGroupIndex);
+			}
 		}
 
 		void OnTick(object sender, EventArgs e) {

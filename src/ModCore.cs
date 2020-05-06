@@ -31,7 +31,7 @@ namespace GTA.GangAndTurfMod {
 
 			this.KeyUp += OnKeyUp;
 			this.Tick += OnTick;
-
+			Logger.ClearLog();
 			Logger.Log("mod started!", 2);
 
 			bool successfulInit = GangMemberUpdater.Initialize();

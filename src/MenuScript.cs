@@ -1362,6 +1362,7 @@ namespace GTA.GangAndTurfMod {
 			AddGangsStartWithPistolToggle();
 			AddKeyBindingMenu();
 			AddGamepadControlsToggle();
+			AddPlayerSpectatorToggle();
 			AddForceAIGangsTickButton();
 			AddForceAIAttackButton();
 			AddReloadOptionsButton();
@@ -1492,7 +1493,21 @@ namespace GTA.GangAndTurfMod {
 			};
 		}
 
+		void AddPlayerSpectatorToggle()
+		{
+			UIMenuCheckboxItem spectatorToggle = new UIMenuCheckboxItem("Player Is a Spectator", ModOptions.instance.playerIsASpectator, "If enabled, all gangs should ignore the player, even during wars.");
 
+			modSettingsSubMenu.AddItem(spectatorToggle);
+			modSettingsSubMenu.OnCheckboxChange += (sender, item, checked_) => {
+				if (item == spectatorToggle)
+				{
+					ModOptions.instance.playerIsASpectator = checked_;
+					ModOptions.instance.SaveOptions(false);
+					GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+				}
+
+			};
+		}
 
 		void AddGamepadControlsToggle() {
 			UIMenuCheckboxItem padToggle = new UIMenuCheckboxItem("Use joypad controls?", ModOptions.instance.joypadControls, "Enables/disables the use of joypad commands to recruit members (pad right), call backup (pad left) and output zone info (pad up). Commands are used while aiming. All credit goes to zixum.");

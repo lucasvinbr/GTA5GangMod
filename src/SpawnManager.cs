@@ -92,11 +92,11 @@ namespace GTA.GangAndTurfMod {
 		/// <param name="sidewalk"></param>
 		/// <returns></returns>
 		public static Vector3 GenerateSpawnPos(Vector3 desiredPos, Nodetype roadtype, bool sidewalk) {
-			Vector3 finalpos = Vector3.Zero;
+			Vector3 finalpos;
 			bool forceOffroad = false;
 			OutputArgument outArgA = new OutputArgument();
 			int nodeNumber = 1;
-			int roadTypeAsInt = 0;
+			int roadTypeAsInt;
 			switch (roadtype) {
 				case Nodetype.Offroad:
 					roadTypeAsInt = 1;
@@ -352,11 +352,12 @@ namespace GTA.GangAndTurfMod {
 			Vector3 refPos = referencePos ?? MindControl.SafePositionNearPlayer;
 			Vector3 getNextPosTarget = Vector3.Zero;
 
+
 			getNextPosTarget = refPos + RandoMath.RandomDirection(true) *
 						  ModOptions.instance.GetAcceptableCarSpawnDistance();
 
 			return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
-					World.GetNextPositionOnStreet(getNextPosTarget);
+					GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false); ;
 		}
 
 		/// <summary>
@@ -395,7 +396,14 @@ namespace GTA.GangAndTurfMod {
                     newPed.Health = 100 + ownerGang.memberHealth;
                     newPed.Armor = ownerGang.memberArmor;
 
-                    newPed.Money = RandoMath.CachedRandom.Next(60);
+					if (ModOptions.instance.membersCanDropMoneyOnDeath)
+					{
+						newPed.Money = RandoMath.CachedRandom.Next(60);
+					}
+					else
+					{
+						newPed.Money = 0;
+					}
 
 					//set the blip, if enabled
 					if (ModOptions.instance.showGangMemberBlips) {

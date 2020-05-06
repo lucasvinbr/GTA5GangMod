@@ -124,7 +124,8 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// sets relations between gangs to a certain level according to the aggressiveness
+		/// sets relations between gangs to a certain level according to the aggressiveness.
+		/// Also makes all gangs ignore the player if playerIsSpectator is true
 		/// </summary>
 		/// <param name="aggrLevel"></param>
 		public void SetGangRelationsAccordingToAggrLevel(ModOptions.GangMemberAggressivenessMode aggrLevel) {
@@ -152,9 +153,23 @@ namespace GTA.GangAndTurfMod {
 						World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
 					}
 				}
-				if (!gangData.gangs[i].isPlayerOwned && gangData.gangs[i] != excludedGang) {
-					World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-					World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+
+				if (!gangData.gangs[i].isPlayerOwned){
+					if (ModOptions.instance.playerIsASpectator)
+					{
+						//everyone should try to ignore the player, even during wars
+						World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+						World.SetRelationshipBetweenGroups(Relationship.Respect, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+					}else if (gangData.gangs[i] != excludedGang)
+					{
+						World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+						World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+					}
+					else
+					{
+						World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+						World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+					}
 				}
 			}
 		}
@@ -289,14 +304,6 @@ namespace GTA.GangAndTurfMod {
 			//relations...
 			newGang.relationGroupIndex = World.AddRelationshipGroup(gangName);
 
-			World.SetRelationshipBetweenGroups(Relationship.Hate, newGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
-			World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, newGang.relationGroupIndex);
-
-			for (int i = 0; i < gangData.gangs.Count; i++) {
-				World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, newGang.relationGroupIndex);
-				World.SetRelationshipBetweenGroups(Relationship.Hate, newGang.relationGroupIndex, gangData.gangs[i].relationGroupIndex);
-			}
-
 			gangData.gangs.Add(newGang);
 
 			newGang.GetPistolIfOptionsRequire();
@@ -306,6 +313,7 @@ namespace GTA.GangAndTurfMod {
 				UI.Notify("The " + gangName + " have entered San Andreas!");
 			}
 
+			SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
 
 			return newGang;
 		}

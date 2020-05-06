@@ -17,9 +17,17 @@ namespace GTA.GangAndTurfMod {
 		public static void Log(object message, int logLevel) {
 			if (ModOptions.instance == null) return;
 			if (ModOptions.instance.loggerLevel >= logLevel) {
-				File.AppendAllText("GangAndTurfMod-" + DateTime.Today.ToString("yyyy-MM-dd") + ".log", DateTime.Now + " : " + message + Environment.NewLine);
+				File.AppendAllText("GangAndTurfMod.log", DateTime.Now + " : " + message + Environment.NewLine);
 			}
 
+		}
+
+		/// <summary>
+		/// overwrites the log file's content with a "cleared log" message
+		/// </summary>
+		public static void ClearLog()
+		{
+			File.WriteAllText("GangAndTurfMod.log", DateTime.Now + " : " + "Cleared log! (This happens when the mod is initialized)" + Environment.NewLine);
 		}
 	}
 }

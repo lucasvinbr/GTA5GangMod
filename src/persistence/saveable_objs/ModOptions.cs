@@ -31,6 +31,8 @@ namespace GTA.GangAndTurfMod {
 
 				this.gangMemberAggressiveness = loadedOptions.gangMemberAggressiveness;
 
+				this.playerIsASpectator = loadedOptions.playerIsASpectator;
+
 				this.addToGroupKey = loadedOptions.addToGroupKey;
 				this.mindControlKey = loadedOptions.mindControlKey;
 				this.openGangMenuKey = loadedOptions.openGangMenuKey;
@@ -92,6 +94,7 @@ namespace GTA.GangAndTurfMod {
 				this.loggerLevel = loadedOptions.loggerLevel;
 				this.preventAIExpansion = loadedOptions.preventAIExpansion;
 				this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
+				this.membersCanDropMoneyOnDeath = loadedOptions.membersCanDropMoneyOnDeath;
 				this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
 				this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
 				this.forceSpawnCars = loadedOptions.forceSpawnCars;
@@ -152,6 +155,8 @@ namespace GTA.GangAndTurfMod {
 
 		public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
+		public bool playerIsASpectator = false;
+
 		public int startingGangMemberHealth = 20;
 		public int maxGangMemberHealth = 120;
 		public int maxGangMemberArmor = 100;
@@ -211,6 +216,7 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		public int loggerLevel = 1;
 		public bool preventAIExpansion = false, membersSpawnWithMeleeOnly = false, warAgainstPlayerEnabled = true, ambientSpawningEnabled = true;
+		public bool membersCanDropMoneyOnDeath = true;
 		public bool forceSpawnCars = false;
 		public bool joypadControls = false;
 
@@ -504,6 +510,8 @@ namespace GTA.GangAndTurfMod {
 
 			gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
+			playerIsASpectator = false;
+
 			startingGangMemberHealth = 20;
 			maxGangMemberHealth = 120;
 			maxGangMemberArmor = 100;
@@ -560,6 +568,7 @@ namespace GTA.GangAndTurfMod {
 			ambientSpawningEnabled = true;
 			forceSpawnCars = false;
 			joypadControls = false;
+			membersCanDropMoneyOnDeath = true;
 
 			showGangMemberBlips = true;
 

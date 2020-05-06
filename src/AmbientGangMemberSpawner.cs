@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod {
 
 				if (Game.Player.WantedLevel > Game.MaxWantedLevel) Game.Player.WantedLevel--;
 
-				if (postWarBackupsRemaining > 0 && GangWarManager.instance.playerNearWarzone) {
+				if (postWarBackupsRemaining > 0) {
 					Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position,
 						safePlayerPos = MindControl.SafePositionNearPlayer;
 					if (SpawnManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
