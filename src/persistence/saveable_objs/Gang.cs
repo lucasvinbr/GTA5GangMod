@@ -268,30 +268,19 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public int GetGangVariedStrengthValue() {
-			int weaponValue = 200;
-			if (gangWeaponHashes.Count > 0) {
-				ModOptions.BuyableWeapon randomWeap = ModOptions.instance.GetBuyableWeaponByHash(RandoMath.GetRandomElementFromList(gangWeaponHashes));
-				if (randomWeap != null) {
-					weaponValue = randomWeap.price;
-				}
-			}
-			return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
-				weaponValue / 200 +
-				memberAccuracyLevel * 10 +
-				memberArmor +
-				memberHealth;
+			return GetFixedStrengthValue() + RandoMath.CachedRandom.Next(10);
 		}
 
 		/// <summary>
 		/// this value doesn't have random variations. we use the gang's number of territories
-		///  and upgrades to define this. a high value is around 2000, 3000
+		///  and upgrades to define this. a high value (everything maxed) is around 30
 		/// </summary>
 		/// <returns></returns>
 		public int GetFixedStrengthValue() {
-			return ZoneManager.instance.GetZonesControlledByGang(name).Count * 40 +
-				memberAccuracyLevel * 10 +
-				memberArmor +
-				memberHealth;
+			return (int) (ZoneManager.instance.GetZonesControlledByGang(name).Count / 6 +
+				memberAccuracyLevel / ((float) ModOptions.instance.maxGangMemberAccuracy) * 10 +
+				memberArmor / ((float) RandoMath.Max(ModOptions.instance.maxGangMemberArmor, 1)) * 10 +
+				memberHealth / ((float)ModOptions.instance.maxGangMemberHealth) * 10);
 		}
 
 		/// <summary>
@@ -299,8 +288,8 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public int GetReinforcementsValue() {
-			return ZoneManager.instance.GetZonesControlledByGang(name).Count * 50 +
-				baseTurfValue * 500;
+			return ZoneManager.instance.GetZonesControlledByGang(name).Count * 2 +
+				baseTurfValue * 5;
 		}
 
 		public int CompareGunsByPrice(WeaponHash x, WeaponHash y) {

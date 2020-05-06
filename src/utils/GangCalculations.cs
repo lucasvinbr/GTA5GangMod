@@ -58,12 +58,12 @@ namespace GTA.GangAndTurfMod {
 
 		public static int CalculateAttackerReinforcements(Gang attackerGang, GangWarManager.AttackStrength attackType) {
 			return ModOptions.instance.extraKillsPerTurfValue * ((int)(attackType + 1) * (int)(attackType + 1)) + ModOptions.instance.baseNumKillsBeforeWarVictory / 2 +
-				attackerGang.GetReinforcementsValue() / 100;
+				attackerGang.GetReinforcementsValue();
 		}
 
 		public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone) {
 			return ModOptions.instance.extraKillsPerTurfValue * targetZone.value + ModOptions.instance.baseNumKillsBeforeWarVictory +
-				defenderGang.GetReinforcementsValue() / 100;
+				defenderGang.GetReinforcementsValue();
 		}
 
 		/// <summary>
