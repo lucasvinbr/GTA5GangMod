@@ -638,7 +638,7 @@ namespace GTA.GangAndTurfMod {
 			Vector3 spawnPos = isFriendly ?
 				RandoMath.GetRandomElementFromArray(alliedSpawnPoints) : RandoMath.GetRandomElementFromArray(enemySpawnPoints);
 
-			if (spawnPos == default(Vector3)) return; //this means we don't have spawn points set yet
+			if (spawnPos == default) return; //this means we don't have spawn points set yet
 
 			SpawnedGangMember spawnedMember = null;
 

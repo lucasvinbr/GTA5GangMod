@@ -22,6 +22,9 @@ namespace GTA.GangAndTurfMod {
 		public ModCore() {
 			curGameTime = Game.GameTime;
 
+			Logger.ClearLog();
+			Logger.Log("mod started!", 2);
+
 			zoneManagerScript = new ZoneManager();
 			gangManagerScript = new GangManager();
 			mindControlScript = new MindControl();
@@ -31,8 +34,7 @@ namespace GTA.GangAndTurfMod {
 
 			this.KeyUp += OnKeyUp;
 			this.Tick += OnTick;
-			Logger.ClearLog();
-			Logger.Log("mod started!", 2);
+			
 
 			bool successfulInit = GangMemberUpdater.Initialize();
 

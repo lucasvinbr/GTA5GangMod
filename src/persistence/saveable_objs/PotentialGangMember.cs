@@ -86,6 +86,29 @@ namespace GTA.GangAndTurfMod
             this.legsTextureIndex = legsTextureIndex;
         }
 
+        /// <summary>
+        /// almost an equality check in all fields, but if one of them is -1 in our data, it's also counted as similar
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool IsSimilarTo(PotentialGangMember other)
+        {
+
+            if (modelHash == other.modelHash &&
+                        (hairDrawableIndex == -1 || hairDrawableIndex == other.hairDrawableIndex) &&
+                        (headDrawableIndex == -1 || headDrawableIndex == other.headDrawableIndex) &&
+                        (headTextureIndex == -1 || headTextureIndex == other.headTextureIndex) &&
+                       (legsDrawableIndex == -1 || legsDrawableIndex == other.legsDrawableIndex) &&
+                        (legsTextureIndex == -1 || legsTextureIndex == other.legsTextureIndex) &&
+                       (torsoDrawableIndex == -1 || torsoDrawableIndex == other.torsoDrawableIndex) &&
+                        (torsoTextureIndex == -1 || torsoTextureIndex == other.torsoTextureIndex))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public PotentialGangMember(Ped sourcePed, DressStyle myStyle, MemberColor linkedColor)
         {
             this.myStyle = myStyle;
@@ -125,7 +148,9 @@ namespace GTA.GangAndTurfMod
         /// <param name="targetPed"></param>
         public virtual void SetPedAppearance(Ped targetPed)
         {
+
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
+
             //if we're not a legacy registration, set the head and hair data too
             if (hairDrawableIndex != -1)
             {
@@ -135,16 +160,16 @@ namespace GTA.GangAndTurfMod
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
             }
 
-            if(torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            if (torsoDrawableIndex != -1 && torsoTextureIndex != -1)
             {
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
             }
-            
-            if(legsDrawableIndex != -1 && legsTextureIndex != -1)
+
+            if (legsDrawableIndex != -1 && legsTextureIndex != -1)
             {
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
             }
-            
+
         }
 
         public static bool AddMemberAndSavePool(PotentialGangMember newMember)
@@ -232,14 +257,7 @@ namespace GTA.GangAndTurfMod
 
                 for (int i = 0; i < memberList.Count; i++)
                 {
-                    if (memberList[i].modelHash == potentialEntry.modelHash &&
-                        memberList[i].hairDrawableIndex == potentialEntry.hairDrawableIndex &&
-                        memberList[i].headDrawableIndex == potentialEntry.headDrawableIndex &&
-                        memberList[i].headTextureIndex == potentialEntry.headTextureIndex &&
-                        memberList[i].legsDrawableIndex == potentialEntry.legsDrawableIndex &&
-                        memberList[i].legsTextureIndex == potentialEntry.legsTextureIndex &&
-                        memberList[i].torsoDrawableIndex == potentialEntry.torsoDrawableIndex &&
-                        memberList[i].torsoTextureIndex == potentialEntry.torsoTextureIndex)
+                    if (potentialEntry.IsSimilarTo(memberList[i]))
                     {
                         return true;
                     }
@@ -266,20 +284,14 @@ namespace GTA.GangAndTurfMod
 
                 for (int i = 0; i < memberList.Count; i++)
                 {
-                    if (memberList[i].modelHash == potentialEntry.modelHash &&
-                        (memberList[i].hairDrawableIndex == -1 || memberList[i].hairDrawableIndex == potentialEntry.hairDrawableIndex) &&
-                        (memberList[i].headDrawableIndex == -1 || memberList[i].headDrawableIndex == potentialEntry.headDrawableIndex) &&
-                        (memberList[i].headTextureIndex == -1 || memberList[i].headTextureIndex == potentialEntry.headTextureIndex) &&
-                       (memberList[i].legsDrawableIndex == -1 || memberList[i].legsDrawableIndex == potentialEntry.legsDrawableIndex) &&
-                        (memberList[i].legsTextureIndex == -1 || memberList[i].legsTextureIndex == potentialEntry.legsTextureIndex) &&
-                       (memberList[i].torsoDrawableIndex == -1 || memberList[i].torsoDrawableIndex == potentialEntry.torsoDrawableIndex) &&
-                        (memberList[i].torsoTextureIndex == -1 || memberList[i].torsoTextureIndex == potentialEntry.torsoTextureIndex))
+                    if (potentialEntry.IsSimilarTo(memberList[i]))
                     {
                         return memberList[i];
                     }
                 }
                 return null;
             }
+
         }
     }
 }

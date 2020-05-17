@@ -14,7 +14,7 @@ namespace GTA.GangAndTurfMod {
 		public Vector3 destination;
 		public Vehicle vehicleIAmDriving;
 		public int updatesWhileGoingToDest;
-		public int updateLimitWhileGoing = 50;
+		public int updateLimitWhileGoing = 20;
 
 		public bool playerAsDest = false;
 
@@ -137,7 +137,9 @@ namespace GTA.GangAndTurfMod {
 						}
 
 					}
-					if (playerAsDest) {
+					//wherever we were going, if we intended to leave the car there, let's just leave it here
+					//(hopefully should help with members stuck in vehicles while heading for wars)
+					if (deliveringCar) {
 						DriverLeaveVehicle();
 					}
 					else {
