@@ -41,13 +41,16 @@ namespace GTA.GangAndTurfMod {
 
 		private float spawnedMembersProportion;
 
-		private const int MIN_TICKS_BETWEEN_CAR_SPAWNS = 20;
-
-		private int ticksSinceLastCarSpawn = 0, ticksSinceLastEnemyRelocation = 0;
+		private const int MIN_TICKS_BETWEEN_CAR_SPAWNS = 10;
+		private const int MS_BETWEEN_WAR_TICKS = 200;
 
 		//balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
 		//we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
-		private const int TICKS_BETWEEN_BALANCE_CHECKS = 8;
+		private const int TICKS_BETWEEN_BALANCE_CHECKS = 14;
+
+		private int ticksSinceLastCarSpawn = 0, ticksSinceLastEnemyRelocation = 0;
+
+		
 
 		private int ticksSinceLastBalanceCheck = 0;
 
@@ -454,6 +457,10 @@ namespace GTA.GangAndTurfMod {
 			return true;
 		}
 
+		/// <summary>
+		/// sets spawns for both allies and enemies
+		/// </summary>
+		/// <param name="initialReferencePoint"></param>
 		void SetSpawnPoints(Vector3 initialReferencePoint) {
 			Logger.Log("setSpawnPoints: begin", 3);
 			//spawn points for both sides should be a bit far from each other, so that the war isn't just pure chaos
@@ -624,11 +631,11 @@ namespace GTA.GangAndTurfMod {
 			SpawnedDrivingGangMember spawnedVehicle = null;
 			if (!isFriendly && spawnedEnemies - 4 < maxSpawnedEnemies) {
 				spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(enemyGang,
-					spawnPos, playerPos, false, false, IncrementEnemiesCount);
+					spawnPos, playerPos, false, true, IncrementEnemiesCount);
 			}
 			else if (spawnedAllies - 4 < maxSpawnedAllies) {
 				spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-					spawnPos, playerPos, false, false, IncrementAlliesCount);
+					spawnPos, playerPos, false, true, IncrementAlliesCount);
 			}
 
 			return spawnedVehicle;
@@ -844,7 +851,7 @@ namespace GTA.GangAndTurfMod {
 					}
 
 					Logger.Log("warmanager inside war tick: end", 5);
-					Wait(400);
+					Wait(MS_BETWEEN_WAR_TICKS);
 				}
 				else {
 					playerNearWarzone = false;
