@@ -31,21 +31,6 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-		public class AreaBlip {
-			public Math.Vector3 position;
-			public float radius;
-
-			public AreaBlip() {
-				radius = 100;
-				position = Math.Vector3.Zero;
-			}
-
-			public AreaBlip(Math.Vector3 position, float radius) {
-				this.position = position;
-				this.radius = radius;
-			}
-
-		}
 
 		public static ZoneManager instance;
 		public TurfZoneData zoneData;
@@ -59,14 +44,6 @@ namespace GTA.GangAndTurfMod {
 				zoneData = new TurfZoneData();
 			}
 
-			for (int i = 0; i < zoneData.zoneList.Count; i++) {
-				List<AreaBlip> zoneCircleList = zoneData.zoneList[i].zoneCircles;
-				for (int j = 0; j < zoneCircleList.Count; j++) {
-					Blip circleBlip = World.CreateBlip(zoneCircleList[j].position, zoneCircleList[j].radius);
-					circleBlip.Alpha = 50; //TODO add mod option to control alpha!
-					zoneData.zoneList[i].myCircleBlips.Add(circleBlip);
-				}
-			}
 		}
 
 		public void SaveZoneData(bool notifySuccess = true) {
@@ -81,10 +58,9 @@ namespace GTA.GangAndTurfMod {
 				zoneData.zoneList.Add(newTurfZone);
 			}
 
-			CreateAttachedBlip(newTurfZone);
-
-			newTurfZone.AttachedBlip.Position = newTurfZone.zoneBlipPosition;
-
+			newTurfZone.CreateAttachedBlip();
+			newTurfZone.UpdateBlipPosition();
+			
 			RefreshZoneBlips();
 
 			SaveZoneData(false);
@@ -92,12 +68,45 @@ namespace GTA.GangAndTurfMod {
 
 		#endregion
 
+		public TurfZone GetZoneInLocation(Vector3 location)
+		{
+			//prioritize custom zones
+			for (int i = 0; i < zoneData.zoneList.Count; i++)
+			{
+				if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
+					zoneData.zoneList[i].IsLocationInside(string.Empty, location))
+				{
+					return zoneData.zoneList[i];
+				}
+			}
+
+			//fall back to getting by zone name
+			return GetZoneByName(World.GetZoneName(location));
+		}
+
+		public TurfZone GetZoneInLocation(string zoneName, Vector3 location)
+		{
+			//prioritize custom zones
+			for (int i = 0; i < zoneData.zoneList.Count; i++)
+			{
+				if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
+					zoneData.zoneList[i].IsLocationInside(zoneName, location))
+				{
+					return zoneData.zoneList[i];
+				}
+			}
+
+			//fall back to getting by zone name
+			return GetZoneByName(zoneName);
+		}
+
 		public void OutputCurrentZoneInfo() {
 			string zoneName = World.GetZoneName(MindControl.CurrentPlayerCharacter.Position);
-			string zoneInfoMsg = "Current zone is " + zoneName + ".";
-			TurfZone currentZone = GetZoneByName(zoneName);
+			string zoneInfoMsg;
+			TurfZone currentZone = GetZoneInLocation(zoneName, MindControl.CurrentPlayerCharacter.Position);
 
 			if (currentZone != null) {
+				zoneInfoMsg = "Current zone is " + currentZone.zoneName + ".";
 				if (currentZone.ownerGangName != "none") {
 					if (GangManager.instance.GetGangByName(currentZone.ownerGangName) == null) {
 						GiveGangZonesToAnother(currentZone.ownerGangName, "none");
@@ -116,7 +125,7 @@ namespace GTA.GangAndTurfMod {
 				}
 			}
 			else {
-				zoneInfoMsg += " It hasn't been marked as takeable yet.";
+				zoneInfoMsg = "Current zone is " + zoneName + ".  It hasn't been marked as takeable yet.";
 			}
 
 			UI.ShowSubtitle(zoneInfoMsg);
@@ -165,22 +174,6 @@ namespace GTA.GangAndTurfMod {
 
 		#region blip related methods
 
-		public void CreateAttachedBlip(TurfZone targetZone) {
-			if (targetZone.AttachedBlip == null) {
-				targetZone.AttachedBlip = World.CreateBlip(targetZone.zoneBlipPosition);
-			}
-
-		}
-
-		public void AddNewCircleBlip(Vector3 position, TurfZone targetZone) {
-			if (targetZone != null) {
-				Blip newCircleBlip = World.CreateBlip(position, 100);
-				newCircleBlip.Alpha = 50;
-				targetZone.myCircleBlips.Add(newCircleBlip);
-				if (targetZone.zoneCircles == null) targetZone.zoneCircles = new List<AreaBlip>();
-				targetZone.zoneCircles.Add(new AreaBlip(position, 100));
-			}
-		}
 
 		public void ChangeBlipDisplay() {
 			curBlipDisplay++;
@@ -204,71 +197,32 @@ namespace GTA.GangAndTurfMod {
 			switch (curBlipDisplay) {
 				case ZoneBlipDisplay.none:
 					for (int i = 0; i < zoneData.zoneList.Count; i++) {
-						//zoneData.zoneList[i].AttachedBlip.Scale = 0;
-						if (zoneData.zoneList[i].AttachedBlip != null) {
-							zoneData.zoneList[i].AttachedBlip.Remove();
-							zoneData.zoneList[i].AttachedBlip = null;
-						}
-
+						zoneData.zoneList[i].RemoveBlip();
 					}
 					break;
 				case ZoneBlipDisplay.allZones:
+					//refresh the closest since we only show area blips for the closest
+					zoneData.zoneList.Sort(CompareZonesByDistToPlayer); 
 					for (int i = 0; i < zoneData.zoneList.Count; i++) {
-						CreateAttachedBlip(zoneData.zoneList[i]);
-						UpdateZoneBlip(zoneData.zoneList[i]);
+						zoneData.zoneList[i].CreateAttachedBlip(i < 5);
+						zoneData.zoneList[i].UpdateBlip();
 					}
 					break;
 				case ZoneBlipDisplay.fiveClosest:
 					zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
 					for (int i = 0; i < zoneData.zoneList.Count; i++) {
 						if (i < 5) {
-							CreateAttachedBlip(zoneData.zoneList[i]);
-							UpdateZoneBlip(zoneData.zoneList[i]);
+							zoneData.zoneList[i].CreateAttachedBlip(true);
+							zoneData.zoneList[i].UpdateBlip();
 						}
 						else {
-							if (zoneData.zoneList[i].AttachedBlip != null) {
-								zoneData.zoneList[i].AttachedBlip.Remove();
-								zoneData.zoneList[i].AttachedBlip = null;
-							}
+							zoneData.zoneList[i].RemoveBlip();
 						}
 					}
 					break;
 				default:
 					UI.Notify("Invalid blip display type");
 					break;
-			}
-		}
-
-		public void UpdateZoneBlip(TurfZone targetZone) {
-			if (targetZone.AttachedBlip != null) {
-				Gang ownerGang = GangManager.instance.GetGangByName(targetZone.ownerGangName);
-				if (ownerGang == null) {
-					targetZone.AttachedBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
-					targetZone.AttachedBlip.Color = BlipColor.White;
-				}
-				else {
-					targetZone.AttachedBlip.Sprite = BlipSprite.GTAOPlayerSafehouse;
-					Function.Call(Hash.SET_BLIP_COLOUR, targetZone.AttachedBlip, ownerGang.blipColor);
-
-					if (ownerGang.isPlayerOwned) {
-						Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 0f, 255, 0f);
-					}
-					else {
-						Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, targetZone.AttachedBlip, 255, 0f, 0f);
-					}
-
-					targetZone.AttachedBlip.Scale = 1.0f + 0.65f / ((ModOptions.instance.maxTurfValue + 1) / (targetZone.value + 1));
-				}
-
-				Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-				if (ownerGang != null) {
-					Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (", targetZone.ownerGangName, " turf, level ", targetZone.value.ToString(), ")"));
-				}
-				else {
-					Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(targetZone.zoneName, " (neutral territory)"));
-				}
-
-				Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, targetZone.AttachedBlip);
 			}
 		}
 
@@ -285,7 +239,18 @@ namespace GTA.GangAndTurfMod {
 
 		#region getters
 
-		public TurfZone GetZoneByName(string zoneName) {
+
+		public bool DoesZoneWithNameExist(string zoneName)
+		{
+			return GetZoneByName(zoneName) != null;
+		}
+
+		/// <summary>
+		/// not exposed in favor of other zone retrieval options that better handle custom zones
+		/// </summary>
+		/// <param name="zoneName"></param>
+		/// <returns></returns>
+		private TurfZone GetZoneByName(string zoneName) {
 			for (int i = 0; i < zoneData.zoneList.Count; i++) {
 				if (zoneData.zoneList[i].zoneName == zoneName) {
 					return zoneData.zoneList[i];
@@ -296,12 +261,11 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// gets the turfzone of where the player is.
-		/// basically a call to getZoneByName, but it's called so often I'm too lazy to write this all over
+		/// gets the turfzone of where the player is
 		/// </summary>
 		/// <returns></returns>
 		public TurfZone GetCurrentTurfZone() {
-			return GetZoneByName(World.GetZoneName(MindControl.CurrentPlayerCharacter.Position));
+			return GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
 		}
 
 		public List<TurfZone> GetZonesControlledByGang(string desiredGangName) {
@@ -312,7 +276,7 @@ namespace GTA.GangAndTurfMod {
 					ownedZones.Add(zoneData.zoneList[i]);
 				}
 			}
-
+			
 			return ownedZones;
 		}
 
