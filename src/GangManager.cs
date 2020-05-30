@@ -284,7 +284,7 @@ namespace GTA.GangAndTurfMod {
 				return null;
 			}
 			//set gang name from options
-			string gangName = "Gang";
+			string gangName;
 			do {
 				gangName = string.Concat(RandoMath.GetRandomElementFromList(ModOptions.instance.possibleGangFirstNames), " ",
 				RandoMath.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));

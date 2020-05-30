@@ -35,13 +35,13 @@ namespace GTA.GangAndTurfMod {
 					//backup the bad file! It's very sad to lose saved data, even if it's corrupted somehow
 					string bkpFilePath = Application.StartupPath + "/gangModData/" + fileName + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".xml";
 					File.Copy(filePath, bkpFilePath, true);
-					return default(T);
+					return default;
 				}
 
 			}
 			else {
 				Logger.Log("file " + fileName + " doesn't exist; loading a default setup", 2);
-				return default(T);
+				return default;
 			}
 
 		}

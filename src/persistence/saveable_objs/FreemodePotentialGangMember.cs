@@ -16,7 +16,7 @@ namespace GTA.GangAndTurfMod {
 		/// male indexes seem to go from 0-20, female from 21-41.
 		/// dlc faces seem to be 42 43 44 male and 45 female
 		/// </summary>
-		private static int numberOfFaceIndexes = 46;
+		private const int FACE_INDEX_COUNT = 46;
 
 		/// <summary>
 		/// more drawable data, unused by potential gang members, but should probably be used here
@@ -141,9 +141,9 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		public static int GetAFaceIndex(FreemodeGender desiredGender) {
-			int returnedIndex = 0;
+			int returnedIndex;
 			if (desiredGender == FreemodeGender.any) {
-				returnedIndex = RandoMath.CachedRandom.Next(numberOfFaceIndexes);
+				returnedIndex = RandoMath.CachedRandom.Next(FACE_INDEX_COUNT);
 			}
 			else if (desiredGender == FreemodeGender.female) {
 				returnedIndex = RandoMath.CachedRandom.Next(21, 43);

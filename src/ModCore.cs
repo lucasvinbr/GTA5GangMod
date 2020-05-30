@@ -148,7 +148,7 @@ namespace GTA.GangAndTurfMod {
 			}
 
 			if (hit.HitEntity != null) {
-				List<Ped> playerGangMembers = null;
+				List<Ped> playerGangMembers;
 
 				if (hit.HitEntity.Model.IsVehicle) {
 					Vehicle hitVeh = (Vehicle)hit.HitEntity;

@@ -39,7 +39,7 @@ namespace GTA.GangAndTurfMod
 
 		public UIMenu warAttackStrengthMenu;
 
-		private CustomZonesSubMenu customZonesSubMenu;
+		private readonly CustomZonesSubMenu customZonesSubMenu;
 
 		private UIMenuItem takeZoneButton, upgradeZoneValueBtn, warLightAtkBtn, warMedAtkBtn, warLargeAtkBtn, warMassAtkBtn;
 

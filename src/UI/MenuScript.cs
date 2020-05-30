@@ -14,30 +14,33 @@ namespace GTA.GangAndTurfMod {
 	/// -------------thanks to the NativeUI developers!-------------
 	/// </summary>
 	public class MenuScript {
+        private readonly MenuPool menuPool;
 
-		MenuPool menuPool;
-		UIMenu gangMenu, memberMenu, carMenu, gangOptionsSubMenu,
+		private readonly UIMenu gangMenu, memberMenu, carMenu;
+		
+		private UIMenu gangOptionsSubMenu,
 			modSettingsSubMenu, warOptionsSubMenu, weaponsMenu, specificGangMemberRegSubMenu, specificCarRegSubMenu;
 
-		private ZonesMenu zonesMenu;
+		private readonly ZonesMenu zonesMenu;
 		
 
-		Ped closestPed;
+		private Ped closestPed;
 
-		int memberStyle = 0, memberColor = 0;
+		private int memberStyle = 0, memberColor = 0;
 
-		int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost;
+		private int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost;
 
-        bool savePotentialMembersAsExtended = false;
+        private bool savePotentialMembersAsExtended = false;
 
-		Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> buyableWeaponCheckboxesDict =
+        private readonly Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> buyableWeaponCheckboxesDict =
 			new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
 
-		Dictionary<VehicleColor, UIMenuItem> carColorEntries =
+        private readonly Dictionary<VehicleColor, UIMenuItem> carColorEntries =
 			new Dictionary<VehicleColor, UIMenuItem>();
 
-		int playerGangOriginalBlipColor = 0;
-		Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
+		private int playerGangOriginalBlipColor = 0;
+
+        private readonly Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
 		{
 			{"white", 0 },
 			{"white-2", 4 },
@@ -77,7 +80,7 @@ namespace GTA.GangAndTurfMod {
 			{"light yellow", 33 },
 		};
 
-		UIMenuItem healthButton, armorButton, accuracyButton, upgradeGangValueBtn,
+		private UIMenuItem healthButton, armorButton, accuracyButton, upgradeGangValueBtn,
 			openGangMenuBtn, openZoneMenuBtn, mindControlBtn, addToGroupBtn, carBackupBtn, paraBackupBtn;
 
 		private int ticksSinceLastCarBkp = 5000, ticksSinceLastParaBkp = 5000;

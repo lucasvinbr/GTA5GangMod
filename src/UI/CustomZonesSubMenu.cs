@@ -149,8 +149,10 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                CustomTurfZone newZone = new CustomTurfZone(newName);
-                newZone.zoneBlipPosition = MindControl.CurrentPlayerCharacter.Position;
+                CustomTurfZone newZone = new CustomTurfZone(newName)
+                {
+                    zoneBlipPosition = MindControl.CurrentPlayerCharacter.Position
+                };
 
                 ZoneManager.instance.UpdateZoneData(newZone);
                 

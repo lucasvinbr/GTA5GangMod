@@ -109,7 +109,7 @@ namespace GTA.GangAndTurfMod {
 				this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
 				this.msBaseIntervalBetweenAmbientSpawns = loadedOptions.msBaseIntervalBetweenAmbientSpawns;
 				this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
-				this.numSpawnsReservedForCarsDuringWars = loadedOptions.numSpawnsReservedForCarsDuringWars;
+				this.thinkingCarLimit = loadedOptions.thinkingCarLimit;
 				this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
 				this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
 				this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
@@ -233,7 +233,7 @@ namespace GTA.GangAndTurfMod {
 		public int spawnedMembersBeforeAmbientGenStops = 20;
 		public int msBaseIntervalBetweenAmbientSpawns = 15000;
 		public int spawnedMemberLimit = 30; //max number of living gang members at any time
-		public int numSpawnsReservedForCarsDuringWars = 1;
+		public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
 		public int minDistanceMemberSpawnFromPlayer = 50;
 		public int maxDistanceMemberSpawnFromPlayer = 130;
 		public int minDistanceCarSpawnFromPlayer = 80;
@@ -578,8 +578,8 @@ namespace GTA.GangAndTurfMod {
 			extraProfitForAIGangsFactor = 1.5f;
 			spawnedMembersBeforeAmbientGenStops = 20;
 			msBaseIntervalBetweenAmbientSpawns = 15000;
-			spawnedMemberLimit = 30; //max number of living gang members at any time
-			numSpawnsReservedForCarsDuringWars = 1;
+			spawnedMemberLimit = 40; //max number of living gang members at any time
+			thinkingCarLimit = 3;
 			minDistanceMemberSpawnFromPlayer = 50;
 			maxDistanceMemberSpawnFromPlayer = 130;
 			minDistanceCarSpawnFromPlayer = 80;
