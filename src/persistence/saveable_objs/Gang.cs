@@ -109,10 +109,10 @@ namespace GTA.GangAndTurfMod {
 		/// checks and adjusts (if necessary) this gang's levels in order to make it conform to the current modOptions
 		/// </summary>
 		public void AdjustStatsToModOptions() {
-			memberHealth = RandoMath.TrimValue(memberHealth, ModOptions.instance.startingGangMemberHealth, ModOptions.instance.maxGangMemberHealth);
-			memberArmor = RandoMath.TrimValue(memberArmor, 0, ModOptions.instance.maxGangMemberArmor);
-			memberAccuracyLevel = RandoMath.TrimValue(memberAccuracyLevel, 0, ModOptions.instance.maxGangMemberAccuracy);
-			baseTurfValue = RandoMath.TrimValue(baseTurfValue, 0, ModOptions.instance.maxTurfValue);
+			memberHealth = RandoMath.ClampValue(memberHealth, ModOptions.instance.startingGangMemberHealth, ModOptions.instance.maxGangMemberHealth);
+			memberArmor = RandoMath.ClampValue(memberArmor, 0, ModOptions.instance.maxGangMemberArmor);
+			memberAccuracyLevel = RandoMath.ClampValue(memberAccuracyLevel, 0, ModOptions.instance.maxGangMemberAccuracy);
+			baseTurfValue = RandoMath.ClampValue(baseTurfValue, 0, ModOptions.instance.maxTurfValue);
 
 			GangManager.instance.SaveGangData(false);
 		}
@@ -294,7 +294,7 @@ namespace GTA.GangAndTurfMod {
 
 		public int CompareGunsByPrice(WeaponHash x, WeaponHash y) {
 			ModOptions.BuyableWeapon buyableX = ModOptions.instance.GetBuyableWeaponByHash(x),
-				buyableY = buyableX = ModOptions.instance.GetBuyableWeaponByHash(y);
+				buyableY = ModOptions.instance.GetBuyableWeaponByHash(y);
 			if (buyableX == null) {
 				if (buyableY == null) {
 					return 0;

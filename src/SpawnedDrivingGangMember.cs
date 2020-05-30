@@ -14,7 +14,7 @@ namespace GTA.GangAndTurfMod {
 		public Vector3 destination;
 		public Vehicle vehicleIAmDriving;
 		public int updatesWhileGoingToDest;
-		public int updateLimitWhileGoing = 20;
+		public int updateLimitWhileGoing = 30;
 
 		public bool playerAsDest = false;
 
@@ -157,8 +157,10 @@ namespace GTA.GangAndTurfMod {
 								vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
 								ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3 &&
 								!vehicleIAmDriving.IsOnScreen) {
+
 								Logger.Log("backup driver: relocation!", 3);
 								vehicleIAmDriving.Position = SpawnManager.instance.FindGoodSpawnPointForCar(destination);
+
 							}
 
 							watchedPed.Task.ClearAll();
@@ -232,6 +234,8 @@ namespace GTA.GangAndTurfMod {
 			}
 			watchedPed = null;
 			myPassengers.Clear();
+
+			SpawnManager.instance.thinkingDrivingMembersCount--;
 		}
 
 		/// <summary>

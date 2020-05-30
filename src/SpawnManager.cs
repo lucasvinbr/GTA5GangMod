@@ -26,6 +26,11 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		public int livingMembersCount = 0;
 
+		/// <summary>
+		/// the number of "thinking" driving members, those that we still want to control
+		/// </summary>
+		public int thinkingDrivingMembersCount = 0;
+
 		public delegate void SuccessfulMemberSpawnDelegate();
 
 		#region setup
@@ -55,7 +60,7 @@ namespace GTA.GangAndTurfMod {
 
 		}
 
-		#region gang general control stuff
+		#region reset handling
 
 
 		/// <summary>
@@ -266,6 +271,11 @@ namespace GTA.GangAndTurfMod {
 			return hostilePeds;
 		}
 
+		public bool HasThinkingDriversLimitBeenReached()
+        {
+			return thinkingDrivingMembersCount >= ModOptions.instance.thinkingCarLimit;
+        }
+
 		#endregion
 
 		#region spawner methods
@@ -275,7 +285,7 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public Vector3 FindGoodSpawnPointForMember(Vector3? referencePosition = null) {
-			Vector3 chosenPos = Vector3.Zero;
+			Vector3 chosenPos;
 			Vector3 referencePos = referencePosition ?? MindControl.SafePositionNearPlayer;
 
 
@@ -290,7 +300,7 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public Vector3 FindCustomSpawnPoint(Vector3 referencePoint, float averageDistanceFromReference, float minDistanceFromReference, int maxAttempts = 10, Vector3? repulsor = null, float minDistanceFromRepulsor = 0) {
-			Vector3 chosenPos = Vector3.Zero;
+			Vector3 chosenPos;
 
 			int attempts = 0;
 
@@ -315,8 +325,8 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public Vector3 FindCustomSpawnPointInStreet(Vector3 referencePoint, float averageDistanceFromReference, float minDistanceFromReference, int maxAttempts = 10, Vector3? repulsor = null, float minDistanceFromRepulsor = 0) {
-			Vector3 chosenPos = Vector3.Zero;
-			Vector3 getNextPosTarget = Vector3.Zero;
+			Vector3 chosenPos;
+			Vector3 getNextPosTarget;
 
 			int attempts = 0;
 
@@ -350,7 +360,7 @@ namespace GTA.GangAndTurfMod {
 		/// <returns></returns>
 		public Vector3 FindGoodSpawnPointForCar(Vector3? referencePos = null) {
 			Vector3 refPos = referencePos ?? MindControl.SafePositionNearPlayer;
-			Vector3 getNextPosTarget = Vector3.Zero;
+			Vector3 getNextPosTarget;
 
 
 			getNextPosTarget = refPos + RandoMath.RandomDirection(true) *
@@ -525,6 +535,7 @@ namespace GTA.GangAndTurfMod {
 							Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
 						}
 
+						thinkingDrivingMembersCount++;
 						Logger.Log("spawn car: end (success)", 4);
 						return driverAI;
 					}

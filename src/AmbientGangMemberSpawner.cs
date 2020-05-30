@@ -41,7 +41,8 @@ namespace GTA.GangAndTurfMod {
 					Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position,
 						safePlayerPos = MindControl.SafePositionNearPlayer;
 					if (SpawnManager.instance.SpawnParachutingMember(GangManager.instance.PlayerGang,
-					   playerPos + Vector3.WorldUp * 50, safePlayerPos) == null) {
+					   playerPos + Vector3.WorldUp * 50, safePlayerPos) == null &&
+					   !SpawnManager.instance.HasThinkingDriversLimitBeenReached()) {
 						SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
 						SpawnManager.instance.FindGoodSpawnPointForCar(safePlayerPos), safePlayerPos);
 					}
@@ -61,7 +62,7 @@ namespace GTA.GangAndTurfMod {
 							if ((playerVehicle != null && playerVehicle.Speed < 30) || playerVehicle == null) {
 								SpawnAmbientMember(curGang);
 							}
-							if (RandoMath.CachedRandom.Next(0, 5) < 3) {
+							if (RandoMath.CachedRandom.Next(0, 5) < 3 && !SpawnManager.instance.HasThinkingDriversLimitBeenReached()) {
 								Wait(100 + RandoMath.CachedRandom.Next(300));
 								SpawnAmbientVehicle(curGang);
 							}
@@ -83,7 +84,7 @@ namespace GTA.GangAndTurfMod {
 		public void SpawnAmbientMember(Gang curGang) {
 			Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForMember
 				(MindControl.CurrentPlayerCharacter.Position);
-			SpawnedGangMember newMember = SpawnManager.instance.SpawnGangMember(curGang, spawnPos);
+			SpawnManager.instance.SpawnGangMember(curGang, spawnPos);
 		}
 
 		public void SpawnAmbientVehicle(Gang curGang) {

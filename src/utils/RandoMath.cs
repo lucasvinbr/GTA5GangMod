@@ -29,7 +29,7 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		/// <returns></returns>
 		public static Math.Vector3 RandomDirection(bool zeroZ) {
-			Math.Vector3 theDirection = Math.Vector3.Zero;
+			Math.Vector3 theDirection;
 			if (zeroZ) {
 				theDirection = Math.Vector3.RandomXY();
 			}
@@ -124,13 +124,13 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// makes sure the value is between, or one of, min and max
+		/// returns a value that is between, or one of, min and max
 		/// </summary>
 		/// <param name="value"></param>
 		/// <param name="min"></param>
 		/// <param name="max"></param>
 		/// <returns></returns>
-		public static int TrimValue(int value, int min, int max) {
+		public static int ClampValue(int value, int min, int max) {
 			value = Max(min, value);
 			value = Min(max, value);
 
@@ -138,13 +138,13 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// makes sure the value is between, or one of, min and max
+		/// returns a value that is between, or one of, min and max
 		/// </summary>
 		/// <param name="value"></param>
 		/// <param name="min"></param>
 		/// <param name="max"></param>
 		/// <returns></returns>
-		public static float TrimValue(float value, float min, float max) {
+		public static float ClampValue(float value, float min, float max) {
 			value = Max(min, value);
 			value = Min(max, value);
 

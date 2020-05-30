@@ -39,10 +39,11 @@ namespace GTA.GangAndTurfMod {
 		/// </summary>
 		private float reinforcementsAdvantage = 0.0f;
 
-		private float spawnedMembersProportion;
+		private float alliedPercentOfSpawnedMembers;
 
 		private const int MIN_TICKS_BETWEEN_CAR_SPAWNS = 10;
 		private const int MS_BETWEEN_WAR_TICKS = 200;
+		private const int MIN_SPAWNS_FOR_EACH_SIDE = 5;
 
 		//balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
 		//we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
@@ -58,10 +59,7 @@ namespace GTA.GangAndTurfMod {
 
 		private int initialEnemyReinforcements = 0, maxSpawnedAllies, maxSpawnedEnemies;
 
-		private float spawnedAllies = 0, spawnedEnemies = 0;
-
-		//this counter should help culling those enemy drivers that get stuck and count towards the enemy's numbers without being helpful
-		public List<SpawnedGangMember> enemiesInsideCars;
+		private int spawnedAllies = 0, spawnedEnemies = 0;
 
 		public TurfZone warZone;
 
@@ -71,7 +69,7 @@ namespace GTA.GangAndTurfMod {
 
 		private Blip warBlip, warAreaBlip, enemySpawnBlip;
 
-		private Blip[] alliedSpawnBlips;
+		private readonly Blip[] alliedSpawnBlips;
 
 		public Vector3[] enemySpawnPoints, alliedSpawnPoints;
 
@@ -132,7 +130,6 @@ namespace GTA.GangAndTurfMod {
 				Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
 				curTicksAwayFromBattle = 0;
-				enemiesInsideCars = SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang, true);
 
 				if (theWarType == WarType.attackingEnemy) {
 					alliedReinforcements = GangCalculations.CalculateAttackerReinforcements(GangManager.instance.PlayerGang, attackStrength);
@@ -162,9 +159,9 @@ namespace GTA.GangAndTurfMod {
 
 				maxSpawnedAllies = (int)RandoMath.Max(RandoMath.Min(
 					(ModOptions.instance.spawnedMemberLimit) * reinforcementsAdvantage,
-					ModOptions.instance.spawnedMemberLimit - 5),
-					5);
-				maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, 5);
+					ModOptions.instance.spawnedMemberLimit - MIN_SPAWNS_FOR_EACH_SIDE),
+					MIN_SPAWNS_FOR_EACH_SIDE);
+				maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, MIN_SPAWNS_FOR_EACH_SIDE);
 
 				Logger.Log(string.Concat("war started! Reinf advantage: ", reinforcementsAdvantage.ToString(),
 					" maxAllies: ", maxSpawnedAllies.ToString(), " maxEnemies: ", maxSpawnedEnemies.ToString()), 3);
@@ -535,7 +532,7 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		void CreatePlayerSpawnBlip(int spawnIndex) {
-			BlipSprite blipSprite = BlipSprite.Adversary10;
+			BlipSprite blipSprite;
 
 			switch (spawnIndex) {
 				case 1:
@@ -623,6 +620,9 @@ namespace GTA.GangAndTurfMod {
 		/// spawns a vehicle that has the player as destination
 		/// </summary>
 		public SpawnedDrivingGangMember SpawnAngryVehicle(bool isFriendly) {
+
+			if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
+
 			Math.Vector3 playerPos = MindControl.SafePositionNearPlayer,
 				spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos);
 
@@ -734,29 +734,6 @@ namespace GTA.GangAndTurfMod {
 			Logger.Log("war balancing: end", 3);
 		}
 
-		/// <summary>
-		/// sometimes, too many enemy drivers get stuck with passengers, which causes quite a heavy impact on how many enemy foot members spawn.
-		/// This is an attempt to circumvent that, hehe
-		/// </summary>
-		public void CullEnemyVehicles() {
-			Logger.Log("cull enemy vehs: start", 3);
-			for (int i = 0; i < enemiesInsideCars.Count; i++) {
-				if (enemiesInsideCars[i].watchedPed != null &&
-					MindControl.CurrentPlayerCharacter.Position.DistanceTo2D(enemiesInsideCars[i].watchedPed.Position) >
-				ModOptions.instance.minDistanceMemberSpawnFromPlayer && !enemiesInsideCars[i].watchedPed.IsOnScreen) {
-					enemiesInsideCars[i].Die(true);
-
-					//make sure we don't exagerate!
-					//stop if we're back inside a tolerable limit
-					if (spawnedEnemies < ModOptions.instance.numSpawnsReservedForCarsDuringWars * 1.5f) {
-						break;
-					}
-				}
-
-				Yield();
-			}
-			Logger.Log("cull enemy vehs: end", 3);
-		}
 
 		public void DecrementSpawnedsNumber(bool memberWasFriendly) {
 			if (memberWasFriendly) {
@@ -821,6 +798,20 @@ namespace GTA.GangAndTurfMod {
 
 					if (ticksSinceLastBalanceCheck > TICKS_BETWEEN_BALANCE_CHECKS) {
 						ticksSinceLastBalanceCheck = 0;
+
+						int maxSpawns = ModOptions.instance.spawnedMemberLimit - MIN_SPAWNS_FOR_EACH_SIDE;
+						//control max spawns, so that a gang with 5 tickets won't spawn as much as before
+						reinforcementsAdvantage = alliedReinforcements / (float)(enemyReinforcements + alliedReinforcements);
+
+						maxSpawnedAllies = RandoMath.ClampValue((int) (ModOptions.instance.spawnedMemberLimit * reinforcementsAdvantage),
+							MIN_SPAWNS_FOR_EACH_SIDE,
+							RandoMath.ClampValue(alliedReinforcements, MIN_SPAWNS_FOR_EACH_SIDE, maxSpawns));
+
+						maxSpawnedEnemies = RandoMath.ClampValue(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies,
+							MIN_SPAWNS_FOR_EACH_SIDE,
+							RandoMath.ClampValue
+								(enemyReinforcements, MIN_SPAWNS_FOR_EACH_SIDE, ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies));
+
 						if (spawnedAllies > maxSpawnedAllies) {
 							//try removing some members that can't currently be seen by the player or are far enough
 							TryWarBalancing(true);
@@ -829,13 +820,6 @@ namespace GTA.GangAndTurfMod {
 							TryWarBalancing(false);
 						}
 
-						//cull enemies inside cars if there are too many!
-						enemiesInsideCars = SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang, true);
-
-						if (enemiesInsideCars.Count >
-							RandoMath.Max(maxSpawnedEnemies / 3, ModOptions.instance.numSpawnsReservedForCarsDuringWars * 2)) {
-							CullEnemyVehicles();
-						}
 					}
 
 					if (!spawnPointsSet) SetSpawnPoints(warZone.zoneBlipPosition);
@@ -843,11 +827,10 @@ namespace GTA.GangAndTurfMod {
 						ticksSinceLastEnemyRelocation > ModOptions.instance.ticksBetweenEnemySpawnReplacement)
 						ReplaceEnemySpawnPoint(alliedSpawnPoints[0]);
 
-					spawnedMembersProportion = spawnedAllies / RandoMath.Max(spawnedEnemies, 1.0f);
+					alliedPercentOfSpawnedMembers = spawnedAllies / RandoMath.Max(spawnedAllies + spawnedEnemies, 1.0f);
 
-					//if the allied side is out of reinforcements, no more allies will be spawned by this system
-					if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMemberLimit - ModOptions.instance.numSpawnsReservedForCarsDuringWars) {
-						SpawnMember(alliedReinforcements > 0 && spawnedMembersProportion < reinforcementsAdvantage && spawnedAllies < maxSpawnedAllies);
+					if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMemberLimit) {
+						SpawnMember(alliedPercentOfSpawnedMembers < reinforcementsAdvantage && spawnedAllies < maxSpawnedAllies);
 					}
 
 					Logger.Log("warmanager inside war tick: end", 5);
