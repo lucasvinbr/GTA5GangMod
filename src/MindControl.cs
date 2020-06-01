@@ -243,8 +243,10 @@ namespace GTA.GangAndTurfMod {
 			if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
 			theOriginalPed.Task.ClearAllImmediately();
 
+			oldPed.IsInvincible = false;
+
 			if (hasDiedWithChangedBody) {
-				oldPed.IsInvincible = false;
+				
 				oldPed.Health = 0;
 				oldPed.MarkAsNoLongerNeeded();
 				oldPed.Kill();

@@ -492,7 +492,7 @@ namespace GTA.GangAndTurfMod {
 			GangManager.instance.SetGangRelationsAccordingToAggrLevel(newMode);
 			//makes everyone hate cops if set to very aggressive
 			GangManager.instance.SetCopRelations(newMode == GangMemberAggressivenessMode.veryAgressive);
-			MenuScript.instance.aggOption.Index = (int)newMode;
+			//MenuScript.instance.aggOption.Index = (int)newMode;
 
 			SaveOptions(false);
 		}

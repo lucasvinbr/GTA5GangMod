@@ -507,7 +507,7 @@ namespace GTA.GangAndTurfMod {
 				Vehicle newVehicle = World.CreateVehicle(RandoMath.GetRandomElementFromList(ownerGang.carVariations).modelHash, spawnPos);
 				if (newVehicle != null) {
 					newVehicle.PrimaryColor = ownerGang.vehicleColor;
-
+					newVehicle.SecondaryColor = ownerGang.vehicleColor;
 
 					SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
 

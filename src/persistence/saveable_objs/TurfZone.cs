@@ -124,7 +124,14 @@ namespace GTA.GangAndTurfMod {
 			}
 		}
 
-
+		/// <summary>
+		/// true if a war is occurring in this zone
+		/// </summary>
+		/// <returns></returns>
+		public virtual bool IsBeingContested()
+        {
+			return GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == this;
+        }
 
 	}
 }

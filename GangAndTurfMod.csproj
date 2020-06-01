@@ -90,8 +90,17 @@
     <Compile Include="src\persistence\saveable_objs\FreemodePotentialGangMember.cs" />
     <Compile Include="src\persistence\saveable_objs\Gang.cs" />
     <Compile Include="src\GangAI.cs" />
-    <Compile Include="src\UI\ZonesMenu.cs" />
-    <Compile Include="src\UI\CustomZonesSubMenu.cs" />
+    <Compile Include="src\UI\gang\GangMenu.cs" />
+    <Compile Include="src\UI\gang\gang_edit\GangBlipColorSubMenu.cs" />
+    <Compile Include="src\UI\gang\gang_edit\GangCarColorsSubMenu.cs" />
+    <Compile Include="src\UI\gang\gang_edit\GangWeaponsSubMenu.cs" />
+    <Compile Include="src\UI\gang\gang_edit\GangCustomizeSubMenu.cs" />
+    <Compile Include="src\UI\gang\gang_edit\GangUpgradesSubMenu.cs" />
+    <Compile Include="src\UI\gang\mod_options\KeyBindingsSubMenu.cs" />
+    <Compile Include="src\UI\gang\mod_options\ModOptionsSubMenu.cs" />
+    <Compile Include="src\UI\gang\war_options\WarOptionsSubMenu.cs" />
+    <Compile Include="src\UI\zones\ZonesMenu.cs" />
+    <Compile Include="src\UI\zones\CustomZonesSubMenu.cs" />
     <Compile Include="src\utils\GangCalculations.cs" />
     <Compile Include="src\GangManager.cs" />
     <Compile Include="src\GangMemberUpdater.cs" />
@@ -113,6 +122,7 @@
     <Compile Include="src\ZoneManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <GTAGameDestination>"E:\steam\steamapps\common\Grand Theft Auto V\scripts\GangAndTurfMod.dll"</GTAGameDestination>

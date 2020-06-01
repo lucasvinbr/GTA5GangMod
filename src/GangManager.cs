@@ -39,8 +39,10 @@ namespace GTA.GangAndTurfMod {
 
 		private int timeLastReward = 0;
 
-		//bools below are toggled true for one Tick if an Update function for the respective type was run
+		//toggled true for one Tick if an Update function for the respective type was run
 		private bool gangAIUpdateRanThisFrame = false;
+
+		private int ticksSinceLastCarBkp = 5000, ticksSinceLastParaBkp = 5000;
 
 
 		#region setup/save stuff
@@ -61,6 +63,8 @@ namespace GTA.GangAndTurfMod {
 			new SpawnManager();
 			new ModOptions();
 
+			ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
+			ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
 
 			gangData = PersistenceHandler.LoadFromFile<GangData>("GangData");
 			if (gangData == null) {
@@ -200,6 +204,7 @@ namespace GTA.GangAndTurfMod {
 
 		public void Tick() {
 			TickGangs();
+			TickBackups();
 		}
 
 		#region gang general control stuff
@@ -414,6 +419,105 @@ namespace GTA.GangAndTurfMod {
 			}
 
 			SpawnManager.instance.ResetSpawnedsUpdateInterval();
+		}
+
+		#endregion
+
+		#region backup calls
+
+		public void TickBackups()
+		{
+			//countdown for next backups
+			ticksSinceLastCarBkp++;
+			if (ticksSinceLastCarBkp > ModOptions.instance.ticksCooldownBackupCar)
+				ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
+			ticksSinceLastParaBkp++;
+			if (ticksSinceLastParaBkp > ModOptions.instance.ticksCooldownParachutingMember)
+				ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
+		}
+
+		public Ped CallParachutingBackup()
+        {
+			if (ticksSinceLastParaBkp < ModOptions.instance.ticksCooldownParachutingMember)
+			{
+				UI.ShowSubtitle("You must wait before calling for parachuting backup again! (This is configurable)");
+				return null;
+			}
+
+			if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember, true))
+			{
+				Gang playergang = PlayerGang;
+				//only allow spawning if the player has turf
+				if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
+				{
+					Ped spawnedPed = SpawnManager.instance.SpawnParachutingMember(PlayerGang,
+			   MindControl.CurrentPlayerCharacter.Position + Vector3.WorldUp * 50, MindControl.SafePositionNearPlayer);
+					if (spawnedPed != null)
+					{
+						ticksSinceLastParaBkp = 0;
+						MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember);
+						return spawnedPed;
+					}
+					else
+					{
+						UI.ShowSubtitle("There are too many gang members around or you haven't registered any member.");
+					}
+				}
+				else
+				{
+					UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+				}
+			}
+			else
+			{
+				UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallParachutingMember.ToString() + " to call a parachuting member!");
+			}
+
+			return null;
+		}
+
+		public SpawnedDrivingGangMember CallCarBackup()
+		{
+			if (ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
+			{
+				UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
+				return null;
+			}
+			if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
+			{
+				Gang playergang = PlayerGang;
+				if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
+				{
+					Vector3 destPos = MindControl.SafePositionNearPlayer;
+
+					Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(destPos);
+
+					SpawnedDrivingGangMember spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(PlayerGang,
+							spawnPos, destPos, true, true);
+					if (spawnedVehicle != null)
+					{
+						ticksSinceLastCarBkp = 0;
+						MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
+						UI.ShowSubtitle("A vehicle is on its way!", 1000);
+
+						return spawnedVehicle;
+					}
+					else
+					{
+						UI.ShowSubtitle("There are too many gang members around or you haven't registered any member or car.");
+					}
+				}
+				else
+				{
+					UI.ShowSubtitle("You need to have control of at least one territory in order to call for backup.");
+				}
+			}
+			else
+			{
+				UI.ShowSubtitle("You need $" + ModOptions.instance.costToCallBackupCar.ToString() + " to call a vehicle!");
+			}
+
+			return null;
 		}
 
 		#endregion

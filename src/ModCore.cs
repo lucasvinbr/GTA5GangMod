@@ -71,16 +71,16 @@ namespace GTA.GangAndTurfMod {
 
 			//zix attempt controller recruit
 			if (ModOptions.instance.joypadControls) {
-				if (Game.IsControlPressed(0, GTA.Control.Aim) || Game.IsControlPressed(0, GTA.Control.AccurateAim)) {
-					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadRight)) {
+				if (Game.IsControlPressed(0, Control.Aim) || Game.IsControlPressed(0, Control.AccurateAim)) {
+					if (Game.IsControlJustPressed(0, Control.ScriptPadRight)) {
 						RecruitGangMember();
 					}
 
-					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadLeft)) {
-						menuScript.CallCarBackup(false);
+					if (Game.IsControlJustPressed(0, Control.ScriptPadLeft)) {
+						GangManager.instance.CallCarBackup();
 					}
 
-					if (Game.IsControlJustPressed(0, GTA.Control.ScriptPadUp)) {
+					if (Game.IsControlJustPressed(0, Control.ScriptPadUp)) {
 						zoneManagerScript.OutputCurrentZoneInfo();
 					}
 				}
@@ -92,7 +92,7 @@ namespace GTA.GangAndTurfMod {
 				if (e.KeyCode != Keys.Enter) {
 					ModOptions.instance.SetKey(menuScript.targetKeyBindToChange, e.KeyCode);
 					menuScript.curInputType = MenuScript.DesiredInputType.none;
-					menuScript.RefreshKeyBindings();
+					menuScript.OnKeyBindingChanged?.Invoke();
 				}
 			}
 			else {

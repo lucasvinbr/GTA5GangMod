@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
-    /// submenu for creating and editing custom zones
+    /// menu for most zone-related actions
     /// </summary>
     public class ZonesMenu : UIMenu
     {
         public ZonesMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
         {
 
-			warAttackStrengthMenu = new UIMenu("Gang Mod", "Gang War Attack Options");
-			customZonesSubMenu = new CustomZonesSubMenu("Gang Mod", "Custom Zones Menu");
+			warAttackStrengthMenu = new UIMenu("Gang and Turf Mod", "Gang War Attack Options");
+			customZonesSubMenu = new CustomZonesSubMenu("Gang and Turf Mod", "Custom Zones Menu");
 
 			menuPool.Add(this);
 			menuPool.Add(warAttackStrengthMenu);
@@ -51,7 +51,7 @@ namespace GTA.GangAndTurfMod
 
 		void AddSaveZoneButton()
 		{
-			UIMenuItem saveZoneBtn = new UIMenuItem("Add Current Zone to Takeables", "Makes the zone you are in become takeable by gangs and sets your position as the zone's reference position (if toggled, this zone's blip will show here).");
+			UIMenuItem saveZoneBtn = new UIMenuItem("Add Current Zone to Takeables/Set Blip Position", "Makes the zone you are in become takeable by gangs and/or sets your position as the zone's reference position (if toggled, this zone's blip will show here).");
 			AddItem(saveZoneBtn);
 			OnItemSelect += (sender, item, index) => {
 				if (item == saveZoneBtn)
@@ -261,6 +261,7 @@ namespace GTA.GangAndTurfMod
 					{
 						if (curZone.ownerGangName == GangManager.instance.PlayerGang.name)
 						{
+
 							if (ModOptions.instance.notificationsEnabled)
 							{
 								UI.Notify(string.Concat("The ", curZone.ownerGangName, " have abandoned ",
@@ -277,6 +278,13 @@ namespace GTA.GangAndTurfMod
 							}
 
 							UI.ShowSubtitle(curZone.zoneName + " is now neutral again.");
+
+							if (curZone.IsBeingContested())
+							{
+								//end the war being fought here, since we're leaving
+								GangWarManager.instance.EndWar(false);
+							}
+
 							ZoneManager.instance.UpdateZoneData(curZone);
 						}
 						else
