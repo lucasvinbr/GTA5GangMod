@@ -291,12 +291,12 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// uses the number of territories, the gang's strength and "war kills compared to default" in order to get a good number of "extra troops" a gang should have in wars
+		/// uses the percentage of territories owned and the gang's strength to get a good number of "extra troops" a gang should always have in wars
 		/// </summary>
 		/// <returns></returns>
 		public int GetBonusReinforcementsCount() {
-			return (int) ((ZoneManager.instance.GetZonesControlledByGang(name).Count * 2 * ModOptions.instance.GetWarKillsComparedToDefault() +
-				baseTurfValue * 5) * ModOptions.instance.GetWarKillsComparedToDefault());
+			return (int) (ModOptions.instance.maxExtraKillsForNumTurfsControlled * (ZoneManager.instance.GetZonesControlledByGang(name).Count / (float) ZoneManager.instance.zoneData.zoneList.Count)) +
+				(baseTurfValue * ModOptions.instance.extraKillsPerGeneralGangStrength);
 		}
 
 		public int CompareGunsByPrice(WeaponHash x, WeaponHash y) {

@@ -55,6 +55,8 @@ namespace GTA.GangAndTurfMod {
 				this.postWarBackupsAmount = loadedOptions.postWarBackupsAmount;
 				this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
 				this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
+				this.maxExtraKillsForNumTurfsControlled = loadedOptions.maxExtraKillsForNumTurfsControlled;
+				this.extraKillsPerGeneralGangStrength = loadedOptions.extraKillsPerGeneralGangStrength;
 				this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
 				this.ticksBetweenEnemySpawnReplacement = loadedOptions.ticksBetweenEnemySpawnReplacement;
 
@@ -169,6 +171,8 @@ namespace GTA.GangAndTurfMod {
 		public int postWarBackupsAmount = 5;
 		public int baseNumKillsBeforeWarVictory = 25;
 		public int extraKillsPerTurfValue = 15;
+		public int maxExtraKillsForNumTurfsControlled = 25;
+		public int extraKillsPerGeneralGangStrength = 5;
 		public int killsBetweenEnemySpawnReplacement = 25;
 		public int ticksBetweenEnemySpawnReplacement = 3600;
 
@@ -533,8 +537,12 @@ namespace GTA.GangAndTurfMod {
 			maxDistToWarBlipBeforePlayerLeavesWar = 300;
 			ticksBeforeWarEndWithPlayerAway = 30000;
 			postWarBackupsAmount = 5;
+
 			baseNumKillsBeforeWarVictory = 25;
 			extraKillsPerTurfValue = 15;
+			maxExtraKillsForNumTurfsControlled = 25;
+			extraKillsPerGeneralGangStrength = 5;
+
 			killsBetweenEnemySpawnReplacement = 25;
 			ticksBetweenEnemySpawnReplacement = 3600;
 

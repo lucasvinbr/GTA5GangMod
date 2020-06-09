@@ -89,6 +89,7 @@ namespace GTA.GangAndTurfMod {
 			timeLastReward = ModCore.curGameTime;
 
 		}
+
 		/// <summary>
 		/// basically sets relationship groups for all gangs, makes them hate each other and starts the AI for enemy gangs.
 		/// also runs a few consistency checks on the gangs, like if their stats are conforming to the limits defined in modoptions
