@@ -10,16 +10,21 @@ using static NativeUI.UIMenuDynamicListItem;
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
-    /// submenu for setting gang cars' colors
+    /// submenu for setting gang cars' colors. Contains another submenu for the colors list
     /// </summary>
     public class GangCarColorsSubMenu : UIMenu
     {
-        public GangCarColorsSubMenu(string title, string subtitle) : base(title, subtitle)
-        {   
-            Setup();
+        public GangCarColorsSubMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
+        {
+			colorsMenu = new UIMenu("Gand and Turf Mod", "Car Colors List");
+			menuPool.Add(colorsMenu);
+			menuPool.Add(this);
+
+			Setup();
         }
 
-
+		private readonly UIMenu colorsMenu;
+		private bool settingPrimaryColor = true;
 		private readonly Dictionary<VehicleColor, UIMenuItem> carColorEntries =
 			new Dictionary<VehicleColor, UIMenuItem>();
 
@@ -28,6 +33,25 @@ namespace GTA.GangAndTurfMod
 		/// </summary>
 		public void Setup()
         {
+			UIMenuItem primaryBtn = new UIMenuItem("Customize Primary Car Color");
+			UIMenuItem secondaryBtn = new UIMenuItem("Customize Secondary Car Color");
+
+			OnItemSelect += (sender, selectedItem, index) =>
+			{
+				settingPrimaryColor = selectedItem == primaryBtn;
+			};
+
+			//it's the same menu for both options
+			BindMenuToItem(colorsMenu, primaryBtn);
+			BindMenuToItem(colorsMenu, secondaryBtn);
+
+			RefreshIndex();
+
+			SetupColorsMenu();
+		}
+
+        private void SetupColorsMenu()
+        {
 			FillCarColorEntries();
 
 			VehicleColor[] carColorsArray = carColorEntries.Keys.ToArray();
@@ -35,27 +59,42 @@ namespace GTA.GangAndTurfMod
 
 			for (int i = 0; i < colorButtonsArray.Length; i++)
 			{
-				AddItem(colorButtonsArray[i]);
+				colorsMenu.AddItem(colorButtonsArray[i]);
 			}
 
-			RefreshIndex();
+			colorsMenu.RefreshIndex();
 
-			OnIndexChange += (sender, index) => {
+			colorsMenu.OnIndexChange += (sender, index) => {
 				Vehicle playerVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
 				if (playerVehicle != null)
 				{
-					playerVehicle.PrimaryColor = carColorsArray[index];
-					playerVehicle.SecondaryColor = carColorsArray[index];
+					if (settingPrimaryColor)
+					{
+						playerVehicle.PrimaryColor = carColorsArray[index];
+					}
+					else
+					{
+						playerVehicle.SecondaryColor = carColorsArray[index];
+					}
 				}
 			};
 
-			OnItemSelect += (sender, item, checked_) => {
+			colorsMenu.OnItemSelect += (sender, item, checked_) => {
 				for (int i = 0; i < carColorsArray.Length; i++)
 				{
 					if (item == carColorEntries[carColorsArray[i]])
 					{
 						Gang playerGang = GangManager.instance.PlayerGang;
-						playerGang.vehicleColor = carColorsArray[i];
+
+						if (settingPrimaryColor)
+						{
+							playerGang.vehicleColor = carColorsArray[i];
+						}
+						else
+						{
+							playerGang.secondaryVehicleColor = carColorsArray[i];
+						}
+
 						GangManager.instance.SaveGangData(false);
 						UI.ShowSubtitle("Gang vehicle color changed!");
 						break;

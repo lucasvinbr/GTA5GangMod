@@ -43,7 +43,6 @@ namespace GTA.GangAndTurfMod {
 
 		private const int MIN_TICKS_BETWEEN_CAR_SPAWNS = 10;
 		private const int MS_BETWEEN_WAR_TICKS = 200;
-		private const int MIN_SPAWNS_FOR_EACH_SIDE = 5;
 
 		//balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
 		//we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
@@ -159,9 +158,11 @@ namespace GTA.GangAndTurfMod {
 
 				maxSpawnedAllies = (int)RandoMath.Max(RandoMath.Min(
 					(ModOptions.instance.spawnedMemberLimit) * reinforcementsAdvantage,
-					ModOptions.instance.spawnedMemberLimit - MIN_SPAWNS_FOR_EACH_SIDE),
-					MIN_SPAWNS_FOR_EACH_SIDE);
-				maxSpawnedEnemies = RandoMath.Max(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, MIN_SPAWNS_FOR_EACH_SIDE);
+					ModOptions.instance.spawnedMemberLimit - ModOptions.instance.minSpawnsForEachSideDuringWars),
+					ModOptions.instance.minSpawnsForEachSideDuringWars);
+
+				maxSpawnedEnemies = RandoMath.Max
+					(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies, ModOptions.instance.minSpawnsForEachSideDuringWars);
 
 				Logger.Log(string.Concat("war started! Reinf advantage: ", reinforcementsAdvantage.ToString(),
 					" maxAllies: ", maxSpawnedAllies.ToString(), " maxEnemies: ", maxSpawnedEnemies.ToString()), 3);
@@ -359,7 +360,7 @@ namespace GTA.GangAndTurfMod {
 			}
 
 			if (!spawnPointsSet) {
-				ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+				ReplaceEnemySpawnPoint();
 
 
 				for (int i = 0; i < alliedSpawnBlips.Length; i++) {
@@ -398,11 +399,11 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// tries to replace the enemy spawn point based on the allied spawn point, returning true if succeeds
+		/// tries to replace the enemy spawn point based on the player's position, returning true if succeeds
 		/// </summary>
 		/// <returns></returns>
 		public bool ReplaceEnemySpawnPoint() {
-			return ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+			return ReplaceEnemySpawnPoint(MindControl.SafePositionNearPlayer, 20);
 		}
 
 		/// <summary>
@@ -685,7 +686,7 @@ namespace GTA.GangAndTurfMod {
 						ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
 						enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0) {
 						if (spawnPointsSet) {
-							ReplaceEnemySpawnPoint(alliedSpawnPoints[0], 20);
+							ReplaceEnemySpawnPoint();
 						}
 
 					}
@@ -799,18 +800,20 @@ namespace GTA.GangAndTurfMod {
 					if (ticksSinceLastBalanceCheck > TICKS_BETWEEN_BALANCE_CHECKS) {
 						ticksSinceLastBalanceCheck = 0;
 
-						int maxSpawns = ModOptions.instance.spawnedMemberLimit - MIN_SPAWNS_FOR_EACH_SIDE;
+						int maxSpawns = ModOptions.instance.spawnedMemberLimit - ModOptions.instance.minSpawnsForEachSideDuringWars;
 						//control max spawns, so that a gang with 5 tickets won't spawn as much as before
 						reinforcementsAdvantage = alliedReinforcements / (float)(enemyReinforcements + alliedReinforcements);
 
 						maxSpawnedAllies = RandoMath.ClampValue((int) (ModOptions.instance.spawnedMemberLimit * reinforcementsAdvantage),
-							MIN_SPAWNS_FOR_EACH_SIDE,
-							RandoMath.ClampValue(alliedReinforcements, MIN_SPAWNS_FOR_EACH_SIDE, maxSpawns));
+							ModOptions.instance.minSpawnsForEachSideDuringWars,
+							RandoMath.ClampValue(alliedReinforcements, ModOptions.instance.minSpawnsForEachSideDuringWars, maxSpawns));
 
 						maxSpawnedEnemies = RandoMath.ClampValue(ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies,
-							MIN_SPAWNS_FOR_EACH_SIDE,
+							ModOptions.instance.minSpawnsForEachSideDuringWars,
 							RandoMath.ClampValue
-								(enemyReinforcements, MIN_SPAWNS_FOR_EACH_SIDE, ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies));
+								(enemyReinforcements,
+								ModOptions.instance.minSpawnsForEachSideDuringWars,
+								ModOptions.instance.spawnedMemberLimit - maxSpawnedAllies));
 
 						if (spawnedAllies > maxSpawnedAllies) {
 							//try removing some members that can't currently be seen by the player or are far enough
@@ -825,7 +828,7 @@ namespace GTA.GangAndTurfMod {
 					if (!spawnPointsSet) SetSpawnPoints(warZone.zoneBlipPosition);
 					else if (ModOptions.instance.ticksBetweenEnemySpawnReplacement > 0 &&
 						ticksSinceLastEnemyRelocation > ModOptions.instance.ticksBetweenEnemySpawnReplacement)
-						ReplaceEnemySpawnPoint(alliedSpawnPoints[0]);
+						ReplaceEnemySpawnPoint();
 
 					alliedPercentOfSpawnedMembers = spawnedAllies / RandoMath.Max(spawnedAllies + spawnedEnemies, 1.0f);
 

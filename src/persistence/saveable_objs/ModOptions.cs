@@ -109,6 +109,7 @@ namespace GTA.GangAndTurfMod {
 				this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
 				this.msBaseIntervalBetweenAmbientSpawns = loadedOptions.msBaseIntervalBetweenAmbientSpawns;
 				this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
+				this.minSpawnsForEachSideDuringWars = loadedOptions.minSpawnsForEachSideDuringWars;
 				this.thinkingCarLimit = loadedOptions.thinkingCarLimit;
 				this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
 				this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
@@ -233,6 +234,7 @@ namespace GTA.GangAndTurfMod {
 		public int spawnedMembersBeforeAmbientGenStops = 20;
 		public int msBaseIntervalBetweenAmbientSpawns = 15000;
 		public int spawnedMemberLimit = 30; //max number of living gang members at any time
+		public int minSpawnsForEachSideDuringWars = 5;
 		public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
 		public int minDistanceMemberSpawnFromPlayer = 50;
 		public int maxDistanceMemberSpawnFromPlayer = 130;
@@ -395,6 +397,16 @@ namespace GTA.GangAndTurfMod {
 		public int GetArmorUpgradeIncrement() {
 			return RandoMath.Max(1, maxGangMemberArmor / numUpgradesUntilMaxMemberAttribute);
 		}
+
+		/// <summary>
+		/// returns a number that attempts to represent how big the "numKills" values are compared to the default ones.
+		/// Values greater than 1.0 should indicate more kills are required than by default
+		/// </summary>
+		/// <returns></returns>
+		public float GetWarKillsComparedToDefault()
+        {
+			return (baseNumKillsBeforeWarVictory + extraKillsPerTurfValue * 3.5f) / (25 + 15 * 3.5f);
+        }
 
 		/// <summary>
 		/// gets a weapon from a list and check if it is in the buyables list.
@@ -579,6 +591,7 @@ namespace GTA.GangAndTurfMod {
 			spawnedMembersBeforeAmbientGenStops = 20;
 			msBaseIntervalBetweenAmbientSpawns = 15000;
 			spawnedMemberLimit = 40; //max number of living gang members at any time
+			minSpawnsForEachSideDuringWars = 5;
 			thinkingCarLimit = 3;
 			minDistanceMemberSpawnFromPlayer = 50;
 			maxDistanceMemberSpawnFromPlayer = 130;

@@ -449,19 +449,6 @@ namespace GTA.GangAndTurfMod {
 					//set the relationship group
 					newPed.RelationshipGroup = ownerGang.relationGroupIndex;
 
-					//newPed.NeverLeavesGroup = true;
-
-					//newPed.BlockPermanentEvents = true;
-					//newPed.StaysInVehicleWhenJacked = true;
-
-					//Function.Call(Hash.SET_CAN_ATTACK_FRIENDLY, newPed, false, false); //cannot attack friendlies
-					//Function.Call(Hash.SET_PED_COMBAT_ABILITY, newPed, 100); //average combat ability
-					//														 //Function.Call(Hash.SET_PED_FLEE_ATTRIBUTES, newPed, 0, 0); //clears the flee attributes?
-
-					//Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
-					//Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
-					//Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 2); //combatRange = far
-
 					newPed.CanSwitchWeapons = true;
 
 					//enlist this new gang member in the spawned list!
@@ -507,7 +494,7 @@ namespace GTA.GangAndTurfMod {
 				Vehicle newVehicle = World.CreateVehicle(RandoMath.GetRandomElementFromList(ownerGang.carVariations).modelHash, spawnPos);
 				if (newVehicle != null) {
 					newVehicle.PrimaryColor = ownerGang.vehicleColor;
-					newVehicle.SecondaryColor = ownerGang.vehicleColor;
+					newVehicle.SecondaryColor = ownerGang.secondaryVehicleColor;
 
 					SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
 
@@ -534,6 +521,8 @@ namespace GTA.GangAndTurfMod {
 
 							Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
 						}
+
+						newVehicle.IsRadioEnabled = false;
 
 						thinkingDrivingMembersCount++;
 						Logger.Log("spawn car: end (success)", 4);

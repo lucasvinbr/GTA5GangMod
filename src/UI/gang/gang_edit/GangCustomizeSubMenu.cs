@@ -18,12 +18,11 @@ namespace GTA.GangAndTurfMod
         {
             gangUpgradesSubMenu = new GangUpgradesSubMenu("Gang and Turf Mod", "Gang Upgrades");
             gangWeaponsSubMenu = new GangWeaponsSubMenu("Gang and Turf Mod", "Gang Weapons");
-            gangCarColorsSubMenu = new GangCarColorsSubMenu("Gang and Turf Mod", "Gang Car Colors");
+            gangCarColorsSubMenu = new GangCarColorsSubMenu("Gang and Turf Mod", "Gang Car Colors", menuPool);
             gangBlipColorSubMenu = new GangBlipColorSubMenu("Gang and Turf Mod", "Gang Blip Color");
 
             menuPool.Add(gangUpgradesSubMenu);
             menuPool.Add(gangWeaponsSubMenu);
-            menuPool.Add(gangCarColorsSubMenu);
             menuPool.Add(gangBlipColorSubMenu);
             menuPool.Add(this);
 

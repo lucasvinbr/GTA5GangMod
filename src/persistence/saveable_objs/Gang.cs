@@ -12,6 +12,7 @@ namespace GTA.GangAndTurfMod {
 		public string name;
 		public int blipColor;
 		public VehicleColor vehicleColor;
+		public VehicleColor secondaryVehicleColor;
 		public int moneyAvailable;
 		public bool isPlayerOwned = false;
 
@@ -93,7 +94,7 @@ namespace GTA.GangAndTurfMod {
 		/// <summary>
 		///this checks if the gangs member, blip and car colors are consistent, like black, black and black.
 		///if left unassigned, the blip color is 0 and the car color is metallic black:
-		///a sign that somethings wrong, because 0 is white blip color
+		///a sign that something's wrong, because 0 is white blip color
 		/// </summary>
 		public void EnforceGangColorConsistency() {
 			ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
@@ -103,6 +104,12 @@ namespace GTA.GangAndTurfMod {
 				vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
 				GangManager.instance.SaveGangData(false);
 			}
+
+			//secondary car color doesn't really have to be consistent with anything hehe, so just randomize it if it's still default
+			if(secondaryVehicleColor == 0)
+            {
+				secondaryVehicleColor = (VehicleColor)RandoMath.CachedRandom.Next(1, 160); //colors seem to go until 159
+            }
 		}
 
 		/// <summary>
@@ -284,12 +291,12 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		/// <summary>
-		/// uses the number of territories and the gang's strength
+		/// uses the number of territories, the gang's strength and "war kills compared to default" in order to get a good number of "extra troops" a gang should have in wars
 		/// </summary>
 		/// <returns></returns>
-		public int GetReinforcementsValue() {
-			return ZoneManager.instance.GetZonesControlledByGang(name).Count * 2 +
-				baseTurfValue * 5;
+		public int GetBonusReinforcementsCount() {
+			return (int) ((ZoneManager.instance.GetZonesControlledByGang(name).Count * 2 * ModOptions.instance.GetWarKillsComparedToDefault() +
+				baseTurfValue * 5) * ModOptions.instance.GetWarKillsComparedToDefault());
 		}
 
 		public int CompareGunsByPrice(WeaponHash x, WeaponHash y) {

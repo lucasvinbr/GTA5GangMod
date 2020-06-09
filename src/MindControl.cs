@@ -44,7 +44,7 @@ namespace GTA.GangAndTurfMod {
 		private static RaycastResult rayResult;
 
 		/// <summary>
-		/// if the cur. player char is flying,
+		/// usually returns the player's pos, but if the cur. player char is flying,
 		/// gets a safe spot on the ground instead of the player pos
 		/// </summary>
 		public static Vector3 SafePositionNearPlayer
