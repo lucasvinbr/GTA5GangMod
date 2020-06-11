@@ -174,10 +174,13 @@ namespace GTA.GangAndTurfMod {
 
 		void TakePedBody(Ped targetPed) {
 			targetPed.Task.ClearAllImmediately();
-
-			Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
 			Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth - 100;
-			targetPed.Armor += targetPed.Health;
+			targetPed.Armor += targetPed.Health - 100;
+			//UI.Notify("health: " + targetPed.Health.ToString());
+			//UI.Notify("our armor is " + targetPed.Armor.ToString());
+			//UI.Notify("max armor is " + Game.Player.MaxArmor.ToString());
+			//UI.Notify("calculation: " + (targetPed.Armor + targetPed.MaxHealth - 100).ToString());
+			Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
 			targetPed.MaxHealth = 5000;
 			targetPed.Health = 5000;
 			currentlyControlledMember = SpawnManager.instance.GetTargetMemberAI(targetPed);
