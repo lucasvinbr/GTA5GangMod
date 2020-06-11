@@ -85,13 +85,15 @@ namespace GTA.GangAndTurfMod
                                         if (watchedPed.IsInWater)
                                         {
                                             //in water and not moving, very likely to be a bad spawn!
-                                            UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                            if (ModOptions.instance.notificationsEnabled) 
+                                                UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
                                             watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
                                             stuckCounter = 0;
                                         }
                                         else if (stuckCounter > 2)
                                         {
-                                            UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                            if (ModOptions.instance.notificationsEnabled)
+                                                UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
                                             watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
                                             stuckCounter = 0;
                                         }

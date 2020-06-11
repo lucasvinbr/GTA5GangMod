@@ -73,7 +73,7 @@ namespace GTA.GangAndTurfMod {
 				//setup initial gangs... the player's and an enemy
 				CreateNewPlayerGang();
 
-				CreateNewEnemyGang();
+				CreateNewEnemyGang(ModOptions.instance.notificationsEnabled);
 			}
 			else {
 				AdjustGangsToModOptions();
@@ -81,7 +81,7 @@ namespace GTA.GangAndTurfMod {
 
 			if (gangData.gangs.Count == 1 && ModOptions.instance.maxCoexistingGangs > 1) {
 				//we're alone.. add an enemy!
-				CreateNewEnemyGang();
+				CreateNewEnemyGang(ModOptions.instance.notificationsEnabled);
 			}
 
 			SetUpAllGangs();
@@ -226,7 +226,7 @@ namespace GTA.GangAndTurfMod {
 						//if there aren't, we might create a new one...
 						if (enemyGangs.Count < ModOptions.instance.maxCoexistingGangs - 1) {
 							if (RandoMath.CachedRandom.Next(enemyGangs.Count) == 0) {
-								Gang createdGang = CreateNewEnemyGang();
+								Gang createdGang = CreateNewEnemyGang(ModOptions.instance.notificationsEnabled);
 								if (createdGang != null) {
 									enemyGangs.Add(new GangAI(createdGang));
 								}
@@ -277,7 +277,7 @@ namespace GTA.GangAndTurfMod {
 				playerGang.gangWeaponHashes.Add(WeaponHash.Pistol);
 			}
 
-			if (notifyMsg) {
+			if (notifyMsg && ModOptions.instance.notificationsEnabled) {
 				UI.Notify("Created new gang for the player!");
 			}
 
@@ -386,7 +386,8 @@ namespace GTA.GangAndTurfMod {
 
 					MindControl.instance.AddOrSubtractMoneyToProtagonist(rewardedCash);
 					Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
-					UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
+					if(ModOptions.instance.notificationsEnabled)
+						UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
 				}
 			}
 			else {
