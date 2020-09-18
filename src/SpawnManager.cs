@@ -15,7 +15,7 @@ namespace GTA.GangAndTurfMod {
 	/// and handling/getting info from already spawned ones
 	/// </summary>
 	public class SpawnManager {
-		public List<SpawnedGangMember> livingMembers;
+		public List<SpawnedGangMember> memberAIs;
 		public List<SpawnedDrivingGangMember> livingDrivingMembers;
 		public static SpawnManager instance;
 
@@ -38,7 +38,7 @@ namespace GTA.GangAndTurfMod {
 		public SpawnManager() {
 			instance = this;
 
-			livingMembers = new List<SpawnedGangMember>();
+			memberAIs = new List<SpawnedGangMember>();
 			livingDrivingMembers = new List<SpawnedDrivingGangMember>();
 		}
 
@@ -50,8 +50,8 @@ namespace GTA.GangAndTurfMod {
 		/// as if everyone had died or were too far from the player
 		/// </summary>
 		public void RemoveAllMembers() {
-			for (int i = 0; i < livingMembers.Count; i++) {
-				livingMembers[i].Die();
+			for (int i = 0; i < memberAIs.Count; i++) {
+				memberAIs[i].Die();
 			}
 
 			for (int i = 0; i < livingDrivingMembers.Count; i++) {
@@ -68,8 +68,8 @@ namespace GTA.GangAndTurfMod {
 		/// may have changed
 		/// </summary>
 		public void ResetSpawnedsUpdateInterval() {
-			for (int i = 0; i < livingMembers.Count; i++) {
-				livingMembers[i].ResetUpdateInterval();
+			for (int i = 0; i < memberAIs.Count; i++) {
+				memberAIs[i].ResetUpdateInterval();
 			}
 		}
 
@@ -137,10 +137,10 @@ namespace GTA.GangAndTurfMod {
 		public List<Ped> GetSpawnedPedsOfGang(Gang desiredGang) {
 			List<Ped> returnedList = new List<Ped>();
 
-			for (int i = 0; i < livingMembers.Count; i++) {
-				if (livingMembers[i].watchedPed != null) {
-					if (livingMembers[i].watchedPed.RelationshipGroup == desiredGang.relationGroupIndex) {
-						returnedList.Add(livingMembers[i].watchedPed);
+			for (int i = 0; i < memberAIs.Count; i++) {
+				if (memberAIs[i].watchedPed != null) {
+					if (memberAIs[i].watchedPed.RelationshipGroup == desiredGang.relationGroupIndex) {
+						returnedList.Add(memberAIs[i].watchedPed);
 					}
 				}
 			}
@@ -158,16 +158,16 @@ namespace GTA.GangAndTurfMod {
 		public List<SpawnedGangMember> GetSpawnedMembersOfGang(Gang desiredGang, bool onlyGetIfInsideVehicle = false) {
 			List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
 
-			for (int i = 0; i < livingMembers.Count; i++) {
-				if (livingMembers[i] != null) {
-					if (livingMembers[i].myGang == desiredGang) {
+			for (int i = 0; i < memberAIs.Count; i++) {
+				if (memberAIs[i] != null) {
+					if (memberAIs[i].myGang == desiredGang) {
 						if (onlyGetIfInsideVehicle) {
-							if (Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, livingMembers[i].watchedPed, false)) {
-								returnedList.Add(livingMembers[i]);
+							if (Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, memberAIs[i].watchedPed, false)) {
+								returnedList.Add(memberAIs[i]);
 							}
 						}
 						else {
-							returnedList.Add(livingMembers[i]);
+							returnedList.Add(memberAIs[i]);
 						}
 
 					}
@@ -206,9 +206,9 @@ namespace GTA.GangAndTurfMod {
 		public SpawnedGangMember GetTargetMemberAI(Ped targetPed, bool onlyGetIfIsAlive = false) {
 			if (targetPed == null) return null;
 			if (!targetPed.IsAlive && onlyGetIfIsAlive) return null;
-			for (int i = 0; i < livingMembers.Count; i++) {
-				if (livingMembers[i].watchedPed == targetPed) {
-					return livingMembers[i];
+			for (int i = 0; i < memberAIs.Count; i++) {
+				if (memberAIs[i].watchedPed == targetPed) {
+					return memberAIs[i];
 				}
 			}
 
@@ -234,11 +234,11 @@ namespace GTA.GangAndTurfMod {
 		public List<Ped> GetMembersNotFromMyGang(Gang myGang, bool includePlayer = true) {
 			List<Ped> returnedList = new List<Ped>();
 
-			for (int i = 0; i < livingMembers.Count; i++) {
-				if (livingMembers[i].watchedPed != null) {
-					if (livingMembers[i] != MindControl.instance.currentlyControlledMember &&
-						livingMembers[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex) {
-						returnedList.Add(livingMembers[i].watchedPed);
+			for (int i = 0; i < memberAIs.Count; i++) {
+				if (memberAIs[i].watchedPed != null) {
+					if (memberAIs[i] != MindControl.instance.currentlyControlledMember &&
+						memberAIs[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex) {
+						returnedList.Add(memberAIs[i].watchedPed);
 					}
 				}
 			}
@@ -455,24 +455,22 @@ namespace GTA.GangAndTurfMod {
 					SpawnedGangMember newMemberAI = null;
 
 					bool couldEnlistWithoutAdding = false;
-					for (int i = 0; i < livingMembers.Count; i++) {
-						if (livingMembers[i].watchedPed == null) {
-							livingMembers[i].AttachData(newPed, ownerGang, hasDriveByGun);
-							newMemberAI = livingMembers[i];
+					for (int i = 0; i < memberAIs.Count; i++) {
+						if (memberAIs[i].watchedPed == null) {
+							memberAIs[i].AttachData(newPed, ownerGang, hasDriveByGun);
+							newMemberAI = memberAIs[i];
 							couldEnlistWithoutAdding = true;
 							break;
 						}
 					}
 					if (!couldEnlistWithoutAdding) {
-						if (livingMembers.Count < ModOptions.instance.spawnedMemberLimit) {
-							newMemberAI = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
-							livingMembers.Add(newMemberAI);
-						}
+						newMemberAI = new SpawnedGangMember(newPed, ownerGang, hasDriveByGun);
+						memberAIs.Add(newMemberAI);
 					}
 
 					livingMembersCount++;
 					onSuccessfulMemberSpawn?.Invoke();
-					Logger.Log("spawn member: end (success). livingMembers list size = " + livingMembers.Count, 4);
+					Logger.Log("spawn member: end (success). memberAI list size = " + memberAIs.Count, 4);
 					return newMemberAI;
 				}
 				else {
@@ -530,7 +528,7 @@ namespace GTA.GangAndTurfMod {
 					}
 					else {
 						newVehicle.Delete();
-						Logger.Log("spawn car: end (fail: couldnt spawn driver)", 4);
+						Logger.Log("spawn car: end (fail: couldn't spawn driver)", 4);
 						return null;
 					}
 				}

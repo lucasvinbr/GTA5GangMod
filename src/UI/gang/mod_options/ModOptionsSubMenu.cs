@@ -297,7 +297,7 @@ namespace GTA.GangAndTurfMod
 			OnItemSelect += (sender, item, index) => {
 				if (item == newButton)
 				{
-					ModOptions.instance.LoadOptions();
+					ModOptions.LoadOptionsInstance();
 					GangManager.instance.ResetGangUpdateIntervals();
 					GangManager.instance.AdjustGangsToModOptions();
 

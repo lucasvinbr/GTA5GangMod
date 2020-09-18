@@ -15,126 +15,37 @@ namespace GTA.GangAndTurfMod {
 	public class ModOptions {
 		public static ModOptions instance;
 
-		public ModOptions() {
-			if (instance == null) {
-				instance = this;
-				LoadOptions();
-				SetupPrimaryWeapons();
-			}
-		}
+		public ModOptions() { }
 
-		public void LoadOptions() {
+		/// <summary>
+		/// sets the ModOptions instance to either a loaded one from the files or a totally new one, with default values
+		/// </summary>
+		public static void LoadOptionsInstance() {
 			ModOptions loadedOptions = PersistenceHandler.LoadFromFile<ModOptions>("ModOptions");
 			if (loadedOptions != null) {
-				//get the loaded options
-				this.msAutoSaveInterval = loadedOptions.msAutoSaveInterval;
 
-				this.gangMemberAggressiveness = loadedOptions.gangMemberAggressiveness;
-
-				this.playerIsASpectator = loadedOptions.playerIsASpectator;
-
-				this.addToGroupKey = loadedOptions.addToGroupKey;
-				this.mindControlKey = loadedOptions.mindControlKey;
-				this.openGangMenuKey = loadedOptions.openGangMenuKey;
-				this.openZoneMenuKey = loadedOptions.openZoneMenuKey;
-
-				this.possibleGangFirstNames = loadedOptions.possibleGangFirstNames;
-				this.possibleGangLastNames = loadedOptions.possibleGangLastNames;
-				this.buyableWeapons = loadedOptions.buyableWeapons;
-				this.similarColors = loadedOptions.similarColors;
-				this.extraPlayerExclusiveColors = loadedOptions.extraPlayerExclusiveColors;
-
-				this.startingGangMemberHealth = loadedOptions.startingGangMemberHealth;
-				this.maxGangMemberHealth = loadedOptions.maxGangMemberHealth;
-				this.maxGangMemberArmor = loadedOptions.maxGangMemberArmor;
-				this.maxGangMemberAccuracy = loadedOptions.maxGangMemberAccuracy;
-
-				this.emptyZoneDuringWar = loadedOptions.emptyZoneDuringWar;
-				this.maxDistToWarBlipBeforePlayerLeavesWar = loadedOptions.maxDistToWarBlipBeforePlayerLeavesWar;
-				this.ticksBeforeWarEndWithPlayerAway = loadedOptions.ticksBeforeWarEndWithPlayerAway;
-				this.postWarBackupsAmount = loadedOptions.postWarBackupsAmount;
-				this.baseNumKillsBeforeWarVictory = loadedOptions.baseNumKillsBeforeWarVictory;
-				this.extraKillsPerTurfValue = loadedOptions.extraKillsPerTurfValue;
-				this.maxExtraKillsForNumTurfsControlled = loadedOptions.maxExtraKillsForNumTurfsControlled;
-				this.extraKillsPerGeneralGangStrength = loadedOptions.extraKillsPerGeneralGangStrength;
-				this.killsBetweenEnemySpawnReplacement = loadedOptions.killsBetweenEnemySpawnReplacement;
-				this.ticksBetweenEnemySpawnReplacement = loadedOptions.ticksBetweenEnemySpawnReplacement;
-
-				this.msTimeBetweenTurfRewards = loadedOptions.msTimeBetweenTurfRewards;
-				this.ticksBetweenGangAIUpdates = loadedOptions.ticksBetweenGangAIUpdates;
-				this.minMsTimeBetweenAttacksOnPlayerTurf = loadedOptions.minMsTimeBetweenAttacksOnPlayerTurf;
-				this.ticksBetweenGangMemberAIUpdates = loadedOptions.ticksBetweenGangMemberAIUpdates;
-				this.baseRewardPerZoneOwned = loadedOptions.baseRewardPerZoneOwned;
-				this.maxRewardPerZoneOwned = loadedOptions.maxRewardPerZoneOwned;
-				this.maxTurfValue = loadedOptions.maxTurfValue;
-
-				this.rewardMultiplierPerZone = loadedOptions.rewardMultiplierPerZone;
-
-				this.baseCostToTakeTurf = loadedOptions.baseCostToTakeTurf;
-				this.rewardForTakingEnemyTurf = loadedOptions.rewardForTakingEnemyTurf;
-
-				this.baseCostToUpgradeGeneralGangTurfValue = loadedOptions.baseCostToUpgradeGeneralGangTurfValue;
-				this.baseCostToUpgradeSingleTurfValue = loadedOptions.baseCostToUpgradeSingleTurfValue;
-				this.baseCostToUpgradeArmor = loadedOptions.baseCostToUpgradeArmor;
-				this.baseCostToUpgradeHealth = loadedOptions.baseCostToUpgradeHealth;
-				this.baseCostToUpgradeAccuracy = loadedOptions.baseCostToUpgradeAccuracy;
-
-				this.wanderingDriverDrivingStyle = loadedOptions.wanderingDriverDrivingStyle;
-				this.driverWithDestinationDrivingStyle = loadedOptions.driverWithDestinationDrivingStyle;
-
-				this.numUpgradesUntilMaxMemberAttribute = loadedOptions.numUpgradesUntilMaxMemberAttribute;
-				this.costToCallBackupCar = loadedOptions.costToCallBackupCar;
-				this.costToCallParachutingMember = loadedOptions.costToCallParachutingMember;
-				this.ticksCooldownBackupCar = loadedOptions.ticksCooldownBackupCar;
-				this.ticksCooldownParachutingMember = loadedOptions.ticksCooldownParachutingMember;
-
-				this.minWantedFactorWhenInGangTurf = loadedOptions.minWantedFactorWhenInGangTurf;
-				this.maxWantedLevelInMaxedGangTurf = loadedOptions.maxWantedLevelInMaxedGangTurf;
-				this.freezeWantedLevelDuringWars = loadedOptions.freezeWantedLevelDuringWars;
-
-				this.notificationsEnabled = loadedOptions.notificationsEnabled;
-				this.loggerLevel = loadedOptions.loggerLevel;
-				this.preventAIExpansion = loadedOptions.preventAIExpansion;
-				this.membersSpawnWithMeleeOnly = loadedOptions.membersSpawnWithMeleeOnly;
-				this.membersCanDropMoneyOnDeath = loadedOptions.membersCanDropMoneyOnDeath;
-				this.warAgainstPlayerEnabled = loadedOptions.warAgainstPlayerEnabled;
-				this.ambientSpawningEnabled = loadedOptions.ambientSpawningEnabled;
-				this.forceSpawnCars = loadedOptions.forceSpawnCars;
-				this.joypadControls = loadedOptions.joypadControls;
-
-				this.showGangMemberBlips = loadedOptions.showGangMemberBlips;
-
-				this.gangsStartWithPistols = loadedOptions.gangsStartWithPistols;
-				this.gangsCanBeWipedOut = loadedOptions.gangsCanBeWipedOut;
-				this.maxCoexistingGangs = loadedOptions.maxCoexistingGangs;
-				this.extraProfitForAIGangsFactor = loadedOptions.extraProfitForAIGangsFactor;
-				this.spawnedMembersBeforeAmbientGenStops = loadedOptions.spawnedMembersBeforeAmbientGenStops;
-				this.msBaseIntervalBetweenAmbientSpawns = loadedOptions.msBaseIntervalBetweenAmbientSpawns;
-				this.spawnedMemberLimit = loadedOptions.spawnedMemberLimit;
-				this.minSpawnsForEachSideDuringWars = loadedOptions.minSpawnsForEachSideDuringWars;
-				this.thinkingCarLimit = loadedOptions.thinkingCarLimit;
-				this.minDistanceCarSpawnFromPlayer = loadedOptions.minDistanceCarSpawnFromPlayer;
-				this.minDistanceMemberSpawnFromPlayer = loadedOptions.minDistanceMemberSpawnFromPlayer;
-				this.maxDistanceCarSpawnFromPlayer = loadedOptions.maxDistanceCarSpawnFromPlayer;
-				this.maxDistanceMemberSpawnFromPlayer = loadedOptions.maxDistanceMemberSpawnFromPlayer;
-
-				if (similarColors.Count == 0) {
-					SetColorTranslationDefaultValues();
+				instance = loadedOptions;
+				//integrity check for color list
+				if (instance.similarColors.Count == 0) {
+					instance.SetColorTranslationDefaultValues();
 				}
 				else {
-					if (similarColors[0].blipColors == null) {
-						SetColorTranslationDefaultValues();
+					if (instance.similarColors[0].blipColors == null) {
+						instance.SetColorTranslationDefaultValues();
 					}
 				}
 
-				SaveOptions();
+				instance.SaveOptions();
 			}
 			else {
-				SetAllValuesToDefault();
-				SetNameListsDefaultValues();
-				SetColorTranslationDefaultValues();
-				PersistenceHandler.SaveToFile(this, "ModOptions");
+				instance = new ModOptions();
+				instance.SetAllValuesToDefault();
+				instance.SetNameListsDefaultValues();
+				instance.SetColorTranslationDefaultValues();
+				PersistenceHandler.SaveToFile(instance, "ModOptions");
 			}
+
+			instance.SetupPrimaryWeapons();
 		}
 
 		public void SaveOptions(bool notifyMsg = true) {
@@ -238,6 +149,7 @@ namespace GTA.GangAndTurfMod {
 		public int spawnedMembersBeforeAmbientGenStops = 20;
 		public int msBaseIntervalBetweenAmbientSpawns = 15000;
 		public int spawnedMemberLimit = 30; //max number of living gang members at any time
+		public int preservedDeadBodyLimit = 0;
 		public int minSpawnsForEachSideDuringWars = 5;
 		public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
 		public int minDistanceMemberSpawnFromPlayer = 50;
@@ -359,11 +271,12 @@ namespace GTA.GangAndTurfMod {
 		/// <returns></returns>
 		public int GetAcceptableMemberSpawnDistance(int paddingFromLimits = 0) {
 			if (maxDistanceMemberSpawnFromPlayer <= minDistanceMemberSpawnFromPlayer) {
-				maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 2;
+				maxDistanceMemberSpawnFromPlayer = minDistanceMemberSpawnFromPlayer + 3;
 				SaveOptions(false);
 			}
+
 			return RandoMath.CachedRandom.Next(minDistanceMemberSpawnFromPlayer,
-				RandoMath.Max(minDistanceCarSpawnFromPlayer + paddingFromLimits, maxDistanceMemberSpawnFromPlayer - paddingFromLimits));
+				RandoMath.ClampValue(maxDistanceMemberSpawnFromPlayer - paddingFromLimits, minDistanceMemberSpawnFromPlayer + 2, maxDistanceMemberSpawnFromPlayer));
 		}
 
 		/// <summary>
@@ -598,7 +511,8 @@ namespace GTA.GangAndTurfMod {
 			extraProfitForAIGangsFactor = 1.5f;
 			spawnedMembersBeforeAmbientGenStops = 20;
 			msBaseIntervalBetweenAmbientSpawns = 15000;
-			spawnedMemberLimit = 40; //max number of living gang members at any time
+			spawnedMemberLimit = 40;
+			preservedDeadBodyLimit = 0;
 			minSpawnsForEachSideDuringWars = 5;
 			thinkingCarLimit = 3;
 			minDistanceMemberSpawnFromPlayer = 50;

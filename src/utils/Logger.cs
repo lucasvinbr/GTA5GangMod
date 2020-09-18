@@ -13,7 +13,7 @@ namespace GTA.GangAndTurfMod {
 		/// but only if the log level defined in the mod options is greater or equal to the message's level
 		/// </summary>
 		/// <param name="message"></param>
-		/// <param name="logLevel"></param>
+		/// <param name="logLevel">The smaller the level, the more relevant, with 1 being very important failure messages and 5 being max debug spam</param>
 		public static void Log(object message, int logLevel) {
 			if (ModOptions.instance == null) return;
 			if (ModOptions.instance.loggerLevel >= logLevel) {

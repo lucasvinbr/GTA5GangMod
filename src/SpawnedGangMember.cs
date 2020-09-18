@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA.Native;
 using GTA.Math;
+using Microsoft.SqlServer.Server;
 
 namespace GTA.GangAndTurfMod
 {
@@ -25,6 +26,13 @@ namespace GTA.GangAndTurfMod
         public Ped watchedPed;
 
         public Gang myGang;
+
+        public static List<SpawnedGangMember> preservedMembersList = new List<SpawnedGangMember>();
+
+        /// <summary>
+        /// a "preserved" member is a dead one that is kept around in an effort to keep the body from disappearing
+        /// </summary>
+        private bool isDeadAndPreserved = false;
 
         public enum MemberStatus
         {
@@ -47,14 +55,44 @@ namespace GTA.GangAndTurfMod
         public override void Update()
         {
             Logger.Log("member update: start", 5);
+
             if ((watchedPed.IsInAir) || MindControl.CurrentPlayerCharacter == watchedPed)
             {
                 Logger.Log("member update: end (isPlayer or etc)", 5);
                 return;
             }
+
+            if (!isDeadAndPreserved && !watchedPed.IsAlive)
+            {
+                if (GangWarManager.instance.isOccurring)
+                {
+                    if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
+                    {
+                        //enemy down
+                        GangWarManager.instance.OnEnemyDeath();
+                    }
+                    else if (watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
+                    {
+                        //ally down
+                        GangWarManager.instance.OnAllyDeath();
+                    }
+                }
+                Die(allowPreserving: true);
+                Logger.Log("member update: end (dead)", 5);
+                return;
+            }
+
+            if (isDeadAndPreserved)
+            {
+                if (preservedMembersList.Count > ModOptions.instance.preservedDeadBodyLimit)
+                {
+                    preservedMembersList[0].Die();
+                    return;
+                }
+            }
+
             if (curStatus != MemberStatus.inVehicle)
             {
-                watchedPed.BlockPermanentEvents = false;
                 if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
                 {
@@ -64,7 +102,7 @@ namespace GTA.GangAndTurfMod
                     return;
                 }
 
-                if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
+                if (!isDeadAndPreserved && RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
@@ -76,7 +114,7 @@ namespace GTA.GangAndTurfMod
                                 Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.enemySpawnPoints);
                                 if (ourDestination != Vector3.Zero)
                                 {
-                                    watchedPed.Task.RunTo(ourDestination);
+                                    watchedPed.Task.RunTo(ourDestination + RandoMath.RandomDirection(true));
                                     if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
                                         watchedPed.Position, false))
                                     {
@@ -85,7 +123,7 @@ namespace GTA.GangAndTurfMod
                                         if (watchedPed.IsInWater)
                                         {
                                             //in water and not moving, very likely to be a bad spawn!
-                                            if (ModOptions.instance.notificationsEnabled) 
+                                            if (ModOptions.instance.notificationsEnabled)
                                                 UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
                                             watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
                                             stuckCounter = 0;
@@ -179,13 +217,18 @@ namespace GTA.GangAndTurfMod
                             return;
                         }
 
-                        if (curVehicle.IsSeatFree(VehicleSeat.Driver))
+                        if (!isDeadAndPreserved && curVehicle.IsSeatFree(VehicleSeat.Driver))
                         {
                             //possibly leave the vehicle if the driver has left already
-                            if (RandoMath.RandomBool())
+                            if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
                             {
                                 watchedPed.Task.LeaveVehicle();
+                                watchedPed.BlockPermanentEvents = false;
                                 stuckCounter = 0;
+                            }
+                            else
+                            {
+                                watchedPed.BlockPermanentEvents = true;
                             }
                         }
                     }
@@ -198,26 +241,6 @@ namespace GTA.GangAndTurfMod
 
             }
 
-            if (!watchedPed.IsAlive)
-            {
-                if (GangWarManager.instance.isOccurring)
-                {
-                    if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
-                    {
-                        //enemy down
-                        GangWarManager.instance.OnEnemyDeath();
-                    }
-                    else if (watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
-                    {
-                        //ally down
-                        GangWarManager.instance.OnAllyDeath();
-                    }
-                }
-                Die();
-                Logger.Log("member update: end (dead)", 5);
-                return;
-            }
-
             Logger.Log("member update: end", 5);
         }
 
@@ -225,13 +248,13 @@ namespace GTA.GangAndTurfMod
         /// decrements gangManager's living members count, also tells the war manager about it,
         /// clears this script's references, removes the ped's blip and marks the ped as no longer needed
         /// </summary>
-        public void Die(bool alsoDelete = false)
+        public void Die(bool alsoDelete = false, bool allowPreserving = false)
         {
 
             if (watchedPed != null)
             {
 
-                if (GangWarManager.instance.isOccurring)
+                if (!isDeadAndPreserved && GangWarManager.instance.isOccurring)
                 {
                     if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
                     {
@@ -255,19 +278,40 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    watchedPed.MarkAsNoLongerNeeded();
-
+                    if (allowPreserving && !isDeadAndPreserved)
+                    {
+                        isDeadAndPreserved = true;
+                        this.myGang = null;
+                        curStatus = MemberStatus.none;
+                        stuckCounter = 0;
+                        SpawnManager.instance.livingMembersCount--;
+                        preservedMembersList.Add(this);
+                        return;
+                    }
+                    else
+                    {
+                        watchedPed.MarkAsNoLongerNeeded();
+                    }
                 }
 
             }
 
-            this.myGang = null;
-            this.watchedPed = null;
+            if (isDeadAndPreserved)
+            {
+                preservedMembersList.Remove(this);
+            }
+            else
+            {
+                SpawnManager.instance.livingMembersCount--;
+            }
+            isDeadAndPreserved = false;
+            myGang = null;
+            watchedPed = null;
             curStatus = MemberStatus.none;
             stuckCounter = 0;
-            SpawnManager.instance.livingMembersCount--;
-
+            
         }
+
 
         /// <summary>
         /// does an ambient animation, like smoking
@@ -305,7 +349,7 @@ namespace GTA.GangAndTurfMod
         /// checks if we're not set to defensive (if a war is occurring and we're one of the involved gangs, that doesn't matter)
         /// </summary>
         /// <returns></returns>
-        public bool CanFight()
+        public bool ShouldFight()
         {
             return (ModOptions.instance.gangMemberAggressiveness !=
                     ModOptions.GangMemberAggressivenessMode.defensive ||

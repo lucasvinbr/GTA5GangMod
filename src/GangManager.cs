@@ -61,7 +61,7 @@ namespace GTA.GangAndTurfMod {
 
 			//classes below are all singletons, so no need to hold their ref here
 			new SpawnManager();
-			new ModOptions();
+			ModOptions.LoadOptionsInstance();
 
 			ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
 			ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;

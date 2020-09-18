@@ -24,6 +24,9 @@ namespace GTA.GangAndTurfMod {
 		private float distToDest;
 
 
+		private bool vehicleHasGuns = false;
+
+
 		/// <summary>
 		/// if true, this driver will focus on getting to their destination and, when there, will leave the car...
 		/// unless it's a backup called by the player; 
@@ -56,6 +59,7 @@ namespace GTA.GangAndTurfMod {
 				}
 				else {
 					//we are just wandering arond
+
 					//if we get too far from the player, despawn
 					if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
 							ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3) {
@@ -67,8 +71,8 @@ namespace GTA.GangAndTurfMod {
 					//if there is a war going on and we're in the war zone, get to one of the spawn points;
 					//it's probably close to the action
 					if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone) {
-						deliveringCar = true;
-						destination = GangWarManager.instance.GetRandomSpawnPoint();
+                        deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
+                        destination = GangWarManager.instance.GetRandomSpawnPoint();
 
 						//if spawns still aren't set... try getting to the player
 						if (destination == Vector3.Zero) {
@@ -110,7 +114,7 @@ namespace GTA.GangAndTurfMod {
 			//if we're close to the destination...
 			if (distToDest < RADIUS_DESTINATION_ARRIVED) //tweaked to match my changes below -- zix
 			{
-				//leave the vehicle if we are a backup vehicle and the player's on foot or if we just had to get somewhere
+				//leave the vehicle if we are a backup vehicle and the player's on foot
 				if (!playerAsDest || (playerAsDest && !playerInVehicle)) {
 					if (deliveringCar) {
 						DriverLeaveVehicle();
@@ -263,15 +267,17 @@ namespace GTA.GangAndTurfMod {
 		}
 
 		public void AttachData(Ped targetPed, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool deliveringCar) {
-			this.watchedPed = targetPed;
-			this.vehicleIAmDriving = targetVehicle;
-			this.destination = theDest;
-			this.playerAsDest = playerIsDest;
+			watchedPed = targetPed;
+			vehicleIAmDriving = targetVehicle;
+			destination = theDest;
+			playerAsDest = playerIsDest;
 			this.deliveringCar = deliveringCar;
 			this.isFriendlyToPlayer = isFriendlyToPlayer;
 			Function.Call(Hash.SET_DRIVER_ABILITY, watchedPed, 1.0f);
 			updatesWhileGoingToDest = 0;
 			SetWatchedPassengers();
+
+			vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
 		}
 
 		/// <summary>

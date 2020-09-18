@@ -694,13 +694,20 @@ namespace GTA.GangAndTurfMod
         }
 
 
-        public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float threshold = 0.5f)
+        /// <summary>
+        /// returns true if the distance to the target position from any of the player's (or enemy's) gang spawn points is below the distanceLimit
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="isEnemyTeam"></param>
+        /// <param name="distanceLimit"></param>
+        /// <returns></returns>
+        public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float distanceLimit = 0.5f)
         {
             Vector3[] consideredSpawns = isEnemyTeam ? enemySpawnPoints : alliedSpawnPoints;
 
             foreach (Vector3 spawn in consideredSpawns)
             {
-                if (World.GetDistance(position, spawn) <= threshold)
+                if (World.GetDistance(position, spawn) <= distanceLimit)
                 {
                     return true;
                 }
@@ -719,8 +726,6 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         void CheckIfBattleWasUnfair()
         {
-
-
             if (enemyGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) == WeaponHash.Unarmed &&
                 GangManager.instance.PlayerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons) != WeaponHash.Unarmed)
             {
@@ -750,12 +755,12 @@ namespace GTA.GangAndTurfMod
             if (!isFriendly && spawnedEnemies - 4 < maxSpawnedEnemies)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(enemyGang,
-                    spawnPos, playerPos, false, true, IncrementEnemiesCount);
+                    spawnPos, playerPos, false, false, IncrementEnemiesCount);
             }
             else if (spawnedAllies - 4 < maxSpawnedAllies)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                    spawnPos, playerPos, false, true, IncrementAlliesCount);
+                    spawnPos, playerPos, false, false, IncrementAlliesCount);
             }
 
             return spawnedVehicle;
