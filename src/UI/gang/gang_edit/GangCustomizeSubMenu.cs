@@ -1,11 +1,4 @@
-﻿using GTA.Native;
-using NativeUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static NativeUI.UIMenuDynamicListItem;
+﻿using NativeUI;
 
 namespace GTA.GangAndTurfMod
 {
@@ -26,7 +19,7 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(gangBlipColorSubMenu);
             menuPool.Add(this);
 
-            
+
             Setup();
         }
 
@@ -66,12 +59,13 @@ namespace GTA.GangAndTurfMod
             RefreshIndex();
         }
 
-        void AddRenameGangButton()
+        private void AddRenameGangButton()
         {
             UIMenuItem newButton = new UIMenuItem("Rename Gang", "Opens the input prompt for resetting your gang's name.");
             AddItem(newButton);
 
-            OnItemSelect += (sender, item, index) => {
+            OnItemSelect += (sender, item, index) =>
+            {
                 if (item == newButton)
                 {
                     Visible = !Visible;

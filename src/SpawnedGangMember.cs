@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GTA.Math;
 using GTA.Native;
-using GTA.Math;
-using Microsoft.SqlServer.Server;
+using System.Collections.Generic;
+using System.Text;
 
 namespace GTA.GangAndTurfMod
 {
@@ -27,13 +23,12 @@ namespace GTA.GangAndTurfMod
 
         public Gang myGang;
 
-        public static List<SpawnedGangMember> preservedMembersList = new List<SpawnedGangMember>();
-
         /// <summary>
-        /// a "preserved" member is a dead one that is kept around in an effort to keep the body from disappearing
+        /// used during wars
         /// </summary>
-        private bool isDeadAndPreserved = false;
+        public Vector3 moveDestination;
 
+        
         public enum MemberStatus
         {
             none,
@@ -43,8 +38,7 @@ namespace GTA.GangAndTurfMod
         }
 
         public const int ticksBetweenIdleChange = 10;
-
-        int ticksSinceLastIdleChange = 0;
+        private int ticksSinceLastIdleChange = 0;
 
         public MemberStatus curStatus = MemberStatus.none;
 
@@ -62,7 +56,7 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
-            if (!isDeadAndPreserved && !watchedPed.IsAlive)
+            if (!watchedPed.IsAlive)
             {
                 if (GangWarManager.instance.isOccurring)
                 {
@@ -82,15 +76,6 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
-            if (isDeadAndPreserved)
-            {
-                if (preservedMembersList.Count > ModOptions.instance.preservedDeadBodyLimit)
-                {
-                    preservedMembersList[0].Die();
-                    return;
-                }
-            }
-
             if (curStatus != MemberStatus.inVehicle)
             {
                 if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
@@ -102,71 +87,46 @@ namespace GTA.GangAndTurfMod
                     return;
                 }
 
-                if (!isDeadAndPreserved && RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
+                if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
-                        //instead of idling while in a war, members should head for one of the spawn points
-                        if (myGang == GangManager.instance.PlayerGang)
+                        //instead of idling while in a war, members should head for one of the key locations
+                        
+                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < WarControlPoint.DISTANCE_TO_CAPTURE)
+                            moveDestination = GangWarManager.instance.GetMoveTargetForGang(myGang);
+                        
+                        if (moveDestination != Vector3.Zero)
                         {
-                            if (GangWarManager.instance.enemySpawnPoints != null)
+                            watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
+                            if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
+                                watchedPed.Position, !myGang.isPlayerOwned))
                             {
-                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.enemySpawnPoints);
-                                if (ourDestination != Vector3.Zero)
+                                //maybe we're spawning inside a building?
+                                stuckCounter++;
+                                if (watchedPed.IsInWater)
                                 {
-                                    watchedPed.Task.RunTo(ourDestination + RandoMath.RandomDirection(true));
-                                    if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
-                                        watchedPed.Position, false))
-                                    {
-                                        //maybe we're spawning inside a building?
-                                        stuckCounter++;
-                                        if (watchedPed.IsInWater)
-                                        {
-                                            //in water and not moving, very likely to be a bad spawn!
-                                            if (ModOptions.instance.notificationsEnabled)
-                                                UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
-                                            watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
-                                            stuckCounter = 0;
-                                        }
-                                        else if (stuckCounter > 2)
-                                        {
-                                            if (ModOptions.instance.notificationsEnabled)
-                                                UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
-                                            watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
-                                            stuckCounter = 0;
-                                        }
-                                    }
-                                }
+                                    //in water and not moving, very likely to be a bad spawn!
+                                    if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
+                                        UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                    watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
 
-                            }
-                        }
-                        else
-                        {
-                            if (GangWarManager.instance.alliedSpawnPoints != null)
-                            {
-                                Vector3 ourDestination = RandoMath.GetRandomElementFromArray(GangWarManager.instance.alliedSpawnPoints);
-                                if (ourDestination != Vector3.Zero)
-                                {
-                                    watchedPed.Task.RunTo(ourDestination);
-                                    if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
-                                        watchedPed.Position, true))
+                                    if (!myGang.isPlayerOwned)
                                     {
-                                        //maybe we're spawning inside a building?
-                                        stuckCounter++;
-                                        if (watchedPed.IsInWater)
-                                        {
-                                            //in water and not moving, very likely to be a bad spawn! change it right away
-                                            watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
-                                            GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                            stuckCounter = 0;
-                                        }
-                                        else if (stuckCounter > 2)
-                                        {
-                                            //maybe we'll be warped far away, but that's better than staying stuck
-                                            watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
-                                            GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                            stuckCounter = 0;
-                                        }
+                                        GangWarManager.instance.ReplaceEnemySpawnPoint();
+                                    }
+                                    stuckCounter = 0;
+                                }
+                                else if (stuckCounter > 2)
+                                {
+                                    if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
+                                        UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                    watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
+                                    stuckCounter = 0;
+
+                                    if (!myGang.isPlayerOwned)
+                                    {
+                                        GangWarManager.instance.ReplaceEnemySpawnPoint();
                                     }
                                 }
                             }
@@ -196,10 +156,6 @@ namespace GTA.GangAndTurfMod
                         }
                     }
                 }
-
-
-
-
             }
             else
             {
@@ -217,7 +173,7 @@ namespace GTA.GangAndTurfMod
                             return;
                         }
 
-                        if (!isDeadAndPreserved && curVehicle.IsSeatFree(VehicleSeat.Driver))
+                        if (curVehicle.IsSeatFree(VehicleSeat.Driver))
                         {
                             //possibly leave the vehicle if the driver has left already
                             if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
@@ -254,7 +210,7 @@ namespace GTA.GangAndTurfMod
             if (watchedPed != null)
             {
 
-                if (!isDeadAndPreserved && GangWarManager.instance.isOccurring)
+                if (GangWarManager.instance.isOccurring)
                 {
                     if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
                     {
@@ -278,15 +234,9 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    if (allowPreserving && !isDeadAndPreserved)
+                    if (allowPreserving)
                     {
-                        isDeadAndPreserved = true;
-                        this.myGang = null;
-                        curStatus = MemberStatus.none;
-                        stuckCounter = 0;
-                        SpawnManager.instance.livingMembersCount--;
-                        preservedMembersList.Add(this);
-                        return;
+                        SpawnManager.instance.PreserveDeadBody(watchedPed);
                     }
                     else
                     {
@@ -296,20 +246,14 @@ namespace GTA.GangAndTurfMod
 
             }
 
-            if (isDeadAndPreserved)
-            {
-                preservedMembersList.Remove(this);
-            }
-            else
-            {
-                SpawnManager.instance.livingMembersCount--;
-            }
-            isDeadAndPreserved = false;
             myGang = null;
-            watchedPed = null;
+
             curStatus = MemberStatus.none;
             stuckCounter = 0;
-            
+            moveDestination = Vector3.Zero;
+            SpawnManager.instance.livingMembersCount--;
+            hasDriveByGun = false;
+            watchedPed = null;
         }
 
 
@@ -349,11 +293,25 @@ namespace GTA.GangAndTurfMod
         /// checks if we're not set to defensive (if a war is occurring and we're one of the involved gangs, that doesn't matter)
         /// </summary>
         /// <returns></returns>
-        public bool ShouldFight()
+        public bool ShouldStartFights()
         {
             return (ModOptions.instance.gangMemberAggressiveness !=
                     ModOptions.GangMemberAggressivenessMode.defensive ||
                     (GangWarManager.instance.isOccurring && (myGang == GangWarManager.instance.enemyGang || myGang == GangManager.instance.PlayerGang)));
+        }
+
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("SpawnedGangMember Data:");
+            stringBuilder.AppendLine($"watchedPed is not null: {watchedPed != null}");
+            stringBuilder.AppendLine($"My gang: {(myGang != null ? myGang.name : "NULL")}");
+            stringBuilder.AppendLine($"Cur status: {curStatus}");
+            stringBuilder.AppendLine($"Has DriveBy-usable gun: {hasDriveByGun}");
+            stringBuilder.AppendLine($"War stuck counter: {this.stuckCounter}");
+            stringBuilder.AppendLine($"War move destination: {moveDestination}");
+
+            return stringBuilder.ToString();
         }
 
     }

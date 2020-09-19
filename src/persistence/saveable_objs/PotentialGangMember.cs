@@ -1,10 +1,6 @@
-﻿using System;
+﻿using GTA.Native;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
-using GTA.Native;
 
 namespace GTA.GangAndTurfMod
 {
@@ -14,8 +10,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     [XmlInclude(typeof(FreemodePotentialGangMember))]
     [XmlInclude(typeof(ExtendedPotentialGangMember))]
-    public class PotentialGangMember {
-       public enum DressStyle
+    public class PotentialGangMember
+    {
+        public enum DressStyle
         {
             business,
             street,
@@ -49,10 +46,11 @@ namespace GTA.GangAndTurfMod
         public MemberColor linkedColor;
 
         [XmlIgnore]
-        public static PotentialMemberPool MemberPool {
+        public static PotentialMemberPool MemberPool
+        {
             get
             {
-                if(memberPool == null)
+                if (memberPool == null)
                 {
                     memberPool = PersistenceHandler.LoadFromFile<PotentialMemberPool>("MemberPool");
 
@@ -62,7 +60,7 @@ namespace GTA.GangAndTurfMod
                         memberPool = new PotentialMemberPool();
                     }
                 }
-               
+
                 return memberPool;
             }
 
@@ -72,7 +70,7 @@ namespace GTA.GangAndTurfMod
 
         public PotentialGangMember(int modelHash, DressStyle myStyle, MemberColor linkedColor,
              int headDrawableIndex = -1, int headTextureIndex = -1, int hairDrawableIndex = -1,
-            int torsoDrawableIndex = -1,int torsoTextureIndex = -1, int legsDrawableIndex = -1, int legsTextureIndex = -1)
+            int torsoDrawableIndex = -1, int torsoTextureIndex = -1, int legsDrawableIndex = -1, int legsTextureIndex = -1)
         {
             this.modelHash = modelHash;
             this.myStyle = myStyle;
@@ -203,7 +201,7 @@ namespace GTA.GangAndTurfMod
         {
             PotentialGangMember returnedMember;
 
-            if(MemberPool.memberList.Count <= 0)
+            if (MemberPool.memberList.Count <= 0)
             {
                 UI.Notify("GTA5GangNTurfMod Warning: empty/bad memberpool file! Enemy gangs won't spawn");
                 return null;
@@ -216,11 +214,11 @@ namespace GTA.GangAndTurfMod
                 attempts++;
             } while ((returnedMember.linkedColor != color || returnedMember.myStyle != style) && attempts < 1000);
 
-            if(returnedMember.linkedColor != color || returnedMember.myStyle != style)
+            if (returnedMember.linkedColor != color || returnedMember.myStyle != style)
             {
                 //we couldnt find one randomly.
                 //lets try to find one the straightforward way then
-                for(int i = 0; i < MemberPool.memberList.Count; i++)
+                for (int i = 0; i < MemberPool.memberList.Count; i++)
                 {
                     returnedMember = MemberPool.memberList[i];
                     if (returnedMember.linkedColor == color && returnedMember.myStyle == style)
@@ -246,10 +244,11 @@ namespace GTA.GangAndTurfMod
 
             public bool HasIdenticalEntry(PotentialGangMember potentialEntry)
             {
-                if(potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
+                if (potentialEntry.GetType() == typeof(FreemodePotentialGangMember))
                 {
                     return FreemodePotentialGangMember.FreemodeSimilarEntryCheck(potentialEntry as FreemodePotentialGangMember) != null;
-                }else if (potentialEntry.GetType() == typeof(ExtendedPotentialGangMember))
+                }
+                else if (potentialEntry.GetType() == typeof(ExtendedPotentialGangMember))
                 {
                     return ExtendedPotentialGangMember.ExtendedSimilarEntryCheck(potentialEntry as ExtendedPotentialGangMember) != null;
                 }

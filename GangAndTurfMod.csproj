@@ -90,6 +90,7 @@
     <Compile Include="src\persistence\saveable_objs\FreemodePotentialGangMember.cs" />
     <Compile Include="src\persistence\saveable_objs\Gang.cs" />
     <Compile Include="src\GangAI.cs" />
+    <Compile Include="src\WarControlPoint.cs" />
     <Compile Include="src\UI\gang\GangMenu.cs" />
     <Compile Include="src\UI\gang\gang_edit\GangBlipColorSubMenu.cs" />
     <Compile Include="src\UI\gang\gang_edit\GangCarColorsSubMenu.cs" />

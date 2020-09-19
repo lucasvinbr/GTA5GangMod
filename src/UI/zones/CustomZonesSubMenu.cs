@@ -1,10 +1,4 @@
-﻿using GTA.Native;
-using NativeUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NativeUI;
 using static NativeUI.UIMenuDynamicListItem;
 
 namespace GTA.GangAndTurfMod
@@ -20,7 +14,7 @@ namespace GTA.GangAndTurfMod
 
         private bool editingZoneName = false;
 
-        
+
 
         //options:
         //create new zone here
@@ -46,14 +40,15 @@ namespace GTA.GangAndTurfMod
             OnItemSelect += (sender, selectedItem, index) =>
             {
                 //TODO check if there's a better menu code for this
-                if(selectedItem == createZoneBtn)
+                if (selectedItem == createZoneBtn)
                 {
                     Visible = !Visible;
                     MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterCustomZoneName, "FMMC_KEY_TIP12N", "New Zone Name");
-                }else if(selectedItem == renameZoneBtn)
+                }
+                else if (selectedItem == renameZoneBtn)
                 {
                     CustomTurfZone zone = GetLocalCustomZone();
-                    if(zone != null)
+                    if (zone != null)
                     {
                         Visible = !Visible;
                         editingZoneName = true;
@@ -66,8 +61,9 @@ namespace GTA.GangAndTurfMod
                 }
             };
 
-            MenuScript.instance.OnInputFieldDone += (desiredInputType, typedText) => {
-                if(desiredInputType == MenuScript.DesiredInputType.enterCustomZoneName)
+            MenuScript.instance.OnInputFieldDone += (desiredInputType, typedText) =>
+            {
+                if (desiredInputType == MenuScript.DesiredInputType.enterCustomZoneName)
                 {
                     if (editingZoneName)
                     {
@@ -107,7 +103,7 @@ namespace GTA.GangAndTurfMod
                     UI.ShowSubtitle("You are not inside a custom zone.");
                 }
 
-                
+
 
                 return currentRadius.ToString();
             }
@@ -155,14 +151,14 @@ namespace GTA.GangAndTurfMod
                 };
 
                 ZoneManager.instance.UpdateZoneData(newZone);
-                
+
                 UI.ShowSubtitle("Zone Created!");
             }
         }
 
         private void TryEditZoneName(string newName)
         {
-            if(newName == "zone" || newName == "")
+            if (newName == "zone" || newName == "")
             {
                 UI.ShowSubtitle("That name cannot be used!");
             }
