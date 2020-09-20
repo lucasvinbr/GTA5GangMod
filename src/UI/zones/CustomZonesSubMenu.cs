@@ -8,7 +8,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class CustomZonesSubMenu : UIMenu
     {
-        public CustomZonesSubMenu(string title, string subtitle) : base(title, subtitle)
+        public CustomZonesSubMenu() : base("Gang and Turf Mod", "Custom Zones Menu")
         {
         }
 

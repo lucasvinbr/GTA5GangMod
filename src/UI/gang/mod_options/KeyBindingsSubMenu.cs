@@ -8,7 +8,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class KeyBindingsSubMenu : UIMenu
     {
-        public KeyBindingsSubMenu(string title, string subtitle) : base(title, subtitle)
+        public KeyBindingsSubMenu() : base("Gang and Turf Mod", "Key Bindings")
         {
             Setup();
         }

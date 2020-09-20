@@ -85,7 +85,7 @@ namespace GTA.GangAndTurfMod
 
             if (myZones.Count > 0)
             {
-                TurfZone chosenZone = RandoMath.GetRandomElementFromList(myZones);
+                TurfZone chosenZone = RandoMath.RandomElement(myZones);
                 TurfZone closestZoneToChosen = ZoneManager.instance.GetClosestZoneToTargetZone(chosenZone, true);
                 TryTakeTurf(closestZoneToChosen);
             }
@@ -107,7 +107,7 @@ namespace GTA.GangAndTurfMod
                 watchedGang.SetPreferredWeapons();
             }
 
-            WeaponHash chosenWeapon = RandoMath.GetRandomElementFromList(watchedGang.preferredWeaponHashes);
+            WeaponHash chosenWeapon = RandoMath.RandomElement(watchedGang.preferredWeaponHashes);
 
             if (!watchedGang.gangWeaponHashes.Contains(chosenWeapon))
             {

@@ -48,7 +48,9 @@ namespace GTA.GangAndTurfMod
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
         private const int TICKS_BETWEEN_BALANCE_CHECKS = 14;
 
-        private int ticksSinceLastCarSpawn = 0, ticksSinceLastEnemyRelocation = 0;
+        private int ticksSinceLastCarSpawn = 0;
+           
+        //private int ticksSinceLastEnemyRelocation = 0;
 
 
 
@@ -56,7 +58,7 @@ namespace GTA.GangAndTurfMod
 
         private int timeLastWarAgainstPlayer = 0;
 
-        private int initialEnemyReinforcements = 0, maxSpawnedAllies, maxSpawnedEnemies;
+        private int maxSpawnedAllies, maxSpawnedEnemies;
 
         private int spawnedAllies = 0, spawnedEnemies = 0;
 
@@ -66,7 +68,9 @@ namespace GTA.GangAndTurfMod
 
         public Gang enemyGang;
 
-        private Blip warBlip, enemySpawnBlip;
+        private Blip warBlip;
+
+        //private Blip enemySpawnBlip;
 
         /// <summary>
         /// index 0 is the area around the zone blip; 1 is the area around the player when the war starts
@@ -74,11 +78,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private readonly Blip[] warAreaBlips;
 
-        private readonly Blip[] alliedSpawnBlips;
+        //private readonly Blip[] alliedSpawnBlips;
 
-        public Vector3[] enemySpawnPoints, alliedSpawnPoints;
+        public List<WarControlPoint> enemySpawnPoints, alliedSpawnPoints;
 
-        private bool spawnPointsSet = false;
+        //private bool spawnPointsSet = false;
 
         private AttackStrength curWarAtkStrength = AttackStrength.light;
 
@@ -92,10 +96,12 @@ namespace GTA.GangAndTurfMod
 
         private readonly List<WarControlPoint> pooledControlPoints = new List<WarControlPoint>();
 
+        private List<Vector3> availableNearbyPresetSpawns;
+
         private int desiredNumberOfControlPointsForThisWar = 0;
         private int nextCPIndexToCheckForCapture = 0;
 
-        public const int MAX_CONTROL_POINTS = 5;
+        public const int MAX_EXTRA_CONTROL_POINTS = 5;
 
         public const float MIN_SPAWNS_DISTANCE_TO_CONTROL_POINT = 60;
 
@@ -104,9 +110,7 @@ namespace GTA.GangAndTurfMod
             instance = this;
             this.Tick += OnTick;
             this.Aborted += OnAbort;
-            enemySpawnPoints = new Vector3[3];
-            alliedSpawnPoints = new Vector3[3];
-            alliedSpawnBlips = new Blip[3];
+            //alliedSpawnBlips = new Blip[3];
             warAreaBlips = new Blip[2];
 
 
@@ -131,12 +135,15 @@ namespace GTA.GangAndTurfMod
                 this.curWarType = theWarType;
                 curWarAtkStrength = attackStrength;
                 playerNearWarzone = false;
-                spawnPointsSet = false;
+                //spawnPointsSet = false;
 
                 warBlip = World.CreateBlip(warZone.zoneBlipPosition);
                 warBlip.IsFlashing = true;
                 warBlip.Sprite = BlipSprite.Deathmatch;
                 warBlip.Color = BlipColor.Red;
+
+                enemySpawnPoints = new List<WarControlPoint>();
+                alliedSpawnPoints = new List<WarControlPoint>();
 
                 warAreaBlips[0] = World.CreateBlip(warZone.zoneBlipPosition,
                     ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
@@ -193,8 +200,6 @@ namespace GTA.GangAndTurfMod
                 alliedNumText.Caption = alliedReinforcements.ToString();
                 enemyNumText.Caption = enemyReinforcements.ToString();
 
-                initialEnemyReinforcements = enemyReinforcements;
-
                 reinforcementsAdvantage = alliedReinforcements / (float)(enemyReinforcements + alliedReinforcements);
 
                 spawnedAllies = SpawnManager.instance.GetSpawnedMembersOfGang(GangManager.instance.PlayerGang).Count;
@@ -232,13 +237,18 @@ namespace GTA.GangAndTurfMod
                 if (alreadyInsideWarzone)
                 {
                     //if we are inside the warzone already, set spawns around the player!
-                    SetSpawnPoints(MindControl.SafePositionNearPlayer);
+                    PrepareAndSetupInitialSpawnPoint(MindControl.SafePositionNearPlayer);
+                }
+                else
+                {
+                    //this number may change once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
+                    desiredNumberOfControlPointsForThisWar = 2;
                 }
                 
 
                 SetHateRelationsBetweenGangs();
 
-                desiredNumberOfControlPointsForThisWar = RandoMath.CachedRandom.Next(2, MAX_CONTROL_POINTS + 1);
+
 
 
                 return true;
@@ -401,18 +411,18 @@ namespace GTA.GangAndTurfMod
                 timeLastWarAgainstPlayer = ModCore.curGameTime;
             }
 
-            if (enemySpawnBlip != null)
-            {
-                enemySpawnBlip.Remove();
-            }
+            //if (enemySpawnBlip != null)
+            //{
+            //    enemySpawnBlip.Remove();
+            //}
 
-            foreach (Blip alliedBlip in alliedSpawnBlips)
-            {
-                if (alliedBlip != null)
-                {
-                    alliedBlip.Remove();
-                }
-            }
+            //foreach (Blip alliedBlip in alliedSpawnBlips)
+            //{
+            //    if (alliedBlip != null)
+            //    {
+            //        alliedBlip.Remove();
+            //    }
+            //}
 
             PoolAllControlPoints();
 
@@ -434,245 +444,294 @@ namespace GTA.GangAndTurfMod
 
         #region spawn point setup
 
-        public void ForceSetAlliedSpawnPoints(Vector3 targetBasePosition)
-        {
-            alliedSpawnPoints[0] = targetBasePosition;
+        //public void ForceSetAlliedSpawnPoints(Vector3 targetBasePosition)
+        //{
+        //    alliedSpawnPoints[0] = targetBasePosition;
 
-            for (int i = 1; i < 3; i++)
-            {
-                alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 10, 3, 20);
-            }
+        //    for (int i = 1; i < 3; i++)
+        //    {
+        //        alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 10, 3, 20);
+        //    }
 
-            for (int i = 0; i < alliedSpawnBlips.Length; i++)
-            {
-                if (alliedSpawnBlips[i] != null)
-                {
-                    alliedSpawnBlips[i].Position = alliedSpawnPoints[i];
-                }
-            }
+        //    for (int i = 0; i < alliedSpawnBlips.Length; i++)
+        //    {
+        //        if (alliedSpawnBlips[i] != null)
+        //        {
+        //            alliedSpawnBlips[i].Position = alliedSpawnPoints[i];
+        //        }
+        //    }
 
-            if (!spawnPointsSet)
-            {
-                ReplaceEnemySpawnPoint();
-
-
-                for (int i = 0; i < alliedSpawnBlips.Length; i++)
-                {
-                    if (alliedSpawnBlips[i] == null)
-                    {
-                        CreatePlayerSpawnBlip(i);
-                    }
-                }
+        //    if (!spawnPointsSet)
+        //    {
+        //        ReplaceEnemySpawnPoint();
 
 
-                if (enemySpawnBlip == null)
-                {
-                    CreateSpawnPointBlip(true);
-                }
+        //        for (int i = 0; i < alliedSpawnBlips.Length; i++)
+        //        {
+        //            if (alliedSpawnBlips[i] == null)
+        //            {
+        //                CreatePlayerSpawnBlip(i);
+        //            }
+        //        }
 
-                if (alliedSpawnPoints[0] != Vector3.Zero &&
-                enemySpawnPoints[0] != Vector3.Zero)
-                {
-                    spawnPointsSet = true;
-                }
-                else
-                {
-                    //we probably failed to place spawn points properly.
-                    //we will try placing the spawn points again in the next tick
-                    foreach (Blip alliedBlip in alliedSpawnBlips)
-                    {
-                        if (alliedBlip != null)
-                        {
-                            alliedBlip.Remove();
-                        }
-                    }
-                    enemySpawnBlip.Remove();
-                }
-            }
-        }
 
-        public void SetSpecificAlliedSpawnPoint(int spawnIndex, Vector3 targetPos)
-        {
-            alliedSpawnPoints[spawnIndex] = targetPos;
-            if (alliedSpawnBlips[spawnIndex] != null)
-            {
-                alliedSpawnBlips[spawnIndex].Position = targetPos;
-            }
-        }
+        //        if (enemySpawnBlip == null)
+        //        {
+        //            CreateSpawnPointBlip(true);
+        //        }
+
+        //        if (alliedSpawnPoints[0] != Vector3.Zero &&
+        //        enemySpawnPoints[0] != Vector3.Zero)
+        //        {
+        //            spawnPointsSet = true;
+        //        }
+        //        else
+        //        {
+        //            //we probably failed to place spawn points properly.
+        //            //we will try placing the spawn points again in the next tick
+        //            foreach (Blip alliedBlip in alliedSpawnBlips)
+        //            {
+        //                if (alliedBlip != null)
+        //                {
+        //                    alliedBlip.Remove();
+        //                }
+        //            }
+        //            enemySpawnBlip.Remove();
+        //        }
+        //    }
+        //}
+
+        //public void SetSpecificAlliedSpawnPoint(int spawnIndex, Vector3 targetPos)
+        //{
+        //    alliedSpawnPoints[spawnIndex] = targetPos;
+        //    if (alliedSpawnBlips[spawnIndex] != null)
+        //    {
+        //        alliedSpawnBlips[spawnIndex].Position = targetPos;
+        //    }
+        //}
 
         /// <summary>
         /// tries to replace the enemy spawn point based on the player's position, returning true if succeeds
         /// </summary>
         /// <returns></returns>
-        public bool ReplaceEnemySpawnPoint()
-        {
-            return ReplaceEnemySpawnPoint(MindControl.SafePositionNearPlayer, 20);
-        }
+        //public bool ReplaceEnemySpawnPoint()
+        //{
+        //    return ReplaceEnemySpawnPoint(MindControl.SafePositionNearPlayer, 20);
+        //}
 
         /// <summary>
         /// tries to replace the enemy spawn point based on the provided ref point, returning true if succeeds
         /// </summary>
         /// <returns></returns>
-        public bool ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)
-        {
-            Logger.Log("enemy spawn relocation: start", 3);
-            Vector3 currentSpawnPoint = enemySpawnPoints[0];
+        //public bool ReplaceEnemySpawnPoint(Vector3 referencePoint, int minDistanceFromReference = 5)
+        //{
+        //    Logger.Log("enemy spawn relocation: start", 3);
+        //    Vector3 currentSpawnPoint = enemySpawnPoints[0];
 
-            enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(referencePoint,
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
-                1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
+        //    enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPointInStreet(referencePoint,
+        //        ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
+        //        1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
-            if (enemySpawnPoints[0] == Vector3.Zero)
-            {
-                //we failed to get a new point, lets keep the last one
-                enemySpawnPoints[0] = currentSpawnPoint;
-                ticksSinceLastEnemyRelocation = 0;
-                Logger.Log("enemy spawn relocation: end (fail)", 3);
-                return false;
-            }
-            else if (alliedSpawnPoints[0] != null &&
-               World.GetDistance(enemySpawnPoints[0], alliedSpawnPoints[0]) >= ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
-            {
-                //the spawn is too far from the player's gang spawn!
-                //relocate
-                enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(referencePoint,
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
-                1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
+        //    if (enemySpawnPoints[0] == Vector3.Zero)
+        //    {
+        //        //we failed to get a new point, lets keep the last one
+        //        enemySpawnPoints[0] = currentSpawnPoint;
+        //        ticksSinceLastEnemyRelocation = 0;
+        //        Logger.Log("enemy spawn relocation: end (fail)", 3);
+        //        return false;
+        //    }
+        //    else if (alliedSpawnPoints[0] != null &&
+        //       World.GetDistance(enemySpawnPoints[0], alliedSpawnPoints[0]) >= ModOptions.instance.maxDistanceMemberSpawnFromPlayer)
+        //    {
+        //        //the spawn is too far from the player's gang spawn!
+        //        //relocate
+        //        enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(referencePoint,
+        //        ModOptions.instance.GetAcceptableMemberSpawnDistance(15), minDistanceFromReference,
+        //        1, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
-                //then check again if we failed...
-                if (enemySpawnPoints[0] == Vector3.Zero)
-                {
-                    enemySpawnPoints[0] = currentSpawnPoint;
-                    ticksSinceLastEnemyRelocation = 0;
-                    Logger.Log("enemy spawn relocation: end (fail after getting one too far)", 3);
-                    return false;
-                }
-            }
+        //        //then check again if we failed...
+        //        if (enemySpawnPoints[0] == Vector3.Zero)
+        //        {
+        //            enemySpawnPoints[0] = currentSpawnPoint;
+        //            ticksSinceLastEnemyRelocation = 0;
+        //            Logger.Log("enemy spawn relocation: end (fail after getting one too far)", 3);
+        //            return false;
+        //        }
+        //    }
 
-            for (int i = 1; i < 3; i++)
-            {
-                enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 10, 3, 1);
-            }
+        //    for (int i = 1; i < 3; i++)
+        //    {
+        //        enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 10, 3, 1);
+        //    }
 
-            if (enemySpawnBlip != null)
-            {
-                enemySpawnBlip.Position = enemySpawnPoints[0];
-            }
+        //    if (enemySpawnBlip != null)
+        //    {
+        //        enemySpawnBlip.Position = enemySpawnPoints[0];
+        //    }
 
-            ticksSinceLastEnemyRelocation = 0;
-            Logger.Log("enemy spawn relocation: end (ok)", 3);
-            return true;
-        }
+        //    ticksSinceLastEnemyRelocation = 0;
+        //    Logger.Log("enemy spawn relocation: end (ok)", 3);
+        //    return true;
+        //}
 
         /// <summary>
-        /// sets spawns for both allies and enemies
+        /// stores nearby preset spawn points and attempts to set the allied spawn, returning true if it succeeded
         /// </summary>
         /// <param name="initialReferencePoint"></param>
-        private void SetSpawnPoints(Vector3 initialReferencePoint)
+        private bool PrepareAndSetupInitialSpawnPoint(Vector3 initialReferencePoint)
         {
             Logger.Log("setSpawnPoints: begin", 3);
             //spawn points for both sides should be a bit far from each other, so that the war isn't just pure chaos
 
 
-            alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
-                50, 5);
-            enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
-            ModOptions.instance.GetAcceptableMemberSpawnDistance(30), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
-            30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
+            //alliedSpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+            //    50, 5);
+            //enemySpawnPoints[0] = SpawnManager.instance.FindCustomSpawnPoint(initialReferencePoint,
+            //ModOptions.instance.GetAcceptableMemberSpawnDistance(30), ModOptions.instance.minDistanceMemberSpawnFromPlayer,
+            //30, alliedSpawnPoints[0], ModOptions.instance.minDistanceMemberSpawnFromPlayer);
 
-            //set the other spawn points and our extra spawn point blips, so that we don't have to hunt where our troops will come from
+            ////set the other spawn points and our extra spawn point blips, so that we don't have to hunt where our troops will come from
 
-            for (int i = 1; i < 3; i++)
+            //for (int i = 1; i < 3; i++)
+            //{
+            //    alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
+            //    CreatePlayerSpawnBlip(i);
+            //}
+
+
+            //for (int i = 1; i < 3; i++)
+            //{
+            //    enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
+            //}
+
+            ////and the base blips for both sides
+            //CreateSpawnPointBlip(false);
+            //CreateSpawnPointBlip(true);
+
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    if (alliedSpawnPoints[i] == Vector3.Zero ||
+            //        enemySpawnPoints[i] == Vector3.Zero)
+            //    {
+            //        spawnPointsSet = false; //failed to get spawn points!
+            //                                //we will try placing the spawn points again in the next tick
+            //        foreach (Blip alliedBlip in alliedSpawnBlips)
+            //        {
+            //            if (alliedBlip != null)
+            //            {
+            //                alliedBlip.Remove();
+            //            }
+            //        }
+            //        enemySpawnBlip.Remove();
+            //        Logger.Log("setSpawnPoints: end (fail)", 3);
+            //        return;
+            //    }
+            //}
+
+            //spawnPointsSet = true;
+
+            availableNearbyPresetSpawns = PotentialSpawnsForWars.GetAllPotentialSpawnsInRadiusFromPos
+                (initialReferencePoint, ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar / 2);
+
+            desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
+                2,
+                2 + (int)(warZone.GetUpgradePercentage() * MAX_EXTRA_CONTROL_POINTS));
+
+            if(availableNearbyPresetSpawns.Count < 2)
             {
-                alliedSpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(alliedSpawnPoints[0], 20, 10, 20);
-                CreatePlayerSpawnBlip(i);
+                UI.Notify("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
             }
 
 
-            for (int i = 1; i < 3; i++)
+            if (availableNearbyPresetSpawns.Count > 0)
             {
-                enemySpawnPoints[i] = SpawnManager.instance.FindCustomSpawnPoint(enemySpawnPoints[0], 20, 10, 20);
-            }
+                //find the closest preset spawn and set it as the allied CP
+                int indexOfClosestSpawn = 0;
+                float smallestDistance = ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar;
 
-            //and the base blips for both sides
-            CreateSpawnPointBlip(false);
-            CreateSpawnPointBlip(true);
-
-            for (int i = 0; i < 3; i++)
-            {
-                if (alliedSpawnPoints[i] == Vector3.Zero ||
-                    enemySpawnPoints[i] == Vector3.Zero)
+                for(int i = 0; i < availableNearbyPresetSpawns.Count; i++)
                 {
-                    spawnPointsSet = false; //failed to get spawn points!
-                                            //we will try placing the spawn points again in the next tick
-                    foreach (Blip alliedBlip in alliedSpawnBlips)
+                    float candidateDistance = initialReferencePoint.DistanceTo(availableNearbyPresetSpawns[i]);
+                    if (candidateDistance < smallestDistance)
                     {
-                        if (alliedBlip != null)
-                        {
-                            alliedBlip.Remove();
-                        }
+                        smallestDistance = candidateDistance;
+                        indexOfClosestSpawn = i;
                     }
-                    enemySpawnBlip.Remove();
-                    Logger.Log("setSpawnPoints: end (fail)", 3);
-                    return;
                 }
-            }
 
-            spawnPointsSet = true;
-            Logger.Log("setSpawnPoints: end (success)", 3);
-        }
-
-        private void CreateSpawnPointBlip(bool enemySpawn)
-        {
-            if (enemySpawn)
-            {
-                enemySpawnBlip = World.CreateBlip(enemySpawnPoints[0]);
-
-                enemySpawnBlip.Sprite = BlipSprite.PickupSpawn;
-                enemySpawnBlip.Scale = 1.55f;
-                Function.Call(Hash.SET_BLIP_COLOUR, enemySpawnBlip, enemyGang.blipColor);
-
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
-                    string.Concat("Gang War: ", enemyGang.name, " spawn point"));
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, enemySpawnBlip);
+                if(SetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], GangManager.instance.PlayerGang))
+                {
+                    availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
+                }
             }
             else
             {
-                CreatePlayerSpawnBlip(0);
-            }
-        }
 
-        private void CreatePlayerSpawnBlip(int spawnIndex)
-        {
-            BlipSprite blipSprite;
-
-            switch (spawnIndex)
-            {
-                case 1:
-                    blipSprite = BlipSprite.Capture2;
-                    break;
-                case 2:
-                    blipSprite = BlipSprite.Capture3;
-                    break;
-                default:
-                    blipSprite = BlipSprite.Capture1;
-                    break;
+                SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                                (initialReferencePoint,
+                                ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
+                                10,
+                                5),
+                                GangManager.instance.PlayerGang);
             }
 
-            Blip theNewBlip = World.CreateBlip(alliedSpawnPoints[spawnIndex]);
+            Logger.Log("setSpawnPoints: end", 3);
 
-            theNewBlip.Sprite = blipSprite;
-            theNewBlip.Scale = 0.9f;
-            Function.Call(Hash.SET_BLIP_COLOUR, theNewBlip, GangManager.instance.PlayerGang.blipColor);
+            return controlPoints.Count > 0;
 
-            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
-                string.Concat("Gang War: ", GangManager.instance.PlayerGang.name, " spawn point (", (spawnIndex + 1).ToString(), ")"));
-            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, theNewBlip);
-
-            alliedSpawnBlips[spawnIndex] = theNewBlip;
         }
+
+        //private void CreateSpawnPointBlip(bool enemySpawn)
+        //{
+        //    if (enemySpawn)
+        //    {
+        //        enemySpawnBlip = World.CreateBlip(enemySpawnPoints[0]);
+
+        //        enemySpawnBlip.Sprite = BlipSprite.PickupSpawn;
+        //        enemySpawnBlip.Scale = 1.55f;
+        //        Function.Call(Hash.SET_BLIP_COLOUR, enemySpawnBlip, enemyGang.blipColor);
+
+        //        Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+        //        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+        //            string.Concat("Gang War: ", enemyGang.name, " spawn point"));
+        //        Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, enemySpawnBlip);
+        //    }
+        //    else
+        //    {
+        //        CreatePlayerSpawnBlip(0);
+        //    }
+        //}
+
+        //private void CreatePlayerSpawnBlip(int spawnIndex)
+        //{
+        //    BlipSprite blipSprite;
+
+        //    switch (spawnIndex)
+        //    {
+        //        case 1:
+        //            blipSprite = BlipSprite.Capture2;
+        //            break;
+        //        case 2:
+        //            blipSprite = BlipSprite.Capture3;
+        //            break;
+        //        default:
+        //            blipSprite = BlipSprite.Capture1;
+        //            break;
+        //    }
+
+        //    Blip theNewBlip = World.CreateBlip(alliedSpawnPoints[spawnIndex]);
+
+        //    theNewBlip.Sprite = blipSprite;
+        //    theNewBlip.Scale = 0.9f;
+        //    Function.Call(Hash.SET_BLIP_COLOUR, theNewBlip, GangManager.instance.PlayerGang.blipColor);
+
+        //    Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
+        //    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+        //        string.Concat("Gang War: ", GangManager.instance.PlayerGang.name, " spawn point (", (spawnIndex + 1).ToString(), ")"));
+        //    Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, theNewBlip);
+
+        //    alliedSpawnBlips[spawnIndex] = theNewBlip;
+        //}
 
         /// <summary>
         /// if spawns are set, returns a random spawn that can be allied or hostile
@@ -680,16 +739,20 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public Vector3 GetRandomSpawnPoint()
         {
-            if (spawnPointsSet)
+            if (controlPoints.Count > 0)
             {
+                WarControlPoint pickedCP;
+
                 if (RandoMath.RandomBool())
                 {
-                    return RandoMath.GetRandomElementFromArray(alliedSpawnPoints);
+                    pickedCP = RandoMath.RandomElement(alliedSpawnPoints);
                 }
                 else
                 {
-                    return RandoMath.GetRandomElementFromArray(enemySpawnPoints);
+                    pickedCP =  RandoMath.RandomElement(enemySpawnPoints);
                 }
+
+                return pickedCP.position;
             }
             else
             {
@@ -706,42 +769,43 @@ namespace GTA.GangAndTurfMod
         /// <param name="isEnemyTeam"></param>
         /// <param name="distanceLimit"></param>
         /// <returns></returns>
-        public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float distanceLimit = 0.5f)
-        {
-            if (!spawnPointsSet) return false;
+        //public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float distanceLimit = 0.5f)
+        //{
+        //    if (!spawnPointsSet) return false;
 
-            Vector3[] consideredSpawns = isEnemyTeam ? enemySpawnPoints : alliedSpawnPoints;
+        //    List<Vector3> consideredSpawns = isEnemyTeam ? enemySpawnPoints : alliedSpawnPoints;
 
-            foreach (Vector3 spawn in consideredSpawns)
-            {
-                if (World.GetDistance(position, spawn) <= distanceLimit)
-                {
-                    return true;
-                }
-            }
+        //    foreach (Vector3 spawn in consideredSpawns)
+        //    {
+        //        if (World.GetDistance(position, spawn) <= distanceLimit)
+        //        {
+        //            return true;
+        //        }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         #endregion
 
         #region control point related
 
         /// <summary>
-        /// in order to not do too much in one frame, we only set up one CP per war tick at most
+        /// returns true if the provided position is not zero
         /// </summary>
-        private bool SetupAControlPoint()
+        private bool SetupAControlPoint(Vector3 targetPos, Gang ownerGang)
         {
-            if (!spawnPointsSet) return false;
+            //if (!spawnPointsSet) return false;
             //for now, we're generating random control points, but they should be manually prepared in the future for better placement!
             //(and maybe then we'll load them all at once)
 
-            Vector3 possiblePointPos = SpawnManager.instance.FindCustomSpawnPoint(
-                RandoMath.CenterOfVectors(alliedSpawnPoints[0], enemySpawnPoints[0]),
-                ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                10,
-                5);
-            if (possiblePointPos != Vector3.Zero)
+            
+            //Vector3 possiblePointPos = SpawnManager.instance.FindCustomSpawnPoint(
+            //    RandoMath.CenterOfVectors(alliedSpawnPoints[0], enemySpawnPoints[0]),
+            //    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
+            //    10,
+            //    5);
+            if (targetPos != Vector3.Zero)
             {
                 WarControlPoint newPoint;
                 if (pooledControlPoints.Count > 0)
@@ -754,12 +818,27 @@ namespace GTA.GangAndTurfMod
                     newPoint = new WarControlPoint();
                 }
 
-                newPoint.SetupAtPosition(possiblePointPos);
+                newPoint.SetupAtPosition(targetPos, ownerGang);
+                if (ownerGang != null) ControlPointHasBeenCaptured(newPoint);
                 controlPoints.Add(newPoint);
                 return true;
             }
 
             return false;
+        }
+
+        public void ControlPointHasBeenCaptured(WarControlPoint capturedCP)
+        {
+            if(capturedCP.ownerGang == enemyGang)
+            {
+                enemySpawnPoints.Add(capturedCP);
+                alliedSpawnPoints.Remove(capturedCP);
+            }
+            else
+            {
+                enemySpawnPoints.Remove(capturedCP);
+                alliedSpawnPoints.Add(capturedCP);
+            }
         }
 
         private void PoolAllControlPoints()
@@ -780,22 +859,36 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public Vector3 GetMoveTargetForGang(Gang gang)
         {
-            Vector3 targetPos = Vector3.Zero;
+            WarControlPoint targetPoint = null;
 
             for (int i = 0; i < controlPoints.Count; i++)
             {
-                if (targetPos == Vector3.Zero || (controlPoints[i].ownerGang != gang && RandoMath.RandomBool()))
+                if (targetPoint == null || (controlPoints[i].ownerGang != gang && (RandoMath.RandomBool() || targetPoint.ownerGang == gang)))
                 {
-                    targetPos = controlPoints[i].position;
+                    targetPoint = controlPoints[i];
                 }
             }
 
-            if (controlPoints.Count == 0)
-            {
-                targetPos = RandoMath.GetRandomElementFromArray(gang.isPlayerOwned ? enemySpawnPoints : alliedSpawnPoints);
-            }
+            return targetPoint.position;
+        }
 
-            return targetPos;
+        /// <summary>
+        /// returns the position of one of the control points for the provided gang
+        /// </summary>
+        /// <param name="gang"></param>
+        /// <returns></returns>
+        public Vector3 GetSpawnPositionForGang(Gang gang)
+        {
+            WarControlPoint pickedPoint = gang == enemyGang ? enemySpawnPoints.RandomElement() : alliedSpawnPoints.RandomElement();
+
+            if(pickedPoint != null)
+            {
+                return pickedPoint.position;
+            }
+            else
+            {
+                return Vector3.Zero;
+            }
         }
 
         #endregion
@@ -812,7 +905,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (RandoMath.RandomBool())
                 {
-                    enemyGang.gangWeaponHashes.Add(RandoMath.GetRandomElementFromList(ModOptions.instance.driveByWeapons));
+                    enemyGang.gangWeaponHashes.Add(RandoMath.RandomElement(ModOptions.instance.driveByWeapons));
                     GangManager.instance.SaveGangData(false);
                 }
             }
@@ -849,8 +942,7 @@ namespace GTA.GangAndTurfMod
 
         public void SpawnMember(bool isFriendly)
         {
-            Vector3 spawnPos = isFriendly ?
-                RandoMath.GetRandomElementFromArray(alliedSpawnPoints) : RandoMath.GetRandomElementFromArray(enemySpawnPoints);
+            Vector3 spawnPos = GetSpawnPositionForGang(isFriendly ? GangManager.instance.PlayerGang : enemyGang);
 
             if (spawnPos == default) return; //this means we don't have spawn points set yet
 
@@ -896,16 +988,16 @@ namespace GTA.GangAndTurfMod
                     enemyNumText.Caption = enemyReinforcements.ToString();
                     //if we've lost too many people since the last time we changed spawn points,
                     //change them again!
-                    if (initialEnemyReinforcements - enemyReinforcements > 0 &&
-                        ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
-                        enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0)
-                    {
-                        if (spawnPointsSet)
-                        {
-                            ReplaceEnemySpawnPoint();
-                        }
+                    //if (initialEnemyReinforcements - enemyReinforcements > 0 &&
+                    //    ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
+                    //    enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0)
+                    //{
+                    //    if (spawnPointsSet)
+                    //    {
+                    //        ReplaceEnemySpawnPoint();
+                    //    }
 
-                    }
+                    //}
                 }
 
             }
@@ -1033,7 +1125,7 @@ namespace GTA.GangAndTurfMod
                     shouldDisplayReinforcementsTexts = true;
                     ticksSinceLastCarSpawn++;
                     ticksSinceLastBalanceCheck++;
-                    ticksSinceLastEnemyRelocation++;
+                    //ticksSinceLastEnemyRelocation++;
                     curTicksAwayFromBattle = 0;
 
                     if (ModOptions.instance.freezeWantedLevelDuringWars)
@@ -1082,33 +1174,72 @@ namespace GTA.GangAndTurfMod
 
                     }
 
-                    if (!spawnPointsSet)
-                    {
-                        SetSpawnPoints(MindControl.SafePositionNearPlayer);
 
-                        //if setting spawns succeeded this time, place the second war area here if it still hasn't been placed
-                        if (spawnPointsSet && warAreaBlips[1] == null)
-                        {
-                            warAreaBlips[1] = World.CreateBlip(MindControl.SafePositionNearPlayer,
-                    ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
-                            warAreaBlips[1].Sprite = BlipSprite.BigCircle;
-                            warAreaBlips[1].Color = BlipColor.Red;
-                            warAreaBlips[1].Alpha = 175;
-                        }
-                    }
-                    else
+                    if (controlPoints.Count < desiredNumberOfControlPointsForThisWar)
                     {
-                        if (ModOptions.instance.ticksBetweenEnemySpawnReplacement > 0 &&
-                        ticksSinceLastEnemyRelocation > ModOptions.instance.ticksBetweenEnemySpawnReplacement)
+                        if (controlPoints.Count > 0)
                         {
-                            ReplaceEnemySpawnPoint();
+                            if(availableNearbyPresetSpawns.Count > 0)
+                            {
+                                if(SetupAControlPoint(availableNearbyPresetSpawns[0],
+                                    enemySpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : enemyGang))
+                                {
+                                    availableNearbyPresetSpawns.RemoveAt(0);
+                                }
+                            }
+                            else
+                            {
+                                SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                                    (controlPoints[0].position,
+                                    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
+                                    10,
+                                    5),
+                                    enemySpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : enemyGang);
+                            }
+                        }
+                        else
+                        {
+                            if (PrepareAndSetupInitialSpawnPoint(MindControl.SafePositionNearPlayer))
+                            {
+                                //if setting spawns succeeded this time, place the second war area here if it still hasn't been placed
+                                if (warAreaBlips[1] == null)
+                                {
+                                    warAreaBlips[1] = World.CreateBlip(MindControl.SafePositionNearPlayer,
+                                    ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
+                                    warAreaBlips[1].Sprite = BlipSprite.BigCircle;
+                                    warAreaBlips[1].Color = BlipColor.Red;
+                                    warAreaBlips[1].Alpha = 175;
+                                }
+                            }
                         }
 
-                        if (controlPoints.Count < desiredNumberOfControlPointsForThisWar)
-                        {
-                            SetupAControlPoint();
-                        }
                     }
+
+                    //if (!spawnPointsSet)
+                    //{
+                    //    //SetSpawnPoints(MindControl.SafePositionNearPlayer);
+
+                    //    //if setting spawns succeeded this time, place the second war area here if it still hasn't been placed
+                    //    if (spawnPointsSet && warAreaBlips[1] == null)
+                    //    {
+                    //        warAreaBlips[1] = World.CreateBlip(MindControl.SafePositionNearPlayer,
+                    //ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
+                    //        warAreaBlips[1].Sprite = BlipSprite.BigCircle;
+                    //        warAreaBlips[1].Color = BlipColor.Red;
+                    //        warAreaBlips[1].Alpha = 175;
+                    //    }
+
+
+                    //}
+                    //else
+                    //{
+                    //    if (ModOptions.instance.ticksBetweenEnemySpawnReplacement > 0 &&
+                    //    ticksSinceLastEnemyRelocation > ModOptions.instance.ticksBetweenEnemySpawnReplacement)
+                    //    {
+                    //        ReplaceEnemySpawnPoint();
+                    //    }
+
+                    //}
 
                     alliedPercentOfSpawnedMembers = spawnedAllies / RandoMath.Max(spawnedAllies + spawnedEnemies, 1.0f);
 
@@ -1169,18 +1300,18 @@ namespace GTA.GangAndTurfMod
 
             }
 
-            foreach (Blip alliedBlip in alliedSpawnBlips)
-            {
-                if (alliedBlip != null)
-                {
-                    alliedBlip.Remove();
-                }
-            }
+            //foreach (Blip alliedBlip in alliedSpawnBlips)
+            //{
+            //    if (alliedBlip != null)
+            //    {
+            //        alliedBlip.Remove();
+            //    }
+            //}
 
-            if (enemySpawnBlip != null)
-            {
-                enemySpawnBlip.Remove();
-            }
+            //if (enemySpawnBlip != null)
+            //{
+            //    enemySpawnBlip.Remove();
+            //}
 
             PoolAllControlPoints();
         }

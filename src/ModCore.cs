@@ -315,6 +315,9 @@ namespace GTA.GangAndTurfMod
                 mindControlScript.RestorePlayerBody();
             }
             SpawnManager.instance.RemoveAllMembers();
+            SpawnManager.instance.RemoveAllDeadBodies();
+
+            PotentialSpawnsForWars.ToggleBlips(false);
 
             Logger.Log("mod aborted!", 2);
 

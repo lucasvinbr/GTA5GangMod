@@ -7,7 +7,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangUpgradesSubMenu : UIMenu
     {
-        public GangUpgradesSubMenu(string title, string subtitle) : base(title, subtitle)
+        public GangUpgradesSubMenu() : base("Gang and Turf Mod", "Gang Upgrades")
         {
             AddGangUpgradesBtns();
             RefreshIndex();

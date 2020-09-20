@@ -330,18 +330,18 @@ namespace GTA.GangAndTurfMod
             string gangName;
             do
             {
-                gangName = string.Concat(RandoMath.GetRandomElementFromList(ModOptions.instance.possibleGangFirstNames), " ",
-                RandoMath.GetRandomElementFromList(ModOptions.instance.possibleGangLastNames));
+                gangName = string.Concat(RandoMath.RandomElement(ModOptions.instance.possibleGangFirstNames), " ",
+                RandoMath.RandomElement(ModOptions.instance.possibleGangLastNames));
             } while (GetGangByName(gangName) != null);
 
             PotentialGangMember.MemberColor gangColor = (PotentialGangMember.MemberColor)RandoMath.CachedRandom.Next(9);
 
             //the new gang takes the wealthiest gang around as reference to define its starting money.
             //that does not mean it will be the new wealthiest one, hehe (but it may)
-            Gang newGang = new Gang(gangName, RandoMath.GetRandomElementFromList(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors),
+            Gang newGang = new Gang(gangName, RandoMath.RandomElement(ModOptions.instance.GetGangColorTranslation(gangColor).vehicleColors),
                 false, (int)(RandoMath.Max(Game.Player.Money, GetWealthiestGang().moneyAvailable) * (RandoMath.CachedRandom.Next(1, 11) / 6.5f)))
             {
-                blipColor = RandoMath.GetRandomElementFromArray(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors)
+                blipColor = RandoMath.RandomElement(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors)
             };
 
             GetMembersForGang(newGang);

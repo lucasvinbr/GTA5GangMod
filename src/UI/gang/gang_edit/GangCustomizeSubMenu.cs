@@ -7,12 +7,12 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangCustomizeSubMenu : UIMenu
     {
-        public GangCustomizeSubMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
+        public GangCustomizeSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Gang Customization/Upgrades")
         {
-            gangUpgradesSubMenu = new GangUpgradesSubMenu("Gang and Turf Mod", "Gang Upgrades");
-            gangWeaponsSubMenu = new GangWeaponsSubMenu("Gang and Turf Mod", "Gang Weapons");
-            gangCarColorsSubMenu = new GangCarColorsSubMenu("Gang and Turf Mod", "Gang Car Colors", menuPool);
-            gangBlipColorSubMenu = new GangBlipColorSubMenu("Gang and Turf Mod", "Gang Blip Color");
+            gangUpgradesSubMenu = new GangUpgradesSubMenu();
+            gangWeaponsSubMenu = new GangWeaponsSubMenu();
+            gangCarColorsSubMenu = new GangCarColorsSubMenu(menuPool);
+            gangBlipColorSubMenu = new GangBlipColorSubMenu();
 
             menuPool.Add(gangUpgradesSubMenu);
             menuPool.Add(gangWeaponsSubMenu);

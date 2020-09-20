@@ -8,9 +8,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class ModOptionsSubMenu : UIMenu
     {
-        public ModOptionsSubMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
+        public ModOptionsSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Mod Options")
         {
-            keyBindingsSubMenu = new KeyBindingsSubMenu("Gang and Turf Mod", "Key Bindings");
+            keyBindingsSubMenu = new KeyBindingsSubMenu();
 
 
             menuPool.Add(this);
@@ -265,7 +265,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (item == newButton)
                 {
-                    GangAI enemyAttackerAI = RandoMath.GetRandomElementFromList(GangManager.instance.enemyGangs);
+                    GangAI enemyAttackerAI = RandoMath.RandomElement(GangManager.instance.enemyGangs);
                     if (enemyAttackerAI != null)
                     {
                         TurfZone curZone = ZoneManager.instance.GetCurrentTurfZone();

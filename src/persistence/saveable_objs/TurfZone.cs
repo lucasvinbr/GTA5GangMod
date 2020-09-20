@@ -132,5 +132,14 @@ namespace GTA.GangAndTurfMod
             return GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == this;
         }
 
+        /// <summary>
+        /// level 5 zone and maxTurfValue modOption is 10 -> returns 0.5 (50%)
+        /// </summary>
+        /// <returns></returns>
+        public float GetUpgradePercentage()
+        {
+            return value / (float) RandoMath.Max(ModOptions.instance.maxTurfValue, 1);
+        }
+
     }
 }

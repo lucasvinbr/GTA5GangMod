@@ -8,7 +8,7 @@ namespace GTA.GangAndTurfMod
     /// just a few useful methods for getting random stuff
     /// and some math stuff as well
     /// </summary>
-    internal class RandoMath
+    internal static class RandoMath
     {
 
         public static Random CachedRandom
@@ -78,13 +78,13 @@ namespace GTA.GangAndTurfMod
             return CachedRandom.Next(0, 2) == 0;
         }
 
-        public static T GetRandomElementFromList<T>(List<T> theList)
+        public static T RandomElement<T>(this List<T> theList)
         {
             if (theList == null) return default;
             return theList[CachedRandom.Next(theList.Count)];
         }
 
-        public static T GetRandomElementFromArray<T>(T[] theArray)
+        public static T RandomElement<T>(this T[] theArray)
         {
             if (theArray == null) return default;
             return theArray[CachedRandom.Next(theArray.Length)];

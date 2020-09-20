@@ -462,7 +462,7 @@ namespace GTA.GangAndTurfMod
             {
                 Logger.Log("spawn member: begin", 4);
                 PotentialGangMember chosenMember =
-                    RandoMath.GetRandomElementFromList(ownerGang.memberVariations);
+                    RandoMath.RandomElement(ownerGang.memberVariations);
                 Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
                 if (newPed != null)
                 {
@@ -514,7 +514,7 @@ namespace GTA.GangAndTurfMod
                             newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
 
                             //and one extra
-                            newPed.Weapons.Give(RandoMath.GetRandomElementFromList(ownerGang.gangWeaponHashes), 1000, false, true);
+                            newPed.Weapons.Give(RandoMath.RandomElement(ownerGang.gangWeaponHashes), 1000, false, true);
                         }
                     }
 
@@ -568,7 +568,7 @@ namespace GTA.GangAndTurfMod
             if (ownerGang.carVariations.Count > 0)
             {
                 Logger.Log("spawn car: start", 4);
-                Vehicle newVehicle = World.CreateVehicle(RandoMath.GetRandomElementFromList(ownerGang.carVariations).modelHash, spawnPos);
+                Vehicle newVehicle = World.CreateVehicle(RandoMath.RandomElement(ownerGang.carVariations).modelHash, spawnPos);
                 if (newVehicle != null)
                 {
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;

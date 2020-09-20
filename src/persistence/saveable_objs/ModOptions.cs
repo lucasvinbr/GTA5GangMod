@@ -357,14 +357,14 @@ namespace GTA.GangAndTurfMod
         {
             for (int attempts = 0; attempts < 5; attempts++)
             {
-                WeaponHash chosenWeapon = RandoMath.GetRandomElementFromList(theWeaponList);
+                WeaponHash chosenWeapon = RandoMath.RandomElement(theWeaponList);
                 if (GetBuyableWeaponByHash(chosenWeapon) != null)
                 {
                     return chosenWeapon;
                 }
             }
 
-            return RandoMath.GetRandomElementFromList(buyableWeapons).wepHash;
+            return RandoMath.RandomElement(buyableWeapons).wepHash;
         }
 
         #endregion

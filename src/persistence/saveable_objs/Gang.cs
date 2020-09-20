@@ -94,7 +94,7 @@ namespace GTA.GangAndTurfMod
             //and some more for that extra variation
             for (int i = 0; i < RandoMath.CachedRandom.Next(2, 5); i++)
             {
-                preferredWeaponHashes.Add(RandoMath.GetRandomElementFromList(ModOptions.instance.buyableWeapons).wepHash);
+                preferredWeaponHashes.Add(RandoMath.RandomElement(ModOptions.instance.buyableWeapons).wepHash);
             }
 
             GangManager.instance.SaveGangData(false);
@@ -111,8 +111,8 @@ namespace GTA.GangAndTurfMod
             if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.MemberColor.white) ||
                 (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.MemberColor.black))
             {
-                blipColor = RandoMath.GetRandomElementFromArray(ourColor.blipColors);
-                vehicleColor = RandoMath.GetRandomElementFromList(ourColor.vehicleColors);
+                blipColor = RandoMath.RandomElement(ourColor.blipColors);
+                vehicleColor = RandoMath.RandomElement(ourColor.vehicleColors);
                 GangManager.instance.SaveGangData(false);
             }
 
@@ -385,7 +385,7 @@ namespace GTA.GangAndTurfMod
 
             if (possibleGuns.Count > 0)
             {
-                return RandoMath.GetRandomElementFromList(possibleGuns);
+                return RandoMath.RandomElement(possibleGuns);
             }
             return WeaponHash.Unarmed;
         }

@@ -9,7 +9,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangCarColorsSubMenu : UIMenu
     {
-        public GangCarColorsSubMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
+        public GangCarColorsSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Gang Car Colors")
         {
             colorsMenu = new UIMenu("Gand and Turf Mod", "Car Colors List");
             menuPool.Add(colorsMenu);

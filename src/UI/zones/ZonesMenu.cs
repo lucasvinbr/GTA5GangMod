@@ -7,11 +7,11 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class ZonesMenu : UIMenu
     {
-        public ZonesMenu(string title, string subtitle, MenuPool menuPool) : base(title, subtitle)
+        public ZonesMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Zone Controls")
         {
 
             warAttackStrengthMenu = new UIMenu("Gang and Turf Mod", "Gang War Attack Options");
-            customZonesSubMenu = new CustomZonesSubMenu("Gang and Turf Mod", "Custom Zones Menu");
+            customZonesSubMenu = new CustomZonesSubMenu();
 
             menuPool.Add(this);
             menuPool.Add(warAttackStrengthMenu);

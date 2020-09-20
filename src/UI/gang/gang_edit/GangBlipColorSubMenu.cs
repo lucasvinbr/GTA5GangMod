@@ -9,7 +9,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangBlipColorSubMenu : UIMenu
     {
-        public GangBlipColorSubMenu(string title, string subtitle) : base(title, subtitle)
+        public GangBlipColorSubMenu() : base("Gang and Turf Mod", "Gang Blip Color")
         {
             Setup();
         }

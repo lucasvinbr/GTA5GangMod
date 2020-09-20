@@ -44,6 +44,11 @@ namespace GTA.GangAndTurfMod
 
         public bool hasDriveByGun = false;
 
+        /// <summary>
+        /// the position where we spawned (or at least the position we were in when the memberAI was attached to us)
+        /// </summary>
+        private Vector3 spawnPosition;
+
         private int stuckCounter = 0;
 
         public override void Update()
@@ -99,35 +104,34 @@ namespace GTA.GangAndTurfMod
                         if (moveDestination != Vector3.Zero)
                         {
                             watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
-                            if (GangWarManager.instance.IsPositionCloseToAnySpawnOfTeam(
-                                watchedPed.Position, !myGang.isPlayerOwned))
+                            if (spawnPosition.DistanceTo(watchedPed.Position) <= 0.5f)
                             {
                                 //maybe we're spawning inside a building?
                                 stuckCounter++;
                                 if (watchedPed.IsInWater)
                                 {
                                     //in water and not moving, very likely to be a bad spawn!
-                                    if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
-                                        UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                    //if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
+                                    //    UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
                                     watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
 
-                                    if (!myGang.isPlayerOwned)
-                                    {
-                                        GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                    }
+                                    //if (!myGang.isPlayerOwned)
+                                    //{
+                                    //    GangWarManager.instance.ReplaceEnemySpawnPoint();
+                                    //}
                                     stuckCounter = 0;
                                 }
                                 else if (stuckCounter > 2)
                                 {
-                                    if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
-                                        UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
+                                    //if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
+                                    //    UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
                                     watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
                                     stuckCounter = 0;
 
-                                    if (!myGang.isPlayerOwned)
-                                    {
-                                        GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                    }
+                                    //if (!myGang.isPlayerOwned)
+                                    //{
+                                    //    GangWarManager.instance.ReplaceEnemySpawnPoint();
+                                    //}
                                 }
                             }
                         }
@@ -263,7 +267,7 @@ namespace GTA.GangAndTurfMod
         public void DoAnIdleAnim()
         {
             Vector3 scenarioPos = World.GetNextPositionOnSidewalk(watchedPed.Position);
-            Function.Call(Hash.TASK_START_SCENARIO_AT_POSITION, watchedPed, RandoMath.GetRandomElementFromArray(idleAnims),
+            Function.Call(Hash.TASK_START_SCENARIO_AT_POSITION, watchedPed, RandoMath.RandomElement(idleAnims),
                 scenarioPos.X, scenarioPos.Y, scenarioPos.Z, RandoMath.RandomHeading(), 0, 0, 0);
         }
 
@@ -287,6 +291,7 @@ namespace GTA.GangAndTurfMod
             this.watchedPed = targetPed;
             this.myGang = ourGang;
             this.hasDriveByGun = hasDriveByGun;
+            this.spawnPosition = targetPed.Position;
         }
 
         /// <summary>

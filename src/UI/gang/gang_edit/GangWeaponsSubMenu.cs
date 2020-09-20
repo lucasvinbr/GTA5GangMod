@@ -8,7 +8,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangWeaponsSubMenu : UIMenu
     {
-        public GangWeaponsSubMenu(string title, string subtitle) : base(title, subtitle)
+        public GangWeaponsSubMenu() : base("Gang and Turf Mod", "Gang Weapons")
         {
             Setup();
         }

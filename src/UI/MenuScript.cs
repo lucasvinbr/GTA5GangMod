@@ -62,10 +62,10 @@ namespace GTA.GangAndTurfMod
 
             menuPool = new MenuPool();
 
-            zonesMenu = new ZonesMenu("Gang and Turf Mod", "Zone Controls", menuPool);
+            zonesMenu = new ZonesMenu(menuPool);
             memberMenu = new UIMenu("Gang and Turf Mod", "Gang Member Registration Controls");
             carMenu = new UIMenu("Gang and Turf Mod", "Gang Vehicle Registration Controls");
-            gangMenu = new GangMenu("Gang and Turf Mod", "Main Menu", menuPool);
+            gangMenu = new GangMenu(menuPool);
 
             menuPool.Add(memberMenu);
             menuPool.Add(carMenu);

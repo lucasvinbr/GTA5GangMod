@@ -73,8 +73,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SetupAtPosition(Vector3 pos)
+        public void SetupAtPosition(Vector3 pos, Gang ownerGang)
         {
+            this.ownerGang = ownerGang;
             position = pos;
             CreateAttachedBlip();
             UpdateBlipAppearance();
@@ -105,6 +106,7 @@ namespace GTA.GangAndTurfMod
                             if (member.myGang == GangWarManager.instance.enemyGang || member.myGang == GangManager.instance.PlayerGang)
                             {
                                 ownerGang = member.myGang;
+                                GangWarManager.instance.ControlPointHasBeenCaptured(this);
                                 UpdateBlipAppearance();
                                 return;
                             }

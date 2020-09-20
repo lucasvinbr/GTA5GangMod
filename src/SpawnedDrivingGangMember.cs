@@ -75,12 +75,12 @@ namespace GTA.GangAndTurfMod
                         return;
                     }
 
-                    //if there is a war going on and we're in the war zone, get to one of the spawn points;
+                    //if there is a war going on and we're in the war zone, get to one of the relevant locations;
                     //it's probably close to the action
                     if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
                     {
                         deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
-                        destination = GangWarManager.instance.GetRandomSpawnPoint();
+                        destination = GangWarManager.instance.GetMoveTargetForGang(isFriendlyToPlayer ? GangManager.instance.PlayerGang : GangWarManager.instance.enemyGang);
 
                         //if spawns still aren't set... try getting to the player
                         if (destination == Vector3.Zero)

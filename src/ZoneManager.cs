@@ -351,7 +351,7 @@ namespace GTA.GangAndTurfMod
 
             if (randomBetween3Closest && timesFoundBetterZone >= 3) //only get a random from top 3 if we found 3 different zones
             {
-                return RandoMath.GetRandomElementFromList(top3ClosestZones);
+                return RandoMath.RandomElement(top3ClosestZones);
             }
             else
             {
@@ -364,7 +364,7 @@ namespace GTA.GangAndTurfMod
         {
             if (!preferablyNeutralZone)
             {
-                return RandoMath.GetRandomElementFromList(zoneData.zoneList);
+                return RandoMath.RandomElement(zoneData.zoneList);
             }
             else
             {
@@ -381,7 +381,7 @@ namespace GTA.GangAndTurfMod
                             //we've run out of options! abort
                             break;
                         }
-                        TurfZone chosenZone = RandoMath.GetRandomElementFromList(possibleTurfChoices);
+                        TurfZone chosenZone = RandoMath.RandomElement(possibleTurfChoices);
                         if (!preferablyNeutralZone || chosenZone.ownerGangName == "none")
                         {
                             return chosenZone;
