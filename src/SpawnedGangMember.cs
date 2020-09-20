@@ -51,6 +51,8 @@ namespace GTA.GangAndTurfMod
 
         private int stuckCounter = 0;
 
+        private const int STUCK_COUNTER_LIMIT = 4;
+
         public override void Update()
         {
             Logger.Log("member update: start", 5);
@@ -121,7 +123,7 @@ namespace GTA.GangAndTurfMod
                                     //}
                                     stuckCounter = 0;
                                 }
-                                else if (stuckCounter > 2)
+                                else if (stuckCounter > STUCK_COUNTER_LIMIT)
                                 {
                                     //if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
                                     //    UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");

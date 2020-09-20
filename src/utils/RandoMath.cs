@@ -80,13 +80,13 @@ namespace GTA.GangAndTurfMod
 
         public static T RandomElement<T>(this List<T> theList)
         {
-            if (theList == null) return default;
+            if (theList == null || theList.Count == 0) return default;
             return theList[CachedRandom.Next(theList.Count)];
         }
 
         public static T RandomElement<T>(this T[] theArray)
         {
-            if (theArray == null) return default;
+            if (theArray == null || theArray.Length == 0) return default;
             return theArray[CachedRandom.Next(theArray.Length)];
         }
 

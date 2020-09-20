@@ -19,6 +19,11 @@ namespace GTA.GangAndTurfMod
 
         public Gang ownerGang;
 
+        /// <summary>
+        /// after being captured, the control point must wait one "capture check" before being available as a spawn point
+        /// </summary>
+        public bool onCaptureCooldown = false;
+
 
         public const float DISTANCE_TO_CAPTURE = 15;
 
@@ -90,6 +95,7 @@ namespace GTA.GangAndTurfMod
             }
 
             ownerGang = null;
+            onCaptureCooldown = false;
         }
 
         public void CheckIfHasBeenCaptured()
@@ -123,12 +129,18 @@ namespace GTA.GangAndTurfMod
                     {
                         //Capture!
                         ownerGang = member.myGang;
+                        GangWarManager.instance.ControlPointHasBeenCaptured(this);
                         UpdateBlipAppearance();
                         return;
                     }
                 }
             }
 
+            if (onCaptureCooldown)
+            {
+                GangWarManager.instance.ControlPointHasCooledDown(this);
+
+            }
 
         }
 
