@@ -12,6 +12,8 @@ namespace GTA.GangAndTurfMod
         private static readonly List<Blip> spawnBlips = new List<Blip>();
         private static List<Vector3> positionsList;
 
+        public static bool showingBlips = false;
+
         public static List<Vector3> PositionsList
         {
             get
@@ -83,6 +85,8 @@ namespace GTA.GangAndTurfMod
 
                 spawnBlips.Clear();
             }
+
+            showingBlips = active;
         }
 
         private static void AddBlipForPosition(Vector3 position)
@@ -92,13 +96,13 @@ namespace GTA.GangAndTurfMod
             spawnBlips.Add(newBlip);
         }
 
-        public static bool AddPositionAndSave(Vector3 position, bool alsoAddBlip)
+        public static bool AddPositionAndSave(Vector3 position)
         {
             //check if there isn't an almost identical entry in the pool
             if (!HasNearbyEntry(position))
             {
                 PositionsList.Add(position);
-                if (alsoAddBlip)
+                if (showingBlips)
                 {
                     AddBlipForPosition(position);
                 }

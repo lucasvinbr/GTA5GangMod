@@ -123,6 +123,23 @@ namespace GTA.GangAndTurfMod
                     {
                         menuScript.OpenContextualRegistrationMenu();
                     }
+                    else if (e.Modifiers == Keys.Alt && PotentialSpawnsForWars.showingBlips)
+                    {
+                        if (PotentialSpawnsForWars.HasNearbyEntry(MindControl.SafePositionNearPlayer))
+                        {
+                            if (PotentialSpawnsForWars.RemovePositionAndSave(MindControl.SafePositionNearPlayer))
+                            {
+                                UI.ShowSubtitle("Potential Spawn Removed!");
+                            }
+                        }
+                        else
+                        {
+                            if (PotentialSpawnsForWars.AddPositionAndSave(MindControl.SafePositionNearPlayer))
+                            {
+                                UI.ShowSubtitle("Potential Spawn Added!");
+                            }
+                        }
+                    }
                 }
                 else if (e.KeyCode == ModOptions.instance.openZoneMenuKey)
                 {

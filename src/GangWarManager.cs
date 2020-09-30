@@ -101,7 +101,7 @@ namespace GTA.GangAndTurfMod
         private int desiredNumberOfControlPointsForThisWar = 0;
         private int nextCPIndexToCheckForCapture = 0;
 
-        public const int MAX_EXTRA_CONTROL_POINTS = 5;
+        public const int MAX_EXTRA_CONTROL_POINTS = 10;
 
         public const float MIN_SPAWNS_DISTANCE_TO_CONTROL_POINT = 60;
 
@@ -976,7 +976,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
                                 if(SetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
-                                    enemySpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : enemyGang))
+                                    enemySpawnPoints.Count >= 1 + desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : enemyGang))
                                 {
                                     availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
                                 }

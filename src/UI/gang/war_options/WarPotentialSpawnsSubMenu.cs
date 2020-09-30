@@ -49,7 +49,7 @@ namespace GTA.GangAndTurfMod
                         return;
                     }
 
-                    if(PotentialSpawnsForWars.AddPositionAndSave(MindControl.CurrentPlayerCharacter.Position, showSpawnBlipsToggle.Checked))
+                    if(PotentialSpawnsForWars.AddPositionAndSave(MindControl.CurrentPlayerCharacter.Position))
                     {
                         UI.ShowSubtitle("Potential spawn added!");
                     }
