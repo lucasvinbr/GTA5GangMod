@@ -81,7 +81,7 @@ namespace GTA.GangAndTurfMod
 
         public bool emptyZoneDuringWar = true;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
-        public int ticksBeforeWarEndWithPlayerAway = 30000;
+        public int ticksBetweenWarAutoResolveSteps = 30000;
         public int postWarBackupsAmount = 5;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
@@ -489,7 +489,7 @@ namespace GTA.GangAndTurfMod
 
             emptyZoneDuringWar = true;
             maxDistToWarBlipBeforePlayerLeavesWar = 300;
-            ticksBeforeWarEndWithPlayerAway = 30000;
+            ticksBetweenWarAutoResolveSteps = 30000;
             postWarBackupsAmount = 5;
 
             baseNumKillsBeforeWarVictory = 25;

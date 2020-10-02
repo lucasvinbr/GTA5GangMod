@@ -85,14 +85,15 @@
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\persistence\saveable_objs\ExtendedPotentialGangMember.cs" />
     <Compile Include="src\persistence\saveable_objs\CustomTurfZone.cs" />
-    <Compile Include="src\persistence\saveable_objs\PotentialSpawnsForWars.cs" />
+    <Compile Include="src\wars\GangWar.cs" />
+    <Compile Include="src\wars\PotentialSpawnsForWars.cs" />
     <Compile Include="src\SpawnManager.cs" />
     <Compile Include="src\persistence\AutoSaver.cs" />
     <Compile Include="src\persistence\saveable_objs\FreemodePotentialGangMember.cs" />
     <Compile Include="src\persistence\saveable_objs\Gang.cs" />
     <Compile Include="src\GangAI.cs" />
     <Compile Include="src\UI\gang\war_options\WarPotentialSpawnsSubMenu.cs" />
-    <Compile Include="src\WarControlPoint.cs" />
+    <Compile Include="src\wars\WarControlPoint.cs" />
     <Compile Include="src\UI\gang\GangMenu.cs" />
     <Compile Include="src\UI\gang\gang_edit\GangBlipColorSubMenu.cs" />
     <Compile Include="src\UI\gang\gang_edit\GangCarColorsSubMenu.cs" />
@@ -108,7 +109,7 @@
     <Compile Include="src\GangManager.cs" />
     <Compile Include="src\GangMemberUpdater.cs" />
     <Compile Include="src\GangVehicleUpdater .cs" />
-    <Compile Include="src\GangWarManager.cs" />
+    <Compile Include="src\wars\GangWarManager.cs" />
     <Compile Include="src\utils\Logger.cs" />
     <Compile Include="src\UI\MenuScript.cs" />
     <Compile Include="src\ModCore.cs" />

@@ -57,7 +57,7 @@
             return requiredAtk;
         }
 
-        public static int CalculateAttackerReinforcements(Gang attackerGang, GangWarManager.AttackStrength attackType)
+        public static int CalculateAttackerReinforcements(Gang attackerGang, GangWar.AttackStrength attackType)
         {
             return ModOptions.instance.extraKillsPerTurfValue * ((int)(attackType + 1) * (int)(attackType + 1)) + ModOptions.instance.baseNumKillsBeforeWarVictory / 2 +
                 attackerGang.GetBonusReinforcementsCount();

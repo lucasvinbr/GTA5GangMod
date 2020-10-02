@@ -20,13 +20,7 @@ namespace GTA.GangAndTurfMod
             defendingFromEnemy
         }
 
-        public enum AttackStrength
-        {
-            light,
-            medium,
-            large,
-            massive
-        }
+        
 
         public WarType curWarType = WarType.attackingEnemy;
 
@@ -49,9 +43,10 @@ namespace GTA.GangAndTurfMod
         private const int TICKS_BETWEEN_BALANCE_CHECKS = 14;
 
         private int ticksSinceLastCarSpawn = 0;
-           
+
         //private int ticksSinceLastEnemyRelocation = 0;
 
+        public readonly List<WarControlPoint> pooledControlPoints = new List<WarControlPoint>();
 
 
         private int ticksSinceLastBalanceCheck = 0;
@@ -93,8 +88,6 @@ namespace GTA.GangAndTurfMod
         public static GangWarManager instance;
 
         public List<WarControlPoint> controlPoints = new List<WarControlPoint>();
-
-        private readonly List<WarControlPoint> pooledControlPoints = new List<WarControlPoint>();
 
         private List<Vector3> availableNearbyPresetSpawns;
 
@@ -1040,7 +1033,7 @@ namespace GTA.GangAndTurfMod
                     shouldDisplayReinforcementsTexts = false;
                     curTicksAwayFromBattle++;
                     AmbientGangMemberSpawner.instance.enabled = true;
-                    if (curTicksAwayFromBattle > ModOptions.instance.ticksBeforeWarEndWithPlayerAway)
+                    if (curTicksAwayFromBattle > ModOptions.instance.ticksBetweenWarAutoResolveSteps)
                     {
                         EndWar(GetSkippedWarResult(0.65f));
                     }
