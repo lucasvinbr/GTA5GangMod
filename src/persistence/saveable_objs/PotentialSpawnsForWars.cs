@@ -93,6 +93,7 @@ namespace GTA.GangAndTurfMod
         {
             Blip newBlip = World.CreateBlip(position);
             newBlip.Name = "Gang war potential spawn point";
+            newBlip.IsShortRange = true;
             spawnBlips.Add(newBlip);
         }
 
