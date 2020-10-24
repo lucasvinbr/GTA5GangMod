@@ -83,7 +83,8 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        if (curZone.ownerGangName == "none")
+                        Gang ownerGang = curZone.ownerGangName == "none" ? null : GangManager.instance.GetGangByName(curZone.ownerGangName);
+                        if (ownerGang == null)
                         {
                             if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.baseCostToTakeTurf))
                             {

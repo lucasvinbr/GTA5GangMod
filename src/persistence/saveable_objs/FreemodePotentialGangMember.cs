@@ -33,6 +33,18 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public int[] headOverlayIndexes;
 
+        /// <summary>
+        /// ids for mother and father, for skin and head shape blending
+        /// </summary>
+        public int motherHeadBlendID, fatherHeadBlendID;
+
+        /// <summary>
+        /// how much mother/father influence skin and head shape. 0.0f for 100% mother, 1.0f for 100% father
+        /// </summary>
+        public float parentSkinToneInfluence, parentHeadShapeInfluence;
+
+        public int hairColorID;
+
         public enum FreemodeGender
         {
             any,
@@ -57,6 +69,9 @@ namespace GTA.GangAndTurfMod
             hairDrawableIndex = -1;
             headDrawableIndex = -1;
             headTextureIndex = -1;
+            motherHeadBlendID = -1;
+            fatherHeadBlendID = -1;
+            hairColorID = -1;
         }
 
         public FreemodePotentialGangMember(Ped targetPed, DressStyle myStyle, MemberColor linkedColor) : base(targetPed, myStyle, linkedColor)
@@ -66,6 +81,10 @@ namespace GTA.GangAndTurfMod
             extraTextureIndexes = new int[8];
             propDrawableIndexes = new int[3];
             propTextureIndexes = new int[3];
+
+            motherHeadBlendID = -1;
+            fatherHeadBlendID = -1;
+            hairColorID = -1;
 
             //we've already got the model hash, torso indexes and stuff.
             //time to get the new data
@@ -104,11 +123,12 @@ namespace GTA.GangAndTurfMod
 
             SetPedFaceBlend(targetPed);
 
-            //hair colors seem to go till 64
-            int randomHairColor = RandoMath.CachedRandom.Next(0, 64);
-            int randomHairStreaksColor = RandoMath.CachedRandom.Next(0, 64);
 
-            Function.Call(Hash._SET_PED_HAIR_COLOR, targetPed, randomHairColor, randomHairStreaksColor);
+            //hair colors seem to go till 64
+            int hairColor = hairColorID == -1 ? RandoMath.CachedRandom.Next(0, 64) : hairColorID; 
+
+
+            Function.Call(Hash._SET_PED_HAIR_COLOR, targetPed, hairColor, hairColor);
 
             //according to what I saw using menyoo, eye colors go from 0 to 32.
             //colors after 23 go pretty crazy, like demon-eyed, so I've decided to stop at 23
@@ -124,7 +144,7 @@ namespace GTA.GangAndTurfMod
                 //we only mess with beard, eyebrow, blush, lipstick and chest hair colors
                 if (i == 1 || i == 2 || i == 5 || i == 8 || i == 10)
                 {
-                    Function.Call(Hash._SET_PED_HEAD_OVERLAY_COLOR, targetPed, i, 2, randomHairColor, 0);
+                    Function.Call(Hash._SET_PED_HEAD_OVERLAY_COLOR, targetPed, i, 2, hairColor, 0);
                 }
 
 
@@ -148,7 +168,38 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        public static int GetAFaceIndex(FreemodeGender desiredGender)
+
+        public void SetPedFaceBlend(Ped targetPed)
+        {
+
+            if(fatherHeadBlendID != -1 && motherHeadBlendID != -1)
+            {
+                Function.Call(Hash.SET_PED_HEAD_BLEND_DATA, targetPed, motherHeadBlendID, fatherHeadBlendID, 0, motherHeadBlendID,
+                    fatherHeadBlendID, 0, parentHeadShapeInfluence, parentSkinToneInfluence, 0.0f, false);
+            }
+            else
+            {
+                FreemodeGender pedGender = FreemodeGender.any;
+                if (targetPed.Model == PedHash.FreemodeMale01)
+                {
+                    pedGender = FreemodeGender.male;
+                }
+                else if (targetPed.Model == PedHash.FreemodeFemale01)
+                {
+                    pedGender = FreemodeGender.female;
+                }
+                else
+                {
+                    UI.Notify(string.Concat("attempted face blending for invalid ped type: ", targetPed.Model));
+                }
+
+                Function.Call(Hash.SET_PED_HEAD_BLEND_DATA, targetPed, GetRandomFaceIndex(pedGender), GetRandomFaceIndex(pedGender), 0, GetRandomFaceIndex(0),
+                    GetRandomFaceIndex(0), 0, 0.5f, 0.5f, 0, false);
+            }
+            
+        }
+
+        public static int GetRandomFaceIndex(FreemodeGender desiredGender)
         {
             int returnedIndex;
             if (desiredGender == FreemodeGender.any)
@@ -167,26 +218,6 @@ namespace GTA.GangAndTurfMod
             }
 
             return returnedIndex;
-        }
-
-        public static void SetPedFaceBlend(Ped targetPed)
-        {
-            FreemodeGender pedGender = FreemodeGender.any;
-            if (targetPed.Model == PedHash.FreemodeMale01)
-            {
-                pedGender = FreemodeGender.male;
-            }
-            else if (targetPed.Model == PedHash.FreemodeFemale01)
-            {
-                pedGender = FreemodeGender.female;
-            }
-            else
-            {
-                UI.Notify(string.Concat("attempted face blending for invalid ped type: ", targetPed.Model));
-            }
-
-            Function.Call(Hash.SET_PED_HEAD_BLEND_DATA, targetPed, GetAFaceIndex(pedGender), GetAFaceIndex(pedGender), 0, GetAFaceIndex(0),
-                GetAFaceIndex(0), 0, 0.5f, 0.5f, 0, false);
         }
 
         public static FreemodePotentialGangMember FreemodeSimilarEntryCheck(FreemodePotentialGangMember potentialEntry)
