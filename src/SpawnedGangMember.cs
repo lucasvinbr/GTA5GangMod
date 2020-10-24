@@ -65,18 +65,9 @@ namespace GTA.GangAndTurfMod
 
             if (!watchedPed.IsAlive)
             {
-                if (GangWarManager.instance.isOccurring)
+                if (GangWarManager.instance.focusedWar != null)
                 {
-                    if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
-                    {
-                        //enemy down
-                        GangWarManager.instance.OnEnemyDeath();
-                    }
-                    else if (watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
-                    {
-                        //ally down
-                        GangWarManager.instance.OnAllyDeath();
-                    }
+                    GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
                 Die(allowPreserving: true);
                 Logger.Log("member update: end (dead)", 5);
@@ -96,12 +87,12 @@ namespace GTA.GangAndTurfMod
 
                 if (RandoMath.RandomBool() && !watchedPed.IsInGroup && !watchedPed.IsInCombat)
                 {
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+                    if (GangWarManager.instance.focusedWar != null)
                     {
                         //instead of idling while in a war, members should head for one of the key locations
                         
                         if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < WarControlPoint.DISTANCE_TO_CAPTURE)
-                            moveDestination = GangWarManager.instance.GetMoveTargetForGang(myGang);
+                            moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang);
                         
                         if (moveDestination != Vector3.Zero)
                         {
@@ -216,18 +207,9 @@ namespace GTA.GangAndTurfMod
             if (watchedPed != null)
             {
 
-                if (GangWarManager.instance.isOccurring)
+                if (GangWarManager.instance.focusedWar != null)
                 {
-                    if (watchedPed.RelationshipGroup == GangWarManager.instance.enemyGang.relationGroupIndex)
-                    {
-                        //enemy down
-                        GangWarManager.instance.DecrementSpawnedsNumber(false);
-                    }
-                    else if (watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
-                    {
-                        //ally down
-                        GangWarManager.instance.DecrementSpawnedsNumber(true);
-                    }
+                    GangWarManager.instance.focusedWar.DecrementSpawnedsFromGang(myGang);
                 }
                 if (watchedPed.CurrentBlip != null)
                 {
@@ -273,7 +255,7 @@ namespace GTA.GangAndTurfMod
                 scenarioPos.X, scenarioPos.Y, scenarioPos.Z, RandoMath.RandomHeading(), 0, 0, 0);
         }
 
-        public void ResetUpdateInterval()
+        public override void ResetUpdateInterval()
         {
             ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangMemberAIUpdates + RandoMath.CachedRandom.Next(100);
         }
@@ -304,7 +286,7 @@ namespace GTA.GangAndTurfMod
         {
             return (ModOptions.instance.gangMemberAggressiveness !=
                     ModOptions.GangMemberAggressivenessMode.defensive ||
-                    (GangWarManager.instance.isOccurring && (myGang == GangWarManager.instance.enemyGang || myGang == GangManager.instance.PlayerGang)));
+                    (GangWarManager.instance.focusedWar != null && (GangWarManager.instance.focusedWar.IsGangFightingInThisWar(myGang))));
         }
 
         public override string ToString()

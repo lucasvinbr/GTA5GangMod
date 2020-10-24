@@ -54,13 +54,16 @@ namespace GTA.GangAndTurfMod
 
                 if (item == skipWarBtn)
                 {
-                    if (GangWarManager.instance.isOccurring)
+                    if (GangWarManager.instance.focusedWar != null)
                     {
-                        GangWarManager.instance.EndWar(GangWarManager.instance.GetSkippedWarResult(0.9f));
+                        while(GangWarManager.instance.focusedWar != null)
+                        {
+                            GangWarManager.instance.focusedWar.RunAutoResolveStep(1.1f);
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("There is no war in progress.");
+                        UI.ShowSubtitle("There is no war in progress here.");
                     }
                 }
                     //else

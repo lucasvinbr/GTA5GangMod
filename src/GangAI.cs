@@ -9,6 +9,12 @@ namespace GTA.GangAndTurfMod
 
         private List<TurfZone> myZones;
 
+
+        /// <summary>
+        /// the AI will wait for some wars to end if it is involved in this many, or more, wars
+        /// </summary>
+        public const int MAX_CONCURRENT_WARS = 4;
+
         public override void Update()
         {
             Logger.Log("gang ai update: begin", 5);
@@ -49,11 +55,11 @@ namespace GTA.GangAndTurfMod
 
             //lets check our financial situation:
             //are we running very low on cash (unable to take even a neutral territory)?
-            //do we have any turf? is any war going on?
+            //do we have any turf? are currently fighting a war?
             //if not, we no longer exist
             if (watchedGang.moneyAvailable < ModOptions.instance.baseCostToTakeTurf)
             {
-                if (!GangWarManager.instance.isOccurring)
+                if (!GangWarManager.instance.IsGangFightingAWar(watchedGang))
                 {
                     myZones = ZoneManager.instance.GetZonesControlledByGang(watchedGang.name);
                     if (myZones.Count == 0)
@@ -257,7 +263,7 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                if (GangWarManager.instance.isOccurring && GangWarManager.instance.warZone == targetZone)
+                if (GangWarManager.instance.IsZoneContested(targetZone))
                 {
                     //don't mess with this zone then, it's a warzone
                     return;
@@ -286,35 +292,16 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                if (targetZone.ownerGangName == GangManager.instance.PlayerGang.name)
+                if (targetZone.ownerGangName != GangManager.instance.PlayerGang.name ||
+                    (ModOptions.instance.warAgainstPlayerEnabled && GangWarManager.instance.CanStartWarAgainstPlayer &&
+                        targetZone.ownerGangName == GangManager.instance.PlayerGang.name))
                 {
-                    if (ModOptions.instance.warAgainstPlayerEnabled &&
-                    GangWarManager.instance.CanStartWarAgainstPlayer)
+                    if(GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
                     {
-                        //the player may be in big trouble now
                         watchedGang.moneyAvailable -= atkCost;
-                        GangWarManager.instance.StartWar(watchedGang, targetZone, GangWarManager.WarType.defendingFromEnemy, requiredStrength);
                     }
                 }
-                else
-                {
-                    watchedGang.moneyAvailable -= atkCost;
-                    int attackStrength = GangCalculations.CalculateAttackerStrength(watchedGang, requiredStrength);
-                    //roll dices... favor the defenders a little here
-                    if (attackStrength / RandoMath.CachedRandom.Next(1, 22) >
-                        defenderStrength / RandoMath.CachedRandom.Next(1, 15))
-                    {
-                        watchedGang.TakeZone(targetZone);
-                        watchedGang.moneyAvailable += (int)(GangCalculations.CalculateBattleRewards(ownerGang, targetZone.value, true) *
-                            ModOptions.instance.extraProfitForAIGangsFactor);
-                    }
-                    else
-                    {
-                        ownerGang.moneyAvailable += (int)(GangCalculations.CalculateBattleRewards(watchedGang, (int)requiredStrength, false) *
-                            ModOptions.instance.extraProfitForAIGangsFactor);
-                    }
-
-                }
+                
             }
         }
 
@@ -354,7 +341,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void ResetUpdateInterval()
+        public override void ResetUpdateInterval()
         {
             ticksBetweenUpdates = ModOptions.instance.ticksBetweenGangAIUpdates + RandoMath.CachedRandom.Next(100);
             ticksSinceLastUpdate = ticksBetweenUpdates;

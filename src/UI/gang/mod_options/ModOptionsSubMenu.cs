@@ -273,10 +273,9 @@ namespace GTA.GangAndTurfMod
                         {
                             if (curZone.ownerGangName == GangManager.instance.PlayerGang.name)
                             {
-                                if (!GangWarManager.instance.StartWar(enemyAttackerAI.watchedGang, curZone,
-                                    GangWarManager.WarType.defendingFromEnemy, GangWarManager.AttackStrength.medium))
+                                if (!GangWarManager.instance.TryStartWar(enemyAttackerAI.watchedGang, curZone, GangWarManager.AttackStrength.medium))
                                 {
-                                    UI.ShowSubtitle("Couldn't start a war. Is a war already in progress?");
+                                    UI.ShowSubtitle("Couldn't start a war. Is a war already in progress in this zone?");
                                 }
                             }
                             else

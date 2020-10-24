@@ -13,6 +13,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class WarControlPoint
     {
+
+        private GangWar warUsingThisPoint;
+
         public Vector3 position;
 
         private Blip myBlip;
@@ -78,8 +81,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SetupAtPosition(Vector3 pos, Gang ownerGang)
+        public void SetupAtPosition(Vector3 pos, Gang ownerGang, GangWar warUsingThisPoint)
         {
+            this.warUsingThisPoint = warUsingThisPoint;
             this.ownerGang = ownerGang;
             position = pos;
             CreateAttachedBlip();
@@ -96,6 +100,7 @@ namespace GTA.GangAndTurfMod
 
             ownerGang = null;
             onCaptureCooldown = false;
+            warUsingThisPoint = null;
         }
 
         public void CheckIfHasBeenCaptured()
@@ -109,10 +114,10 @@ namespace GTA.GangAndTurfMod
                         if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
                         {
                             //Capture!
-                            if (member.myGang == GangWarManager.instance.enemyGang || member.myGang == GangManager.instance.PlayerGang)
+                            if (member.myGang == warUsingThisPoint.defendingGang || member.myGang == warUsingThisPoint.attackingGang)
                             {
                                 ownerGang = member.myGang;
-                                GangWarManager.instance.ControlPointHasBeenCaptured(this);
+                                warUsingThisPoint.ControlPointHasBeenCaptured(this);
                                 UpdateBlipAppearance();
                                 return;
                             }
@@ -122,14 +127,14 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                Gang enemyGang = ownerGang.isPlayerOwned ? GangWarManager.instance.enemyGang : GangManager.instance.PlayerGang;
+                Gang enemyGang = ownerGang == warUsingThisPoint.attackingGang ? warUsingThisPoint.defendingGang : warUsingThisPoint.attackingGang;
                 foreach (SpawnedGangMember member in SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang))
                 {
                     if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
                     {
                         //Capture!
                         ownerGang = member.myGang;
-                        GangWarManager.instance.ControlPointHasBeenCaptured(this);
+                        warUsingThisPoint.ControlPointHasBeenCaptured(this);
                         UpdateBlipAppearance();
                         return;
                     }
@@ -138,7 +143,7 @@ namespace GTA.GangAndTurfMod
 
             if (onCaptureCooldown)
             {
-                GangWarManager.instance.ControlPointHasCooledDown(this);
+                warUsingThisPoint.ControlPointHasCooledDown(this);
 
             }
 

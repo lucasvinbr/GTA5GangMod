@@ -10,19 +10,9 @@ namespace GTA.GangAndTurfMod
     public class GangWar : UpdatedClass
     {
 
-        public enum AttackStrength
-        {
-            light,
-            medium,
-            large,
-            massive
-        }
-
         public int attackerReinforcements, defenderReinforcements;
 
-        public bool isOccurring = false;
-
-        private int ticksSinceLastAutoResolveStep = 0;
+        private int updatesSinceLastAutoResolveStep = 0;
 
         /// <summary>
         /// numbers closer to 1 for defender advantage, less than 0.5 for attacker advantage.
@@ -37,13 +27,15 @@ namespace GTA.GangAndTurfMod
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
-        private const int TICKS_BETWEEN_BALANCE_CHECKS = 14;
+        private const int UPDATES_BETWEEN_BALANCE_CHECKS = 14;
 
-        private int ticksSinceLastCarSpawn = 0;
+        private const int MIN_LOSSES_PER_AUTORESOLVE_STEP = 6, MAX_LOSSES_PER_AUTORESOLVE_STEP = 30;
 
-        private int ticksSinceLastBalanceCheck = 0;
+        private const int MAX_EXTRA_CONTROL_POINTS = 4;
 
-        private int timeLastWarAgainstPlayer = 0;
+        private int updatesSinceLastCarSpawn = 0;
+
+        private int updatesSinceLastBalanceCheck = 0;
 
         private int maxSpawnedDefenders, maxSpawnedAttackers;
 
@@ -63,11 +55,9 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private readonly Blip[] warAreaBlips;
 
-        public List<WarControlPoint> enemySpawnPoints, alliedSpawnPoints;
+        public List<WarControlPoint> attackerSpawnPoints, defenderSpawnPoints;
 
-        private AttackStrength curWarAtkStrength = AttackStrength.light;
-
-        public bool shouldDisplayReinforcementsTexts = false;
+        private GangWarManager.AttackStrength curWarAtkStrength = GangWarManager.AttackStrength.light;
 
         public List<WarControlPoint> controlPoints = new List<WarControlPoint>();
 
@@ -83,18 +73,24 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public const float PERCENT_SPAWNS_TO_USE_IN_AI_WAR = 0.75f;
 
+        public Action<GangWar> OnReinforcementsChanged;
+        public Action<GangWar> OnPlayerEnteredWarzone;
+        public Action<GangWar> OnPlayerLeftWarzone;
+
+        public delegate void OnWarEnded(GangWar endedWar, bool defenderVictory);
+
+        public OnWarEnded onWarEnded;
+
         public GangWar()
         {
             warAreaBlips = new Blip[2];
+            ResetUpdateInterval();
         }
 
 
         #region start/end/skip war
-        public bool StartWar(Gang attackerGang, Gang defenderGang, TurfZone warZone, AttackStrength attackStrength)
+        public bool StartWar(Gang attackerGang, Gang defenderGang, TurfZone warZone, GangWarManager.AttackStrength attackStrength)
         {
-            if (isOccurring) return false;
-
-
             attackingGang = attackerGang;
             defendingGang = defenderGang;
             this.warZone = warZone;
@@ -102,13 +98,12 @@ namespace GTA.GangAndTurfMod
             playerNearWarzone = false;
 
             warBlip = World.CreateBlip(warZone.zoneBlipPosition);
-            warBlip.IsFlashing = true;
             warBlip.Sprite = BlipSprite.Deathmatch;
             warBlip.Color = BlipColor.Red;
-            
 
-            enemySpawnPoints = new List<WarControlPoint>();
-            alliedSpawnPoints = new List<WarControlPoint>();
+
+            attackerSpawnPoints = new List<WarControlPoint>();
+            defenderSpawnPoints = new List<WarControlPoint>();
 
             if (warAreaBlips[1] != null)
             {
@@ -128,6 +123,7 @@ namespace GTA.GangAndTurfMod
             if (playerGangInvolved)
             {
                 warBlip.IsShortRange = false;
+                warBlip.IsFlashing = true;
 
                 warAreaBlips[0] = World.CreateBlip(warZone.zoneBlipPosition,
                 ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
@@ -146,7 +142,7 @@ namespace GTA.GangAndTurfMod
                     warAreaBlips[1].Alpha = 175;
                 }
 
-                
+
 
                 //BANG-like sound
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "PROPERTY_PURCHASE", "HUD_AWARDS");
@@ -156,11 +152,13 @@ namespace GTA.GangAndTurfMod
                     attackerReinforcements.ToString(),
                     " against our ",
                     defenderReinforcements.ToString()));
+
+                GangWarManager.instance.timeLastWarAgainstPlayer = ModCore.curGameTime;
             }
             else
             {
                 warBlip.IsShortRange = true;
-                allowedSpawnLimit = (int) RandoMath.Max(ModOptions.instance.spawnedMemberLimit * PERCENT_SPAWNS_TO_USE_IN_AI_WAR,
+                allowedSpawnLimit = (int)RandoMath.Max(ModOptions.instance.spawnedMemberLimit * PERCENT_SPAWNS_TO_USE_IN_AI_WAR,
                     ModOptions.instance.minSpawnsForEachSideDuringWars * 2);
             }
 
@@ -168,12 +166,12 @@ namespace GTA.GangAndTurfMod
             Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War (", defenderGang.name, " versus ", attackerGang.name + ")"));
             Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
-            ticksSinceLastAutoResolveStep = 0;
+            updatesSinceLastAutoResolveStep = 0;
 
             spawnedDefenders = SpawnManager.instance.GetSpawnedMembersOfGang(defenderGang).Count;
             spawnedAttackers = SpawnManager.instance.GetSpawnedMembersOfGang(attackerGang).Count;
 
-            maxSpawnedDefenders = (int) RandoMath.ClampValue(allowedSpawnLimit * defenderReinforcementsAdvantage,
+            maxSpawnedDefenders = (int)RandoMath.ClampValue(allowedSpawnLimit * defenderReinforcementsAdvantage,
                 ModOptions.instance.minSpawnsForEachSideDuringWars,
                 ModOptions.instance.spawnedMemberLimit - ModOptions.instance.minSpawnsForEachSideDuringWars);
 
@@ -182,8 +180,6 @@ namespace GTA.GangAndTurfMod
 
             Logger.Log(string.Concat("war started! Reinf advantage: ", defenderReinforcementsAdvantage.ToString(),
                 " maxDefenders: ", maxSpawnedDefenders.ToString(), " maxAttackers: ", maxSpawnedAttackers.ToString()), 3);
-
-            isOccurring = true;
 
             if (alreadyInsideWarzone)
             {
@@ -222,7 +218,7 @@ namespace GTA.GangAndTurfMod
 
             if (playerGangInvolved)
             {
-                if(defendingGang == GangManager.instance.PlayerGang)
+                if (defendingGang == GangManager.instance.PlayerGang)
                 {
                     totalDefenderStrength *= playerGangStrengthFactor;
                 }
@@ -244,7 +240,7 @@ namespace GTA.GangAndTurfMod
                     enemyGang = defendingGang;
                     strengthProportion = totalAttackerStrength / totalDefenderStrength;
                 }
-                
+
 
                 string battleReport = "Battle report: We";
 
@@ -304,7 +300,7 @@ namespace GTA.GangAndTurfMod
                     UI.Notify(battleReport);
             }
 
-            
+
 
             return defenderVictory;
         }
@@ -320,97 +316,123 @@ namespace GTA.GangAndTurfMod
             {
                 bool playerWon = !loserGang.isPlayerOwned;
 
-                AmbientGangMemberSpawner.instance.postWarBackupsRemaining = ModOptions.instance.postWarBackupsAmount;
-
-                MindControl.instance.AddOrSubtractMoneyToProtagonist
-                    (battleProfit);
-
-                if (ModOptions.instance.notificationsEnabled)
-                    UI.Notify("Victory rewards: $" + battleProfit.ToString());
-
-                if (curWarType == WarType.attackingEnemy)
+                if (playerWon)
                 {
-                    UI.ShowSubtitle("We've lost this battle. They keep the turf.");
+                    //player gang was involved and won
+                    AmbientGangMemberSpawner.instance.postWarBackupsRemaining = ModOptions.instance.postWarBackupsAmount;
+
+                    MindControl.instance.AddOrSubtractMoneyToProtagonist
+                        (battleProfit);
+
+                    if (ModOptions.instance.notificationsEnabled)
+                        UI.Notify("Victory rewards: $" + battleProfit.ToString());
+
+                    if (defenderVictory)
+                    {
+                        UI.ShowSubtitle(warZone.zoneName + " remains ours!");
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle(warZone.zoneName + " is ours!");
+                    }
                 }
                 else
                 {
-                    UI.ShowSubtitle(warZone.zoneName + " has been taken by the " + attackingGang.name + "!");
+                    //player was involved and lost!
+                    if (defenderVictory)
+                    {
+                        UI.ShowSubtitle("We've lost this battle. They keep the turf.");
+                    }
+                    else
+                    {
+                        UI.ShowSubtitle(warZone.zoneName + " has been taken by the " + attackingGang.name + "!");
+                    }
                 }
 
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "ScreenFlash", "WastedSounds");
             }
-
-            if (defenderVictory)
-            {
-                defendingGang.moneyAvailable += battleProfit;
-                
-
-                
-
-                
-            }
             else
             {
-                attackingGang.TakeZone(warZone);
-
-                attackingGang.moneyAvailable += battleProfit;
-                
-            }
-
-            
-            warBlip.Remove();
-            for (int i = 0; i < warAreaBlips.Length; i++)
-            {
-                if (warAreaBlips[i] != null)
+                if (defenderVictory)
                 {
-                    warAreaBlips[i].Remove();
-                    warAreaBlips[i] = null;
+                    defendingGang.moneyAvailable += battleProfit;
                 }
+                else
+                {
+                    attackingGang.TakeZone(warZone);
 
+                    attackingGang.moneyAvailable += battleProfit;
+                }
             }
-            shouldDisplayReinforcementsTexts = false;
-            isOccurring = false;
-            playerNearWarzone = false;
-            AmbientGangMemberSpawner.instance.enabled = true;
 
-            if (!weWereAttacking)
+            if (IsPlayerCloseToWar())
             {
-                //prevent the player from being attacked again too early
-                timeLastWarAgainstPlayer = ModCore.curGameTime;
+                AmbientGangMemberSpawner.instance.enabled = true;
             }
 
-            //if (enemySpawnBlip != null)
-            //{
-            //    enemySpawnBlip.Remove();
-            //}
+            if (warBlip != null)
+            {
+                warBlip.Remove();
 
-            //foreach (Blip alliedBlip in alliedSpawnBlips)
-            //{
-            //    if (alliedBlip != null)
-            //    {
-            //        alliedBlip.Remove();
-            //    }
-            //}
+                foreach (Blip areaBlip in warAreaBlips)
+                {
+                    if (areaBlip != null)
+                        areaBlip.Remove();
+                }
+            }
+
+            playerNearWarzone = false;
+            OnPlayerLeftWarzone?.Invoke(this);
 
             PoolAllControlPoints();
+
+
+            onWarEnded?.Invoke(this, defenderVictory);
+
 
             //reset relations to whatever is set in modoptions
             GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
 
+
         }
 
-        public bool CanStartWarAgainstPlayer
+        /// <summary>
+        /// reduces reinforcements on both sides (optionally applying the multiplier on the player gang if it's involved) and then checks if the war should end
+        /// </summary>
+        /// <param name="lossMultiplierOnPlayerGang"></param>
+        public void RunAutoResolveStep(float lossMultiplierOnPlayerGang = 1.0f)
         {
-            get
+            float defenderLosses = RandoMath.CachedRandom.Next(MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
+
+            float attackerLosses = RandoMath.CachedRandom.Next(MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
+
+            float biasTowardDefenders = (float)defendingGang.GetGangVariedStrengthValue() / attackingGang.GetGangVariedStrengthValue();
+
+            defenderLosses = RandoMath.ClampValue(defenderLosses / biasTowardDefenders, MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
+            attackerLosses = RandoMath.ClampValue(attackerLosses * biasTowardDefenders, MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
+
+            if (defendingGang.isPlayerOwned) defenderLosses *= lossMultiplierOnPlayerGang;
+            if (attackingGang.isPlayerOwned) attackerLosses *= lossMultiplierOnPlayerGang;
+
+            attackerReinforcements -= (int)attackerLosses;
+            defenderReinforcements -= (int)defenderLosses;
+
+            if (attackerReinforcements <= 0 || defenderReinforcements <= 0)
             {
-                return (ModCore.curGameTime - timeLastWarAgainstPlayer > ModOptions.instance.minMsTimeBetweenAttacksOnPlayerTurf) &&
-                    MindControl.CurrentPlayerCharacter.IsAlive; //starting a war against the player when we're in the "wasted" screen would instantly end it
+                EndWar(attackerReinforcements <= 0); //favor the defenders if both sides ran out of reinforcements
             }
+            else
+            {
+                //alliedNumText.Caption = defenderReinforcements.ToString();
+                OnReinforcementsChanged?.Invoke(this);
+            }
+
+            updatesSinceLastAutoResolveStep = 0;
         }
 
         #endregion
 
-        #region spawn point setup
+        #region control point related
 
         /// <summary>
         /// stores nearby preset spawn points and attempts to set the allied spawn, returning true if it succeeded
@@ -450,7 +472,7 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                if (SetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], GangManager.instance.PlayerGang))
+                if (SetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang))
                 {
                     availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
                 }
@@ -463,7 +485,7 @@ namespace GTA.GangAndTurfMod
                                 ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
                                 10,
                                 5),
-                                GangManager.instance.PlayerGang);
+                                IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang);
             }
 
             Logger.Log("setSpawnPoints: end", 3);
@@ -484,11 +506,11 @@ namespace GTA.GangAndTurfMod
 
                 if (RandoMath.RandomBool())
                 {
-                    pickedCP = RandoMath.RandomElement(alliedSpawnPoints);
+                    pickedCP = RandoMath.RandomElement(defenderSpawnPoints);
                 }
                 else
                 {
-                    pickedCP = RandoMath.RandomElement(enemySpawnPoints);
+                    pickedCP = RandoMath.RandomElement(attackerSpawnPoints);
                 }
 
                 return pickedCP.position;
@@ -525,9 +547,6 @@ namespace GTA.GangAndTurfMod
         //    return false;
         //}
 
-        #endregion
-
-        #region control point related
 
         /// <summary>
         /// returns true if the provided position is not zero
@@ -546,18 +565,9 @@ namespace GTA.GangAndTurfMod
             //    5);
             if (targetPos != Vector3.Zero)
             {
-                WarControlPoint newPoint;
-                if (pooledControlPoints.Count > 0)
-                {
-                    newPoint = pooledControlPoints[0];
-                    pooledControlPoints.RemoveAt(0);
-                }
-                else
-                {
-                    newPoint = new WarControlPoint();
-                }
+                WarControlPoint newPoint = GangWarManager.instance.GetUnusedWarControlPoint();
 
-                newPoint.SetupAtPosition(targetPos, ownerGang);
+                newPoint.SetupAtPosition(targetPos, ownerGang, this);
                 if (ownerGang != null) ControlPointHasBeenCaptured(newPoint);
                 controlPoints.Add(newPoint);
                 return true;
@@ -570,11 +580,11 @@ namespace GTA.GangAndTurfMod
         {
             if (capturedCP.ownerGang == attackingGang)
             {
-                alliedSpawnPoints.Remove(capturedCP);
+                defenderSpawnPoints.Remove(capturedCP);
             }
             else
             {
-                enemySpawnPoints.Remove(capturedCP);
+                attackerSpawnPoints.Remove(capturedCP);
             }
 
             capturedCP.onCaptureCooldown = true;
@@ -589,11 +599,11 @@ namespace GTA.GangAndTurfMod
         {
             if (capturedCP.ownerGang == attackingGang)
             {
-                enemySpawnPoints.Add(capturedCP);
+                attackerSpawnPoints.Add(capturedCP);
             }
             else
             {
-                alliedSpawnPoints.Add(capturedCP);
+                defenderSpawnPoints.Add(capturedCP);
             }
 
             capturedCP.onCaptureCooldown = false;
@@ -604,8 +614,7 @@ namespace GTA.GangAndTurfMod
         {
             foreach (WarControlPoint cp in controlPoints)
             {
-                cp.Disable();
-                pooledControlPoints.Add(cp);
+                GangWarManager.instance.PoolControlPoint(cp);
             }
 
             controlPoints.Clear();
@@ -640,7 +649,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public Vector3 GetSpawnPositionForGang(Gang gang)
         {
-            WarControlPoint pickedPoint = gang == attackingGang ? enemySpawnPoints.RandomElement() : alliedSpawnPoints.RandomElement();
+            WarControlPoint pickedPoint = gang == attackingGang ? attackerSpawnPoints.RandomElement() : defenderSpawnPoints.RandomElement();
 
             if (pickedPoint != null)
             {
@@ -659,7 +668,7 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// spawns a vehicle that has the player as destination
         /// </summary>
-        public SpawnedDrivingGangMember SpawnAngryVehicle(bool isFriendly)
+        public SpawnedDrivingGangMember SpawnAngryVehicle(bool isDefender)
         {
 
             if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
@@ -670,33 +679,33 @@ namespace GTA.GangAndTurfMod
             if (spawnPos == Vector3.Zero) return null;
 
             SpawnedDrivingGangMember spawnedVehicle = null;
-            if (!isFriendly && spawnedAttackers - 4 < maxSpawnedAttackers)
+            if (!isDefender && spawnedAttackers - 4 < maxSpawnedAttackers)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(attackingGang,
-                    spawnPos, playerPos, false, false, IncrementEnemiesCount);
+                    spawnPos, playerPos, false, false, IncrementAttackersCount);
             }
             else if (spawnedDefenders - 4 < maxSpawnedDefenders)
             {
-                spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(GangManager.instance.PlayerGang,
-                    spawnPos, playerPos, false, false, IncrementAlliesCount);
+                spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(defendingGang,
+                    spawnPos, playerPos, false, false, IncrementDefendersCount);
             }
 
             return spawnedVehicle;
         }
 
-        public void SpawnMember(bool isFriendly)
+        public void SpawnMember(bool isDefender)
         {
-            Vector3 spawnPos = GetSpawnPositionForGang(isFriendly ? GangManager.instance.PlayerGang : attackingGang);
+            Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
 
             if (spawnPos == default) return; //this means we don't have spawn points set yet
 
             SpawnedGangMember spawnedMember = null;
 
-            if (isFriendly)
+            if (isDefender)
             {
                 if (spawnedDefenders < maxSpawnedDefenders)
                 {
-                    spawnedMember = SpawnManager.instance.SpawnGangMember(GangManager.instance.PlayerGang, spawnPos, onSuccessfulMemberSpawn: IncrementAlliesCount);
+                    spawnedMember = SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
                 }
                 else return;
 
@@ -705,49 +714,50 @@ namespace GTA.GangAndTurfMod
             {
                 if (spawnedAttackers < maxSpawnedAttackers)
                 {
-                    spawnedMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementEnemiesCount);
+                    spawnedMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
                 }
                 else return;
             }
         }
 
-        private void IncrementAlliesCount() { spawnedDefenders++; }
+        private void IncrementDefendersCount() { spawnedDefenders++; }
 
-        private void IncrementEnemiesCount() { spawnedAttackers++; }
+        private void IncrementAttackersCount() { spawnedAttackers++; }
 
-        public void OnEnemyDeath()
+        public void MemberHasDiedNearWar(Gang memberGang)
+        {
+            if (memberGang == defendingGang)
+            {
+                DefenderDied();
+            }
+            else if (memberGang == attackingGang)
+            {
+                AttackerDied();
+            }
+        }
+
+        public void AttackerDied()
         {
             //check if the player was in or near the warzone when the death happened 
             if (playerNearWarzone)
             {
                 attackerReinforcements--;
 
-                //have we lost too many? its a victory for the player then
+                //have we lost too many? its a victory for the defenders then
                 if (attackerReinforcements <= 0)
                 {
                     EndWar(true);
                 }
                 else
                 {
-                    enemyNumText.Caption = attackerReinforcements.ToString();
-                    //if we've lost too many people since the last time we changed spawn points,
-                    //change them again!
-                    //if (initialEnemyReinforcements - enemyReinforcements > 0 &&
-                    //    ModOptions.instance.killsBetweenEnemySpawnReplacement > 0 &&
-                    //    enemyReinforcements % ModOptions.instance.killsBetweenEnemySpawnReplacement == 0)
-                    //{
-                    //    if (spawnPointsSet)
-                    //    {
-                    //        ReplaceEnemySpawnPoint();
-                    //    }
-
-                    //}
+                    //attack.Caption = attackerReinforcements.ToString();
+                    OnReinforcementsChanged?.Invoke(this);
                 }
 
             }
         }
 
-        public void OnAllyDeath()
+        public void DefenderDied()
         {
             //check if the player was in or near the warzone when the death happened 
             if (playerNearWarzone)
@@ -760,45 +770,27 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    alliedNumText.Caption = defenderReinforcements.ToString();
+                    //alliedNumText.Caption = defenderReinforcements.ToString();
+                    OnReinforcementsChanged?.Invoke(this);
                 }
             }
         }
 
-        public void TryWarBalancing(bool cullFriendlies)
+        public void DecrementSpawnedsFromGang(Gang gang)
         {
-            Logger.Log("war balancing: start", 3);
-            List<SpawnedGangMember> membersFromTargetGang =
-                SpawnManager.instance.GetSpawnedMembersOfGang(cullFriendlies ? GangManager.instance.PlayerGang : attackingGang);
-
-            for (int i = 0; i < membersFromTargetGang.Count; i++)
+            if(gang == defendingGang)
             {
-                if (membersFromTargetGang[i].watchedPed == null) continue;
-                //don't attempt to cull a friendly driving member because they could be a backup car called by the player...
-                //and the player can probably take more advantage of any stuck friendly vehicle than the AI can
-                if ((!cullFriendlies || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, membersFromTargetGang[i].watchedPed, false)) &&
-                    !membersFromTargetGang[i].watchedPed.IsOnScreen)
-                {
-                    membersFromTargetGang[i].Die(true);
-                    //make sure we don't exagerate!
-                    //stop if we're back inside the limits
-                    if ((cullFriendlies && spawnedDefenders < maxSpawnedDefenders) ||
-                        (!cullFriendlies && spawnedAttackers < maxSpawnedAttackers))
-                    {
-                        break;
-                    }
-                }
-
-                Yield();
+                DecrementSpawnedsNumber(true);
             }
-
-            Logger.Log("war balancing: end", 3);
+            else if(gang == attackingGang)
+            {
+                DecrementSpawnedsNumber(false);
+            }
         }
 
-
-        public void DecrementSpawnedsNumber(bool memberWasFriendly)
+        public void DecrementSpawnedsNumber(bool memberWasDefender)
         {
-            if (memberWasFriendly)
+            if (memberWasDefender)
             {
                 spawnedDefenders--;
                 if (spawnedDefenders < 0) spawnedDefenders = 0;
@@ -809,6 +801,35 @@ namespace GTA.GangAndTurfMod
                 if (spawnedAttackers < 0) spawnedAttackers = 0;
             }
         }
+
+        public void TryWarBalancing(bool cullDefenders)
+        {
+            Logger.Log("war balancing: start", 3);
+            List<SpawnedGangMember> membersFromTargetGang =
+                SpawnManager.instance.GetSpawnedMembersOfGang(cullDefenders ? defendingGang : attackingGang);
+
+            for (int i = 0; i < membersFromTargetGang.Count; i++)
+            {
+                if (membersFromTargetGang[i].watchedPed == null) continue;
+                //don't attempt to cull a friendly driving member because they could be a backup car called by the player...
+                //and the player can probably take more advantage of any stuck friendly vehicle than the AI can
+                if (!Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, membersFromTargetGang[i].watchedPed, false) &&
+                    !membersFromTargetGang[i].watchedPed.IsOnScreen)
+                {
+                    membersFromTargetGang[i].Die(true);
+                    //make sure we don't exagerate!
+                    //stop if we're back inside the limits
+                    if ((cullDefenders && spawnedDefenders < maxSpawnedDefenders) ||
+                        (!cullDefenders && spawnedAttackers < maxSpawnedAttackers))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            Logger.Log("war balancing: end", 3);
+        }
+
 
         #endregion
 
@@ -859,154 +880,6 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        private void OnTick(object sender, EventArgs e)
-        {
-            if (isOccurring)
-            {
-                if (IsPlayerCloseToWar())
-                {
-                    Logger.Log("warmanager inside war tick: begin. spAllies: " + spawnedDefenders.ToString() + " spEnemies: " + spawnedAttackers.ToString(), 5);
-                    playerNearWarzone = true;
-                    shouldDisplayReinforcementsTexts = true;
-                    ticksSinceLastCarSpawn++;
-                    ticksSinceLastBalanceCheck++;
-                    //ticksSinceLastEnemyRelocation++;
-                    ticksSinceLastAutoResolveStep = 0;
-
-                    if (ModOptions.instance.freezeWantedLevelDuringWars)
-                    {
-                        Game.WantedMultiplier = 0;
-                    }
-
-                    AmbientGangMemberSpawner.instance.enabled = false;
-
-
-                    if (ticksSinceLastCarSpawn > UPDATES_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
-                    {
-                        SpawnAngryVehicle(RandoMath.RandomBool());
-
-                        ticksSinceLastCarSpawn = 0;
-                    }
-
-                    if (ticksSinceLastBalanceCheck > TICKS_BETWEEN_BALANCE_CHECKS)
-                    {
-                        ticksSinceLastBalanceCheck = 0;
-
-                        int maxSpawns = ModOptions.instance.spawnedMemberLimit - ModOptions.instance.minSpawnsForEachSideDuringWars;
-                        //control max spawns, so that a gang with 5 tickets won't spawn as much as before
-                        defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
-
-                        maxSpawnedDefenders = RandoMath.ClampValue((int)(ModOptions.instance.spawnedMemberLimit * defenderReinforcementsAdvantage),
-                            ModOptions.instance.minSpawnsForEachSideDuringWars,
-                            RandoMath.ClampValue(defenderReinforcements, ModOptions.instance.minSpawnsForEachSideDuringWars, maxSpawns));
-
-                        maxSpawnedAttackers = RandoMath.ClampValue(ModOptions.instance.spawnedMemberLimit - maxSpawnedDefenders,
-                            ModOptions.instance.minSpawnsForEachSideDuringWars,
-                            RandoMath.ClampValue
-                                (attackerReinforcements,
-                                ModOptions.instance.minSpawnsForEachSideDuringWars,
-                                ModOptions.instance.spawnedMemberLimit - maxSpawnedDefenders));
-
-                        if (spawnedDefenders > maxSpawnedDefenders)
-                        {
-                            //try removing some members that can't currently be seen by the player or are far enough
-                            TryWarBalancing(true);
-                        }
-                        else if (spawnedAttackers > maxSpawnedAttackers)
-                        {
-                            TryWarBalancing(false);
-                        }
-
-                    }
-
-
-                    if (controlPoints.Count < desiredNumberOfControlPointsForThisWar)
-                    {
-                        if (controlPoints.Count > 0)
-                        {
-                            if (availableNearbyPresetSpawns.Count > 0)
-                            {
-                                int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
-                                if (SetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
-                                    enemySpawnPoints.Count >= 1 + desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : attackingGang))
-                                {
-                                    availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
-                                }
-                            }
-                            else
-                            {
-                                SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
-                                    (controlPoints[0].position,
-                                    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                                    10,
-                                    5),
-                                    enemySpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : attackingGang);
-                            }
-                        }
-                        else
-                        {
-                            if (PrepareAndSetupInitialSpawnPoint(MindControl.SafePositionNearPlayer))
-                            {
-                                //if setting spawns succeeded this time, place the second war area here if it still hasn't been placed
-                                if (warAreaBlips[1] == null)
-                                {
-                                    warAreaBlips[1] = World.CreateBlip(MindControl.SafePositionNearPlayer,
-                                    ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
-                                    warAreaBlips[1].Sprite = BlipSprite.BigCircle;
-                                    warAreaBlips[1].Color = BlipColor.Red;
-                                    warAreaBlips[1].Alpha = 175;
-                                }
-                            }
-                        }
-
-                    }
-
-
-                    alliedPercentOfSpawnedMembers = spawnedDefenders / RandoMath.Max(spawnedDefenders + spawnedAttackers, 1.0f);
-
-                    if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMemberLimit)
-                    {
-                        SpawnMember(alliedPercentOfSpawnedMembers < defenderReinforcementsAdvantage && spawnedDefenders < maxSpawnedDefenders);
-                    }
-
-                    //check one of the control points for capture
-                    if (controlPoints.Count > 0)
-                    {
-                        if (nextCPIndexToCheckForCapture >= controlPoints.Count)
-                        {
-                            nextCPIndexToCheckForCapture = 0;
-                        }
-
-                        controlPoints[nextCPIndexToCheckForCapture].CheckIfHasBeenCaptured();
-
-                        nextCPIndexToCheckForCapture++;
-                    }
-
-
-                    Logger.Log("warmanager inside war tick: end", 5);
-                    Wait(EEN_WAR_TICKS);
-                }
-                else
-                {
-                    playerNearWarzone = false;
-                    shouldDisplayReinforcementsTexts = false;
-                    ticksSinceLastAutoResolveStep++;
-                    AmbientGangMemberSpawner.instance.enabled = true;
-                    if (ticksSinceLastAutoResolveStep > ModOptions.instance.ticksBetweenWarAutoResolveSteps)
-                    {
-                        EndWar(GetSkippedWarResult(0.65f));
-                    }
-                }
-                //if the player's gang leader is dead...
-                if (!Game.Player.IsAlive && !MindControl.instance.HasChangedBody)
-                {
-                    //the war ends, but the outcome depends more on how well the player's side was doing
-                    EndWar(GetSkippedWarResult(0.9f));
-                    return;
-                }
-            }
-        }
-
         public void Abort()
         {
             if (warBlip != null)
@@ -1038,9 +911,162 @@ namespace GTA.GangAndTurfMod
             return defendingGang == GangManager.instance.PlayerGang ? attackingGang : defendingGang;
         }
 
+        public bool IsGangFightingInThisWar(Gang gang)
+        {
+            return defendingGang == gang || attackingGang == gang;
+        }
+
         public override void Update()
         {
+            if (IsPlayerCloseToWar())
+            {
+                Logger.Log("warmanager inside war tick: begin. spDefenders: " + spawnedDefenders.ToString() + " spAttackers: " + spawnedAttackers.ToString(), 5);
+                if (!playerNearWarzone)
+                {
+                    OnPlayerEnteredWarzone?.Invoke(this);
+                }
+                playerNearWarzone = true;
+                updatesSinceLastCarSpawn++;
+                updatesSinceLastBalanceCheck++;
+                updatesSinceLastAutoResolveStep = 0;
 
+                if (ModOptions.instance.freezeWantedLevelDuringWars)
+                {
+                    Game.WantedMultiplier = 0;
+                }
+
+                AmbientGangMemberSpawner.instance.enabled = false;
+
+
+                if (updatesSinceLastCarSpawn > UPDATES_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
+                {
+                    SpawnAngryVehicle(RandoMath.RandomBool());
+
+                    updatesSinceLastCarSpawn = 0;
+                }
+
+                if (updatesSinceLastBalanceCheck > UPDATES_BETWEEN_BALANCE_CHECKS)
+                {
+                    updatesSinceLastBalanceCheck = 0;
+
+                    int maxSpawns = ModOptions.instance.spawnedMemberLimit - ModOptions.instance.minSpawnsForEachSideDuringWars;
+                    //control max spawns, so that a gang with 5 tickets won't spawn as much as before
+                    defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
+
+                    maxSpawnedDefenders = RandoMath.ClampValue((int)(ModOptions.instance.spawnedMemberLimit * defenderReinforcementsAdvantage),
+                        ModOptions.instance.minSpawnsForEachSideDuringWars,
+                        RandoMath.ClampValue(defenderReinforcements, ModOptions.instance.minSpawnsForEachSideDuringWars, maxSpawns));
+
+                    maxSpawnedAttackers = RandoMath.ClampValue(ModOptions.instance.spawnedMemberLimit - maxSpawnedDefenders,
+                        ModOptions.instance.minSpawnsForEachSideDuringWars,
+                        RandoMath.ClampValue
+                            (attackerReinforcements,
+                            ModOptions.instance.minSpawnsForEachSideDuringWars,
+                            ModOptions.instance.spawnedMemberLimit - maxSpawnedDefenders));
+
+                    if (spawnedDefenders > maxSpawnedDefenders)
+                    {
+                        //try removing some members that can't currently be seen by the player or are far enough
+                        TryWarBalancing(true);
+                    }
+                    else if (spawnedAttackers > maxSpawnedAttackers)
+                    {
+                        TryWarBalancing(false);
+                    }
+
+                }
+
+
+                if (controlPoints.Count < desiredNumberOfControlPointsForThisWar)
+                {
+                    if (controlPoints.Count > 0)
+                    {
+                        if (availableNearbyPresetSpawns.Count > 0)
+                        {
+                            int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
+                            if (SetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
+                                attackerSpawnPoints.Count >= 1 + desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : attackingGang))
+                            {
+                                availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
+                            }
+                        }
+                        else
+                        {
+                            SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                                (controlPoints[0].position,
+                                ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
+                                10,
+                                5),
+                                attackerSpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? null : attackingGang);
+                        }
+                    }
+                    else
+                    {
+                        if (PrepareAndSetupInitialSpawnPoint(MindControl.SafePositionNearPlayer))
+                        {
+                            //if setting spawns succeeded this time, place the second war area here if it still hasn't been placed
+                            if (warAreaBlips[1] == null)
+                            {
+                                warAreaBlips[1] = World.CreateBlip(MindControl.SafePositionNearPlayer,
+                                ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar);
+                                warAreaBlips[1].Sprite = BlipSprite.BigCircle;
+                                warAreaBlips[1].Color = BlipColor.Red;
+                                warAreaBlips[1].Alpha = 175;
+                            }
+                        }
+                    }
+
+                }
+
+
+                alliedPercentOfSpawnedMembers = spawnedDefenders / RandoMath.Max(spawnedDefenders + spawnedAttackers, 1.0f);
+
+                if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMemberLimit)
+                {
+                    SpawnMember(alliedPercentOfSpawnedMembers < defenderReinforcementsAdvantage && spawnedDefenders < maxSpawnedDefenders);
+                }
+
+                //check one of the control points for capture
+                if (controlPoints.Count > 0)
+                {
+                    if (nextCPIndexToCheckForCapture >= controlPoints.Count)
+                    {
+                        nextCPIndexToCheckForCapture = 0;
+                    }
+
+                    controlPoints[nextCPIndexToCheckForCapture].CheckIfHasBeenCaptured();
+
+                    nextCPIndexToCheckForCapture++;
+                }
+
+
+                Logger.Log("warmanager inside war tick: end", 5);
+            }
+            else
+            {
+                if (playerNearWarzone)
+                {
+                    OnPlayerLeftWarzone?.Invoke(this);
+                }
+                playerNearWarzone = false;
+                updatesSinceLastAutoResolveStep++;
+                AmbientGangMemberSpawner.instance.enabled = true;
+                if (updatesSinceLastAutoResolveStep > ModOptions.instance.updatesBetweenWarAutoResolveSteps)
+                {
+                    RunAutoResolveStep(1.15f);
+                }
+            }
+            //if the player's gang leader is dead...
+            if (!Game.Player.IsAlive && !MindControl.instance.HasChangedBody)
+            {
+                RunAutoResolveStep(1.05f);
+                return;
+            }
+        }
+
+        public override void ResetUpdateInterval()
+        {
+            ticksBetweenUpdates = GangWarManager.TICKS_BETWEEN_WAR_UPDATES;
         }
     }
 }

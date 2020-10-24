@@ -77,10 +77,10 @@ namespace GTA.GangAndTurfMod
 
                     //if there is a war going on and we're in the war zone, get to one of the relevant locations;
                     //it's probably close to the action
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+                    if (GangWarManager.instance.focusedWar != null)
                     {
                         deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
-                        destination = GangWarManager.instance.GetMoveTargetForGang(isFriendlyToPlayer ? GangManager.instance.PlayerGang : GangWarManager.instance.enemyGang);
+                        destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
                         //if spawns still aren't set... try getting to the player
                         if (destination == Vector3.Zero)
@@ -304,7 +304,7 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool deliveringCar = false)
         {
-            this.ticksBetweenUpdates = 50;
+            ResetUpdateInterval();
             AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar);
         }
 
@@ -337,5 +337,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public override void ResetUpdateInterval()
+        {
+            ticksBetweenUpdates = 50; //TODO modoption?
+        }
     }
 }

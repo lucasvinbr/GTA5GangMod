@@ -144,11 +144,7 @@ namespace GTA.GangAndTurfMod
         public void SetGangRelationsAccordingToAggrLevel(ModOptions.GangMemberAggressivenessMode aggrLevel)
         {
             Relationship targetRelationLevel = Relationship.Hate;
-            Gang excludedGang = null;
-            if (GangWarManager.instance.isOccurring)
-            {
-                excludedGang = GangWarManager.instance.enemyGang;
-            }
+            
             switch (aggrLevel)
             {
                 case ModOptions.GangMemberAggressivenessMode.veryAgressive:
@@ -163,16 +159,22 @@ namespace GTA.GangAndTurfMod
             }
             for (int i = gangData.gangs.Count - 1; i > -1; i--)
             {
+                //relations between gangs...
                 for (int j = 0; j < i; j++)
                 {
-                    if ((gangData.gangs[i] != excludedGang || gangData.gangs[j] != PlayerGang) &&
-                        (gangData.gangs[j] != excludedGang || gangData.gangs[i] != PlayerGang))
+                    if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(gangData.gangs[i], gangData.gangs[j]))
                     {
                         World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
                         World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
                     }
+                    else
+                    {
+                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
+                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+                    }
                 }
 
+                //relations between player and gangs...
                 if (!gangData.gangs[i].isPlayerOwned)
                 {
                     if (ModOptions.instance.playerIsASpectator)
@@ -181,7 +183,7 @@ namespace GTA.GangAndTurfMod
                         World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                         World.SetRelationshipBetweenGroups(Relationship.Respect, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
                     }
-                    else if (gangData.gangs[i] != excludedGang)
+                    else if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(PlayerGang, gangData.gangs[i]))
                     {
                         World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
                         World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
