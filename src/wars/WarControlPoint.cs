@@ -103,6 +103,18 @@ namespace GTA.GangAndTurfMod
             warUsingThisPoint = null;
         }
 
+        /// <summary>
+        /// only hides the point's blip; it still retains control data and can be captured
+        /// </summary>
+        public virtual void HideBlip()
+        {
+            if (myBlip != null)
+            {
+                myBlip.Remove();
+                myBlip = null;
+            }
+        }
+
         public void CheckIfHasBeenCaptured()
         {
             if (ownerGang == null)

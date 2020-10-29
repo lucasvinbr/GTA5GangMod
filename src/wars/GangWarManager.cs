@@ -41,11 +41,13 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public GangWar focusedWar;
 
-        private readonly List<GangWar> activeWars, pooledWars;
+        private readonly List<GangWar> activeWars, pooledWars, warsNearPlayer;
 
 
         public const int TICKS_BETWEEN_WAR_UPDATES = 12;
         private bool updateRanThisFrame = false;
+
+        private int nextWarIndexToUpdate = 0;
 
         public GangWarManager()
         {
@@ -71,6 +73,7 @@ namespace GTA.GangAndTurfMod
 
             activeWars = new List<GangWar>();
             pooledWars = new List<GangWar>();
+            warsNearPlayer = new List<GangWar>();
         }
 
 
@@ -87,12 +90,12 @@ namespace GTA.GangAndTurfMod
                 GangWar warObj = GetUnusedWarObject();
                 if(warObj.StartWar(attackingGang, defenderGang, warzone, attackStrength))
                 {
-                    pooledWars.Remove(warObj);
                     activeWars.Add(warObj);
                     return true;
                 }
                 else
                 {
+                    pooledWars.Add(warObj);
                     return false;
                 }
             }
@@ -201,6 +204,7 @@ namespace GTA.GangAndTurfMod
             if (pooledWars.Count > 0)
             {
                 returnedWar = pooledWars[0];
+                pooledWars.RemoveAt(0);
             }
             else
             {
@@ -209,7 +213,6 @@ namespace GTA.GangAndTurfMod
                 returnedWar.OnPlayerLeftWarzone += PlayerLeftWar;
                 returnedWar.onWarEnded += WarHasEnded;
                 returnedWar.OnReinforcementsChanged += WarReinforcementsChanged;
-                pooledWars.Add(returnedWar);
             }
 
             return returnedWar;
@@ -234,31 +237,25 @@ namespace GTA.GangAndTurfMod
 
         public void PlayerEnteredWar(GangWar enteredWar)
         {
-            if(focusedWar == null)
-            {
-                focusedWar = enteredWar;
 
-                if (focusedWar.IsPlayerGangInvolved())
-                {
-                    shouldDisplayReinforcementsTexts = true;
-                    if (focusedWar.attackingGang.isPlayerOwned)
-                    {
-                        UpdateReinforcementsTexts(focusedWar.attackerReinforcements, focusedWar.defenderReinforcements);
-                    }
-                    else
-                    {
-                        UpdateReinforcementsTexts(focusedWar.defenderReinforcements, focusedWar.attackerReinforcements);
-                    }
-                }
+            warsNearPlayer.Add(enteredWar);
+
+            if (focusedWar == null)
+            {
+                ChangeFocusedWar();
             }
+
+            
         }
 
         public void PlayerLeftWar(GangWar leftWar)
         {
-            if(leftWar == focusedWar)
+            
+            warsNearPlayer.Remove(leftWar);
+
+            if (leftWar == focusedWar)
             {
-                focusedWar = null;
-                shouldDisplayReinforcementsTexts = false;
+                ChangeFocusedWar();
             }
         }
 
@@ -266,11 +263,11 @@ namespace GTA.GangAndTurfMod
         {
             activeWars.Remove(endedWar);
             pooledWars.Add(endedWar);
+            warsNearPlayer.Remove(endedWar);
 
             if(endedWar == focusedWar)
             {
-                focusedWar = null;
-                shouldDisplayReinforcementsTexts = false;
+                ChangeFocusedWar();
             }
         }
 
@@ -293,6 +290,47 @@ namespace GTA.GangAndTurfMod
         {
             alliedNumText.Caption = allies.ToString();
             enemyNumText.Caption = enemies.ToString();
+        }
+
+
+        /// <summary>
+        /// finds a nearby war for us to "solve in real time"... or sets focusedWar to null to show we're not close to any war
+        /// </summary>
+        public void ChangeFocusedWar()
+        {
+            if(focusedWar == null || !warsNearPlayer.Contains(focusedWar))
+            {
+                if(focusedWar != null)
+                {
+                    focusedWar.OnNoLongerFocusedWar();
+                }
+
+                if(warsNearPlayer.Count > 0)
+                {
+                    focusedWar = warsNearPlayer[0];
+
+                    focusedWar.OnBecameFocusedWar();
+
+                    if (focusedWar.IsPlayerGangInvolved())
+                    {
+                        shouldDisplayReinforcementsTexts = true;
+                        if (focusedWar.attackingGang.isPlayerOwned)
+                        {
+                            UpdateReinforcementsTexts(focusedWar.attackerReinforcements, focusedWar.defenderReinforcements);
+                        }
+                        else
+                        {
+                            UpdateReinforcementsTexts(focusedWar.defenderReinforcements, focusedWar.attackerReinforcements);
+                        }
+                    }
+
+                }
+                else
+                {
+                    focusedWar = null;
+                    shouldDisplayReinforcementsTexts = false;
+                }
+            }
         }
 
         #endregion
@@ -336,15 +374,21 @@ namespace GTA.GangAndTurfMod
         private void OnTick(object sender, EventArgs e)
         {
             updateRanThisFrame = false;
+            if (nextWarIndexToUpdate <= 0)
+            {
+                nextWarIndexToUpdate = activeWars.Count - 1;
+            }
+
             for (int i = activeWars.Count - 1; i >= 0; i--)
             {
                 activeWars[i].ticksSinceLastUpdate++;
 
-                if (!updateRanThisFrame && activeWars[i].ticksSinceLastUpdate >= activeWars[i].ticksBetweenUpdates)
+                if (!updateRanThisFrame && activeWars[i].ticksSinceLastUpdate >= activeWars[i].ticksBetweenUpdates && i <= nextWarIndexToUpdate)
                 {
                     updateRanThisFrame = true;
                     activeWars[i].ticksSinceLastUpdate = 0;
                     activeWars[i].Update();
+                    nextWarIndexToUpdate = i;
                 }
             }
         }
