@@ -671,7 +671,12 @@ namespace GTA.GangAndTurfMod
         /// <param name="deadPed"></param>
         public void PreserveDeadBody(Ped deadPed)
         {
-            if (ModOptions.instance.preservedDeadBodyLimit <= 0) return; //if the limit's at 0, this feature is disabled
+            if (ModOptions.instance.preservedDeadBodyLimit <= 0)
+            {
+                //if the limit's at 0, this feature is disabled
+                deadPed.MarkAsNoLongerNeeded();
+                return; 
+            }
 
             //remove "old" bodies before adding this one
             while(preservedDeadBodies.Count > ModOptions.instance.preservedDeadBodyLimit)
