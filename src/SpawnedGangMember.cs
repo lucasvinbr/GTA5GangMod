@@ -76,6 +76,8 @@ namespace GTA.GangAndTurfMod
 
             if (curStatus != MemberStatus.inVehicle)
             {
+                watchedPed.BlockPermanentEvents = false;
+
                 if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
                 {
@@ -170,18 +172,35 @@ namespace GTA.GangAndTurfMod
                             return;
                         }
 
+                        //if we were a driving member, we must be allowed to "be distracted" again
+                        watchedPed.BlockPermanentEvents = false;
+
                         if (curVehicle.IsSeatFree(VehicleSeat.Driver))
                         {
                             //possibly leave the vehicle if the driver has left already
                             if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
                             {
                                 watchedPed.Task.LeaveVehicle();
-                                watchedPed.BlockPermanentEvents = false;
                                 stuckCounter = 0;
+                            }
+                        }
+                        else
+                        {
+                            //even if we're inside an awesome vehicle, we should probably leave it if we appear to be stuck
+                            if(!watchedPed.IsInCombat && curVehicle.Speed < 20)
+                            {
+                                stuckCounter++;
+
+                                if(stuckCounter > STUCK_COUNTER_LIMIT)
+                                {
+                                    watchedPed.Task.LeaveVehicle();
+                                    
+                                    stuckCounter = 0;
+                                }
                             }
                             else
                             {
-                                watchedPed.BlockPermanentEvents = true;
+                                stuckCounter = 0;
                             }
                         }
                     }
