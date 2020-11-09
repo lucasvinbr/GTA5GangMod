@@ -81,9 +81,10 @@ namespace GTA.GangAndTurfMod
 
         public bool emptyZoneDuringWar = true;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
-        public int warUpdatesBetweenWarAutoResolveSteps = 200;
-        public int warUpdatesBetweenPunishingForNoSpawns = 50;
+        public int msTimeBetweenWarAutoResolveSteps = 50000;
+        public int msTimeBetweenWarPunishingForNoSpawns = 1000;
         public int postWarBackupsAmount = 5;
+        public int warsMaxExtraControlPoints = 8;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;
         public int maxExtraKillsForNumTurfsControlled = 25;
@@ -489,9 +490,10 @@ namespace GTA.GangAndTurfMod
 
             emptyZoneDuringWar = true;
             maxDistToWarBlipBeforePlayerLeavesWar = 300;
-            warUpdatesBetweenWarAutoResolveSteps = 200;
-            warUpdatesBetweenPunishingForNoSpawns = 50;
+            msTimeBetweenWarAutoResolveSteps = 50000;
+            msTimeBetweenWarPunishingForNoSpawns = 1000;
             postWarBackupsAmount = 5;
+            warsMaxExtraControlPoints = 8;
             maxConcurrentWarsAgainstPlayer = 3;
 
             baseNumKillsBeforeWarVictory = 25;

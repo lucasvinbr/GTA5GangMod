@@ -12,8 +12,6 @@ namespace GTA.GangAndTurfMod
 
         public int attackerReinforcements, defenderReinforcements;
 
-        private int updatesSinceLastAutoResolveStep = 0;
-
         /// <summary>
         /// numbers closer to 1 for defender advantage, less than 0.5 for attacker advantage.
         /// this advantage affects the member respawns:
@@ -21,21 +19,23 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private float defenderReinforcementsAdvantage = 0.0f;
 
-        private const int UPDATES_BETWEEN_CAR_SPAWNS = 10;
+        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 6000;
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
-        private const int UPDATES_BETWEEN_BALANCE_CHECKS = 14;
+        private const int MS_TIME_BETWEEN_BALANCE_CHECKS = 5000;
 
-        private const int MIN_LOSSES_PER_AUTORESOLVE_STEP = 6, MAX_LOSSES_PER_AUTORESOLVE_STEP = 30;
+        private const int MIN_LOSSES_PER_AUTORESOLVE_STEP = 6, MAX_LOSSES_PER_AUTORESOLVE_STEP = 17;
 
         private const int MAX_EXTRA_CONTROL_POINTS = 4;
 
-        private int updatesSinceLastCarSpawn = 0;
+        private int msTimeOfLastAutoResolveStep = 0;
 
-        private int updatesSinceLastBalanceCheck = 0;
+        private int msTimeOfLastCarSpawn = 0;
 
-        private int updatesSinceLastNoSpawnsPunishment = 0;
+        private int msTimeOfLastBalanceCheck = 0;
+
+        private int msTimeOfLastNoSpawnsPunishment = 0;
 
         private int maxSpawnedDefenders, maxSpawnedAttackers;
 
@@ -153,7 +153,7 @@ namespace GTA.GangAndTurfMod
             Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War (", defenderGang.name, " versus ", attackerGang.name + ")"));
             Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
-            updatesSinceLastAutoResolveStep = 0;
+            msTimeOfLastAutoResolveStep = ModCore.curGameTime;
 
             spawnedDefenders = SpawnManager.instance.GetSpawnedMembersOfGang(defenderGang).Count;
             spawnedAttackers = SpawnManager.instance.GetSpawnedMembersOfGang(attackerGang).Count;
@@ -409,7 +409,7 @@ namespace GTA.GangAndTurfMod
                 OnReinforcementsChanged?.Invoke(this);
             }
 
-            updatesSinceLastAutoResolveStep = 0;
+            msTimeOfLastAutoResolveStep = ModCore.curGameTime;
         }
 
         #endregion
@@ -430,7 +430,7 @@ namespace GTA.GangAndTurfMod
 
             desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
                 2,
-                2 + (int)(warZone.GetUpgradePercentage() * MAX_EXTRA_CONTROL_POINTS));
+                2 + (int)(warZone.GetUpgradePercentage() * ModOptions.instance.warsMaxExtraControlPoints));
 
             if (availableNearbyPresetSpawns.Count < 2)
             {
@@ -926,10 +926,8 @@ namespace GTA.GangAndTurfMod
 
                 if (isFocused)
                 {
-                    updatesSinceLastCarSpawn++;
-                    updatesSinceLastBalanceCheck++;
-                    updatesSinceLastNoSpawnsPunishment++;
-                    updatesSinceLastAutoResolveStep = 0;
+                    int curTime = ModCore.curGameTime;
+                    msTimeOfLastAutoResolveStep = curTime;
 
                     if (ModOptions.instance.freezeWantedLevelDuringWars)
                     {
@@ -939,16 +937,16 @@ namespace GTA.GangAndTurfMod
                     AmbientGangMemberSpawner.instance.enabled = false;
 
 
-                    if (updatesSinceLastCarSpawn > UPDATES_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
+                    if (curTime - msTimeOfLastCarSpawn > MS_TIME_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
                     {
                         SpawnAngryVehicle(spawnedDefenders < maxSpawnedDefenders);
 
-                        updatesSinceLastCarSpawn = 0;
+                        msTimeOfLastCarSpawn = curTime;
                     }
 
-                    if (updatesSinceLastBalanceCheck > UPDATES_BETWEEN_BALANCE_CHECKS)
+                    if (curTime - msTimeOfLastBalanceCheck > MS_TIME_BETWEEN_BALANCE_CHECKS)
                     {
-                        updatesSinceLastBalanceCheck = 0;
+                        msTimeOfLastBalanceCheck = curTime;
 
                         int maxSpawns = allowedSpawnLimit - ModOptions.instance.minSpawnsForEachSideDuringWars;
                         //control max spawns, so that a gang with 5 tickets won't spawn as much as before
@@ -1020,19 +1018,21 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        if(updatesSinceLastNoSpawnsPunishment > ModOptions.instance.warUpdatesBetweenPunishingForNoSpawns)
+                        if(curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
                         {
-                            updatesSinceLastNoSpawnsPunishment = 0;
+                            msTimeOfLastNoSpawnsPunishment = curTime;
 
                             //decrement reinforcements of any side with no spawn points!
                             if(attackerSpawnPoints.Count == 0)
                             {
                                 DecrementAttackerReinforcements();
+                                UI.ShowSubtitle("punish attackers!", 800);
                             }
 
                             if(defenderSpawnPoints.Count == 0)
                             {
                                 DecrementDefenderReinforcements();
+                                UI.ShowSubtitle("punish defenders!", 800);
                             }
                         }
                     }
@@ -1067,9 +1067,8 @@ namespace GTA.GangAndTurfMod
                 }
 
                 playerNearWarzone = false;
-                updatesSinceLastAutoResolveStep++;
                 AmbientGangMemberSpawner.instance.enabled = true;
-                if (updatesSinceLastAutoResolveStep > ModOptions.instance.warUpdatesBetweenWarAutoResolveSteps)
+                if (ModCore.curGameTime - msTimeOfLastAutoResolveStep > ModOptions.instance.msTimeBetweenWarAutoResolveSteps)
                 {
                     RunAutoResolveStep(1.15f);
                 }
