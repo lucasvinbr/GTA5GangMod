@@ -531,7 +531,7 @@ namespace GTA.GangAndTurfMod
 
 
         /// <summary>
-        /// returns true if the provided position is not zero
+        /// returns true if the provided position is not zero and the point was set up successfully
         /// </summary>
         private bool SetupAControlPoint(Vector3 targetPos, Gang ownerGang)
         {
@@ -560,11 +560,12 @@ namespace GTA.GangAndTurfMod
 
         public void ControlPointHasBeenCaptured(WarControlPoint capturedCP)
         {
-            if (capturedCP.ownerGang == attackingGang)
+            if (capturedCP.ownerGang != defendingGang)
             {
                 defenderSpawnPoints.Remove(capturedCP);
             }
-            else
+
+            if (capturedCP.ownerGang != attackingGang)
             {
                 attackerSpawnPoints.Remove(capturedCP);
             }
@@ -583,7 +584,7 @@ namespace GTA.GangAndTurfMod
             {
                 attackerSpawnPoints.Add(capturedCP);
             }
-            else
+            else if (capturedCP.ownerGang == defendingGang)
             {
                 defenderSpawnPoints.Add(capturedCP);
             }
@@ -952,7 +953,7 @@ namespace GTA.GangAndTurfMod
                         //control max spawns, so that a gang with 5 tickets won't spawn as much as before
                         defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
 
-                        maxSpawnedDefenders = RandoMath.ClampValue((int)(allowedSpawnLimit * defenderReinforcementsAdvantage),
+                        maxSpawnedDefenders = RandoMath.ClampValue((int)(maxSpawns * defenderReinforcementsAdvantage),
                             ModOptions.instance.minSpawnsForEachSideDuringWars,
                             RandoMath.ClampValue(defenderReinforcements, ModOptions.instance.minSpawnsForEachSideDuringWars, maxSpawns));
 

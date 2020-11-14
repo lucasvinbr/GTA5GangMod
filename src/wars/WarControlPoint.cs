@@ -117,35 +117,23 @@ namespace GTA.GangAndTurfMod
 
         public void CheckIfHasBeenCaptured()
         {
-            if (ownerGang == null)
+            foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
             {
-                foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
-                {
-                    if (member.watchedPed != null && member.watchedPed.IsAlive)
-                    {
-                        if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
-                        {
-                            //Capture!
-                            if (member.myGang == warUsingThisPoint.defendingGang || member.myGang == warUsingThisPoint.attackingGang)
-                            {
-                                ownerGang = member.myGang;
-                                warUsingThisPoint.ControlPointHasBeenCaptured(this);
-                                UpdateBlipAppearance();
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Gang enemyGang = ownerGang == warUsingThisPoint.attackingGang ? warUsingThisPoint.defendingGang : warUsingThisPoint.attackingGang;
-                foreach (SpawnedGangMember member in SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang))
+                if (member.watchedPed != null && member.watchedPed.IsAlive && member.myGang != ownerGang)
                 {
                     if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
                     {
                         //Capture!
-                        ownerGang = member.myGang;
+                        if (member.myGang == warUsingThisPoint.defendingGang || member.myGang == warUsingThisPoint.attackingGang)
+                        {
+                            ownerGang = member.myGang;
+                        }
+                        else
+                        {
+                            //gangs "interfering" in the war should only neutralize points instead of capturing
+                            ownerGang = null;
+                        }
+
                         warUsingThisPoint.ControlPointHasBeenCaptured(this);
                         UpdateBlipAppearance();
                         return;
@@ -153,10 +141,10 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
+            //if no one has tried to capture this point in this update, the point can "cool down" and be used as a spawn for the owners
             if (onCaptureCooldown)
             {
                 warUsingThisPoint.ControlPointHasCooledDown(this);
-
             }
 
         }
