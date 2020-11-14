@@ -16,6 +16,8 @@ namespace GTA.GangAndTurfMod
 
         public int[] extraTextureIndexes;
 
+        public int hairTextureIndex;
+
         public ExtendedPotentialGangMember()
         {
             extraDrawableIndexes = new int[8];
@@ -28,6 +30,7 @@ namespace GTA.GangAndTurfMod
             legsDrawableIndex = -1;
             legsTextureIndex = -1;
             hairDrawableIndex = -1;
+            hairTextureIndex = -1;
             headDrawableIndex = -1;
             headTextureIndex = -1;
         }
@@ -36,6 +39,8 @@ namespace GTA.GangAndTurfMod
         {
             extraDrawableIndexes = new int[8];
             extraTextureIndexes = new int[8];
+
+            hairTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, targetPed, 2);
 
             //we've already got the model hash, torso indexes and stuff.
             //time to get the new data
@@ -62,7 +67,26 @@ namespace GTA.GangAndTurfMod
         {
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
 
-            base.SetPedAppearance(targetPed);
+            //if we're not a legacy registration, set the head and hair data too
+            if (hairDrawableIndex != -1)
+            {
+                int hairTexIndex = hairTextureIndex != -1 ? 
+                    hairTextureIndex : 
+                    RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 2, hairDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, hairTexIndex, pedPalette);
+            }
+
+            if (torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
+            }
+
+            if (legsDrawableIndex != -1 && legsTextureIndex != -1)
+            {
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+            }
 
             //new data time!
             for (int i = 0; i < 11; i++)
@@ -99,6 +123,7 @@ namespace GTA.GangAndTurfMod
                     extendedEntry.legsTextureIndex == potentialEntry.legsTextureIndex &&
                     extendedEntry.torsoDrawableIndex == potentialEntry.torsoDrawableIndex &&
                     extendedEntry.torsoTextureIndex == potentialEntry.torsoTextureIndex &&
+                    extendedEntry.hairTextureIndex == potentialEntry.hairTextureIndex &&
                     RandoMath.AreIntArrayContentsTheSame(extendedEntry.extraDrawableIndexes, potentialEntry.extraDrawableIndexes) &&
                     RandoMath.AreIntArrayContentsTheSame(extendedEntry.extraTextureIndexes, potentialEntry.extraTextureIndexes))
                     {
