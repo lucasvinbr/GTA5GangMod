@@ -27,7 +27,7 @@ namespace GTA.GangAndTurfMod
 
         private const int MIN_LOSSES_PER_AUTORESOLVE_STEP = 6, MAX_LOSSES_PER_AUTORESOLVE_STEP = 17;
 
-        private const int MAX_EXTRA_CONTROL_POINTS = 4;
+        private int msTimeWarStarted;
 
         private int msTimeOfLastAutoResolveStep = 0;
 
@@ -145,10 +145,17 @@ namespace GTA.GangAndTurfMod
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "PROPERTY_PURCHASE", "HUD_AWARDS");
 
                 if (ModOptions.instance.notificationsEnabled && defenderGang == GangManager.instance.PlayerGang)
+                {
+                    //if the player is defending and already was inside the zone, we should take their current spawned members in consideration
+
+                    defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
+
                     UI.Notify(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
                     attackerReinforcements.ToString(),
                     " against our ",
                     defenderReinforcements.ToString()));
+                }
+                    
 
                 GangWarManager.instance.timeLastWarAgainstPlayer = ModCore.curGameTime;
                 allowedSpawnLimit = ModOptions.instance.spawnedMemberLimit;
@@ -161,11 +168,11 @@ namespace GTA.GangAndTurfMod
             }
 
             Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War (", defenderGang.name, " versus ", attackerGang.name + ")"));
+            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War (", attackerGang.name, " attacking ", defenderGang.name + ")"));
             Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
 
             msTimeOfLastAutoResolveStep = ModCore.curGameTime;
-
+            msTimeWarStarted = ModCore.curGameTime;
             
 
             maxSpawnedDefenders = (int)RandoMath.ClampValue(allowedSpawnLimit * defenderReinforcementsAdvantage,
@@ -997,7 +1004,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
                                 if (SetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
-                                    attackerSpawnPoints.Count >= 1 + desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? defendingGang : attackingGang))
+                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang))
                                 {
                                     availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
                                 }
@@ -1062,7 +1069,15 @@ namespace GTA.GangAndTurfMod
                             nextCPIndexToCheckForCapture = 0;
                         }
 
-                        controlPoints[nextCPIndexToCheckForCapture].CheckIfHasBeenCaptured();
+                        WarControlPoint curCheckedCP = controlPoints[nextCPIndexToCheckForCapture];
+
+                        bool pointIsSafe = (((ModCore.curGameTime - msTimeWarStarted < ModOptions.instance.msTimeBeforeEnemySpawnsCanBeCaptured) && curCheckedCP.ownerGang != null) ||
+                            !curCheckedCP.CheckIfHasBeenCaptured());
+
+                        if (pointIsSafe && curCheckedCP.onCaptureCooldown)
+                        {
+                            ControlPointHasCooledDown(curCheckedCP);
+                        }
 
                         nextCPIndexToCheckForCapture++;
                     }

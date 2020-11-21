@@ -240,7 +240,8 @@ namespace GTA.GangAndTurfMod
 
             warsNearPlayer.Add(enteredWar);
 
-            if (focusedWar == null)
+            if (focusedWar == null ||
+                (enteredWar.IsPlayerGangInvolved() && !focusedWar.IsPlayerGangInvolved()))
             {
                 ChangeFocusedWar();
             }
@@ -298,39 +299,53 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void ChangeFocusedWar()
         {
-            if(focusedWar == null || !warsNearPlayer.Contains(focusedWar))
+            
+            if(focusedWar != null)
             {
-                if(focusedWar != null)
+                focusedWar.OnNoLongerFocusedWar();
+            }
+
+            if(warsNearPlayer.Count > 0)
+            {
+                //get the first war in the "wars nearby" list...
+                //unless there is another one in which the player gang is involved
+                focusedWar = warsNearPlayer[0];
+
+                foreach(GangWar war in warsNearPlayer)
                 {
-                    focusedWar.OnNoLongerFocusedWar();
+                    if (war.IsPlayerGangInvolved())
+                    {
+                        focusedWar = war;
+                        break;
+                    }
                 }
 
-                if(warsNearPlayer.Count > 0)
+                focusedWar.OnBecameFocusedWar();
+
+                if (focusedWar.IsPlayerGangInvolved())
                 {
-                    focusedWar = warsNearPlayer[0];
-
-                    focusedWar.OnBecameFocusedWar();
-
-                    if (focusedWar.IsPlayerGangInvolved())
+                    shouldDisplayReinforcementsTexts = true;
+                    if (focusedWar.attackingGang.isPlayerOwned)
                     {
-                        shouldDisplayReinforcementsTexts = true;
-                        if (focusedWar.attackingGang.isPlayerOwned)
-                        {
-                            UpdateReinforcementsTexts(focusedWar.attackerReinforcements, focusedWar.defenderReinforcements);
-                        }
-                        else
-                        {
-                            UpdateReinforcementsTexts(focusedWar.defenderReinforcements, focusedWar.attackerReinforcements);
-                        }
+                        UpdateReinforcementsTexts(focusedWar.attackerReinforcements, focusedWar.defenderReinforcements);
                     }
-
+                    else
+                    {
+                        UpdateReinforcementsTexts(focusedWar.defenderReinforcements, focusedWar.attackerReinforcements);
+                    }
                 }
                 else
                 {
-                    focusedWar = null;
                     shouldDisplayReinforcementsTexts = false;
                 }
+
             }
+            else
+            {
+                focusedWar = null;
+                shouldDisplayReinforcementsTexts = false;
+            }
+            
         }
 
         #endregion

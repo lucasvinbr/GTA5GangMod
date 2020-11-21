@@ -28,7 +28,7 @@ namespace GTA.GangAndTurfMod
         public bool onCaptureCooldown = false;
 
 
-        public const float DISTANCE_TO_CAPTURE = 15;
+        public const float DISTANCE_TO_CAPTURE = 5;
 
         /// <summary>
         /// if the blip is being displayed, refreshes its size and color
@@ -115,7 +115,11 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void CheckIfHasBeenCaptured()
+        /// <summary>
+        /// returns true if it has been captured
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckIfHasBeenCaptured()
         {
             foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
             {
@@ -136,16 +140,12 @@ namespace GTA.GangAndTurfMod
 
                         warUsingThisPoint.ControlPointHasBeenCaptured(this);
                         UpdateBlipAppearance();
-                        return;
+                        return true;
                     }
                 }
             }
 
-            //if no one has tried to capture this point in this update, the point can "cool down" and be used as a spawn for the owners
-            if (onCaptureCooldown)
-            {
-                warUsingThisPoint.ControlPointHasCooledDown(this);
-            }
+            return false;
 
         }
 

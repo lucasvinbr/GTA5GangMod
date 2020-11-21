@@ -83,6 +83,7 @@ namespace GTA.GangAndTurfMod
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 50000;
         public int msTimeBetweenWarPunishingForNoSpawns = 1000;
+        public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
         public int postWarBackupsAmount = 5;
         public int warsMaxExtraControlPoints = 8;
         public int baseNumKillsBeforeWarVictory = 25;
@@ -492,6 +493,7 @@ namespace GTA.GangAndTurfMod
             maxDistToWarBlipBeforePlayerLeavesWar = 300;
             msTimeBetweenWarAutoResolveSteps = 50000;
             msTimeBetweenWarPunishingForNoSpawns = 1000;
+            msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
             postWarBackupsAmount = 5;
             warsMaxExtraControlPoints = 8;
             maxConcurrentWarsAgainstPlayer = 3;
