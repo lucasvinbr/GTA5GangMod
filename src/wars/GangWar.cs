@@ -113,8 +113,19 @@ namespace GTA.GangAndTurfMod
 
             bool playerGangInvolved = IsPlayerGangInvolved();
 
+            spawnedDefenders = SpawnManager.instance.GetSpawnedMembersOfGang(defenderGang).Count;
+            spawnedAttackers = SpawnManager.instance.GetSpawnedMembersOfGang(attackerGang).Count;
+
             defenderReinforcements = GangCalculations.CalculateDefenderReinforcements(defenderGang, warZone);
             attackerReinforcements = GangCalculations.CalculateAttackerReinforcements(attackerGang, attackStrength);
+
+            //if it's an AIvsAI fight, add the number of currently spawned members to the tickets!
+            //this should prevent large masses of defenders from going poof when defending their newly taken zone
+            if (!playerGangInvolved)
+            {
+                defenderReinforcements += spawnedDefenders;
+                attackerReinforcements += spawnedAttackers;
+            }
 
             defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
 
@@ -155,8 +166,7 @@ namespace GTA.GangAndTurfMod
 
             msTimeOfLastAutoResolveStep = ModCore.curGameTime;
 
-            spawnedDefenders = SpawnManager.instance.GetSpawnedMembersOfGang(defenderGang).Count;
-            spawnedAttackers = SpawnManager.instance.GetSpawnedMembersOfGang(attackerGang).Count;
+            
 
             maxSpawnedDefenders = (int)RandoMath.ClampValue(allowedSpawnLimit * defenderReinforcementsAdvantage,
                 ModOptions.instance.minSpawnsForEachSideDuringWars,
@@ -697,30 +707,28 @@ namespace GTA.GangAndTurfMod
             return spawnedVehicle;
         }
 
-        public void SpawnMember(bool isDefender)
+        public SpawnedGangMember SpawnMember(bool isDefender)
         {
             Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
 
-            if (spawnPos == default) return; //this means we don't have spawn points set yet
-
-            SpawnedGangMember spawnedMember = null;
+            if (spawnPos == default) return null; //this means we don't have spawn points set yet
 
             if (isDefender)
             {
                 if (spawnedDefenders < maxSpawnedDefenders)
                 {
-                    spawnedMember = SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
+                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
                 }
-                else return;
+                else return null;
 
             }
             else
             {
                 if (spawnedAttackers < maxSpawnedAttackers)
                 {
-                    spawnedMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
+                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
                 }
-                else return;
+                else return null;
             }
         }
 
@@ -902,16 +910,20 @@ namespace GTA.GangAndTurfMod
 
         public void OnBecameFocusedWar()
         {
-            UI.ShowSubtitle("war on " + warZone.zoneName + " has become focused!", 4500);
             isFocused = true;
             UpdateDisplayForAllControlPoints();
         }
 
         public void OnNoLongerFocusedWar()
         {
-            UI.ShowSubtitle("war on " + warZone.zoneName + " has just lost focus!", 4500);
             isFocused = false;
             HideAllControlPoints();
+            //hide the "redder" area blip
+            if (warAreaBlips[1] != null)
+            {
+                warAreaBlips[1].Remove();
+                warAreaBlips[1] = null;
+            }
         }
 
         public override void Update()
@@ -1027,13 +1039,11 @@ namespace GTA.GangAndTurfMod
                             if(attackerSpawnPoints.Count == 0)
                             {
                                 DecrementAttackerReinforcements();
-                                UI.ShowSubtitle("punish attackers!", 800);
                             }
 
                             if(defenderSpawnPoints.Count == 0)
                             {
                                 DecrementDefenderReinforcements();
-                                UI.ShowSubtitle("punish defenders!", 800);
                             }
                         }
                     }
@@ -1041,7 +1051,7 @@ namespace GTA.GangAndTurfMod
 
                     if (SpawnManager.instance.livingMembersCount < allowedSpawnLimit)
                     {
-                        SpawnMember(spawnedDefenders < maxSpawnedDefenders);
+                        SpawnMember(spawnedDefenders < maxSpawnedDefenders && defenderSpawnPoints.Count > 0);
                     }
 
                     //check one of the control points for capture
