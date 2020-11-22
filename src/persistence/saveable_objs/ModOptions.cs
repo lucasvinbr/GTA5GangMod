@@ -40,7 +40,6 @@ namespace GTA.GangAndTurfMod
             else
             {
                 instance = new ModOptions();
-                instance.SetAllValuesToDefault();
                 instance.SetNameListsDefaultValues();
                 instance.SetColorTranslationDefaultValues();
                 PersistenceHandler.SaveToFile(instance, "ModOptions");
@@ -473,101 +472,26 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void SetAllValuesToDefault()
         {
-            msAutoSaveInterval = 3000;
+            List<string> gangFirstNames = possibleGangFirstNames,
+                gangLastNames = possibleGangLastNames;
 
-            openGangMenuKey = Keys.B;
-            openZoneMenuKey = Keys.N;
-            mindControlKey = Keys.J;
-            addToGroupKey = Keys.H;
+            List<GangColorTranslation> gangColors = similarColors;
+            List<VehicleColor> playerExclusiveColors = extraPlayerExclusiveColors;
 
-            gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
+            instance = new ModOptions
+            {
+                possibleGangFirstNames = gangFirstNames,
+                possibleGangLastNames = gangLastNames,
+                similarColors = gangColors,
+                extraPlayerExclusiveColors = playerExclusiveColors
+            };
 
-            playerIsASpectator = false;
+            instance.SetupPrimaryWeapons();
 
-            startingGangMemberHealth = 20;
-            maxGangMemberHealth = 120;
-            maxGangMemberArmor = 100;
-            maxGangMemberAccuracy = 30;
-
-            emptyZoneDuringWar = true;
-            maxDistToWarBlipBeforePlayerLeavesWar = 300;
-            msTimeBetweenWarAutoResolveSteps = 50000;
-            msTimeBetweenWarPunishingForNoSpawns = 1000;
-            msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
-            postWarBackupsAmount = 5;
-            warsMaxExtraControlPoints = 8;
-            maxConcurrentWarsAgainstPlayer = 3;
-
-            baseNumKillsBeforeWarVictory = 25;
-            extraKillsPerTurfValue = 15;
-            maxExtraKillsForNumTurfsControlled = 25;
-            extraKillsPerGeneralGangStrength = 5;
-
-
-            msTimeBetweenTurfRewards = 180000;
-            ticksBetweenGangAIUpdates = 15000;
-            minMsTimeBetweenAttacksOnPlayerTurf = 600000;
-
-            ticksBetweenGangMemberAIUpdates = 100;
-            baseRewardPerZoneOwned = 1200;
-            maxRewardPerZoneOwned = 15000;
-            maxTurfValue = 10;
-
-            rewardMultiplierPerZone = 0.1f;
-
-            baseCostToTakeTurf = 3000;
-            rewardForTakingEnemyTurf = 5000;
-
-            baseCostToUpgradeGeneralGangTurfValue = 1000000;
-            baseCostToUpgradeSingleTurfValue = 2000;
-            baseCostToUpgradeArmor = 35000;
-            baseCostToUpgradeHealth = 20000;
-            baseCostToUpgradeAccuracy = 40000;
-
-            wanderingDriverDrivingStyle = 1 + 2 + 8 + 16 + 32 + 128 + 256;
-            driverWithDestinationDrivingStyle = 4 + 8 + 16 + 32 + 512 + 262144;
-
-            numUpgradesUntilMaxMemberAttribute = 10;
-            costToCallBackupCar = 900;
-            costToCallParachutingMember = 250;
-            ticksCooldownBackupCar = 1000;
-            ticksCooldownParachutingMember = 600;
-
-            minWantedFactorWhenInGangTurf = 0.0f;
-            maxWantedLevelInMaxedGangTurf = 0;
-            freezeWantedLevelDuringWars = true;
-
-            notificationsEnabled = true;
-            loggerLevel = 1;
-
-            preventAIExpansion = false;
-            membersSpawnWithMeleeOnly = false;
-            warAgainstPlayerEnabled = true;
-            ambientSpawningEnabled = true;
-            forceSpawnCars = false;
-            joypadControls = false;
-            membersCanDropMoneyOnDeath = true;
-
-            showGangMemberBlips = true;
-
-            gangsStartWithPistols = true;
-            gangsCanBeWipedOut = true;
-            maxCoexistingGangs = 7;
-            extraProfitForAIGangsFactor = 1.5f;
-            spawnedMembersBeforeAmbientGenStops = 20;
-            msBaseIntervalBetweenAmbientSpawns = 15000;
-            spawnedMemberLimit = 40;
-            preservedDeadBodyLimit = 0;
-            minSpawnsForEachSideDuringWars = 5;
-            thinkingCarLimit = 3;
-            minDistanceMemberSpawnFromPlayer = 50;
-            maxDistanceMemberSpawnFromPlayer = 130;
-            minDistanceCarSpawnFromPlayer = 80;
-            maxDistanceCarSpawnFromPlayer = 190;
-
-            SaveOptions();
+            PersistenceHandler.SaveToFile(instance, "ModOptions");
 
             GangManager.instance.ResetGangUpdateIntervals();
+            GangManager.instance.SetGangRelationsAccordingToAggrLevel(instance.gangMemberAggressiveness);
         }
 
         public void SetWeaponListDefaultValues()

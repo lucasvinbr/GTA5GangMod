@@ -307,6 +307,7 @@ namespace GTA.GangAndTurfMod
                     ModOptions.LoadOptionsInstance();
                     GangManager.instance.ResetGangUpdateIntervals();
                     GangManager.instance.AdjustGangsToModOptions();
+                    GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
 
                     MenuScript.instance.RefreshCostsTexts();
                 }
