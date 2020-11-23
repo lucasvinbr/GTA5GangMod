@@ -9,12 +9,6 @@ namespace GTA.GangAndTurfMod
 
         private List<TurfZone> myZones;
 
-
-        /// <summary>
-        /// the AI will wait for some wars to end if it is involved in this many, or more, wars
-        /// </summary>
-        public const int MAX_CONCURRENT_WARS = 4;
-
         public override void Update()
         {
             Logger.Log("gang ai update: begin", 5);
@@ -86,8 +80,10 @@ namespace GTA.GangAndTurfMod
         {
             //lets attack!
             //pick a random zone owned by us, get the closest hostile zone and attempt to take it
-            //..but only if the player hasn't disabled expansion
+            //..but only if the player hasn't disabled expansion, and we're not involved in too many wars already
             if (ModOptions.instance.preventAIExpansion) return;
+
+            if (GangWarManager.instance.GetAllCurrentWarsInvolvingGang(watchedGang).Count >= ModOptions.instance.maxNumWarsAiGangCanBeInvolvedIn) return;
 
             if (myZones.Count > 0)
             {
@@ -263,7 +259,9 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                if (GangWarManager.instance.IsZoneContested(targetZone))
+                if (GangWarManager.instance.IsZoneContested(targetZone) ||
+                    (ownerGang.isPlayerOwned && 
+                        GangWarManager.instance.GetAllCurrentWarsInvolvingGang(ownerGang).Count >= ModOptions.instance.maxConcurrentWarsAgainstPlayer))
                 {
                     //don't mess with this zone then, it's a warzone
                     return;

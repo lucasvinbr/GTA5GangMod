@@ -89,7 +89,8 @@ namespace GTA.GangAndTurfMod
         public int extraKillsPerTurfValue = 15;
         public int maxExtraKillsForNumTurfsControlled = 25;
         public int extraKillsPerGeneralGangStrength = 5;
-        public int maxConcurrentWarsAgainstPlayer = 3;
+        public int maxConcurrentWarsAgainstPlayer = 2;
+        public int maxNumWarsAiGangCanBeInvolvedIn = 2;
 
         public int msTimeBetweenTurfRewards = 180000;
         public int ticksBetweenGangAIUpdates = 15000;

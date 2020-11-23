@@ -358,11 +358,6 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (IsPlayerCloseToWar())
-            {
-                AmbientGangMemberSpawner.instance.enabled = true;
-            }
-
             if (warBlip != null)
             {
                 warBlip.Remove();
@@ -852,7 +847,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool IsPositionInsideWarzone(Vector3 position)
         {
-            if (World.GetZoneName(position) == warZone.zoneName) return true;
+            if (warZone.IsLocationInside(World.GetZoneName(position), position)) return true;
 
             foreach (Blip warAreaBlip in warAreaBlips)
             {
@@ -953,8 +948,6 @@ namespace GTA.GangAndTurfMod
                     {
                         Game.WantedMultiplier = 0;
                     }
-
-                    AmbientGangMemberSpawner.instance.enabled = false;
 
 
                     if (curTime - msTimeOfLastCarSpawn > MS_TIME_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
@@ -1093,7 +1086,6 @@ namespace GTA.GangAndTurfMod
                 }
 
                 playerNearWarzone = false;
-                AmbientGangMemberSpawner.instance.enabled = true;
                 if (ModCore.curGameTime - msTimeOfLastAutoResolveStep > ModOptions.instance.msTimeBetweenWarAutoResolveSteps)
                 {
                     RunAutoResolveStep(1.15f);

@@ -190,6 +190,21 @@ namespace GTA.GangAndTurfMod
             return returnedList;
         }
 
+        public List<GangWar> GetAllCurrentWarsInvolvingGang(Gang targetGang)
+        {
+            List<GangWar> returnedList = new List<GangWar>();
+
+            foreach (GangWar war in activeWars)
+            {
+                if (war.IsGangFightingInThisWar(targetGang))
+                {
+                    returnedList.Add(war);
+                }
+            }
+
+            return returnedList;
+        }
+
         #endregion
 
         #region war objects fetching
@@ -322,6 +337,11 @@ namespace GTA.GangAndTurfMod
 
                 focusedWar.OnBecameFocusedWar();
 
+                if (ModOptions.instance.emptyZoneDuringWar)
+                {
+                    AmbientGangMemberSpawner.instance.enabled = false;
+                }
+
                 if (focusedWar.IsPlayerGangInvolved())
                 {
                     shouldDisplayReinforcementsTexts = true;
@@ -342,8 +362,14 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
+                //no wars nearby for now!
                 focusedWar = null;
                 shouldDisplayReinforcementsTexts = false;
+
+                if (ModOptions.instance.emptyZoneDuringWar) {
+                    AmbientGangMemberSpawner.instance.enabled = true;
+                }
+                
             }
             
         }
