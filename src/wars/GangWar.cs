@@ -438,16 +438,16 @@ namespace GTA.GangAndTurfMod
             //spawn points for both sides should be a bit far from each other, so that the war isn't just pure chaos
 
             availableNearbyPresetSpawns = PotentialSpawnsForWars.GetAllPotentialSpawnsInRadiusFromPos
-                (initialReferencePoint, ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar / 2);
+                (initialReferencePoint, ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar * 0.75f);
 
             desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
                 2,
                 2 + (int)(warZone.GetUpgradePercentage() * ModOptions.instance.warsMaxExtraControlPoints));
 
-            if (availableNearbyPresetSpawns.Count < 2)
-            {
-                UI.Notify("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
-            }
+            //if (availableNearbyPresetSpawns.Count < 2)
+            //{
+            //    UI.Notify("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
+            //}
 
 
             if (availableNearbyPresetSpawns.Count > 0)
@@ -466,7 +466,7 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                if (SetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang))
+                if (TrySetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang))
                 {
                     availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
                 }
@@ -474,7 +474,7 @@ namespace GTA.GangAndTurfMod
             else
             {
 
-                SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
                                 (initialReferencePoint,
                                 ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
                                 10,
@@ -543,22 +543,21 @@ namespace GTA.GangAndTurfMod
 
 
         /// <summary>
-        /// returns true if the provided position is not zero and the point was set up successfully
+        /// returns true if the provided position is not zero and not too close to existing spawns
+        /// and the point was set up successfully
         /// </summary>
-        private bool SetupAControlPoint(Vector3 targetPos, Gang ownerGang)
+        private bool TrySetupAControlPoint(Vector3 targetPos, Gang ownerGang)
         {
-            //if (!spawnPointsSet) return false;
-            //for now, we're generating random control points, but they should be manually prepared in the future for better placement!
-            //(and maybe then we'll load them all at once)
-
-
-            //Vector3 possiblePointPos = SpawnManager.instance.FindCustomSpawnPoint(
-            //    RandoMath.CenterOfVectors(alliedSpawnPoints[0], enemySpawnPoints[0]),
-            //    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-            //    10,
-            //    5);
             if (targetPos != Vector3.Zero)
             {
+                foreach(WarControlPoint cp in controlPoints)
+                {
+                    if(cp.position.DistanceTo(targetPos) < ModOptions.instance.minDistanceBetweenWarSpawns)
+                    {
+                        return false;
+                    }
+                }
+
                 WarControlPoint newPoint = GangWarManager.instance.GetUnusedWarControlPoint();
 
                 newPoint.SetupAtPosition(targetPos, ownerGang, this);
@@ -807,28 +806,41 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void TryWarBalancing(bool cullDefenders)
+        /// <summary>
+        /// if one of the involved gangs has too many or too few members,
+        /// attempts to remove exceeding members from the involved gangs or any "interfering" ones
+        /// </summary>
+        public void ReassureWarBalance()
         {
             Logger.Log("war balancing: start", 3);
-            bool isCullingPlayerGang = cullDefenders ? defendingGang.isPlayerOwned : attackingGang.isPlayerOwned;
-            List<SpawnedGangMember> membersFromTargetGang =
-                SpawnManager.instance.GetSpawnedMembersOfGang(cullDefenders ? defendingGang : attackingGang);
+            List<SpawnedGangMember> allLivingMembers =
+                SpawnManager.instance.GetAllLivingMembers();
 
-            for (int i = 0; i < membersFromTargetGang.Count; i++)
+            int minSpawns = ModOptions.instance.minSpawnsForEachSideDuringWars;
+
+            foreach (SpawnedGangMember member in allLivingMembers)
             {
-                if (membersFromTargetGang[i].watchedPed == null) continue;
+                if((spawnedAttackers >= minSpawns && spawnedAttackers <= maxSpawnedAttackers) &&
+                   (spawnedDefenders >= minSpawns && spawnedDefenders <= maxSpawnedDefenders))
+                {
+                    break;
+                }
+
+                if (member.watchedPed == null) continue;
                 //don't attempt to cull a friendly driving member because they could be a backup car called by the player...
                 //and the player can probably take more advantage of any stuck friendly vehicle than the AI can
-                if ((!isCullingPlayerGang || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, membersFromTargetGang[i].watchedPed, false)) &&
-                    !membersFromTargetGang[i].watchedPed.IsOnScreen)
+                if ((!member.myGang.isPlayerOwned || !Function.Call<bool>(Hash.IS_PED_IN_ANY_VEHICLE, member.watchedPed, false)) &&
+                    !member.watchedPed.IsOnScreen)
                 {
-                    membersFromTargetGang[i].Die(true);
-                    //make sure we don't exagerate!
-                    //stop if we're back inside the limits
-                    if ((cullDefenders && spawnedDefenders < maxSpawnedDefenders) ||
-                        (!cullDefenders && spawnedAttackers < maxSpawnedAttackers))
+                    //ok, it's fine to cull this member...
+                    //but is it necessary right now?
+                    if((member.myGang == attackingGang && spawnedAttackers > maxSpawnedAttackers) ||
+                       (member.myGang == defendingGang && spawnedDefenders > maxSpawnedDefenders) ||
+                       (!IsGangFightingInThisWar(member.myGang) && SpawnManager.instance.livingMembersCount >= allowedSpawnLimit &&
+                            (spawnedAttackers < ModOptions.instance.minSpawnsForEachSideDuringWars ||
+                             spawnedDefenders < ModOptions.instance.minSpawnsForEachSideDuringWars)))
                     {
-                        break;
+                        member.Die(true);
                     }
                 }
             }
@@ -976,15 +988,7 @@ namespace GTA.GangAndTurfMod
                                 ModOptions.instance.minSpawnsForEachSideDuringWars,
                                 maxSpawns));
 
-                        if (spawnedDefenders > maxSpawnedDefenders)
-                        {
-                            //try removing some members that can't currently be seen by the player or are far enough
-                            TryWarBalancing(true);
-                        }
-                        else if (spawnedAttackers > maxSpawnedAttackers)
-                        {
-                            TryWarBalancing(false);
-                        }
+                        ReassureWarBalance();
 
                     }
 
@@ -996,18 +1000,20 @@ namespace GTA.GangAndTurfMod
                             if (availableNearbyPresetSpawns.Count > 0)
                             {
                                 int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
-                                if (SetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
-                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang))
-                                {
-                                    availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
-                                }
+
+                                TrySetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
+                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang);
+                                
+                                //remove this potential spawn, even if we fail,
+                                //so that we don't spend time testing (and failing) again
+                                availableNearbyPresetSpawns.RemoveAt(presetSpawnIndex);
                             }
                             else
                             {
-                                SetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                                TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
                                     (controlPoints[0].position,
                                     ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                                    10,
+                                    ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                                     5),
                                     attackerSpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? defendingGang : attackingGang);
                             }

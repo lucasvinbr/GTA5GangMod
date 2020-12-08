@@ -11,6 +11,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class SpawnManager
     {
+        /// <summary>
+        /// all memberAIs initialized since the mod started. Not all are assured to be being used at any time
+        /// </summary>
         public List<SpawnedGangMember> memberAIs;
         public List<SpawnedDrivingGangMember> livingDrivingMembers;
 
@@ -25,7 +28,7 @@ namespace GTA.GangAndTurfMod
 
         /// <summary>
         /// the number of currently alive members.
-        /// (the number of entries in LivingMembers isn't the same as this)
+        /// (the number of entries in memberAIs isn't the same as this)
         /// </summary>
         public int livingMembersCount = 0;
 
@@ -172,6 +175,25 @@ namespace GTA.GangAndTurfMod
                         returnedList.Add(memberAIs[i].watchedPed);
                     }
                 }
+            }
+
+            return returnedList;
+        }
+
+        public List<SpawnedGangMember> GetAllLivingMembers()
+        {
+            List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
+
+            for (int i = 0; i < memberAIs.Count; i++)
+            {
+                if (memberAIs[i] != null)
+                {
+                    if (memberAIs[i].watchedPed != null)
+                    {
+                        returnedList.Add(memberAIs[i]);
+                    }
+                }
+
             }
 
             return returnedList;

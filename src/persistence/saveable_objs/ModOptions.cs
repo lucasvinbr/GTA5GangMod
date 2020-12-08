@@ -156,6 +156,7 @@ namespace GTA.GangAndTurfMod
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int preservedDeadBodyLimit = 0;
         public int minSpawnsForEachSideDuringWars = 5;
+        public int minDistanceBetweenWarSpawns = 40;
         public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 130;
