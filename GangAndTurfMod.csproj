@@ -85,6 +85,7 @@
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\persistence\saveable_objs\ExtendedPotentialGangMember.cs" />
     <Compile Include="src\persistence\saveable_objs\CustomTurfZone.cs" />
+    <Compile Include="src\UI\gang\generic\PickAiGangMenu.cs" />
     <Compile Include="src\wars\GangWar.cs" />
     <Compile Include="src\wars\PotentialSpawnsForWars.cs" />
     <Compile Include="src\SpawnManager.cs" />

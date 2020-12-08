@@ -20,6 +20,7 @@ namespace GTA.GangAndTurfMod
 
         private readonly ZonesMenu zonesMenu;
         private readonly GangMenu gangMenu;
+        private readonly PickAiGangMenu pickAiGangMenu;
 
         private Ped closestPed;
 
@@ -62,6 +63,7 @@ namespace GTA.GangAndTurfMod
 
             menuPool = new MenuPool();
 
+            pickAiGangMenu = new PickAiGangMenu(menuPool);
             zonesMenu = new ZonesMenu(menuPool);
             memberMenu = new UIMenu("Gang and Turf Mod", "Gang Member Registration Controls");
             carMenu = new UIMenu("Gang and Turf Mod", "Gang Vehicle Registration Controls");
@@ -146,6 +148,12 @@ namespace GTA.GangAndTurfMod
                 zonesMenu.UpdateZoneUpgradeBtn();
                 zonesMenu.Visible = !zonesMenu.Visible;
             }
+        }
+
+        public void OpenPickAiGangMenu(UIMenu callerMenu, string menuSubtitle, Action<Gang> onGangPicked)
+        {
+            callerMenu.Visible = false;
+            pickAiGangMenu.Open(callerMenu, menuSubtitle, onGangPicked);
         }
         #endregion
 
