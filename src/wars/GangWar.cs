@@ -200,14 +200,12 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public bool GetSkippedWarResult(float playerGangStrengthFactor = 1.0f)
         {
-            int defenderBaseStr = defendingGang.GetGangVariedStrengthValue(),
+            float defenderBaseStr = defendingGang.GetGangVariedStrengthValue(),
                 attackerBaseStr = attackingGang.GetGangVariedStrengthValue();
 
             //the amount of reinforcements counts here
-            float totalDefenderStrength = defenderBaseStr +
-                RandoMath.Max(4, defenderBaseStr / 100) * defenderReinforcements,
-                totalAttackerStrength = attackerBaseStr +
-                RandoMath.Max(4, attackerBaseStr / 100) * attackerReinforcements;
+            float totalDefenderStrength = defenderReinforcements / attackerBaseStr,
+                totalAttackerStrength = attackerReinforcements / defenderBaseStr;
 
             bool playerGangInvolved = IsPlayerGangInvolved();
 
@@ -400,7 +398,7 @@ namespace GTA.GangAndTurfMod
 
             float attackerLosses = RandoMath.CachedRandom.Next(MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
 
-            float biasTowardDefenders = (float)defendingGang.GetGangVariedStrengthValue() / attackingGang.GetGangVariedStrengthValue();
+            float biasTowardDefenders = defendingGang.GetGangVariedStrengthValue() / attackingGang.GetGangVariedStrengthValue();
 
             defenderLosses = RandoMath.ClampValue(defenderLosses / biasTowardDefenders, MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
             attackerLosses = RandoMath.ClampValue(attackerLosses * biasTowardDefenders, MIN_LOSSES_PER_AUTORESOLVE_STEP, MAX_LOSSES_PER_AUTORESOLVE_STEP);
@@ -515,31 +513,6 @@ namespace GTA.GangAndTurfMod
             }
 
         }
-
-
-        /// <summary>
-        /// returns true if the distance to the target position from any of the player's (or enemy's) gang spawn points is below the distanceLimit
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="isEnemyTeam"></param>
-        /// <param name="distanceLimit"></param>
-        /// <returns></returns>
-        //public bool IsPositionCloseToAnySpawnOfTeam(Vector3 position, bool isEnemyTeam, float distanceLimit = 0.5f)
-        //{
-        //    if (!spawnPointsSet) return false;
-
-        //    List<Vector3> consideredSpawns = isEnemyTeam ? enemySpawnPoints : alliedSpawnPoints;
-
-        //    foreach (Vector3 spawn in consideredSpawns)
-        //    {
-        //        if (World.GetDistance(position, spawn) <= distanceLimit)
-        //        {
-        //            return true;
-        //        }
-        //    }
-
-        //    return false;
-        //}
 
 
         /// <summary>

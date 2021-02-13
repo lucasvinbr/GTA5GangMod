@@ -326,6 +326,25 @@ namespace GTA.GangAndTurfMod
             return ownedZones;
         }
 
+        /// <summary>
+        /// returns how much, in 0 to 1 percentage, of the "takeable world" the target gang owns
+        /// </summary>
+        /// <param name="desiredGangName"></param>
+        /// <returns></returns>
+        public float GetPercentOfZonesOwnedByGang(string desiredGangName)
+        {
+            int numOwnedZones = 0;
+            foreach(TurfZone z in zoneData.zoneList)
+            {
+                if(z.ownerGangName == desiredGangName)
+                {
+                    numOwnedZones++;
+                }
+            }
+
+            return (float)numOwnedZones / zoneData.zoneList.Count;
+        }
+
         public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, bool randomBetween3Closest = true)
         {
             float smallestDistance = 0;
