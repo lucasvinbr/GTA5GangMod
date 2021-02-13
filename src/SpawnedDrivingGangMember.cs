@@ -17,6 +17,7 @@ namespace GTA.GangAndTurfMod
         public bool playerAsDest = false;
 
         public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
+        
 
         private float targetSpeed;
         private float distToDest;
@@ -24,6 +25,20 @@ namespace GTA.GangAndTurfMod
 
         private bool vehicleHasGuns = false;
 
+        private int stuckCounter = 0;
+        /// <summary>
+        /// if the stuck counter gets to this value, we switch to another driving style in an attempt to get ourselves out of that position
+        /// </summary>
+        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 2;
+        /// <summary>
+        /// if we're heading towards the destination and our current speed is equal or below this value, we consider ourselves to be stuck
+        /// </summary>
+        private const float STUCK_SPEED_LIMIT = 2.0f;
+
+        /// <summary>
+        /// driving style used when trying to "unstuck" the vehicle
+        /// </summary>
+        public const int DRIVESTYLE_REVERSE = 2 + 4 + 8 + 32 + 512 + 1024 + 262144;
 
         /// <summary>
         /// if true, this driver will focus on getting to their destination and, when there, will leave the car...
@@ -31,6 +46,8 @@ namespace GTA.GangAndTurfMod
         /// in that case, it will follow the player around if they're in a vehicle
         /// </summary>
         public bool deliveringCar = false;
+
+        private bool attemptingUnstuckVehicle = false;
 
         public override void Update()
         {
@@ -143,6 +160,22 @@ namespace GTA.GangAndTurfMod
             {
                 updatesWhileGoingToDest++;
 
+                if(vehicleIAmDriving.Speed <= STUCK_SPEED_LIMIT)
+                {
+                    stuckCounter++;
+                    if(stuckCounter >= CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD)
+                    {
+                        //switch our driving style: if we were unstucking, return to normal, and vice-versa
+                        attemptingUnstuckVehicle = !attemptingUnstuckVehicle;
+                        stuckCounter = 0;
+                    }
+                }
+                else
+                {
+                    attemptingUnstuckVehicle = false;
+                    stuckCounter = 0;
+                }
+
                 //give up, drop passengers and go away... but only if we're not chasing the player
                 //and he/she isn't on a vehicle
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
@@ -228,7 +261,8 @@ namespace GTA.GangAndTurfMod
                             }
 
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, ModOptions.instance.driverWithDestinationDrivingStyle);
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, 
+                                attemptingUnstuckVehicle ? DRIVESTYLE_REVERSE : ModOptions.instance.driverWithDestinationDrivingStyle);
                         }
                     }
                 }
@@ -318,6 +352,8 @@ namespace GTA.GangAndTurfMod
             this.isFriendlyToPlayer = isFriendlyToPlayer;
             Function.Call(Hash.SET_DRIVER_ABILITY, watchedPed, 1.0f);
             updatesWhileGoingToDest = 0;
+            attemptingUnstuckVehicle = false;
+            stuckCounter = 0;
             SetWatchedPassengers();
 
             vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
