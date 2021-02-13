@@ -53,6 +53,7 @@ namespace GTA.GangAndTurfMod
 
         #endregion
 
+        #region cleanup
         /// <summary>
         /// marks all living members as no longer needed and removes their blips, 
         /// as if everyone had died or were too far from the player
@@ -80,6 +81,8 @@ namespace GTA.GangAndTurfMod
 
             preservedDeadBodies.Clear();
         }
+
+        #endregion
 
         #region reset handling
 
@@ -544,6 +547,9 @@ namespace GTA.GangAndTurfMod
                     newPed.RelationshipGroup = ownerGang.relationGroupIndex;
 
                     newPed.CanSwitchWeapons = true;
+
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
 
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;
