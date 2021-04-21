@@ -449,9 +449,9 @@ namespace GTA.GangAndTurfMod
             {
                 for (int i = 0; i < curGangZones.Count; i++)
                 {
-                    targetGang.moneyAvailable += (int)
+                    targetGang.AddMoney((int)
                         (GangCalculations.CalculateRewardForZone(curGangZones[i], zonesCount) *
-                        ModOptions.instance.extraProfitForAIGangsFactor);
+                        ModOptions.instance.extraProfitForAIGangsFactor));
                 }
 
             }

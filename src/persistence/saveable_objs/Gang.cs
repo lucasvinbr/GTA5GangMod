@@ -159,6 +159,15 @@ namespace GTA.GangAndTurfMod
             GangManager.instance.SaveGangData(false);
         }
 
+        /// <summary>
+        /// adds the value to the amount available for the gang (subtracts if negative). Clamps it to the maximum stored, so that it won't overflow and become negative
+        /// </summary>
+        /// <param name="moneyIncrement"></param>
+        public void AddMoney(int moneyIncrement)
+        {
+            moneyAvailable = RandoMath.ClampValue(moneyAvailable + moneyIncrement, -1, int.MaxValue / 2);
+        }
+
         public bool AddMemberVariation(PotentialGangMember newMember)
         {
             for (int i = 0; i < memberVariations.Count; i++)

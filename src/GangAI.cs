@@ -65,7 +65,7 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             //we get some money then, at least to keep trying to fight
-                            watchedGang.moneyAvailable += (int)(ModOptions.instance.baseCostToTakeTurf * 5 * ModOptions.instance.extraProfitForAIGangsFactor);
+                            watchedGang.AddMoney((int)(ModOptions.instance.baseCostToTakeTurf * 5 * ModOptions.instance.extraProfitForAIGangsFactor));
                         }
 
                     }
@@ -123,7 +123,7 @@ namespace GTA.GangAndTurfMod
 
                 if (watchedGang.moneyAvailable >= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price;
+                    watchedGang.AddMoney(-ModOptions.instance.GetBuyableWeaponByHash(chosenWeapon).price);
                     watchedGang.gangWeaponHashes.Add(chosenWeapon);
                     GangManager.instance.SaveGangData(false);
                 }
@@ -139,7 +139,7 @@ namespace GTA.GangAndTurfMod
                     if (watchedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy &&
                 watchedGang.moneyAvailable >= GangCalculations.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel))
                     {
-                        watchedGang.moneyAvailable -= GangCalculations.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel);
+                        watchedGang.AddMoney(-GangCalculations.CalculateAccuracyUpgradeCost(watchedGang.memberAccuracyLevel));
                         watchedGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
                         if (watchedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                         {
@@ -153,7 +153,7 @@ namespace GTA.GangAndTurfMod
                     if (watchedGang.memberArmor < ModOptions.instance.maxGangMemberArmor &&
                             watchedGang.moneyAvailable >= GangCalculations.CalculateArmorUpgradeCost(watchedGang.memberArmor))
                     {
-                        watchedGang.moneyAvailable -= GangCalculations.CalculateArmorUpgradeCost(watchedGang.memberArmor);
+                        watchedGang.AddMoney(-GangCalculations.CalculateArmorUpgradeCost(watchedGang.memberArmor));
                         watchedGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
 
                         if (watchedGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
@@ -169,7 +169,7 @@ namespace GTA.GangAndTurfMod
                     if (watchedGang.memberHealth < ModOptions.instance.maxGangMemberHealth &&
                             watchedGang.moneyAvailable >= GangCalculations.CalculateHealthUpgradeCost(watchedGang.memberHealth))
                     {
-                        watchedGang.moneyAvailable -= GangCalculations.CalculateHealthUpgradeCost(watchedGang.memberHealth);
+                        watchedGang.AddMoney(-GangCalculations.CalculateHealthUpgradeCost(watchedGang.memberHealth));
                         watchedGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
 
                         if (watchedGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
@@ -192,7 +192,7 @@ namespace GTA.GangAndTurfMod
             if (watchedGang.moneyAvailable >= upgradeCost &&
                 watchedGang.baseTurfValue <= GangManager.instance.PlayerGang.baseTurfValue - 1)
             {
-                watchedGang.moneyAvailable -= upgradeCost;
+                watchedGang.AddMoney(-upgradeCost);
                 watchedGang.baseTurfValue++;
                 GangManager.instance.SaveGangData(false);
                 return;
@@ -206,7 +206,7 @@ namespace GTA.GangAndTurfMod
                 upgradeCost = GangCalculations.CalculateTurfValueUpgradeCost(myZones[i].value);
                 if (watchedGang.moneyAvailable >= upgradeCost)
                 {
-                    watchedGang.moneyAvailable -= upgradeCost;
+                    watchedGang.AddMoney(-upgradeCost);
                     myZones[i].value++;
                     ZoneManager.instance.SaveZoneData(false);
                     return;
@@ -226,7 +226,7 @@ namespace GTA.GangAndTurfMod
                 //this zone is neutral, lets just take it
                 if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
+                    watchedGang.AddMoney(-ModOptions.instance.baseCostToTakeTurf);
                     watchedGang.TakeZone(targetZone);
                 }
             }
@@ -253,7 +253,7 @@ namespace GTA.GangAndTurfMod
                 //this zone was controlled by a gang that no longer exists. it is neutral now
                 if (watchedGang.moneyAvailable >= ModOptions.instance.baseCostToTakeTurf)
                 {
-                    watchedGang.moneyAvailable -= ModOptions.instance.baseCostToTakeTurf;
+                    watchedGang.AddMoney(-ModOptions.instance.baseCostToTakeTurf);
                     watchedGang.TakeZone(targetZone);
                 }
             }
@@ -296,7 +296,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if(GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
                     {
-                        watchedGang.moneyAvailable -= atkCost;
+                        watchedGang.AddMoney(-atkCost);
                     }
                 }
                 
