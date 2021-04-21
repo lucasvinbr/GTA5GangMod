@@ -455,6 +455,22 @@ namespace GTA.GangAndTurfMod
                           ModOptions.instance.GetAcceptableCarSpawnDistance();
 
             return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+                    GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false);
+        }
+
+        /// <summary>
+        /// finds a nice spot in the general direction neither too close or far from the reference pos
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindGoodSpawnPointForCar(Vector3 referencePos, Vector3 targetDirectionFromReference)
+        {
+            Vector3 getNextPosTarget;
+
+
+            getNextPosTarget = referencePos + targetDirectionFromReference *
+                          ModOptions.instance.GetAcceptableCarSpawnDistance();
+
+            return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
                     GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false); ;
         }
 

@@ -19,11 +19,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private float defenderReinforcementsAdvantage = 0.0f;
 
-        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 6000;
+        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 1000;
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
-        private const int MS_TIME_BETWEEN_BALANCE_CHECKS = 5000;
+        private const int MS_TIME_BETWEEN_BALANCE_CHECKS = 5250;
 
         private const int MIN_LOSSES_PER_AUTORESOLVE_STEP = 6, MAX_LOSSES_PER_AUTORESOLVE_STEP = 17;
 
@@ -67,6 +67,8 @@ namespace GTA.GangAndTurfMod
         private int nextCPIndexToCheckForCapture = 0;
 
         private int allowedSpawnLimit = 0;
+
+        private Vector3 attackerVehicleSpawnDirection, defenderVehicleSpawnDirection;
 
         /// <summary>
         /// TODO modoption?
@@ -187,6 +189,8 @@ namespace GTA.GangAndTurfMod
 
             //this number may change once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
             desiredNumberOfControlPointsForThisWar = 2;
+
+            RefreshVehicleSpawnDirections();
 
             SetHateRelationsBetweenGangs();
 
@@ -649,6 +653,18 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        /// <summary>
+        /// updates the "recommended" vehicle spawn directions.
+        /// The directions are intended as "incentives" for the attackers and defenders to come from different sides
+        /// instead of on top of each other
+        /// </summary>
+        public void RefreshVehicleSpawnDirections()
+        {
+            defenderVehicleSpawnDirection = RandoMath.RandomDirection(true);
+            attackerVehicleSpawnDirection = defenderVehicleSpawnDirection * -1;
+            //TODO consider spawn points?
+        }
+
         #endregion
 
 
@@ -661,8 +677,10 @@ namespace GTA.GangAndTurfMod
 
             if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
 
-            Math.Vector3 playerPos = MindControl.SafePositionNearPlayer,
-                spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos);
+            Vector3 playerPos = MindControl.SafePositionNearPlayer;
+            
+            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos, isDefender?
+                defenderVehicleSpawnDirection : attackerVehicleSpawnDirection);
 
             if (spawnPos == Vector3.Zero) return null;
 
