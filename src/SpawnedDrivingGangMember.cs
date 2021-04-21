@@ -29,11 +29,11 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// if the stuck counter gets to this value, we switch to another driving style in an attempt to get ourselves out of that position
         /// </summary>
-        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 2;
+        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 4;
         /// <summary>
         /// if we're heading towards the destination and our current speed is equal or below this value, we consider ourselves to be stuck
         /// </summary>
-        private const float STUCK_SPEED_LIMIT = 2.0f;
+        private const float STUCK_SPEED_LIMIT = 1.75f;
 
         /// <summary>
         /// driving style used when trying to "unstuck" the vehicle
@@ -42,8 +42,8 @@ namespace GTA.GangAndTurfMod
 
         /// <summary>
         /// if true, this driver will focus on getting to their destination and, when there, will leave the car...
-        /// unless it's a backup called by the player; 
-        /// in that case, it will follow the player around if they're in a vehicle
+        /// unless it's a backup called by the player and the player is in a vehicle; 
+        /// in that case, it will follow the player around
         /// </summary>
         public bool deliveringCar = false;
 
@@ -146,7 +146,7 @@ namespace GTA.GangAndTurfMod
                 //leave the vehicle if we are a backup vehicle and the player's on foot
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
-                    if (deliveringCar)
+                    if (deliveringCar || (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival))
                     {
                         DriverLeaveVehicle();
                     }
@@ -193,7 +193,6 @@ namespace GTA.GangAndTurfMod
 
                     }
                     //wherever we were going, if we intended to leave the car there, let's just leave it here
-                    //(hopefully should help with members stuck in vehicles while heading for wars)
                     if (deliveringCar)
                     {
                         DriverLeaveVehicle();
