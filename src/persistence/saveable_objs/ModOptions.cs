@@ -85,6 +85,7 @@ namespace GTA.GangAndTurfMod
         public int msTimeBetweenWarPunishingForNoSpawns = 1000;
         public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
         public int postWarBackupsAmount = 5;
+        public int warsMinNumControlPoints = 3;
         public int warsMaxExtraControlPoints = 8;
         public int baseNumKillsBeforeWarVictory = 25;
         public int extraKillsPerTurfValue = 15;

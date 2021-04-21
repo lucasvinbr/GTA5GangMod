@@ -439,8 +439,8 @@ namespace GTA.GangAndTurfMod
                 (initialReferencePoint, ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar * 0.75f);
 
             desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
-                2,
-                2 + (int)(warZone.GetUpgradePercentage() * ModOptions.instance.warsMaxExtraControlPoints));
+                RandoMath.Max(ModOptions.instance.warsMinNumControlPoints, 2),
+                ModOptions.instance.warsMinNumControlPoints + (int)(warZone.GetUpgradePercentage() * ModOptions.instance.warsMaxExtraControlPoints));
 
             //if (availableNearbyPresetSpawns.Count < 2)
             //{
