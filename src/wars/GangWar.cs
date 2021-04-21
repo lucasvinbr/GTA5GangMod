@@ -436,7 +436,7 @@ namespace GTA.GangAndTurfMod
             //spawn points for both sides should be a bit far from each other, so that the war isn't just pure chaos
 
             availableNearbyPresetSpawns = PotentialSpawnsForWars.GetAllPotentialSpawnsInRadiusFromPos
-                (initialReferencePoint, ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar * 0.75f);
+                (initialReferencePoint, ModOptions.instance.maxDistanceBetweenWarSpawns / 2);
 
             desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
                 RandoMath.Max(ModOptions.instance.warsMinNumControlPoints, 2),
