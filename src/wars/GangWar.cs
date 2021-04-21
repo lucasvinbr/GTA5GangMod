@@ -121,13 +121,6 @@ namespace GTA.GangAndTurfMod
             defenderReinforcements = GangCalculations.CalculateDefenderReinforcements(defenderGang, warZone);
             attackerReinforcements = GangCalculations.CalculateAttackerReinforcements(attackerGang, attackStrength);
 
-            //if it's an AIvsAI fight, add the number of currently spawned members to the tickets!
-            //this should prevent large masses of defenders from going poof when defending their newly taken zone
-            if (!playerGangInvolved)
-            {
-                defenderReinforcements += spawnedDefenders;
-                attackerReinforcements += spawnedAttackers;
-            }
 
             defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
 
@@ -184,7 +177,7 @@ namespace GTA.GangAndTurfMod
             maxSpawnedAttackers = RandoMath.Max
                 (allowedSpawnLimit - maxSpawnedDefenders, ModOptions.instance.minSpawnsForEachSideDuringWars);
 
-            Logger.Log(string.Concat("war started! Reinf advantage: ", defenderReinforcementsAdvantage.ToString(),
+            Logger.Log(string.Concat("war started at ", warZone.zoneName, "! Reinf advantage: ", defenderReinforcementsAdvantage.ToString(),
                 " maxDefenders: ", maxSpawnedDefenders.ToString(), " maxAttackers: ", maxSpawnedAttackers.ToString()), 3);
 
             //this number may change once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
@@ -352,11 +345,11 @@ namespace GTA.GangAndTurfMod
             {
                 if (defenderVictory)
                 {
-                    defendingGang.moneyAvailable += battleProfit;
+                    defendingGang.AddMoney(battleProfit);
                 }
                 else
                 {
-                    attackingGang.moneyAvailable += battleProfit;
+                    attackingGang.AddMoney(battleProfit);
                 }
             }
 
@@ -685,16 +678,24 @@ namespace GTA.GangAndTurfMod
             if (spawnPos == Vector3.Zero) return null;
 
             SpawnedDrivingGangMember spawnedVehicle = null;
-            if (!isDefender && spawnedAttackers - 4 < maxSpawnedAttackers)
-            {
-                spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(attackingGang,
-                    spawnPos, playerPos, false, false, IncrementAttackersCount);
-            }
-            else if (spawnedDefenders - 4 < maxSpawnedDefenders)
+
+            int maxPeopleToSpawnInVehicle = isDefender ?
+                maxSpawnedDefenders - spawnedDefenders :
+                maxSpawnedAttackers - spawnedAttackers;
+
+            if (maxPeopleToSpawnInVehicle <= 0) return null;
+
+            if (isDefender)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(defendingGang,
-                    spawnPos, playerPos, false, false, IncrementDefendersCount);
+                    spawnPos, playerPos, false, false, IncrementDefendersCount, maxPeopleToSpawnInVehicle);
             }
+            else
+            {
+                spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(attackingGang,
+                    spawnPos, playerPos, false, false, IncrementAttackersCount, maxPeopleToSpawnInVehicle);
+            }
+            
 
             return spawnedVehicle;
         }
@@ -709,6 +710,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (spawnedDefenders < maxSpawnedDefenders)
                 {
+                    Logger.Log("war: try spawn defender", 4);
                     return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
                 }
                 else return null;
@@ -718,6 +720,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (spawnedAttackers < maxSpawnedAttackers)
                 {
+                    Logger.Log("war: try spawn attacker", 4);
                     return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
                 }
                 else return null;
@@ -809,11 +812,17 @@ namespace GTA.GangAndTurfMod
 
             int minSpawns = ModOptions.instance.minSpawnsForEachSideDuringWars;
 
+            Logger.Log("war balancing: maxAtkers = " + maxSpawnedAttackers.ToString(), 4);
+            Logger.Log("war balancing: maxDefers = " + maxSpawnedDefenders.ToString(), 4);
+            Logger.Log("war balancing: spawnedAttackers = " + spawnedAttackers.ToString(), 4);
+            Logger.Log("war balancing: spawnedDefenders = " + spawnedDefenders.ToString(), 4);
+
             foreach (SpawnedGangMember member in allLivingMembers)
             {
                 if((spawnedAttackers >= minSpawns && spawnedAttackers <= maxSpawnedAttackers) &&
                    (spawnedDefenders >= minSpawns && spawnedDefenders <= maxSpawnedDefenders))
                 {
+                    Logger.Log("war balancing: done culling, spawns are balanced", 4);
                     break;
                 }
 
@@ -828,9 +837,10 @@ namespace GTA.GangAndTurfMod
                     if((member.myGang == attackingGang && spawnedAttackers > maxSpawnedAttackers) ||
                        (member.myGang == defendingGang && spawnedDefenders > maxSpawnedDefenders) ||
                        (!IsGangFightingInThisWar(member.myGang) && SpawnManager.instance.livingMembersCount >= allowedSpawnLimit &&
-                            (spawnedAttackers < ModOptions.instance.minSpawnsForEachSideDuringWars ||
-                             spawnedDefenders < ModOptions.instance.minSpawnsForEachSideDuringWars)))
+                            (spawnedAttackers < minSpawns ||
+                             spawnedDefenders < minSpawns)))
                     {
+                        Logger.Log("war balancing: culled member from " + member.myGang.name, 4);
                         member.Die(true);
                     }
                 }
@@ -917,6 +927,19 @@ namespace GTA.GangAndTurfMod
         {
             isFocused = true;
             UpdateDisplayForAllControlPoints();
+
+            bool playerGangInvolved = IsPlayerGangInvolved();
+
+            spawnedDefenders = SpawnManager.instance.GetSpawnedMembersOfGang(defendingGang).Count;
+            spawnedAttackers = SpawnManager.instance.GetSpawnedMembersOfGang(attackingGang).Count;
+
+            //if it's an AIvsAI fight, add the number of currently spawned members to the tickets!
+            //this should prevent large masses of defenders from going poof when defending their newly taken zone
+            if (!playerGangInvolved && controlPoints.Count < desiredNumberOfControlPointsForThisWar)
+            {
+                defenderReinforcements += spawnedDefenders;
+                attackerReinforcements += spawnedAttackers;
+            }
         }
 
         public void OnNoLongerFocusedWar()

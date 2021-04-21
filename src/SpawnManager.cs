@@ -501,7 +501,7 @@ namespace GTA.GangAndTurfMod
             }
             if (ownerGang.memberVariations.Count > 0)
             {
-                Logger.Log("spawn member: begin", 4);
+                Logger.Log(string.Concat("spawn member: begin (gang: ", ownerGang.name, ")"), 4);
                 PotentialGangMember chosenMember =
                     RandoMath.RandomElement(ownerGang.memberVariations);
                 Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
@@ -601,7 +601,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
+        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null, int maxMembersToSpawnInVehicle = -1)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
@@ -626,7 +626,20 @@ namespace GTA.GangAndTurfMod
                         driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
 
                         int passengerCount = newVehicle.PassengerSeats;
-                        if (destPos == Vector3.Zero && passengerCount > 4) passengerCount = 4; //limit ambient passengers in order to have less impact in ambient spawning
+
+                        if(destPos == Vector3.Zero)
+                        {
+                            passengerCount = RandoMath.Min(passengerCount, 4);//limit ambient passengers in order to have less impact in ambient spawning
+                        }
+                        else
+                        {
+                            if(maxMembersToSpawnInVehicle != -1)
+                            {
+                                passengerCount = RandoMath.Min(passengerCount, maxMembersToSpawnInVehicle - 1);
+                            }
+                        }
+
+
 
                         for (int i = 0; i < passengerCount; i++)
                         {

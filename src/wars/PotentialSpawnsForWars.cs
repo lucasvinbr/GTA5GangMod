@@ -58,7 +58,7 @@ namespace GTA.GangAndTurfMod
             List<Vector3> returnedSpawns = new List<Vector3>();
             for (int i = 0; i < PositionsList.Count; i++)
             {
-                if (pos.DistanceTo(PositionsList[i]) < radius)
+                if (pos.DistanceTo2D(PositionsList[i]) < radius)
                 {
                     returnedSpawns.Add(PositionsList[i]);
                 }
