@@ -342,7 +342,7 @@ namespace GTA.GangAndTurfMod
                     AmbientGangMemberSpawner.instance.enabled = false;
                 }
 
-                if (focusedWar.IsPlayerGangInvolved())
+                if (focusedWar.IsPlayerGangInvolved() || ModOptions.instance.showReinforcementCountsForAIWars)
                 {
                     shouldDisplayReinforcementsTexts = true;
                     if (focusedWar.attackingGang.isPlayerOwned)

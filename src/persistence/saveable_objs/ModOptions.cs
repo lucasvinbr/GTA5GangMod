@@ -79,6 +79,7 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberAccuracy = 30;
 
         public bool emptyZoneDuringWar = true;
+        public bool showReinforcementCountsForAIWars = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 50000;
         public int msTimeBetweenWarPunishingForNoSpawns = 1000;
