@@ -364,6 +364,12 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
+            if (isFocused)
+            {
+                StoreControlPointRecommendations(defenderVictory);
+            }
+
+
             playerNearWarzone = false;
             OnPlayerLeftWarzone?.Invoke(this);
 
@@ -377,7 +383,6 @@ namespace GTA.GangAndTurfMod
             onWarEnded?.Invoke(this, defenderVictory);
 
             
-
 
             //reset relations to whatever is set in modoptions
             GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
@@ -461,7 +466,11 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                if (TrySetupAControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang))
+                if (TrySetupAControlPoint(
+                    availableNearbyPresetSpawns[indexOfClosestSpawn],
+                    IsPlayerGangInvolved() ? 
+                        GangManager.instance.PlayerGang : 
+                        GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], this)))
                 {
                     availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
                 }
@@ -597,6 +606,21 @@ namespace GTA.GangAndTurfMod
             foreach (WarControlPoint cp in controlPoints)
             {
                 cp.UpdateBlipAppearance();
+            }
+        }
+
+        /// <summary>
+        /// stores recommendations for control point ownership in future wars in the same location
+        /// </summary>
+        private void StoreControlPointRecommendations(bool defendersWon)
+        {
+            foreach(WarControlPoint cp in controlPoints)
+            {
+                if(defendersWon && cp.ownerGang == defendingGang || 
+                    !defendersWon && cp.ownerGang == attackingGang)
+                {
+                    GangWarManager.instance.AddRecommendedControlPoint(cp.position, cp.ownerGang);
+                }
             }
         }
 
@@ -1014,9 +1038,15 @@ namespace GTA.GangAndTurfMod
                             if (availableNearbyPresetSpawns.Count > 0)
                             {
                                 int presetSpawnIndex = RandoMath.CachedRandom.Next(availableNearbyPresetSpawns.Count);
+                                //we consider control point ownership recommendations only after giving at least 1 spawn for each side
+                                bool considerRecommendations = attackerSpawnPoints.Count >= 1 && defenderSpawnPoints.Count >= 1;
+
+                                Gang targetOwnerGang = considerRecommendations ?
+                                    GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[presetSpawnIndex], this) :
+                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang;
 
                                 TrySetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
-                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang);
+                                    targetOwnerGang);
                                 
                                 //remove this potential spawn, even if we fail,
                                 //so that we don't spend time testing (and failing) again

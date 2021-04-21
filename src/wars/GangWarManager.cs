@@ -36,6 +36,19 @@ namespace GTA.GangAndTurfMod
 
         private readonly List<WarControlPoint> pooledControlPoints = new List<WarControlPoint>();
 
+        
+
+        /// <summary>
+        /// a dictionary for storing control point positions that could be reused by the same gang if a similar war starts nearby.
+        /// This is to avoid situations where a war is basically restarted, but the gangs switch their starting CPs instead of coming from the same sides again
+        /// </summary>
+        private readonly List<KeyValuePair<Vector3, Gang>> recommendedControlPoints = new List<KeyValuePair<Vector3, Gang>>();
+
+        /// <summary>
+        /// max number of recently used control points we should store
+        /// </summary>
+        private const int MAX_STORED_RECOMMENDED_CPS = 8;
+
         /// <summary>
         /// the war the player is probably paying attention to. it should be updated more often than the others
         /// </summary>
@@ -396,6 +409,58 @@ namespace GTA.GangAndTurfMod
             }
 
             return newPoint;
+        }
+
+        /// <summary>
+        /// stores the CP as "recommended" for the target gang.
+        /// If another war starts in the same region, the gang should probably use this point
+        /// </summary>
+        /// <param name="cpPosition"></param>
+        /// <param name="recommendedOwner"></param>
+        public void AddRecommendedControlPoint(Vector3 cpPosition, Gang recommendedOwner)
+        {
+            for(int i = 0; i < recommendedControlPoints.Count; i++)
+            {
+                //remove entries with the same position
+                if(recommendedControlPoints[i].Key == cpPosition)
+                {
+                    recommendedControlPoints.RemoveAt(i);
+                    break;
+                }
+            }
+
+            recommendedControlPoints.Add(new KeyValuePair<Vector3, Gang>(cpPosition, recommendedOwner));
+
+            //remove oldest entry if we're storing too many
+            if (recommendedControlPoints.Count > MAX_STORED_RECOMMENDED_CPS)
+            {
+                recommendedControlPoints.RemoveAt(0);
+            }
+        }
+
+        /// <summary>
+        /// checks if any of the involved gangs has the point as "recommended" from previous wars.
+        /// If not, picks the defenders
+        /// </summary>
+        /// <param name="pointPosition"></param>
+        /// <param name="war"></param>
+        /// <returns></returns>
+        public Gang PickOwnerGangForControlPoint(Vector3 pointPosition, GangWar war)
+        {
+            Gang pickedGang = war.defendingGang;
+
+            for (int i = 0; i < recommendedControlPoints.Count; i++)
+            {
+                //remove the recommendation if it's valid
+                if (recommendedControlPoints[i].Key == pointPosition && war.IsGangFightingInThisWar(recommendedControlPoints[i].Value))
+                {
+                    pickedGang = recommendedControlPoints[i].Value;
+                    recommendedControlPoints.RemoveAt(i);
+                    break;
+                }
+            }
+
+            return pickedGang;
         }
 
         /// <summary>
