@@ -181,7 +181,7 @@ namespace GTA.GangAndTurfMod
                 " maxDefenders: ", maxSpawnedDefenders.ToString(), " maxAttackers: ", maxSpawnedAttackers.ToString()), 3);
 
             //this number may change once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
-            desiredNumberOfControlPointsForThisWar = 2;
+            desiredNumberOfControlPointsForThisWar = ModOptions.instance.warsMinNumControlPoints;
 
             RefreshVehicleSpawnDirections();
 
@@ -441,7 +441,7 @@ namespace GTA.GangAndTurfMod
                 (initialReferencePoint, ModOptions.instance.maxDistanceBetweenWarSpawns / 2);
 
             desiredNumberOfControlPointsForThisWar = RandoMath.ClampValue(availableNearbyPresetSpawns.Count,
-                RandoMath.Max(ModOptions.instance.warsMinNumControlPoints, 2),
+                RandoMath.Max(ModOptions.instance.warsMinNumControlPoints, 0),
                 ModOptions.instance.warsMinNumControlPoints + (int)(warZone.GetUpgradePercentage() * ModOptions.instance.warsMaxExtraControlPoints));
 
             //if (availableNearbyPresetSpawns.Count < 2)
@@ -1043,7 +1043,7 @@ namespace GTA.GangAndTurfMod
 
                                 Gang targetOwnerGang = considerRecommendations ?
                                     GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[presetSpawnIndex], this) :
-                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang;
+                                    defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang;
 
                                 TrySetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
                                     targetOwnerGang);
@@ -1059,7 +1059,7 @@ namespace GTA.GangAndTurfMod
                                     ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
                                     ModOptions.instance.minDistanceMemberSpawnFromPlayer,
                                     5),
-                                    attackerSpawnPoints.Count >= desiredNumberOfControlPointsForThisWar * warZone.GetUpgradePercentage() ? defendingGang : attackingGang);
+                                    defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang);
                             }
                         }
                         else
