@@ -31,6 +31,7 @@ namespace GTA.GangAndTurfMod
             AddNotificationsToggle();
             AddMemberAggressivenessControl();
             AddEnableAmbientSpawnToggle();
+            AddIgnoreZoneOwnershipWhenAmbientSpawningToggle();
             AddAiExpansionToggle();
             AddShowMemberBlipsToggle();
             AddMeleeOnlyToggle();
@@ -153,6 +154,22 @@ namespace GTA.GangAndTurfMod
                 if (item == spawnToggle)
                 {
                     ModOptions.instance.ambientSpawningEnabled = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
+        private void AddIgnoreZoneOwnershipWhenAmbientSpawningToggle()
+        {
+            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient member spawning: spawn random gangs", ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning, "If enabled, ambient spawning will spawn members from any gang instead of only from the one which owns the zone you are in. This option does not affect member spawning via backup calls or gang wars.");
+
+            AddItem(spawnToggle);
+            OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == spawnToggle)
+                {
+                    ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning = checked_;
                     ModOptions.instance.SaveOptions(false);
                 }
 

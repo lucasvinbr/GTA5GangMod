@@ -73,6 +73,11 @@ namespace GTA.GangAndTurfMod
 
         public bool playerIsASpectator = false;
 
+        /// <summary>
+        /// "gang members everywhere", but only in zones controlled by someone
+        /// </summary>
+        public bool ignoreTurfOwnershipWhenAmbientSpawning = false;
+
         public int startingGangMemberHealth = 20;
         public int maxGangMemberHealth = 120;
         public int maxGangMemberArmor = 100;

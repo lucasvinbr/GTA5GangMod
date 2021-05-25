@@ -60,6 +60,12 @@ namespace GTA.GangAndTurfMod
                     {
                         if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
+                            //randomize spawned gang if "members spawn anywhere"
+                            if (ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning)
+                            {
+                                curGang = GangManager.instance.gangData.gangs.RandomElement();
+                            }
+
                             Vehicle playerVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 30) || playerVehicle == null)
                             {
