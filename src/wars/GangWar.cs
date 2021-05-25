@@ -63,6 +63,7 @@ namespace GTA.GangAndTurfMod
 
         private List<Vector3> availableNearbyPresetSpawns;
 
+
         private int desiredNumberOfControlPointsForThisWar = 0;
         private int nextCPIndexToCheckForCapture = 0;
 
@@ -180,8 +181,8 @@ namespace GTA.GangAndTurfMod
             Logger.Log(string.Concat("war started at ", warZone.zoneName, "! Reinf advantage: ", defenderReinforcementsAdvantage.ToString(),
                 " maxDefenders: ", maxSpawnedDefenders.ToString(), " maxAttackers: ", maxSpawnedAttackers.ToString()), 3);
 
-            //this number may change once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
-            desiredNumberOfControlPointsForThisWar = ModOptions.instance.warsMinNumControlPoints;
+            //this number is properly set once we're inside the zone and PrepareAndSetupInitialSpawnPoint is run
+            desiredNumberOfControlPointsForThisWar = 1;
 
             RefreshVehicleSpawnDirections();
 
@@ -429,7 +430,7 @@ namespace GTA.GangAndTurfMod
         #region control point related
 
         /// <summary>
-        /// stores nearby preset spawn points and attempts to set the allied spawn, returning true if it succeeded
+        /// stores nearby preset spawn points and attempts to set one spawn, returning true if it succeeded
         /// </summary>
         /// <param name="initialReferencePoint"></param>
         private bool PrepareAndSetupInitialSpawnPoint(Vector3 initialReferencePoint)
@@ -449,46 +450,49 @@ namespace GTA.GangAndTurfMod
             //    UI.Notify("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
             //}
 
-
-            if (availableNearbyPresetSpawns.Count > 0)
+            if(desiredNumberOfControlPointsForThisWar > 0)
             {
-                //find the closest preset spawn and set it as the allied CP
-                int indexOfClosestSpawn = 0;
-                float smallestDistance = ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar;
-
-                for (int i = 0; i < availableNearbyPresetSpawns.Count; i++)
+                if (availableNearbyPresetSpawns.Count > 0)
                 {
-                    float candidateDistance = initialReferencePoint.DistanceTo(availableNearbyPresetSpawns[i]);
-                    if (candidateDistance < smallestDistance)
+                    //find the closest preset spawn and set it as the allied CP
+                    int indexOfClosestSpawn = 0;
+                    float smallestDistance = ModOptions.instance.maxDistToWarBlipBeforePlayerLeavesWar;
+
+                    for (int i = 0; i < availableNearbyPresetSpawns.Count; i++)
                     {
-                        smallestDistance = candidateDistance;
-                        indexOfClosestSpawn = i;
+                        float candidateDistance = initialReferencePoint.DistanceTo(availableNearbyPresetSpawns[i]);
+                        if (candidateDistance < smallestDistance)
+                        {
+                            smallestDistance = candidateDistance;
+                            indexOfClosestSpawn = i;
+                        }
+                    }
+
+                    if (TrySetupAControlPoint(
+                        availableNearbyPresetSpawns[indexOfClosestSpawn],
+                        IsPlayerGangInvolved() ?
+                            GangManager.instance.PlayerGang :
+                            GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], this)))
+                    {
+                        availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
                     }
                 }
-
-                if (TrySetupAControlPoint(
-                    availableNearbyPresetSpawns[indexOfClosestSpawn],
-                    IsPlayerGangInvolved() ? 
-                        GangManager.instance.PlayerGang : 
-                        GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[indexOfClosestSpawn], this)))
+                else
                 {
-                    availableNearbyPresetSpawns.RemoveAt(indexOfClosestSpawn);
+
+                    TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
+                                    (initialReferencePoint,
+                                    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
+                                    10,
+                                    5),
+                                    IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang);
                 }
             }
-            else
-            {
-
-                TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
-                                (initialReferencePoint,
-                                ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                                10,
-                                5),
-                                IsPlayerGangInvolved() ? GangManager.instance.PlayerGang : defendingGang);
-            }
+            
 
             Logger.Log("setSpawnPoints: end", 3);
 
-            return controlPoints.Count > 0;
+            return controlPoints.Count > 0 || desiredNumberOfControlPointsForThisWar == 0;
 
         }
 
@@ -1081,6 +1085,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
+                        //(we don't start punishing before setting up the desired number of CPs)
                         if(curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
                         {
                             msTimeOfLastNoSpawnsPunishment = curTime;
