@@ -86,32 +86,32 @@ namespace GTA.GangAndTurfMod
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
-        public int msTimeBetweenWarAutoResolveSteps = 50000;
-        public int msTimeBetweenWarPunishingForNoSpawns = 1000;
+        public int msTimeBetweenWarAutoResolveSteps = 25000;
+        public int msTimeBetweenWarPunishingForNoSpawns = 1500;
         public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
         public int postWarBackupsAmount = 5;
-        public int warsMinNumControlPoints = 3;
-        public int warsMaxExtraControlPoints = 8;
-        public int baseNumKillsBeforeWarVictory = 25;
-        public int extraKillsPerTurfValue = 15;
-        public int maxExtraKillsForNumTurfsControlled = 25;
-        public int extraKillsPerGeneralGangStrength = 5;
-        public int maxConcurrentWarsAgainstPlayer = 2;
-        public int maxNumWarsAiGangCanBeInvolvedIn = 2;
+        public int warsMinNumControlPoints = 2;
+        public int warsMaxExtraControlPoints = 5;
+        public int baseNumKillsBeforeWarVictory = 20;
+        public int extraKillsPerTurfValue = 7;
+        public int maxExtraKillsForNumTurfsControlled = 10;
+        public int extraKillsPerGeneralGangStrength = 2;
+        public int maxConcurrentWarsAgainstPlayer = 3;
+        public int maxNumWarsAiGangCanBeInvolvedIn = 3;
 
         public int msTimeBetweenTurfRewards = 180000;
         public int ticksBetweenGangAIUpdates = 15000;
-        public int minMsTimeBetweenAttacksOnPlayerTurf = 600000;
+        public int minMsTimeBetweenAttacksOnPlayerTurf = 450000;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 1200;
-        public int maxRewardPerZoneOwned = 15000;
+        public int maxRewardPerZoneOwned = 6000;
         public int maxTurfValue = 10;
 
         /// <summary>
         /// percentage sum, per zone owned, over the total reward received.
         /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
         /// </summary>
-        public float rewardMultiplierPerZone = 0.1f;
+        public float rewardMultiplierPerZone = 0.0f;
 
         public int baseCostToTakeTurf = 3000;
         public int rewardForTakingEnemyTurf = 5000;
@@ -130,8 +130,8 @@ namespace GTA.GangAndTurfMod
         public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
-        public int ticksCooldownBackupCar = 1000;
-        public int ticksCooldownParachutingMember = 600;
+        public int ticksCooldownBackupCar = 1;
+        public int ticksCooldownParachutingMember = 120;
 
         public bool notificationsEnabled = true;
         /// <summary>
@@ -150,8 +150,8 @@ namespace GTA.GangAndTurfMod
 
         public bool showGangMemberBlips = true;
 
-        public float minWantedFactorWhenInGangTurf = 0.0f;
-        public int maxWantedLevelInMaxedGangTurf = 0;
+        public float minWantedFactorWhenInGangTurf = 1.0f;
+        public int maxWantedLevelInMaxedGangTurf = 5;
         public bool freezeWantedLevelDuringWars = true;
 
         public bool gangsStartWithPistols = true;
@@ -165,12 +165,12 @@ namespace GTA.GangAndTurfMod
         public int minSpawnsForEachSideDuringWars = 5;
         public int minDistanceBetweenWarSpawns = 40;
         public int maxDistanceBetweenWarSpawns = 200;
-        public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
+        public int thinkingCarLimit = 5; //a "soft" limit, ignored by backup calls made by the player
         public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
         public int minDistanceMemberSpawnFromPlayer = 50;
-        public int maxDistanceMemberSpawnFromPlayer = 130;
+        public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
-        public int maxDistanceCarSpawnFromPlayer = 190;
+        public int maxDistanceCarSpawnFromPlayer = 150;
 
         [XmlIgnore]
         public List<WeaponHash> primaryWeapons = new List<WeaponHash>();
