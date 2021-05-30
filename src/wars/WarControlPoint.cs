@@ -13,6 +13,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class WarControlPoint
     {
+
+        private GangWar warUsingThisPoint;
+
         public Vector3 position;
 
         private Blip myBlip;
@@ -25,7 +28,7 @@ namespace GTA.GangAndTurfMod
         public bool onCaptureCooldown = false;
 
 
-        public const float DISTANCE_TO_CAPTURE = 15;
+        public const float DISTANCE_TO_CAPTURE = 5;
 
         /// <summary>
         /// if the blip is being displayed, refreshes its size and color
@@ -78,8 +81,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void SetupAtPosition(Vector3 pos, Gang ownerGang)
+        public void SetupAtPosition(Vector3 pos, Gang ownerGang, GangWar warUsingThisPoint)
         {
+            this.warUsingThisPoint = warUsingThisPoint;
             this.ownerGang = ownerGang;
             position = pos;
             CreateAttachedBlip();
@@ -96,51 +100,52 @@ namespace GTA.GangAndTurfMod
 
             ownerGang = null;
             onCaptureCooldown = false;
+            warUsingThisPoint = null;
         }
 
-        public void CheckIfHasBeenCaptured()
+        /// <summary>
+        /// only hides the point's blip; it still retains control data and can be captured
+        /// </summary>
+        public virtual void HideBlip()
         {
-            if (ownerGang == null)
+            if (myBlip != null)
             {
-                foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
-                {
-                    if (member.watchedPed != null && member.watchedPed.IsAlive)
-                    {
-                        if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
-                        {
-                            //Capture!
-                            if (member.myGang == GangWarManager.instance.enemyGang || member.myGang == GangManager.instance.PlayerGang)
-                            {
-                                ownerGang = member.myGang;
-                                GangWarManager.instance.ControlPointHasBeenCaptured(this);
-                                UpdateBlipAppearance();
-                                return;
-                            }
-                        }
-                    }
-                }
+                myBlip.Remove();
+                myBlip = null;
             }
-            else
+        }
+
+        /// <summary>
+        /// returns true if it has been captured
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckIfHasBeenCaptured()
+        {
+            foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
             {
-                Gang enemyGang = ownerGang.isPlayerOwned ? GangWarManager.instance.enemyGang : GangManager.instance.PlayerGang;
-                foreach (SpawnedGangMember member in SpawnManager.instance.GetSpawnedMembersOfGang(enemyGang))
+                if (member.watchedPed != null && member.watchedPed.IsAlive && member.myGang != ownerGang)
                 {
                     if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
                     {
                         //Capture!
-                        ownerGang = member.myGang;
-                        GangWarManager.instance.ControlPointHasBeenCaptured(this);
+                        if (member.myGang == warUsingThisPoint.defendingGang || member.myGang == warUsingThisPoint.attackingGang)
+                        {
+                            ownerGang = member.myGang;
+                        }
+                        else
+                        {
+                            //gangs "interfering" in the war should only neutralize points instead of capturing
+                            ownerGang = null;
+                        }
+
+                        warUsingThisPoint.ControlPointHasBeenCaptured(this);
                         UpdateBlipAppearance();
-                        return;
+                        return true;
                     }
                 }
             }
 
-            if (onCaptureCooldown)
-            {
-                GangWarManager.instance.ControlPointHasCooledDown(this);
-
-            }
+            return false;
 
         }
 

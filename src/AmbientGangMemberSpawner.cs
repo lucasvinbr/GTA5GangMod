@@ -55,12 +55,17 @@ namespace GTA.GangAndTurfMod
                 {
 
                     Gang curGang = GangManager.instance.GetGangByName(curTurfZone.ownerGangName);
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.enemyGang == curGang) return; //we want enemies of this gang to spawn only when close to the war
 
                     if (curTurfZone.ownerGangName != "none" && curGang != null) //only spawn if there really is a gang in control here
                     {
                         if (SpawnManager.instance.livingMembersCount < ModOptions.instance.spawnedMembersBeforeAmbientGenStops)
                         {
+                            //randomize spawned gang if "members spawn anywhere"
+                            if (ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning)
+                            {
+                                curGang = GangManager.instance.gangData.gangs.RandomElement();
+                            }
+
                             Vehicle playerVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                             if ((playerVehicle != null && playerVehicle.Speed < 30) || playerVehicle == null)
                             {

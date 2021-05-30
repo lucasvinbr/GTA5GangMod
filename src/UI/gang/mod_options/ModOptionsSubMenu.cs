@@ -31,6 +31,7 @@ namespace GTA.GangAndTurfMod
             AddNotificationsToggle();
             AddMemberAggressivenessControl();
             AddEnableAmbientSpawnToggle();
+            AddIgnoreZoneOwnershipWhenAmbientSpawningToggle();
             AddAiExpansionToggle();
             AddShowMemberBlipsToggle();
             AddMeleeOnlyToggle();
@@ -159,6 +160,22 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        private void AddIgnoreZoneOwnershipWhenAmbientSpawningToggle()
+        {
+            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient spawning: random gangs", ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning, "If enabled, ambient spawning will spawn members from any gang instead of only from the one which owns the zone you are in. This option does not affect member spawning via backup calls or gang wars.");
+
+            AddItem(spawnToggle);
+            OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == spawnToggle)
+                {
+                    ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+            };
+        }
+
         private void AddShowMemberBlipsToggle()
         {
             UIMenuCheckboxItem blipToggle = new UIMenuCheckboxItem("Show Member and Car Blips?", ModOptions.instance.showGangMemberBlips, "If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)");
@@ -273,10 +290,9 @@ namespace GTA.GangAndTurfMod
                         {
                             if (curZone.ownerGangName == GangManager.instance.PlayerGang.name)
                             {
-                                if (!GangWarManager.instance.StartWar(enemyAttackerAI.watchedGang, curZone,
-                                    GangWarManager.WarType.defendingFromEnemy, GangWarManager.AttackStrength.medium))
+                                if (!GangWarManager.instance.TryStartWar(enemyAttackerAI.watchedGang, curZone, GangWarManager.AttackStrength.medium))
                                 {
-                                    UI.ShowSubtitle("Couldn't start a war. Is a war already in progress?");
+                                    UI.ShowSubtitle("Couldn't start a war. Is a war already in progress in this zone?");
                                 }
                             }
                             else
@@ -308,6 +324,7 @@ namespace GTA.GangAndTurfMod
                     ModOptions.LoadOptionsInstance();
                     GangManager.instance.ResetGangUpdateIntervals();
                     GangManager.instance.AdjustGangsToModOptions();
+                    GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
 
                     MenuScript.instance.RefreshCostsTexts();
                 }

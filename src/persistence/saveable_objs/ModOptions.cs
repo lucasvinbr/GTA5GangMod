@@ -40,7 +40,6 @@ namespace GTA.GangAndTurfMod
             else
             {
                 instance = new ModOptions();
-                instance.SetAllValuesToDefault();
                 instance.SetNameListsDefaultValues();
                 instance.SetColorTranslationDefaultValues();
                 PersistenceHandler.SaveToFile(instance, "ModOptions");
@@ -74,35 +73,45 @@ namespace GTA.GangAndTurfMod
 
         public bool playerIsASpectator = false;
 
+        /// <summary>
+        /// "gang members everywhere", but only in zones controlled by someone
+        /// </summary>
+        public bool ignoreTurfOwnershipWhenAmbientSpawning = false;
+
         public int startingGangMemberHealth = 20;
         public int maxGangMemberHealth = 120;
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 30;
 
         public bool emptyZoneDuringWar = true;
+        public bool showReinforcementCountsForAIWars = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
-        public int ticksBeforeWarEndWithPlayerAway = 30000;
+        public int msTimeBetweenWarAutoResolveSteps = 25000;
+        public int msTimeBetweenWarPunishingForNoSpawns = 1500;
+        public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
         public int postWarBackupsAmount = 5;
-        public int baseNumKillsBeforeWarVictory = 25;
-        public int extraKillsPerTurfValue = 15;
-        public int maxExtraKillsForNumTurfsControlled = 25;
-        public int extraKillsPerGeneralGangStrength = 5;
-        public int killsBetweenEnemySpawnReplacement = 25;
-        public int ticksBetweenEnemySpawnReplacement = 3600;
+        public int warsMinNumControlPoints = 2;
+        public int warsMaxExtraControlPoints = 5;
+        public int baseNumKillsBeforeWarVictory = 20;
+        public int extraKillsPerTurfValue = 7;
+        public int maxExtraKillsForNumTurfsControlled = 10;
+        public int extraKillsPerGeneralGangStrength = 2;
+        public int maxConcurrentWarsAgainstPlayer = 3;
+        public int maxNumWarsAiGangCanBeInvolvedIn = 3;
 
         public int msTimeBetweenTurfRewards = 180000;
         public int ticksBetweenGangAIUpdates = 15000;
-        public int minMsTimeBetweenAttacksOnPlayerTurf = 600000;
+        public int minMsTimeBetweenAttacksOnPlayerTurf = 450000;
         public int ticksBetweenGangMemberAIUpdates = 100;
         public int baseRewardPerZoneOwned = 1200;
-        public int maxRewardPerZoneOwned = 15000;
+        public int maxRewardPerZoneOwned = 6000;
         public int maxTurfValue = 10;
 
         /// <summary>
         /// percentage sum, per zone owned, over the total reward received.
         /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
         /// </summary>
-        public float rewardMultiplierPerZone = 0.1f;
+        public float rewardMultiplierPerZone = 0.0f;
 
         public int baseCostToTakeTurf = 3000;
         public int rewardForTakingEnemyTurf = 5000;
@@ -121,8 +130,8 @@ namespace GTA.GangAndTurfMod
         public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
-        public int ticksCooldownBackupCar = 1000;
-        public int ticksCooldownParachutingMember = 600;
+        public int ticksCooldownBackupCar = 1;
+        public int ticksCooldownParachutingMember = 120;
 
         public bool notificationsEnabled = true;
         /// <summary>
@@ -141,8 +150,8 @@ namespace GTA.GangAndTurfMod
 
         public bool showGangMemberBlips = true;
 
-        public float minWantedFactorWhenInGangTurf = 0.0f;
-        public int maxWantedLevelInMaxedGangTurf = 0;
+        public float minWantedFactorWhenInGangTurf = 1.0f;
+        public int maxWantedLevelInMaxedGangTurf = 5;
         public bool freezeWantedLevelDuringWars = true;
 
         public bool gangsStartWithPistols = true;
@@ -154,11 +163,14 @@ namespace GTA.GangAndTurfMod
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public int preservedDeadBodyLimit = 0;
         public int minSpawnsForEachSideDuringWars = 5;
-        public int thinkingCarLimit = 3; //a "soft" limit, ignored by backup calls made by the player
+        public int minDistanceBetweenWarSpawns = 40;
+        public int maxDistanceBetweenWarSpawns = 200;
+        public int thinkingCarLimit = 5; //a "soft" limit, ignored by backup calls made by the player
+        public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
         public int minDistanceMemberSpawnFromPlayer = 50;
-        public int maxDistanceMemberSpawnFromPlayer = 130;
+        public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
-        public int maxDistanceCarSpawnFromPlayer = 190;
+        public int maxDistanceCarSpawnFromPlayer = 150;
 
         [XmlIgnore]
         public List<WeaponHash> primaryWeapons = new List<WeaponHash>();
@@ -171,6 +183,7 @@ namespace GTA.GangAndTurfMod
             WeaponHash.HeavyPistol,
             WeaponHash.MachinePistol,
             WeaponHash.MarksmanPistol,
+            WeaponHash.CeramicPistol,
             WeaponHash.Pistol,
             WeaponHash.PistolMk2,
             WeaponHash.Pistol50,
@@ -471,99 +484,26 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void SetAllValuesToDefault()
         {
-            msAutoSaveInterval = 3000;
+            List<string> gangFirstNames = possibleGangFirstNames,
+                gangLastNames = possibleGangLastNames;
 
-            openGangMenuKey = Keys.B;
-            openZoneMenuKey = Keys.N;
-            mindControlKey = Keys.J;
-            addToGroupKey = Keys.H;
+            List<GangColorTranslation> gangColors = similarColors;
+            List<VehicleColor> playerExclusiveColors = extraPlayerExclusiveColors;
 
-            gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
+            instance = new ModOptions
+            {
+                possibleGangFirstNames = gangFirstNames,
+                possibleGangLastNames = gangLastNames,
+                similarColors = gangColors,
+                extraPlayerExclusiveColors = playerExclusiveColors
+            };
 
-            playerIsASpectator = false;
+            instance.SetupPrimaryWeapons();
 
-            startingGangMemberHealth = 20;
-            maxGangMemberHealth = 120;
-            maxGangMemberArmor = 100;
-            maxGangMemberAccuracy = 30;
-
-            emptyZoneDuringWar = true;
-            maxDistToWarBlipBeforePlayerLeavesWar = 300;
-            ticksBeforeWarEndWithPlayerAway = 30000;
-            postWarBackupsAmount = 5;
-
-            baseNumKillsBeforeWarVictory = 25;
-            extraKillsPerTurfValue = 15;
-            maxExtraKillsForNumTurfsControlled = 25;
-            extraKillsPerGeneralGangStrength = 5;
-
-            killsBetweenEnemySpawnReplacement = 25;
-            ticksBetweenEnemySpawnReplacement = 3600;
-
-            msTimeBetweenTurfRewards = 180000;
-            ticksBetweenGangAIUpdates = 15000;
-            minMsTimeBetweenAttacksOnPlayerTurf = 600000;
-
-            ticksBetweenGangMemberAIUpdates = 100;
-            baseRewardPerZoneOwned = 1200;
-            maxRewardPerZoneOwned = 15000;
-            maxTurfValue = 10;
-
-            rewardMultiplierPerZone = 0.1f;
-
-            baseCostToTakeTurf = 3000;
-            rewardForTakingEnemyTurf = 5000;
-
-            baseCostToUpgradeGeneralGangTurfValue = 1000000;
-            baseCostToUpgradeSingleTurfValue = 2000;
-            baseCostToUpgradeArmor = 35000;
-            baseCostToUpgradeHealth = 20000;
-            baseCostToUpgradeAccuracy = 40000;
-
-            wanderingDriverDrivingStyle = 1 + 2 + 8 + 16 + 32 + 128 + 256;
-            driverWithDestinationDrivingStyle = 4 + 8 + 16 + 32 + 512 + 262144;
-
-            numUpgradesUntilMaxMemberAttribute = 10;
-            costToCallBackupCar = 900;
-            costToCallParachutingMember = 250;
-            ticksCooldownBackupCar = 1000;
-            ticksCooldownParachutingMember = 600;
-
-            minWantedFactorWhenInGangTurf = 0.0f;
-            maxWantedLevelInMaxedGangTurf = 0;
-            freezeWantedLevelDuringWars = true;
-
-            notificationsEnabled = true;
-            loggerLevel = 1;
-
-            preventAIExpansion = false;
-            membersSpawnWithMeleeOnly = false;
-            warAgainstPlayerEnabled = true;
-            ambientSpawningEnabled = true;
-            forceSpawnCars = false;
-            joypadControls = false;
-            membersCanDropMoneyOnDeath = true;
-
-            showGangMemberBlips = true;
-
-            gangsStartWithPistols = true;
-            gangsCanBeWipedOut = true;
-            maxCoexistingGangs = 7;
-            extraProfitForAIGangsFactor = 1.5f;
-            spawnedMembersBeforeAmbientGenStops = 20;
-            msBaseIntervalBetweenAmbientSpawns = 15000;
-            spawnedMemberLimit = 40;
-            preservedDeadBodyLimit = 0;
-            minSpawnsForEachSideDuringWars = 5;
-            thinkingCarLimit = 3;
-            minDistanceMemberSpawnFromPlayer = 50;
-            maxDistanceMemberSpawnFromPlayer = 130;
-            minDistanceCarSpawnFromPlayer = 80;
-            maxDistanceCarSpawnFromPlayer = 190;
-
-            SaveOptions();
+            PersistenceHandler.SaveToFile(instance, "ModOptions");
 
             GangManager.instance.ResetGangUpdateIntervals();
+            GangManager.instance.SetGangRelationsAccordingToAggrLevel(instance.gangMemberAggressiveness);
         }
 
         public void SetWeaponListDefaultValues()
@@ -599,10 +539,12 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.BullpupShotgun, 265000),
             new BuyableWeapon(WeaponHash.CarbineRifle, 150000),
             new BuyableWeapon(WeaponHash.CarbineRifleMk2, 210000),
+            new BuyableWeapon(WeaponHash.CeramicPistol, 100000),
             new BuyableWeapon(WeaponHash.CombatMG, 220000),
             new BuyableWeapon(WeaponHash.CombatMGMk2, 245000),
             new BuyableWeapon(WeaponHash.CombatPDW, 205000),
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
+            new BuyableWeapon(WeaponHash.CombatShotgun, 216000),
             new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleActionRevolver, 120000),
@@ -622,9 +564,12 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.MarksmanRifleMk2, 310000),
             new BuyableWeapon(WeaponHash.MG, 290000),
             new BuyableWeapon(WeaponHash.MicroSMG, 90000),
+            new BuyableWeapon(WeaponHash.MilitaryRifle, 186000),
             new BuyableWeapon(WeaponHash.Minigun, 400000),
             new BuyableWeapon(WeaponHash.MiniSMG, 100000),
-            new BuyableWeapon(WeaponHash.Musket, 70000),
+            new BuyableWeapon(WeaponHash.Musket, 100000),
+            new BuyableWeapon(WeaponHash.NavyRevolver, 110000),
+            new BuyableWeapon(WeaponHash.PericoPistol, 90000),
             new BuyableWeapon(WeaponHash.Pistol, 30000),
             new BuyableWeapon(WeaponHash.Pistol50, 70000),
             new BuyableWeapon(WeaponHash.PistolMk2, 65000),

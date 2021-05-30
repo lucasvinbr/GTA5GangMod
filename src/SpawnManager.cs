@@ -11,6 +11,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class SpawnManager
     {
+        /// <summary>
+        /// all memberAIs initialized since the mod started. Not all are assured to be being used at any time
+        /// </summary>
         public List<SpawnedGangMember> memberAIs;
         public List<SpawnedDrivingGangMember> livingDrivingMembers;
 
@@ -25,7 +28,7 @@ namespace GTA.GangAndTurfMod
 
         /// <summary>
         /// the number of currently alive members.
-        /// (the number of entries in LivingMembers isn't the same as this)
+        /// (the number of entries in memberAIs isn't the same as this)
         /// </summary>
         public int livingMembersCount = 0;
 
@@ -50,6 +53,7 @@ namespace GTA.GangAndTurfMod
 
         #endregion
 
+        #region cleanup
         /// <summary>
         /// marks all living members as no longer needed and removes their blips, 
         /// as if everyone had died or were too far from the player
@@ -77,6 +81,8 @@ namespace GTA.GangAndTurfMod
 
             preservedDeadBodies.Clear();
         }
+
+        #endregion
 
         #region reset handling
 
@@ -172,6 +178,25 @@ namespace GTA.GangAndTurfMod
                         returnedList.Add(memberAIs[i].watchedPed);
                     }
                 }
+            }
+
+            return returnedList;
+        }
+
+        public List<SpawnedGangMember> GetAllLivingMembers()
+        {
+            List<SpawnedGangMember> returnedList = new List<SpawnedGangMember>();
+
+            for (int i = 0; i < memberAIs.Count; i++)
+            {
+                if (memberAIs[i] != null)
+                {
+                    if (memberAIs[i].watchedPed != null)
+                    {
+                        returnedList.Add(memberAIs[i]);
+                    }
+                }
+
             }
 
             return returnedList;
@@ -430,6 +455,22 @@ namespace GTA.GangAndTurfMod
                           ModOptions.instance.GetAcceptableCarSpawnDistance();
 
             return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
+                    GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false);
+        }
+
+        /// <summary>
+        /// finds a nice spot in the general direction neither too close or far from the reference pos
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindGoodSpawnPointForCar(Vector3 referencePos, Vector3 targetDirectionFromReference)
+        {
+            Vector3 getNextPosTarget;
+
+
+            getNextPosTarget = referencePos + targetDirectionFromReference *
+                          ModOptions.instance.GetAcceptableCarSpawnDistance();
+
+            return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
                     GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false); ;
         }
 
@@ -460,7 +501,7 @@ namespace GTA.GangAndTurfMod
             }
             if (ownerGang.memberVariations.Count > 0)
             {
-                Logger.Log("spawn member: begin", 4);
+                Logger.Log(string.Concat("spawn member: begin (gang: ", ownerGang.name, ")"), 4);
                 PotentialGangMember chosenMember =
                     RandoMath.RandomElement(ownerGang.memberVariations);
                 Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
@@ -523,6 +564,9 @@ namespace GTA.GangAndTurfMod
 
                     newPed.CanSwitchWeapons = true;
 
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
+
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;
 
@@ -557,7 +601,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null)
+        public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null, int maxMembersToSpawnInVehicle = -1)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
@@ -582,7 +626,20 @@ namespace GTA.GangAndTurfMod
                         driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
 
                         int passengerCount = newVehicle.PassengerSeats;
-                        if (destPos == Vector3.Zero && passengerCount > 4) passengerCount = 4; //limit ambient passengers in order to have less impact in ambient spawning
+
+                        if(destPos == Vector3.Zero)
+                        {
+                            passengerCount = RandoMath.Min(passengerCount, 4);//limit ambient passengers in order to have less impact in ambient spawning
+                        }
+                        else
+                        {
+                            if(maxMembersToSpawnInVehicle != -1)
+                            {
+                                passengerCount = RandoMath.Min(passengerCount, maxMembersToSpawnInVehicle - 1);
+                            }
+                        }
+
+
 
                         for (int i = 0; i < passengerCount; i++)
                         {
@@ -671,7 +728,12 @@ namespace GTA.GangAndTurfMod
         /// <param name="deadPed"></param>
         public void PreserveDeadBody(Ped deadPed)
         {
-            if (ModOptions.instance.preservedDeadBodyLimit <= 0) return; //if the limit's at 0, this feature is disabled
+            if (ModOptions.instance.preservedDeadBodyLimit <= 0)
+            {
+                //if the limit's at 0, this feature is disabled
+                deadPed.MarkAsNoLongerNeeded();
+                return; 
+            }
 
             //remove "old" bodies before adding this one
             while(preservedDeadBodies.Count > ModOptions.instance.preservedDeadBodyLimit)

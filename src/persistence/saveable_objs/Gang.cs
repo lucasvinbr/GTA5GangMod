@@ -159,6 +159,15 @@ namespace GTA.GangAndTurfMod
             GangManager.instance.SaveGangData(false);
         }
 
+        /// <summary>
+        /// adds the value to the amount available for the gang (subtracts if negative). Clamps it to the maximum stored, so that it won't overflow and become negative
+        /// </summary>
+        /// <param name="moneyIncrement"></param>
+        public void AddMoney(int moneyIncrement)
+        {
+            moneyAvailable = RandoMath.ClampValue(moneyAvailable + moneyIncrement, -1, int.MaxValue / 2);
+        }
+
         public bool AddMemberVariation(PotentialGangMember newMember)
         {
             for (int i = 0; i < memberVariations.Count; i++)
@@ -312,25 +321,25 @@ namespace GTA.GangAndTurfMod
 
         /// <summary>
         /// when a gang fights against another, this value is used to influence the outcome.
-        /// it varies a little, to give that extra chance to weaker gangs
+        /// it can vary quite a bit, to give that extra chance to weaker gangs
         /// </summary>
         /// <returns></returns>
-        public int GetGangVariedStrengthValue()
+        public float GetGangVariedStrengthValue()
         {
-            return GetFixedStrengthValue() + RandoMath.CachedRandom.Next(10);
+            return GetFixedStrengthValue() + (float) (RandoMath.CachedRandom.NextDouble() * 2.5f);
         }
 
         /// <summary>
         /// this value doesn't have random variations. we use the gang's number of territories
-        ///  and upgrades to define this. a high value (everything maxed) is around 30
+        /// and upgrades to define this. the highest value possible is 4.0 (1.0 per maxed attribute and 1.0 for taking all zones)
         /// </summary>
         /// <returns></returns>
-        public int GetFixedStrengthValue()
+        public float GetFixedStrengthValue()
         {
-            return (int)(ZoneManager.instance.GetZonesControlledByGang(name).Count / 6 +
-                memberAccuracyLevel / ((float)ModOptions.instance.maxGangMemberAccuracy) * 10 +
-                memberArmor / ((float)RandoMath.Max(ModOptions.instance.maxGangMemberArmor, 1)) * 10 +
-                memberHealth / ((float)ModOptions.instance.maxGangMemberHealth) * 10);
+            return (int)(ZoneManager.instance.GetPercentOfZonesOwnedByGang(name) +
+                memberAccuracyLevel / ((float)ModOptions.instance.maxGangMemberAccuracy) +
+                memberArmor / ((float)RandoMath.Max(ModOptions.instance.maxGangMemberArmor, 1)) +
+                memberHealth / ((float)ModOptions.instance.maxGangMemberHealth));
         }
 
         /// <summary>
@@ -339,7 +348,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public int GetBonusReinforcementsCount()
         {
-            return (int)(ModOptions.instance.maxExtraKillsForNumTurfsControlled * (ZoneManager.instance.GetZonesControlledByGang(name).Count / (float)ZoneManager.instance.zoneData.zoneList.Count)) +
+            return (int)(ModOptions.instance.maxExtraKillsForNumTurfsControlled * ZoneManager.instance.GetPercentOfZonesOwnedByGang(name)) +
                 (baseTurfValue * ModOptions.instance.extraKillsPerGeneralGangStrength);
         }
 

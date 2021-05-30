@@ -174,9 +174,9 @@ namespace GTA.GangAndTurfMod
 
             if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-atkCost, true))
             {
-                if (!GangWarManager.instance.StartWar(GangManager.instance.GetGangByName(targetZone.ownerGangName), targetZone, GangWarManager.WarType.attackingEnemy, atkStrength))
+                if (!GangWarManager.instance.TryStartWar(GangManager.instance.PlayerGang, targetZone, atkStrength))
                 {
-                    UI.ShowSubtitle("A war is already in progress.");
+                    UI.ShowSubtitle("A war is already in progress here! Skip the war to start a new one, or wait for it to end.");
                     return false;
                 }
                 else
@@ -278,7 +278,7 @@ namespace GTA.GangAndTurfMod
                             if (curZone.IsBeingContested())
                             {
                                 //end the war being fought here, since we're leaving
-                                GangWarManager.instance.EndWar(false);
+                                GangWarManager.instance.GetWarOccurringOnZone(curZone).EndWar(false);
                             }
 
                             ZoneManager.instance.UpdateZoneData(curZone);

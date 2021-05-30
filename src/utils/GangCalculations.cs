@@ -33,9 +33,7 @@
         public static int CalculateAttackCost(Gang attackerGang, GangWarManager.AttackStrength attackType)
         {
             int attackTypeInt = (int)attackType;
-            int pow2NonZeroAttackType = (attackTypeInt * attackTypeInt + 1);
-            return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt * attackTypeInt +
-                attackerGang.GetFixedStrengthValue() * pow2NonZeroAttackType;
+            return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt * attackTypeInt;
         }
 
         public static GangWarManager.AttackStrength CalculateRequiredAttackStrength(Gang attackerGang, int defenderStrength)
@@ -59,8 +57,9 @@
 
         public static int CalculateAttackerReinforcements(Gang attackerGang, GangWarManager.AttackStrength attackType)
         {
-            return ModOptions.instance.extraKillsPerTurfValue * ((int)(attackType + 1) * (int)(attackType + 1)) + ModOptions.instance.baseNumKillsBeforeWarVictory / 2 +
-                attackerGang.GetBonusReinforcementsCount();
+            // maxed attack should have almost as many reinforcements as a maxed zone
+            return (int) ((ModOptions.instance.extraKillsPerTurfValue * ModOptions.instance.maxTurfValue * ((int) attackType / 3.0f) + ModOptions.instance.baseNumKillsBeforeWarVictory +
+                attackerGang.GetBonusReinforcementsCount()) * 0.75f);
         }
 
         public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone)
@@ -78,8 +77,8 @@
         /// <returns></returns>
         public static int CalculateDefenderStrength(Gang defenderGang, TurfZone contestedZone)
         {
-            return defenderGang.GetFixedStrengthValue() *
-                CalculateDefenderReinforcements(defenderGang, contestedZone);
+            return (int) (defenderGang.GetFixedStrengthValue() *
+                CalculateDefenderReinforcements(defenderGang, contestedZone));
         }
 
         /// <summary>
@@ -91,8 +90,8 @@
         /// <returns></returns>
         public static int CalculateAttackerStrength(Gang attackerGang, GangWarManager.AttackStrength attackType)
         {
-            return attackerGang.GetFixedStrengthValue() *
-                CalculateAttackerReinforcements(attackerGang, attackType);
+            return (int) (attackerGang.GetFixedStrengthValue() *
+                CalculateAttackerReinforcements(attackerGang, attackType));
         }
 
         /// <summary>
@@ -107,7 +106,7 @@
             {
                 baseReward /= 2;
             }
-            return (baseReward + ourEnemy.GetGangVariedStrengthValue()) * (battleScale + 1);
+            return (int)(baseReward * ourEnemy.GetGangVariedStrengthValue()) * (battleScale + 1);
         }
 
         public static int CalculateRewardForZone(TurfZone zone, int ownerGangTurfsCount)

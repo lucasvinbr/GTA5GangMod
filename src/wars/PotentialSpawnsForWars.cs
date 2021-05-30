@@ -10,26 +10,28 @@ namespace GTA.GangAndTurfMod
         public const float MIN_DIST_BETWEEN_POINTS = 10.0f;
 
         private static readonly List<Blip> spawnBlips = new List<Blip>();
-        private static List<Vector3> positionsList;
+        private static List<Vector3> _positionsList;
 
         public static bool showingBlips = false;
+
+        public const int MAX_DISPLAYED_BLIPS = 100;
 
         public static List<Vector3> PositionsList
         {
             get
             {
-                if (positionsList == null)
+                if (_positionsList == null)
                 {
-                    positionsList = PersistenceHandler.LoadFromFile<List<Vector3>>("PotentialSpawnsForWars");
+                    _positionsList = PersistenceHandler.LoadFromFile<List<Vector3>>("PotentialSpawnsForWars");
 
                     //if we still don't have a pool, create one!
-                    if (positionsList == null)
+                    if (_positionsList == null)
                     {
-                        positionsList = new List<Vector3>();
+                        _positionsList = new List<Vector3>();
                     }
                 }
 
-                return positionsList;
+                return _positionsList;
             }
 
         }
@@ -58,7 +60,7 @@ namespace GTA.GangAndTurfMod
             List<Vector3> returnedSpawns = new List<Vector3>();
             for (int i = 0; i < PositionsList.Count; i++)
             {
-                if (pos.DistanceTo(PositionsList[i]) < radius)
+                if (pos.DistanceTo2D(PositionsList[i]) < radius)
                 {
                     returnedSpawns.Add(PositionsList[i]);
                 }
@@ -69,16 +71,9 @@ namespace GTA.GangAndTurfMod
 
         public static void ToggleBlips(bool active)
         {
-            if (active)
+            if (!active)
             {
-                foreach(Vector3 pos in PositionsList)
-                {
-                    AddBlipForPosition(pos);
-                }
-            }
-            else
-            {
-                foreach(Blip blip in spawnBlips)
+                foreach (Blip blip in spawnBlips)
                 {
                     blip.Remove();
                 }
@@ -87,6 +82,25 @@ namespace GTA.GangAndTurfMod
             }
 
             showingBlips = active;
+        }
+
+        public static void UpdateBlipDisplay(Vector3 playerPos)
+        {
+            //closest zones should be the first ones in the list
+            PositionsList.Sort((posX, posY) => playerPos.DistanceTo2D(posX).CompareTo(playerPos.DistanceTo(posY)));
+
+            foreach (Blip blip in spawnBlips)
+            {
+                blip.Remove();
+            }
+
+            spawnBlips.Clear();
+
+
+            for (int i = 0; i < RandoMath.Min(MAX_DISPLAYED_BLIPS, PositionsList.Count); i++)
+            {
+                AddBlipForPosition(PositionsList[i]);
+            }
         }
 
         private static void AddBlipForPosition(Vector3 position)

@@ -1,9 +1,10 @@
-﻿using NativeUI;
+﻿using GTA.Math;
+using NativeUI;
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
-    /// menu for most gang-related stuff... but also takes to mod options
+    /// the B menu, for most gang-related stuff... but also takes to mod options
     /// </summary>
     public class GangMenu : UIMenu
     {
@@ -16,7 +17,6 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(this);
 
             Setup();
-
         }
 
 
@@ -62,8 +62,12 @@ namespace GTA.GangAndTurfMod
             carBackupBtn = new UIMenuItem("Call Backup Vehicle ($" + ModOptions.instance.costToCallBackupCar.ToString() + ")", "Calls one of your gang's vehicles to your position. All passengers leave the vehicle once it arrives.");
             paraBackupBtn = new UIMenuItem("Call Parachuting Member ($" + ModOptions.instance.costToCallParachutingMember.ToString() + ")", "Calls a gang member who parachutes to your position (member survival not guaranteed!).");
 
+            UIMenuItem enemyBackupBtn = new UIMenuItem("Spawn Enemy Backup Vehicle", "Spawns a vehicle of the target AI gang, attempting to reach your location.");
+
             AddItem(carBackupBtn);
             AddItem(paraBackupBtn);
+            AddItem(enemyBackupBtn);
+
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == carBackupBtn)
@@ -81,6 +85,25 @@ namespace GTA.GangAndTurfMod
                     {
                         Visible = false;
                     }
+                }
+
+                if(item == enemyBackupBtn)
+                {
+                    MenuScript.instance.OpenPickAiGangMenu(this, "Select gang from which to spawn a vehicle", (pickedGang) =>
+                    {
+                        Vector3 playerPos = MindControl.SafePositionNearPlayer;
+
+                        SpawnedDrivingGangMember spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(pickedGang,
+                            SpawnManager.instance.FindGoodSpawnPointForCar(playerPos), playerPos, true, true);
+                        if (spawnedVehicle != null)
+                        {
+                            UI.ShowSubtitle("Vehicle spawned!", 1000);
+                        }
+                        else
+                        {
+                            UI.ShowSubtitle("There are too many gang members around or the picked gang has no vehicles/members registered.");
+                        }
+                    });
                 }
             };
 

@@ -17,6 +17,7 @@ namespace GTA.GangAndTurfMod
         public bool playerAsDest = false;
 
         public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
+        
 
         private float targetSpeed;
         private float distToDest;
@@ -24,13 +25,29 @@ namespace GTA.GangAndTurfMod
 
         private bool vehicleHasGuns = false;
 
+        private int stuckCounter = 0;
+        /// <summary>
+        /// if the stuck counter gets to this value, we switch to another driving style in an attempt to get ourselves out of that position
+        /// </summary>
+        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 4;
+        /// <summary>
+        /// if we're heading towards the destination and our current speed is equal or below this value, we consider ourselves to be stuck
+        /// </summary>
+        private const float STUCK_SPEED_LIMIT = 1.75f;
+
+        /// <summary>
+        /// driving style used when trying to "unstuck" the vehicle
+        /// </summary>
+        public const int DRIVESTYLE_REVERSE = 2 + 4 + 8 + 32 + 512 + 1024 + 262144;
 
         /// <summary>
         /// if true, this driver will focus on getting to their destination and, when there, will leave the car...
-        /// unless it's a backup called by the player; 
-        /// in that case, it will follow the player around if they're in a vehicle
+        /// unless it's a backup called by the player and the player is in a vehicle; 
+        /// in that case, it will follow the player around
         /// </summary>
         public bool deliveringCar = false;
+
+        private bool attemptingUnstuckVehicle = false;
 
         public override void Update()
         {
@@ -77,10 +94,10 @@ namespace GTA.GangAndTurfMod
 
                     //if there is a war going on and we're in the war zone, get to one of the relevant locations;
                     //it's probably close to the action
-                    if (GangWarManager.instance.isOccurring && GangWarManager.instance.playerNearWarzone)
+                    if (GangWarManager.instance.focusedWar != null)
                     {
                         deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
-                        destination = GangWarManager.instance.GetMoveTargetForGang(isFriendlyToPlayer ? GangManager.instance.PlayerGang : GangWarManager.instance.enemyGang);
+                        destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
                         //if spawns still aren't set... try getting to the player
                         if (destination == Vector3.Zero)
@@ -129,7 +146,7 @@ namespace GTA.GangAndTurfMod
                 //leave the vehicle if we are a backup vehicle and the player's on foot
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
-                    if (deliveringCar)
+                    if (deliveringCar || (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival))
                     {
                         DriverLeaveVehicle();
                     }
@@ -142,6 +159,22 @@ namespace GTA.GangAndTurfMod
             else
             {
                 updatesWhileGoingToDest++;
+
+                if(vehicleIAmDriving.Speed <= STUCK_SPEED_LIMIT)
+                {
+                    stuckCounter++;
+                    if(stuckCounter >= CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD)
+                    {
+                        //switch our driving style: if we were unstucking, return to normal, and vice-versa
+                        attemptingUnstuckVehicle = !attemptingUnstuckVehicle;
+                        stuckCounter = 0;
+                    }
+                }
+                else
+                {
+                    attemptingUnstuckVehicle = false;
+                    stuckCounter = 0;
+                }
 
                 //give up, drop passengers and go away... but only if we're not chasing the player
                 //and he/she isn't on a vehicle
@@ -160,7 +193,6 @@ namespace GTA.GangAndTurfMod
 
                     }
                     //wherever we were going, if we intended to leave the car there, let's just leave it here
-                    //(hopefully should help with members stuck in vehicles while heading for wars)
                     if (deliveringCar)
                     {
                         DriverLeaveVehicle();
@@ -228,7 +260,8 @@ namespace GTA.GangAndTurfMod
                             }
 
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, ModOptions.instance.driverWithDestinationDrivingStyle);
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, 
+                                attemptingUnstuckVehicle ? DRIVESTYLE_REVERSE : ModOptions.instance.driverWithDestinationDrivingStyle);
                         }
                     }
                 }
@@ -304,7 +337,7 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedDrivingGangMember(Ped watchedPed, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool deliveringCar = false)
         {
-            this.ticksBetweenUpdates = 50;
+            ResetUpdateInterval();
             AttachData(watchedPed, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar);
         }
 
@@ -318,6 +351,8 @@ namespace GTA.GangAndTurfMod
             this.isFriendlyToPlayer = isFriendlyToPlayer;
             Function.Call(Hash.SET_DRIVER_ABILITY, watchedPed, 1.0f);
             updatesWhileGoingToDest = 0;
+            attemptingUnstuckVehicle = false;
+            stuckCounter = 0;
             SetWatchedPassengers();
 
             vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
@@ -337,5 +372,9 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public override void ResetUpdateInterval()
+        {
+            ticksBetweenUpdates = 50; //TODO modoption?
+        }
     }
 }

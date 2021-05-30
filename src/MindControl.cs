@@ -133,9 +133,9 @@ namespace GTA.GangAndTurfMod
                 {
                     if (!hasDiedWithChangedBody)
                     {
-                        if (GangWarManager.instance.isOccurring)
+                        if (GangWarManager.instance.focusedWar != null)
                         {
-                            GangWarManager.instance.OnAllyDeath();
+                            GangWarManager.instance.focusedWar.MemberHasDiedNearWar(currentlyControlledMember.myGang);
                         }
                     }
                     hasDiedWithChangedBody = true;

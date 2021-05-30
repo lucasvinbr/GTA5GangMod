@@ -9,5 +9,6 @@
         public int ticksBetweenUpdates = 600;
         public int ticksSinceLastUpdate;
         abstract public void Update();
+        abstract public void ResetUpdateInterval();
     }
 }

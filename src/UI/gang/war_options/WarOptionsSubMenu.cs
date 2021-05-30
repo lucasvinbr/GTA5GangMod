@@ -26,24 +26,15 @@ namespace GTA.GangAndTurfMod
         {
             UIMenuItem skipWarBtn = new UIMenuItem("Skip current War",
                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
-            //UIMenuItem resetAlliedSpawnBtn = new UIMenuItem("Set allied spawn points to your region",
-            //    "If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets all 3 spawn points to your location: one exactly where you are and 2 nearby.");
-            //UIMenuItem resetEnemySpawnBtn = new UIMenuItem("Force reset enemy spawn points",
-            //    "If a war is currently occurring, the enemy spawn points will be randomly set to a nearby location. Use this if they end up spawning somewhere unreachable.");
 
             AddItem(skipWarBtn);
-            //AddItem(resetAlliedSpawnBtn);
 
-            //UIMenuItem[] setSpecificSpawnBtns = new UIMenuItem[3];
-            //for (int i = 0; i < setSpecificSpawnBtns.Length; i++)
-            //{
-            //    setSpecificSpawnBtns[i] = new UIMenuItem(string.Concat("Set allied spawn point ", (i + 1).ToString(), " to your position"),
-            //        string.Concat("If a war is currently occurring, your gang members will keep spawning at the 3 allied spawn points for as long as you've got reinforcements. This option sets spawn point number ",
-            //            (i + 1).ToString(), " to your exact location."));
-            //    AddItem(setSpecificSpawnBtns[i]);
-            //}
+            UIMenuCheckboxItem showReinforcementsAIWarsToggle = new UIMenuCheckboxItem("Show reinforcement counts for AI Wars", 
+                ModOptions.instance.showReinforcementCountsForAIWars,
+               "If enabled, reinforcement counts will also be shown when inside a war the player's gang is not involved in.");
 
-            //AddItem(resetEnemySpawnBtn);
+            AddItem(showReinforcementsAIWarsToggle);
+
 
             UIMenuItem warSpawnsMenuBtn = new UIMenuItem("War Potential Spawns...", "Opens the War Potential Spawns Menu, which allows viewing, creating and deleting spawns to be used in wars.");
             AddItem(warSpawnsMenuBtn);
@@ -54,73 +45,27 @@ namespace GTA.GangAndTurfMod
 
                 if (item == skipWarBtn)
                 {
-                    if (GangWarManager.instance.isOccurring)
+                    if (GangWarManager.instance.focusedWar != null)
                     {
-                        GangWarManager.instance.EndWar(GangWarManager.instance.GetSkippedWarResult(0.9f));
+                        while(GangWarManager.instance.focusedWar != null)
+                        {
+                            GangWarManager.instance.focusedWar.RunAutoResolveStep(1.1f);
+                        }
                     }
                     else
                     {
-                        UI.ShowSubtitle("There is no war in progress.");
+                        UI.ShowSubtitle("There is no war in progress here.");
                     }
                 }
-                    //else
+            };
 
-                    //if (item == resetAlliedSpawnBtn)
-                    //{
-                    //    if (GangWarManager.instance.playerNearWarzone)
-                    //    {
-                    //        GangWarManager.instance.ForceSetAlliedSpawnPoints(MindControl.SafePositionNearPlayer);
-                    //    }
-                    //    else
-                    //    {
-                    //        UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
-                    //    }
-                    //}
-                    //else
-
-                    //if (item == resetEnemySpawnBtn)
-                    //{
-                    //    if (GangWarManager.instance.playerNearWarzone)
-                    //    {
-                    //        if (GangWarManager.instance.ReplaceEnemySpawnPoint())
-                    //        {
-                    //            UI.ShowSubtitle("Enemy spawn point reset succeeded!");
-                    //        }
-                    //        else
-                    //        {
-                    //            UI.ShowSubtitle("Enemy spawn point reset failed (try again)!");
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        UI.ShowSubtitle("You must be in the contested zone or close to the war blip before resetting spawn points!");
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    for (int i = 0; i < setSpecificSpawnBtns.Length; i++)
-                    //    {
-                    //        if (item == setSpecificSpawnBtns[i])
-                    //        {
-                    //            if (GangWarManager.instance.playerNearWarzone)
-                    //            {
-                    //                GangWarManager.instance.SetSpecificAlliedSpawnPoint(i, MindControl.SafePositionNearPlayer);
-                    //            }
-                    //            else
-                    //            {
-                    //                UI.ShowSubtitle("You must be in the contested zone or close to the war blip before setting the spawn point!");
-                    //            }
-
-                    //            break;
-                    //        }
-
-                    //    }
-                    //}
-
-
-                
-                
-
+            OnCheckboxChange += (sender, item, checked_) =>
+            {
+                if (item == showReinforcementsAIWarsToggle)
+                {
+                    ModOptions.instance.showReinforcementCountsForAIWars = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
             };
 
             RefreshIndex();

@@ -18,7 +18,7 @@ namespace GTA.GangAndTurfMod
         public void Setup()
         {
             UIMenuCheckboxItem showSpawnBlipsToggle = new UIMenuCheckboxItem("Show spawns on map", false,
-               "If enabled, all spawns will be marked with blips on the map.");
+               "For debugging purposes. If enabled, the nearest spawns will be marked with blips on the map.");
 
             UIMenuItem addNewSpawnBtn = new UIMenuItem("Add New Potential Spawn Here",
                "Adds a new position to be used as a spawn/control point in Gang Wars. You must be on the ground for the spawn to work correctly!");
@@ -32,6 +32,7 @@ namespace GTA.GangAndTurfMod
                 if (item == showSpawnBlipsToggle)
                 {
                     PotentialSpawnsForWars.ToggleBlips(checked_);
+                    if (checked_) PotentialSpawnsForWars.UpdateBlipDisplay(MindControl.CurrentPlayerCharacter.Position);
                 }
             };
 
