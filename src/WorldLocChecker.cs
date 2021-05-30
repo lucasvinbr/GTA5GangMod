@@ -39,10 +39,17 @@ namespace GTA.GangAndTurfMod
         {
             Wait(3000 + RandoMath.CachedRandom.Next(1000));
             ZoneManager.instance.RefreshZoneBlips();
+
+            playerPos = MindControl.CurrentPlayerCharacter.Position;
+
+            if (PotentialSpawnsForWars.showingBlips)
+            {
+                PotentialSpawnsForWars.UpdateBlipDisplay(playerPos);
+            }
+
             //check if we're offroad
             playerIsAwayFromRoads = false;
             offroadAttempts = 0;
-            playerPos = MindControl.CurrentPlayerCharacter.Position;
             offroadCheckVector = World.GetNextPositionOnStreet
                           (playerPos + RandoMath.RandomDirection(true) * ModOptions.instance.maxDistanceCarSpawnFromPlayer);
             //UI.Notify(playerPos.ToString() + " from " + offroadCheckVector.ToString());
