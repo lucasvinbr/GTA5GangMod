@@ -386,7 +386,7 @@ namespace GTA.GangAndTurfMod
             
 
             //reset relations to whatever is set in modoptions
-            GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            GangManager.instance.SetGangRelationsAccordingToAggrLevel();
 
 
         }

@@ -135,13 +135,23 @@ namespace GTA.GangAndTurfMod
             }
 
             //set gang relations...
-            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            SetGangRelationsAccordingToAggrLevel();
             //all gangs hate cops if set to very aggressive
             SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.GangMemberAggressivenessMode.veryAgressive);
         }
 
         /// <summary>
-        /// sets relations between gangs to a certain level according to the aggressiveness.
+        /// sets relations between gangs to a certain level according to the aggressiveness set in ModOptions.
+        /// Also makes all gangs ignore the player if playerIsSpectator is true
+        /// </summary>
+        /// <param name="aggrLevel"></param>
+        public void SetGangRelationsAccordingToAggrLevel()
+        {
+            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+        }
+
+        /// <summary>
+        /// sets relations between gangs to a certain level according to the provided aggressiveness.
         /// Also makes all gangs ignore the player if playerIsSpectator is true
         /// </summary>
         /// <param name="aggrLevel"></param>
@@ -365,7 +375,7 @@ namespace GTA.GangAndTurfMod
                 UI.Notify("The " + gangName + " have entered San Andreas!");
             }
 
-            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            SetGangRelationsAccordingToAggrLevel();
 
             return newGang;
         }
