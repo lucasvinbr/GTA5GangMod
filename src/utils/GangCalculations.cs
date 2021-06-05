@@ -59,7 +59,7 @@
         {
             // maxed attack should have almost as many reinforcements as a maxed zone
             return (int) ((ModOptions.instance.extraKillsPerTurfValue * ModOptions.instance.maxTurfValue * ((int) attackType / 3.0f) + ModOptions.instance.baseNumKillsBeforeWarVictory +
-                attackerGang.GetBonusReinforcementsCount()) * 0.75f);
+                attackerGang.GetBonusReinforcementsCount()) * 0.9f);
         }
 
         public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone)
