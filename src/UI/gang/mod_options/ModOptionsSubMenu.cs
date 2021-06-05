@@ -184,11 +184,7 @@ namespace GTA.GangAndTurfMod
                 if (item == newButton)
                 {
                     ModOptions.LoadOptionsInstance();
-                    GangManager.instance.ResetGangUpdateIntervals();
-                    GangManager.instance.AdjustGangsToModOptions();
-                    GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
-
-                    MenuScript.instance.RefreshCostsTexts();
+                    ModOptions.OnModOptionsReloaded?.Invoke();
                 }
             };
         }
@@ -219,8 +215,6 @@ namespace GTA.GangAndTurfMod
                 if (item == newButton)
                 {
                     ModOptions.instance.SetAllValuesToDefault();
-
-                    MenuScript.instance.RefreshCostsTexts();
                 }
             };
         }

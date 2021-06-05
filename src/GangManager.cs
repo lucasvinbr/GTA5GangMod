@@ -63,6 +63,10 @@ namespace GTA.GangAndTurfMod
             new SpawnManager();
             ModOptions.LoadOptionsInstance();
 
+            ModOptions.OnModOptionsReloaded += ResetGangUpdateIntervals;
+            ModOptions.OnModOptionsReloaded += AdjustGangsToModOptions;
+            ModOptions.OnModOptionsReloaded += SetGangRelationsAccordingToAggrLevel;
+
             ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
             ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
 

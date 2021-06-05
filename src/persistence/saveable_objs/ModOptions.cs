@@ -11,6 +11,11 @@ namespace GTA.GangAndTurfMod
     {
         public static ModOptions instance;
 
+        /// <summary>
+        /// triggered whenever ModOptions is reset to defaults or reloaded from the XML
+        /// </summary>
+        public static Action OnModOptionsReloaded;
+
         public ModOptions() { }
 
         /// <summary>
@@ -503,8 +508,7 @@ namespace GTA.GangAndTurfMod
 
             PersistenceHandler.SaveToFile(instance, "ModOptions");
 
-            GangManager.instance.ResetGangUpdateIntervals();
-            GangManager.instance.SetGangRelationsAccordingToAggrLevel(instance.gangMemberAggressiveness);
+            OnModOptionsReloaded?.Invoke();
         }
 
         public void SetWeaponListDefaultValues()
