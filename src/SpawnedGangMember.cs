@@ -93,7 +93,7 @@ namespace GTA.GangAndTurfMod
                     {
                         //instead of idling while in a war, members should head for one of the key locations
                         
-                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < WarControlPoint.DISTANCE_TO_CAPTURE)
+                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
                             moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang);
                         
                         if (moveDestination != Vector3.Zero)
