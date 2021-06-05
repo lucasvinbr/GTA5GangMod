@@ -356,15 +356,6 @@ namespace GTA.GangAndTurfMod
             return RandoMath.Max(1, maxGangMemberArmor / numUpgradesUntilMaxMemberAttribute);
         }
 
-        /// <summary>
-        /// returns a number that attempts to represent how big the "numKills" values are compared to the default ones.
-        /// Values greater than 1.0 should indicate more kills are required than by default
-        /// </summary>
-        /// <returns></returns>
-        public float GetWarKillsComparedToDefault()
-        {
-            return (baseNumKillsBeforeWarVictory + extraKillsPerTurfValue * 3.5f) / (25 + 15 * 3.5f);
-        }
 
         /// <summary>
         /// gets a weapon from a list and check if it is in the buyables list.
