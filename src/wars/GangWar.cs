@@ -724,6 +724,10 @@ namespace GTA.GangAndTurfMod
                     spawnPos, playerPos, false, false, IncrementAttackersCount, maxPeopleToSpawnInVehicle);
             }
             
+            if(spawnedVehicle != null)
+            {
+                SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle.vehicleIAmDriving, spawnPos);
+            }
 
             return spawnedVehicle;
         }

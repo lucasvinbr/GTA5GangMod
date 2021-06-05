@@ -12,11 +12,11 @@ namespace GTA.GangAndTurfMod
         public Vector3 destination;
         public Vehicle vehicleIAmDriving;
         public int updatesWhileGoingToDest;
-        public int updateLimitWhileGoing = 30;
+        public int updateLimitWhileGoing = 42;
 
         public bool playerAsDest = false;
 
-        public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
+        public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120;
         
 
         private float targetSpeed;
@@ -29,7 +29,7 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// if the stuck counter gets to this value, we switch to another driving style in an attempt to get ourselves out of that position
         /// </summary>
-        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 4;
+        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 6;
         /// <summary>
         /// if we're heading towards the destination and our current speed is equal or below this value, we consider ourselves to be stuck
         /// </summary>
@@ -141,7 +141,7 @@ namespace GTA.GangAndTurfMod
             distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
 
             //if we're close to the destination...
-            if (distToDest < RADIUS_DESTINATION_ARRIVED) //tweaked to match my changes below -- zix
+            if (distToDest < ModOptions.instance.driverDistanceToDestForArrival) //tweaked to match my changes below -- zix
             {
                 //leave the vehicle if we are a backup vehicle and the player's on foot
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
@@ -229,8 +229,8 @@ namespace GTA.GangAndTurfMod
                                 //just keep following on the ground in this case;
                                 //both allies and enemies should do it
                                 watchedPed.Task.DriveTo
-                                    (vehicleIAmDriving, destination, 15, 50,
-                                    ModOptions.instance.driverWithDestinationDrivingStyle);
+                                    (vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival, MAX_SPEED,
+                                    GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                             }
                             else
                             {
@@ -238,7 +238,7 @@ namespace GTA.GangAndTurfMod
                                 {
                                     Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving,
                                         MindControl.CurrentPlayerCharacter.CurrentVehicle, -1, -1,
-                                        ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
+                                        GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), 30, 0, 35);
                                 }
                                 else
                                 {
@@ -260,14 +260,23 @@ namespace GTA.GangAndTurfMod
                             }
 
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, 
-                                attemptingUnstuckVehicle ? DRIVESTYLE_REVERSE : ModOptions.instance.driverWithDestinationDrivingStyle);
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival / 2, targetSpeed,
+                                GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                         }
                     }
                 }
             }
         }
 
+
+        private int GetAppropriateDrivingStyle(bool unstucking, float distToDest)
+        {
+            if (unstucking) return DRIVESTYLE_REVERSE;
+
+            return distToDest <= SLOW_DOWN_DIST / 2 ?
+                ModOptions.instance.nearbyDriverWithDestinationDrivingStyle :
+                ModOptions.instance.driverWithDestinationDrivingStyle;
+        }
 
         /// <summary>
         /// tells the driver to leave the vehicle, then clearAllRefs
