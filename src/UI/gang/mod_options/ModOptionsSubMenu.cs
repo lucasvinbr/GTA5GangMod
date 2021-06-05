@@ -6,9 +6,9 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for setting various mod options
     /// </summary>
-    public class ModOptionsSubMenu : UIMenu
+    public class ModOptionsSubMenu : ModMenu
     {
-        public ModOptionsSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Mod Options")
+        public ModOptionsSubMenu(MenuPool menuPool) : base("Mod Options")
         {
             keyBindingsSubMenu = new KeyBindingsSubMenu();
 
@@ -28,19 +28,62 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void Setup()
         {
-            AddNotificationsToggle();
+            AddModOptionToggle(nameof(ModOptions.instance.notificationsEnabled),
+                "Notifications enabled?",
+                "Enables/disables the displaying of messages whenever a gang takes over a zone.");
+            
             AddMemberAggressivenessControl();
-            AddEnableAmbientSpawnToggle();
-            AddIgnoreZoneOwnershipWhenAmbientSpawningToggle();
-            AddAiExpansionToggle();
-            AddShowMemberBlipsToggle();
-            AddMeleeOnlyToggle();
-            AddEnableWarVersusPlayerToggle();
-            AddEnableCarTeleportToggle();
-            AddGangsStartWithPistolToggle();
+            
+            AddModOptionToggle(nameof(ModOptions.instance.ambientSpawningEnabled),
+                 "Ambient member spawning?",
+                 "If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.");
+            
+            AddModOptionToggle(nameof(ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning),
+                 "Ambient spawning: random gangs",
+                 "If enabled, ambient spawning will spawn members from any gang instead of only from the one which owns the zone you are in. This option does not affect member spawning via backup calls or gang wars.");
+            
+            AddModOptionToggle(nameof(ModOptions.instance.preventAIExpansion),
+                "Prevent AI Gangs' Expansion?",
+                "If checked, AI Gangs won't start wars or take neutral zones.");
+            
+            AddModOptionToggle(nameof(ModOptions.instance.showGangMemberBlips),
+                "Show Member and Car Blips?",
+                "If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)");
+            
+            AddModOptionToggle(nameof(ModOptions.instance.membersSpawnWithMeleeOnly),
+                 "Gang members use melee weapons only?",
+                 "If checked, all gang members will spawn with melee weapons only, even if they purchase firearms or are set to start with pistols.");
+
+            AddModOptionToggle(nameof(ModOptions.instance.warAgainstPlayerEnabled),
+                 "Enemy gangs can attack your turf?",
+                 "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
+
+            AddModOptionToggle(nameof(ModOptions.instance.forceSpawnCars),
+                 "Backup cars can teleport to always arrive?",
+                 "If enabled, backup cars, after taking too long to get to the player, will teleport close by. This will only affect friendly vehicles.");
+
+            AddModOptionToggle(nameof(ModOptions.instance.gangsStartWithPistols),
+                 "Gangs start with Pistols?",
+                 "If checked, all gangs, except the player's, will start with pistols. Pistols will not be given to gangs already in town.");
+
             AddKeyBindingMenu();
-            AddGamepadControlsToggle();
-            AddPlayerSpectatorToggle();
+            
+            AddModOptionToggle(nameof(ModOptions.instance.joypadControls),
+                 "Use joypad controls?",
+                 "Enables/disables the use of joypad commands to recruit members (pad right), call backup (pad left) and output zone info (pad up). Commands are used while aiming. All credit goes to zixum.",
+                 (nowChecked) =>
+                 {
+                     if (nowChecked)
+                     {
+                         UI.ShowSubtitle("Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well");
+                     }
+                 });
+            
+            AddModOptionToggle(nameof(ModOptions.instance.playerIsASpectator),
+                 "Player Is a Spectator",
+                 "If enabled, all gangs should ignore the player, even during wars.",
+                 (newValue) => GangManager.instance.SetGangRelationsAccordingToAggrLevel());
+
             AddForceAIGangsTickButton();
             AddForceAIAttackButton();
             AddReloadOptionsButton();
@@ -55,22 +98,6 @@ namespace GTA.GangAndTurfMod
             UIMenuItem newButton = new UIMenuItem("Key Bindings...", "Opens the Key Bindings Menu, which allows setting which keys are linked to this mod's commands.");
             AddItem(newButton);
             BindMenuToItem(keyBindingsSubMenu, newButton);
-        }
-
-        private void AddNotificationsToggle()
-        {
-            UIMenuCheckboxItem notifyToggle = new UIMenuCheckboxItem("Notifications enabled?", ModOptions.instance.notificationsEnabled, "Enables/disables the displaying of messages whenever a gang takes over a zone.");
-
-            AddItem(notifyToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == notifyToggle)
-                {
-                    ModOptions.instance.notificationsEnabled = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
         }
 
         private void AddMemberAggressivenessControl()
@@ -93,171 +120,6 @@ namespace GTA.GangAndTurfMod
                 {
                     ModOptions.instance.SetMemberAggressiveness((ModOptions.GangMemberAggressivenessMode)index);
                 }
-            };
-        }
-
-        private void AddAiExpansionToggle()
-        {
-            UIMenuCheckboxItem aiToggle = new UIMenuCheckboxItem("Prevent AI Gangs' Expansion?", ModOptions.instance.preventAIExpansion, "If checked, AI Gangs won't start wars or take neutral zones.");
-
-            AddItem(aiToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == aiToggle)
-                {
-                    ModOptions.instance.preventAIExpansion = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddMeleeOnlyToggle()
-        {
-            UIMenuCheckboxItem meleeToggle = new UIMenuCheckboxItem("Gang members use melee weapons only?", ModOptions.instance.membersSpawnWithMeleeOnly, "If checked, all gang members will spawn with melee weapons only, even if they purchase firearms or are set to start with pistols.");
-
-            AddItem(meleeToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == meleeToggle)
-                {
-                    ModOptions.instance.membersSpawnWithMeleeOnly = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddEnableWarVersusPlayerToggle()
-        {
-            UIMenuCheckboxItem warToggle = new UIMenuCheckboxItem("Enemy gangs can attack your turf?", ModOptions.instance.warAgainstPlayerEnabled, "If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.");
-
-            AddItem(warToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == warToggle)
-                {
-                    ModOptions.instance.warAgainstPlayerEnabled = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddEnableAmbientSpawnToggle()
-        {
-            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient member spawning?", ModOptions.instance.ambientSpawningEnabled, "If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.");
-
-            AddItem(spawnToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == spawnToggle)
-                {
-                    ModOptions.instance.ambientSpawningEnabled = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddIgnoreZoneOwnershipWhenAmbientSpawningToggle()
-        {
-            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Ambient spawning: random gangs", ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning, "If enabled, ambient spawning will spawn members from any gang instead of only from the one which owns the zone you are in. This option does not affect member spawning via backup calls or gang wars.");
-
-            AddItem(spawnToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == spawnToggle)
-                {
-                    ModOptions.instance.ignoreTurfOwnershipWhenAmbientSpawning = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddShowMemberBlipsToggle()
-        {
-            UIMenuCheckboxItem blipToggle = new UIMenuCheckboxItem("Show Member and Car Blips?", ModOptions.instance.showGangMemberBlips, "If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)");
-
-            AddItem(blipToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == blipToggle)
-                {
-                    ModOptions.instance.showGangMemberBlips = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddEnableCarTeleportToggle()
-        {
-            UIMenuCheckboxItem spawnToggle = new UIMenuCheckboxItem("Backup cars can teleport to always arrive?", ModOptions.instance.forceSpawnCars, "If enabled, backup cars, after taking too long to get to the player, will teleport close by. This will only affect friendly vehicles.");
-
-            AddItem(spawnToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == spawnToggle)
-                {
-                    ModOptions.instance.forceSpawnCars = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddGangsStartWithPistolToggle()
-        {
-            UIMenuCheckboxItem pistolToggle = new UIMenuCheckboxItem("Gangs start with Pistols?", ModOptions.instance.gangsStartWithPistols, "If checked, all gangs, except the player's, will start with pistols. Pistols will not be given to gangs already in town.");
-
-            AddItem(pistolToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == pistolToggle)
-                {
-                    ModOptions.instance.gangsStartWithPistols = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                }
-
-            };
-        }
-
-        private void AddPlayerSpectatorToggle()
-        {
-            UIMenuCheckboxItem spectatorToggle = new UIMenuCheckboxItem("Player Is a Spectator", ModOptions.instance.playerIsASpectator, "If enabled, all gangs should ignore the player, even during wars.");
-
-            AddItem(spectatorToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == spectatorToggle)
-                {
-                    ModOptions.instance.playerIsASpectator = checked_;
-                    ModOptions.instance.SaveOptions(false);
-                    GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
-                }
-
-            };
-        }
-
-        private void AddGamepadControlsToggle()
-        {
-            UIMenuCheckboxItem padToggle = new UIMenuCheckboxItem("Use joypad controls?", ModOptions.instance.joypadControls, "Enables/disables the use of joypad commands to recruit members (pad right), call backup (pad left) and output zone info (pad up). Commands are used while aiming. All credit goes to zixum.");
-
-            AddItem(padToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == padToggle)
-                {
-                    ModOptions.instance.joypadControls = checked_;
-                    if (checked_)
-                    {
-                        UI.ShowSubtitle("Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well");
-                    }
-                    ModOptions.instance.SaveOptions(false);
-                }
-
             };
         }
 
