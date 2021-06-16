@@ -629,11 +629,11 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// gets a neutral or enemy point's position for this gang's members to head to
+        /// gets a neutral or enemy point's position for this gang's members to head to (it must be a position different from previousMoveTarget)
         /// </summary>
         /// <param name="gang"></param>
         /// <returns></returns>
-        public Vector3 GetMoveTargetForGang(Gang gang)
+        public Vector3 GetMoveTargetForGang(Gang gang, Vector3? previousMoveTarget = null)
         {
             WarControlPoint targetPoint = null;
 
@@ -647,9 +647,10 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (targetPoint == null)
+            if (targetPoint == null || (previousMoveTarget.HasValue && previousMoveTarget == targetPoint.position))
             {
-                return MindControl.SafePositionNearPlayer;
+                return MindControl.SafePositionNearPlayer + RandoMath.RandomDirection(true) * 
+                    ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.distanceToCaptureWarControlPoint);
             }
 
             return targetPoint.position;
