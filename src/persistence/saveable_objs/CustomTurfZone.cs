@@ -48,12 +48,12 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     myBlip.Color = BlipColor.White;
+                    myBlip.HideNumber();
 
                     if (areaBlip != null)
                     {
                         areaBlip.Color = BlipColor.White;
                         areaBlip.Alpha = 60;
-                        myBlip.HideNumber();
                     }
                 }
                 else
