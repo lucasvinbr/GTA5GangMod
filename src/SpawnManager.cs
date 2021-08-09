@@ -509,12 +509,15 @@ namespace GTA.GangAndTurfMod
                 {
                     chosenMember.SetPedAppearance(newPed);
 
-                    newPed.Accuracy = ownerGang.memberAccuracyLevel;
+                    newPed.Accuracy = (int) (ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
 
                     newPed.CanWrithe = false; //no early dying
-                    newPed.MaxHealth = 100 + ownerGang.memberHealth;
-                    newPed.Health = 100 + ownerGang.memberHealth;
-                    newPed.Armor = ownerGang.memberArmor;
+                    int memberHealth = 100 + RandoMath.Max(1, (int)(ownerGang.memberHealth * ownerGang.memberHealthMultiplier));
+                    newPed.MaxHealth = memberHealth;
+                    newPed.Health = memberHealth;
+                    newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
+
+                    newPed.FiringPattern = ownerGang.membersFiringPattern;
 
                     if (ModOptions.instance.membersCanDropMoneyOnDeath)
                     {
@@ -564,6 +567,7 @@ namespace GTA.GangAndTurfMod
 
                     newPed.CanSwitchWeapons = true;
 
+                    Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 0);
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
 
