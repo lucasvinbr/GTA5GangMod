@@ -546,6 +546,9 @@ namespace GTA.GangAndTurfMod
                 newPoint.SetupAtPosition(targetPos, ownerGang, this);
                 if (ownerGang != null) ControlPointHasBeenCaptured(newPoint);
                 controlPoints.Add(newPoint);
+
+                Logger.Log(string.Concat("Set up new spawn point for gang: ", ownerGang != null ? ownerGang.name : "(neutral point)"), 3);
+
                 return true;
             }
 
@@ -737,13 +740,17 @@ namespace GTA.GangAndTurfMod
         {
             Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
 
-            if (spawnPos == default) return null; //this means we don't have spawn points set yet
-
             if (isDefender)
             {
                 if (spawnedDefenders < maxSpawnedDefenders)
                 {
                     Logger.Log("war: try spawn defender", 4);
+
+                    if(spawnPos == default)
+                    {
+                        return SpawnMemberInsideExistingVehicle(true);
+                    }
+
                     return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
                 }
                 else return null;
@@ -754,10 +761,49 @@ namespace GTA.GangAndTurfMod
                 if (spawnedAttackers < maxSpawnedAttackers)
                 {
                     Logger.Log("war: try spawn attacker", 4);
+
+                    if (spawnPos == default)
+                    {
+                        return SpawnMemberInsideExistingVehicle(false);
+                    }
+
                     return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
                 }
                 else return null;
             }
+        }
+
+        /// <summary>
+        /// attempts to spawn a new member inside a "thinking" vehicle, if it has a free seat
+        /// </summary>
+        /// <param name="isDefender"></param>
+        /// <returns></returns>
+        private SpawnedGangMember SpawnMemberInsideExistingVehicle(bool isDefender)
+        {
+            Logger.Log("war: try spawn new passenger inside existing vehicle", 4);
+
+            Gang ownerGang = isDefender ? defendingGang : attackingGang;
+
+            SpawnedDrivingGangMember randomDriver = SpawnManager.instance.GetSpawnedDriversOfGang(ownerGang).RandomElement();
+            if (randomDriver != default)
+            {
+                if (randomDriver.vehicleIAmDriving.PassengerCount < randomDriver.vehicleIAmDriving.PassengerSeats)
+                {
+                    SpawnManager.SuccessfulMemberSpawnDelegate onSpawn;
+                    if (isDefender) onSpawn = IncrementDefendersCount; else onSpawn = IncrementAttackersCount;
+                    SpawnedGangMember spawnedPassenger =
+                        SpawnManager.instance.SpawnGangMember(ownerGang, randomDriver.vehicleIAmDriving.Position, onSuccessfulMemberSpawn: onSpawn);
+                    if(spawnedPassenger != null)
+                    {
+                        spawnedPassenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
+                        spawnedPassenger.watchedPed.SetIntoVehicle(randomDriver.vehicleIAmDriving, VehicleSeat.Any);
+                        randomDriver.myPassengers.Add(spawnedPassenger.watchedPed);
+                        return spawnedPassenger;
+                    }
+                }
+            }
+            
+            return null;
         }
 
         private void IncrementDefendersCount() { spawnedDefenders++; }
@@ -1052,7 +1098,7 @@ namespace GTA.GangAndTurfMod
 
                                 Gang targetOwnerGang = considerRecommendations ?
                                     GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[presetSpawnIndex], this) :
-                                    defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang;
+                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang;
 
                                 TrySetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
                                     targetOwnerGang);
