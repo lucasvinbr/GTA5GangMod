@@ -35,14 +35,14 @@ namespace GTA.GangAndTurfMod
                         if (playerGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
                         {
                             playerGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
-                            MindControl.instance.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
+                            MindControl.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Weapon Removed!");
                             item.Checked = false;
                         }
                         else
                         {
-                            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
+                            if (MindControl.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
                             {
                                 playerGang.gangWeaponHashes.Add(kvp.Key.wepHash);
                                 GangManager.instance.SaveGangData();

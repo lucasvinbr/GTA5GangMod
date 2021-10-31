@@ -7,17 +7,18 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// this script controls most things related to the mind control feature
     /// </summary>
-    public class MindControl
+    public static class MindControl
     {
 
-        public static MindControl instance;
+        public static SpawnedGangMember currentlyControlledMember = null;
+        public static bool hasDiedWithChangedBody = false;
+        public static Ped theOriginalPed;
 
-        public SpawnedGangMember currentlyControlledMember = null;
-        public bool hasDiedWithChangedBody = false;
-        public Ped theOriginalPed;
+        private static int moneyFromLastProtagonist = 0;
+        private static int defaultMaxHealth = 200;
 
-        private int moneyFromLastProtagonist = 0;
-        private int defaultMaxHealth = 200;
+        private static int originalProtagonistRelationGroup;
+        public static int spectatorProtagonistRelationGroup;
 
         /// <summary>
         /// the character currently controlled by the player. 
@@ -27,9 +28,9 @@ namespace GTA.GangAndTurfMod
         {
             get
             {
-                if (instance.HasChangedBody)
+                if (HasChangedBody)
                 {
-                    return instance.currentlyControlledMember.watchedPed;
+                    return currentlyControlledMember.watchedPed;
                 }
                 else
                 {
@@ -76,15 +77,19 @@ namespace GTA.GangAndTurfMod
 
 
 
-        public MindControl()
+        public static void SetupData()
         {
-            instance = this;
-
             defaultMaxHealth = Game.Player.Character.MaxHealth;
 
+            //set up the peaceful spectator relation group
+            spectatorProtagonistRelationGroup = World.AddRelationshipGroup("GangAndTurfModSpectatorProtagonist");
+
+            //player shouldn't be attacked by the ai-controlled protagonist while mind controlling a member
+            World.SetRelationshipBetweenGroups(Relationship.Companion, spectatorProtagonistRelationGroup, Game.Player.Character.RelationshipGroup);
+            World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, spectatorProtagonistRelationGroup);
         }
 
-        public void Tick()
+        public static void Tick()
         {
             if (HasChangedBody)
             {
@@ -97,7 +102,7 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// the addition to the tick methods when the player is in control of a member
         /// </summary>
-        private void TickMindControl()
+        private static void TickMindControl()
         {
             if (Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
             {
@@ -143,6 +148,7 @@ namespace GTA.GangAndTurfMod
                     //in a war, this counts as a casualty in our team
 
                     Function.Call((Hash)0xAE99FB955581844A, CurrentPlayerCharacter.Handle, -1, -1, 0, 0, 0, 0);
+                    
                     Game.Player.IgnoredByEveryone = true;
                 }
 
@@ -154,7 +160,7 @@ namespace GTA.GangAndTurfMod
         /// attempts to change the player's body.
         /// if the player has already changed body, the original body is restored
         /// </summary>
-        public void TryBodyChange()
+        public static void TryBodyChange()
         {
             if (!HasChangedBody)
             {
@@ -167,6 +173,7 @@ namespace GTA.GangAndTurfMod
                         if (playerGangMembers[i].IsAlive)
                         {
                             theOriginalPed = CurrentPlayerCharacter;
+                            originalProtagonistRelationGroup = CurrentPlayerCharacter.RelationshipGroup;
                             //adds a blip to the protagonist so that we know where we left him
                             Blip protagonistBlip = theOriginalPed.AddBlip();
                             protagonistBlip.Sprite = BlipSprite.Creator;
@@ -178,6 +185,15 @@ namespace GTA.GangAndTurfMod
                             defaultMaxHealth = theOriginalPed.MaxHealth;
                             moneyFromLastProtagonist = Game.Player.Money;
                             TakePedBody(playerGangMembers[i]);
+
+                            if (ModOptions.instance.protagonistsAreSpectators)
+                            {
+                                theOriginalPed.RelationshipGroup = spectatorProtagonistRelationGroup;
+                                theOriginalPed.Task.ClearAll();
+                            }
+
+                            GangManager.instance.RefreshPlayerRelationsWithAiGangs();
+
                             break;
                         }
                     }
@@ -190,7 +206,7 @@ namespace GTA.GangAndTurfMod
 
         }
 
-        private void TakePedBody(Ped targetPed)
+        private static void TakePedBody(Ped targetPed)
         {
             targetPed.Task.ClearAllImmediately();
             Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth - 100;
@@ -211,7 +227,7 @@ namespace GTA.GangAndTurfMod
         /// makes the body the player was using become dead for real
         /// </summary>
         /// <param name="theBody"></param>
-        private void DiscardDeadBody(Ped theBody)
+        private static void DiscardDeadBody(Ped theBody)
         {
             hasDiedWithChangedBody = false;
             theBody.RelationshipGroup = GangManager.instance.PlayerGang.relationGroupIndex;
@@ -225,7 +241,7 @@ namespace GTA.GangAndTurfMod
         /// if there isnt any, creates one parachuting.
         /// you can only respawn if you have died as a gang member
         /// </summary>
-        public void RespawnIfPossible()
+        public static void RespawnIfPossible()
         {
             if (hasDiedWithChangedBody)
             {
@@ -261,7 +277,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void RestorePlayerBody()
+        public static void RestorePlayerBody()
         {
             Ped oldPed = CurrentPlayerCharacter;
             //return to original body
@@ -271,6 +287,9 @@ namespace GTA.GangAndTurfMod
             theOriginalPed.MaxHealth = defaultMaxHealth;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             theOriginalPed.Task.ClearAllImmediately();
+            theOriginalPed.RelationshipGroup = originalProtagonistRelationGroup;
+
+            GangManager.instance.RefreshPlayerRelationsWithAiGangs();
 
             oldPed.IsInvincible = false;
 
@@ -294,7 +313,7 @@ namespace GTA.GangAndTurfMod
             currentlyControlledMember = null;
         }
 
-        public bool HasChangedBody
+        public static bool HasChangedBody
         {
             get
             {
@@ -308,7 +327,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         /// <param name="valueToAdd"></param>
         /// <returns></returns>
-        public bool AddOrSubtractMoneyToProtagonist(int valueToAdd, bool onlyCheck = false)
+        public static bool AddOrSubtractMoneyToProtagonist(int valueToAdd, bool onlyCheck = false)
         {
             if (HasChangedBody)
             {

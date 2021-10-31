@@ -79,7 +79,7 @@ namespace GTA.GangAndTurfMod
                      }
                  });
             
-            AddModOptionToggle(nameof(ModOptions.instance.playerIsASpectator),
+            AddModOptionToggle(nameof(ModOptions.instance.protagonistsAreSpectators),
                  "Player Is a Spectator",
                  "If enabled, all gangs should ignore the player, even during wars.",
                  (newValue) => GangManager.instance.SetGangRelationsAccordingToAggrLevel());

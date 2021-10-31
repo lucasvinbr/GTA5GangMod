@@ -77,7 +77,7 @@ namespace GTA.GangAndTurfMod
 
         public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
-        public bool playerIsASpectator = false;
+        public bool protagonistsAreSpectators = false;
 
         /// <summary>
         /// "gang members everywhere", but only in zones controlled by someone

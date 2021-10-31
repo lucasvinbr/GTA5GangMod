@@ -312,7 +312,7 @@ namespace GTA.GangAndTurfMod
                     //player gang was involved and won
                     AmbientGangMemberSpawner.instance.postWarBackupsRemaining = ModOptions.instance.postWarBackupsAmount;
 
-                    MindControl.instance.AddOrSubtractMoneyToProtagonist
+                    MindControl.AddOrSubtractMoneyToProtagonist
                         (battleProfit);
 
                     if (ModOptions.instance.notificationsEnabled)
@@ -963,7 +963,7 @@ namespace GTA.GangAndTurfMod
             World.SetRelationshipBetweenGroups(Relationship.Hate, attackingGang.relationGroupIndex, defendingGang.relationGroupIndex);
             World.SetRelationshipBetweenGroups(Relationship.Hate, defendingGang.relationGroupIndex, attackingGang.relationGroupIndex);
 
-            if (!ModOptions.instance.playerIsASpectator && IsPlayerGangInvolved())
+            if (!ModOptions.instance.protagonistsAreSpectators && IsPlayerGangInvolved())
             {
                 Gang enemyGang = defendingGang == GangManager.instance.PlayerGang ? attackingGang : defendingGang;
                 World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
@@ -1198,7 +1198,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
             //if the player's gang leader is dead...
-            if (!Game.Player.IsAlive && !MindControl.instance.HasChangedBody)
+            if (!Game.Player.IsAlive && !MindControl.HasChangedBody)
             {
                 RunAutoResolveStep(1.05f);
                 return;

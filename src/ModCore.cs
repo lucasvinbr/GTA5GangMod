@@ -13,7 +13,6 @@ namespace GTA.GangAndTurfMod
     internal class ModCore : Script
     {
         public GangManager gangManagerScript;
-        public MindControl mindControlScript;
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
@@ -27,8 +26,11 @@ namespace GTA.GangAndTurfMod
             Logger.Log("mod started!", 2);
 
             zoneManagerScript = new ZoneManager();
+
+            MindControl.SetupData();
             gangManagerScript = new GangManager();
-            mindControlScript = new MindControl();
+            
+
             menuScript = new MenuScript();
 
             this.Aborted += OnAbort;
@@ -58,7 +60,7 @@ namespace GTA.GangAndTurfMod
         {
             curGameTime = Game.GameTime;
             gangManagerScript.Tick();
-            mindControlScript.Tick();
+            MindControl.Tick();
             menuScript.Tick();
 
             //war stuff that should happen every frame
@@ -171,13 +173,13 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (e.KeyCode == ModOptions.instance.mindControlKey)
                 {
-                    mindControlScript.TryBodyChange();
+                    MindControl.TryBodyChange();
                 }
                 else if (e.KeyCode == Keys.Space)
                 {
-                    if (mindControlScript.HasChangedBody)
+                    if (MindControl.HasChangedBody)
                     {
-                        mindControlScript.RespawnIfPossible();
+                        MindControl.RespawnIfPossible();
                     }
                 }
             }
@@ -327,9 +329,9 @@ namespace GTA.GangAndTurfMod
         {
             UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
-            if (mindControlScript.HasChangedBody)
+            if (MindControl.HasChangedBody)
             {
-                mindControlScript.RestorePlayerBody();
+                MindControl.RestorePlayerBody();
             }
             SpawnManager.instance.RemoveAllMembers();
             SpawnManager.instance.RemoveAllDeadBodies();
