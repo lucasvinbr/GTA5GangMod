@@ -562,6 +562,9 @@ namespace GTA.GangAndTurfMod
                     newPed.Health = memberHealth;
                     newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
 
+                    newPed.IsFireProof = ModOptions.instance.gangMembersAreFireproof;
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
+
                     newPed.FiringPattern = ownerGang.membersFiringPattern;
 
                     if (ModOptions.instance.membersCanDropMoneyOnDeath)

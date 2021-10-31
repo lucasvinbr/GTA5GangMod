@@ -89,6 +89,9 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 30;
 
+        public bool gangMembersAreFireproof = false;
+        public bool gangMembersCanUseCover = true;
+
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
