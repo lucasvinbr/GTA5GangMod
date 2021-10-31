@@ -699,6 +699,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public SpawnedDrivingGangMember SpawnAngryVehicle(bool isDefender)
         {
+            int maxPeopleToSpawnInVehicle = isDefender ?
+                maxSpawnedDefenders - spawnedDefenders :
+                maxSpawnedAttackers - spawnedAttackers;
+
+            if (maxPeopleToSpawnInVehicle < RandoMath.Max(1, ModOptions.instance.warMinAvailableSpawnsBeforeSpawningVehicle)) return null;
 
             if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
 
@@ -707,16 +712,17 @@ namespace GTA.GangAndTurfMod
             Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointWithHeadingForCar(playerPos, isDefender?
                 defenderVehicleSpawnDirection : attackerVehicleSpawnDirection, out float carHeading);
 
+            if(World.GetDistance(playerPos, spawnPos) < ModOptions.instance.minDistanceCarSpawnFromPlayer)
+            {
+                Logger.Log("War: vehicle spawned too close to player! Try reset vehicle spawn directions", 3);
+                RefreshVehicleSpawnDirections();
+            }
+
             if (spawnPos == Vector3.Zero) return null;
 
             SpawnedDrivingGangMember spawnedVehicle = null;
 
-            int maxPeopleToSpawnInVehicle = isDefender ?
-                maxSpawnedDefenders - spawnedDefenders :
-                maxSpawnedAttackers - spawnedAttackers;
-
-            if (maxPeopleToSpawnInVehicle <= 0) return null;
-
+            
             if (isDefender)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(defendingGang,
@@ -887,6 +893,13 @@ namespace GTA.GangAndTurfMod
         public void ReassureWarBalance()
         {
             Logger.Log("war balancing: start", 3);
+
+            if (!ModOptions.instance.warMemberCullingForBalancingEnabled)
+            {
+                Logger.Log("war balancing: abort, warMemberCullingForBalancingEnabled is disabled", 3);
+                return;
+            }
+
             List<SpawnedGangMember> allLivingMembers =
                 SpawnManager.instance.GetAllLivingMembers();
 

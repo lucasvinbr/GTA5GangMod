@@ -176,7 +176,9 @@ namespace GTA.GangAndTurfMod
         public int minDistanceBetweenWarSpawns = 40;
         public int maxDistanceBetweenWarSpawns = 200;
         public int thinkingCarLimit = 5; //a "soft" limit, ignored by backup calls made by the player
+        public int warMinAvailableSpawnsBeforeSpawningVehicle = 0;
         public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
+        public bool warMemberCullingForBalancingEnabled = true;
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
