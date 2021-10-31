@@ -161,6 +161,28 @@ namespace GTA.GangAndTurfMod
             return finalpos;
         }
 
+        /// <summary>
+        /// gets the closest vehicle node and its heading
+        /// </summary>
+        /// <param name="desiredPos"></param>
+        /// <returns></returns>
+        public static Vector3 GenerateSpawnPosWithHeading(Vector3 desiredPos, out float heading)
+        {
+            Vector3 finalpos;
+            int roadTypeAsInt = (int)Nodetype.AnyRoad;
+
+            OutputArgument outCoords = new OutputArgument();
+            OutputArgument outRoadheading = new OutputArgument();
+
+            Function.Call<bool>(Hash.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING,
+                desiredPos.X, desiredPos.Y, desiredPos.Z, outCoords, outRoadheading, roadTypeAsInt, 3, 0);
+
+            finalpos = outCoords.GetResult<Vector3>();
+            heading = outRoadheading.GetResult<float>();
+
+            return finalpos;
+        }
+
         #endregion
 
         #region getters
@@ -310,7 +332,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (memberAIs[i].watchedPed != null)
                 {
-                    if (memberAIs[i] != MindControl.instance.currentlyControlledMember &&
+                    if (memberAIs[i] != MindControl.currentlyControlledMember &&
                         memberAIs[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
                     {
                         returnedList.Add(memberAIs[i].watchedPed);
@@ -472,6 +494,29 @@ namespace GTA.GangAndTurfMod
 
             return WorldLocChecker.PlayerIsAwayFromRoads ? World.GetNextPositionOnSidewalk(getNextPosTarget) :
                     GenerateSpawnPos(getNextPosTarget, Nodetype.AnyRoad, false); ;
+        }
+
+        /// <summary>
+        /// finds a nice spot and heading in the general direction neither too close or far from the reference pos
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindGoodSpawnPointWithHeadingForCar(Vector3 referencePos, Vector3 targetDirectionFromReference, out float heading)
+        {
+            Vector3 getNextPosTarget;
+
+
+            getNextPosTarget = referencePos + targetDirectionFromReference *
+                          ModOptions.instance.GetAcceptableCarSpawnDistance();
+
+            if (WorldLocChecker.PlayerIsAwayFromRoads)
+            {
+                heading = RandoMath.RandomHeading();
+                return World.GetNextPositionOnSidewalk(getNextPosTarget);
+            }
+            else
+            {
+                return GenerateSpawnPosWithHeading(getNextPosTarget, out heading);
+            }
         }
 
         /// <summary>

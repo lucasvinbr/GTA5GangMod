@@ -704,8 +704,8 @@ namespace GTA.GangAndTurfMod
 
             Vector3 playerPos = MindControl.SafePositionNearPlayer;
             
-            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos, isDefender?
-                defenderVehicleSpawnDirection : attackerVehicleSpawnDirection);
+            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointWithHeadingForCar(playerPos, isDefender?
+                defenderVehicleSpawnDirection : attackerVehicleSpawnDirection, out float carHeading);
 
             if (spawnPos == Vector3.Zero) return null;
 
@@ -730,7 +730,8 @@ namespace GTA.GangAndTurfMod
             
             if(spawnedVehicle != null)
             {
-                SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle.vehicleIAmDriving, spawnPos);
+                //SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle.vehicleIAmDriving, spawnPos);
+                spawnedVehicle.vehicleIAmDriving.Heading = carHeading;
             }
 
             return spawnedVehicle;
