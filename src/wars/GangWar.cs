@@ -533,12 +533,25 @@ namespace GTA.GangAndTurfMod
         {
             if (targetPos != Vector3.Zero)
             {
+                //at least one existing CP must be close enough (below maxDistanceBetweenWarSpawns)
+                //...unless we don't have any CPs set up yet
+                bool atLeastOneCpIsClose = controlPoints.Count == 0;
                 foreach(WarControlPoint cp in controlPoints)
                 {
                     if(cp.position.DistanceTo(targetPos) < ModOptions.instance.minDistanceBetweenWarSpawns)
                     {
                         return false;
                     }
+
+                    if (!atLeastOneCpIsClose && cp.position.DistanceTo(targetPos) < ModOptions.instance.maxDistanceBetweenWarSpawns)
+                    {
+                        atLeastOneCpIsClose = true;
+                    }
+                }
+
+                if (!atLeastOneCpIsClose)
+                {
+                    return false;
                 }
 
                 WarControlPoint newPoint = GangWarManager.instance.GetUnusedWarControlPoint();
@@ -1125,8 +1138,8 @@ namespace GTA.GangAndTurfMod
                             {
                                 TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
                                     (controlPoints[0].position,
-                                    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                                    ModOptions.instance.minDistanceMemberSpawnFromPlayer,
+                                    RandoMath.CachedRandom.Next(ModOptions.instance.minDistanceBetweenWarSpawns, ModOptions.instance.maxDistanceBetweenWarSpawns),
+                                    ModOptions.instance.minDistanceBetweenWarSpawns,
                                     5),
                                     defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang);
                             }
