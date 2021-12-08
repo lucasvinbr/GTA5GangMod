@@ -143,8 +143,10 @@ namespace GTA.GangAndTurfMod
                 if (ModOptions.instance.notificationsEnabled && defenderGang == GangManager.instance.PlayerGang)
                 {
                     //if the player is defending and already was inside the zone, we should take their current spawned members in consideration
-
-                    defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
+                    if (ModOptions.instance.addAlreadySpawnedMembersToWarRequiredKills)
+                    {
+                        defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
+                    }
 
                     UI.Notify(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
                     attackerReinforcements.ToString(),
@@ -1041,7 +1043,8 @@ namespace GTA.GangAndTurfMod
 
             //if it's an AIvsAI fight, add the number of currently spawned members to the tickets!
             //this should prevent large masses of defenders from going poof when defending their newly taken zone
-            if (!playerGangInvolved && controlPoints.Count < desiredNumberOfControlPointsForThisWar)
+            if (!playerGangInvolved && controlPoints.Count < desiredNumberOfControlPointsForThisWar &&
+                ModOptions.instance.addAlreadySpawnedMembersToWarRequiredKills)
             {
                 defenderReinforcements += spawnedDefenders;
                 attackerReinforcements += spawnedAttackers;

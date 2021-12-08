@@ -106,6 +106,7 @@ namespace GTA.GangAndTurfMod
         public int extraKillsPerTurfValue = 7;
         public int maxExtraKillsForNumTurfsControlled = 10;
         public int extraKillsPerGeneralGangStrength = 2;
+        public bool addAlreadySpawnedMembersToWarRequiredKills = true;
         public int maxConcurrentWarsAgainstPlayer = 3;
         public int maxNumWarsAiGangCanBeInvolvedIn = 3;
 
