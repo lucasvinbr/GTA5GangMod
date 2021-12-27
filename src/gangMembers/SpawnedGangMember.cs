@@ -37,8 +37,8 @@ namespace GTA.GangAndTurfMod
             inVehicle
         }
 
-        public const int ticksBetweenIdleChange = 10;
-        private int ticksSinceLastIdleChange = 0;
+        private const int UPDATES_BETWEEN_IDLE_CHANGE = 10;
+        private int updatesSinceLastIdleChange = 0;
 
         public MemberStatus curStatus = MemberStatus.none;
 
@@ -136,11 +136,11 @@ namespace GTA.GangAndTurfMod
                         }
 
                         curStatus = MemberStatus.onFootThinking;
-                        ticksSinceLastIdleChange = 0;
+                        updatesSinceLastIdleChange = 0;
                     }
                     else
                     {
-                        if (curStatus != MemberStatus.onFootThinking || ticksSinceLastIdleChange > ticksBetweenIdleChange)
+                        if (curStatus != MemberStatus.onFootThinking || updatesSinceLastIdleChange > UPDATES_BETWEEN_IDLE_CHANGE)
                         {
                             curStatus = MemberStatus.onFootThinking;
                             if (RandoMath.RandomBool())
@@ -151,11 +151,11 @@ namespace GTA.GangAndTurfMod
                             {
                                 DoAnIdleAnim();
                             }
-                            ticksSinceLastIdleChange = 0 - RandoMath.CachedRandom.Next(10);
+                            updatesSinceLastIdleChange = 0 - RandoMath.CachedRandom.Next(10);
                         }
                         else
                         {
-                            ticksSinceLastIdleChange++;
+                            updatesSinceLastIdleChange++;
                         }
                     }
                 }
@@ -165,10 +165,10 @@ namespace GTA.GangAndTurfMod
                 if (watchedPed.IsInVehicle())
                 {
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
-                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent, no longer with driver AI attached)...
+                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (no longer persistent, no longer with mod's driver AI attached)...
                     {
                         if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-               ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3)
+               ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                         {
                             //we're too far to be important
                             Die();

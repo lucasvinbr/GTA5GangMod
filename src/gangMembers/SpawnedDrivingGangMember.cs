@@ -55,14 +55,16 @@ namespace GTA.GangAndTurfMod
             {
                 if (deliveringCar)
                 {
-                    watchedPed.BlockPermanentEvents = true; //our driver shouldn't get distracted
+                    //since we want this vehicle to arrive,
+                    //our driver shouldn't get distracted with fights and stuff
+                    watchedPed.BlockPermanentEvents = true;
                 }
 
                 if (destination != Vector3.Zero)
                 {
                     //even if we are backup vehicles, we should despawn if TOO far
                     if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                            ModOptions.instance.maxDistanceCarSpawnFromPlayer * 8)
+                            ModOptions.instance.carWithDestinationDespawnDistanceFromPlayer)
                     {
                         DespawnProcedure();
                         return;
@@ -85,7 +87,7 @@ namespace GTA.GangAndTurfMod
 
                     //if we get too far from the player, despawn
                     if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                            ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3)
+                            ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                     {
 
                         DespawnProcedure();
@@ -96,7 +98,8 @@ namespace GTA.GangAndTurfMod
                     //it's probably close to the action
                     if (GangWarManager.instance.focusedWar != null)
                     {
-                        deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
+                        //leave the vehicle after arrival only if it's unarmed and the modOption is active
+                        deliveringCar = !vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival; 
                         destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
                         //if spawns still aren't set... try getting to the player
@@ -141,18 +144,29 @@ namespace GTA.GangAndTurfMod
             distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
 
             //if we're close to the destination...
-            if (distToDest < ModOptions.instance.driverDistanceToDestForArrival) //tweaked to match my changes below -- zix
+            if (distToDest < ModOptions.instance.driverDistanceToDestForArrival)
             {
-                //leave the vehicle if we are a backup vehicle and the player's on foot
+                //if we were heading somewhere (not the player) or we're a backup vehicle and the player's on foot...
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
-                    if (deliveringCar || (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival))
+                    if (deliveringCar)
                     {
                         DriverLeaveVehicle();
                     }
                     else
                     {
-                        ClearAllRefs(true);
+                        //if we weren't planning to leave the vehicle here...
+                        if(!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival)
+                        {
+                            //in this case, leave anyway
+                            DriverLeaveVehicle();
+                        }
+                        else
+                        {
+                            //ClearAllRefs(true);
+                            //testing this
+                            destination = Vector3.Zero;
+                        }
                     }
                 }
             }
@@ -181,7 +195,7 @@ namespace GTA.GangAndTurfMod
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
                     (!playerAsDest || !playerInVehicle))
                 {
-                    if (playerAsDest && deliveringCar) //zix - extra config options
+                    if (playerAsDest && deliveringCar)
                     {
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
@@ -214,7 +228,7 @@ namespace GTA.GangAndTurfMod
                             if (ModOptions.instance.forceSpawnCars &&
                                 watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex &&
                                 vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                                ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3 &&
+                                ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2 &&
                                 !vehicleIAmDriving.IsOnScreen)
                             {
 
