@@ -187,6 +187,9 @@ namespace GTA.GangAndTurfMod
         public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
         public int maxDistanceCarSpawnFromPlayer = 150;
+        
+        public int roamingCarDespawnDistanceFromPlayer = 250;
+        public int carWithDestinationDespawnDistanceFromPlayer = 450;
 
         [XmlIgnore]
         public List<WeaponHash> primaryWeapons = new List<WeaponHash>();

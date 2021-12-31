@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private float defenderReinforcementsAdvantage = 0.0f;
 
-        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 1000;
+        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 2400;
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy

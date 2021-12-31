@@ -158,13 +158,14 @@ namespace GTA.GangAndTurfMod
                         //if we weren't planning to leave the vehicle here...
                         if(!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival)
                         {
-                            //in this case, leave anyway
-                            DriverLeaveVehicle();
+                            DropOffPassengers();
+                            destination = Vector3.Zero;
                         }
                         else
                         {
                             //ClearAllRefs(true);
                             //testing this
+                            DropOffPassengers();
                             destination = Vector3.Zero;
                         }
                     }
@@ -308,6 +309,21 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
+        /// attempts to make everyone not driving or operating a gun to leave the vehicle
+        /// </summary>
+        public void DropOffPassengers()
+        {
+            for(int i = myPassengers.Count - 1; i >= 0; i--)
+            {
+                if (myPassengers[i] != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, myPassengers[i]))
+                {
+                    myPassengers[i].Task.LeaveVehicle();
+                    myPassengers.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>
         /// nullifies/clears references to the vehicle, driver and passengers, 
         /// optionally telling the driver to roam
         /// </summary>
@@ -391,7 +407,10 @@ namespace GTA.GangAndTurfMod
             {
                 Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
                 myPassengers.Add(memberInSeat);
-                Function.Call(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat);
+                if(memberInSeat != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat))
+                {
+                    memberInSeat.BlockPermanentEvents = false;
+                }
             }
         }
 
