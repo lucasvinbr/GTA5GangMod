@@ -1167,7 +1167,8 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         //(we don't start punishing before setting up the desired number of CPs)
-                        if(curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
+                        if(ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns > 0 &&
+                            curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
                         {
                             msTimeOfLastNoSpawnsPunishment = curTime;
 
