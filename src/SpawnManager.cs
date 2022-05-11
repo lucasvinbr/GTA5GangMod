@@ -537,7 +537,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null)
+        public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null, bool spawnWithWeaponEquipped = false)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
@@ -597,13 +597,13 @@ namespace GTA.GangAndTurfMod
                     if (ownerGang.gangWeaponHashes.Count > 0)
                     {
                         //get one weap from each type... if possible AND we're not forcing melee only
-                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, false, true);
+                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, spawnWithWeaponEquipped, true);
                         if (!ModOptions.instance.membersSpawnWithMeleeOnly)
                         {
                             WeaponHash driveByGun = ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons);
                             hasDriveByGun = driveByGun != WeaponHash.Unarmed;
                             newPed.Weapons.Give(driveByGun, 1000, false, true);
-                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
+                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, spawnWithWeaponEquipped, true);
 
                             //and one extra
                             newPed.Weapons.Give(RandoMath.RandomElement(ownerGang.gangWeaponHashes), 1000, false, true);
@@ -670,7 +670,7 @@ namespace GTA.GangAndTurfMod
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;
                     newVehicle.SecondaryColor = ownerGang.secondaryVehicleColor;
 
-                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
+                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
 
                     if (driver != null)
                     {
@@ -695,7 +695,7 @@ namespace GTA.GangAndTurfMod
 
                         for (int i = 0; i < passengerCount; i++)
                         {
-                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
+                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
                             if (passenger != null)
                             {
                                 passenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;

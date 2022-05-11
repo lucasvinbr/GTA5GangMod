@@ -773,7 +773,7 @@ namespace GTA.GangAndTurfMod
                         return SpawnMemberInsideExistingVehicle(true);
                     }
 
-                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
+                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
                 }
                 else return null;
 
@@ -789,7 +789,7 @@ namespace GTA.GangAndTurfMod
                         return SpawnMemberInsideExistingVehicle(false);
                     }
 
-                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
+                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
                 }
                 else return null;
             }
@@ -809,12 +809,12 @@ namespace GTA.GangAndTurfMod
             SpawnedDrivingGangMember randomDriver = SpawnManager.instance.GetSpawnedDriversOfGang(ownerGang).RandomElement();
             if (randomDriver != default)
             {
-                if (randomDriver.vehicleIAmDriving.PassengerCount < randomDriver.vehicleIAmDriving.PassengerSeats)
+                if (randomDriver.vehicleIAmDriving.IsSeatFree(VehicleSeat.Any))
                 {
                     SpawnManager.SuccessfulMemberSpawnDelegate onSpawn;
                     if (isDefender) onSpawn = IncrementDefendersCount; else onSpawn = IncrementAttackersCount;
                     SpawnedGangMember spawnedPassenger =
-                        SpawnManager.instance.SpawnGangMember(ownerGang, randomDriver.vehicleIAmDriving.Position, onSuccessfulMemberSpawn: onSpawn);
+                        SpawnManager.instance.SpawnGangMember(ownerGang, randomDriver.vehicleIAmDriving.Position, onSuccessfulMemberSpawn: onSpawn, true);
                     if(spawnedPassenger != null)
                     {
                         spawnedPassenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
