@@ -82,7 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\AmbientGangMemberSpawner.cs" />
-    <Compile Include="src\gangVehicles\ReinforcementVehiclesHandler.cs" />
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\gangMembers\data\ExtendedPotentialGangMember.cs" />
     <Compile Include="src\zones\CustomTurfZone.cs" />
@@ -109,7 +108,7 @@
     <Compile Include="src\UI\zones\ZonesMenu.cs" />
     <Compile Include="src\UI\zones\CustomZonesSubMenu.cs" />
     <Compile Include="src\utils\GangCalculations.cs" />
-    <Compile Include="src\gangs\GangManager.cs" />
+    <Compile Include="src\GangManager.cs" />
     <Compile Include="src\gangMembers\GangMemberUpdater.cs" />
     <Compile Include="src\gangVehicles\GangVehicleUpdater .cs" />
     <Compile Include="src\wars\GangWarManager.cs" />

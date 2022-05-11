@@ -193,7 +193,13 @@ namespace GTA.GangAndTurfMod
                         World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
                     }
 
-                    if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
+
+                    if (gangData.gangs[i].isPlayerOwned)
+                    {
+                        World.SetRelationshipBetweenGroups(Relationship.Companion, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+                        World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    }
+                    else if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
                     {
                         //everyone should try to ignore the player, even during wars
                         World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
