@@ -64,6 +64,7 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     myBlip.Color = BlipColor.White;
+                    myBlip.HideNumber();
                 }
                 else
                 {
@@ -79,7 +80,7 @@ namespace GTA.GangAndTurfMod
                         Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
                     }
 
-                    myBlip.Scale = 1.0f + 0.65f / ((ModOptions.instance.maxTurfValue + 1) / (float) (value + 1));
+                    myBlip.ShowNumber(value);
                 }
 
                 Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");

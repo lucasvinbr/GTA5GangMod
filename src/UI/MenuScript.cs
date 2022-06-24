@@ -61,6 +61,8 @@ namespace GTA.GangAndTurfMod
         {
             instance = this;
 
+            ModOptions.OnModOptionsReloaded += RefreshCostsTexts;
+
             menuPool = new MenuPool();
 
             pickAiGangMenu = new PickAiGangMenu(menuPool);

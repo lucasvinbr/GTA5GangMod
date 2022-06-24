@@ -27,6 +27,33 @@ namespace GTA.GangAndTurfMod
 
         public int baseTurfValue = 0;
 
+        /// <summary>
+        /// multiplier applied to memberAccuracyLevel, changing the final value
+        /// </summary>
+        public float memberAccuracyMultiplier = 1.0f;
+
+        /// <summary>
+        /// multiplier applied to memberHealth, changing the final value
+        /// </summary>
+        public float memberHealthMultiplier = 1.0f;
+
+        /// <summary>
+        /// multiplier applied to memberArmor, changing the final value
+        /// </summary>
+        public float memberArmorMultiplier = 1.0f;
+
+        /// <summary>
+        /// multiplier applied to the number of members available in wars
+        /// </summary>
+        public float memberAmountInWarsMultiplier = 1.0f;
+
+        /// <summary>
+        /// multiplier applied to any (positive) income received by this gang
+        /// </summary>
+        public float profitMultiplier = 1.0f;
+
+        public FiringPattern membersFiringPattern = FiringPattern.Default;
+
         //car stats - the models
         public List<PotentialGangVehicle> carVariations = new List<PotentialGangVehicle>();
 

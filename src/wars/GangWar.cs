@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private float defenderReinforcementsAdvantage = 0.0f;
 
-        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 1000;
+        private const int MS_TIME_BETWEEN_CAR_SPAWNS = 2400;
 
         //balance checks are what tries to ensure that reinforcement advantage is something meaningful in battle.
         //we try to reduce the amount of spawned members of one gang if they were meant to have less members defending/attacking than their enemy
@@ -143,8 +143,10 @@ namespace GTA.GangAndTurfMod
                 if (ModOptions.instance.notificationsEnabled && defenderGang == GangManager.instance.PlayerGang)
                 {
                     //if the player is defending and already was inside the zone, we should take their current spawned members in consideration
-
-                    defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
+                    if (ModOptions.instance.addAlreadySpawnedMembersToWarRequiredKills)
+                    {
+                        defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
+                    }
 
                     UI.Notify(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
                     attackerReinforcements.ToString(),
@@ -312,7 +314,7 @@ namespace GTA.GangAndTurfMod
                     //player gang was involved and won
                     AmbientGangMemberSpawner.instance.postWarBackupsRemaining = ModOptions.instance.postWarBackupsAmount;
 
-                    MindControl.instance.AddOrSubtractMoneyToProtagonist
+                    MindControl.AddOrSubtractMoneyToProtagonist
                         (battleProfit);
 
                     if (ModOptions.instance.notificationsEnabled)
@@ -386,7 +388,7 @@ namespace GTA.GangAndTurfMod
             
 
             //reset relations to whatever is set in modoptions
-            GangManager.instance.SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            GangManager.instance.SetGangRelationsAccordingToAggrLevel();
 
 
         }
@@ -533,12 +535,25 @@ namespace GTA.GangAndTurfMod
         {
             if (targetPos != Vector3.Zero)
             {
+                //at least one existing CP must be close enough (below maxDistanceBetweenWarSpawns)
+                //...unless we don't have any CPs set up yet
+                bool atLeastOneCpIsClose = controlPoints.Count == 0;
                 foreach(WarControlPoint cp in controlPoints)
                 {
                     if(cp.position.DistanceTo(targetPos) < ModOptions.instance.minDistanceBetweenWarSpawns)
                     {
                         return false;
                     }
+
+                    if (!atLeastOneCpIsClose && cp.position.DistanceTo(targetPos) < ModOptions.instance.maxDistanceBetweenWarSpawns)
+                    {
+                        atLeastOneCpIsClose = true;
+                    }
+                }
+
+                if (!atLeastOneCpIsClose)
+                {
+                    return false;
                 }
 
                 WarControlPoint newPoint = GangWarManager.instance.GetUnusedWarControlPoint();
@@ -546,6 +561,9 @@ namespace GTA.GangAndTurfMod
                 newPoint.SetupAtPosition(targetPos, ownerGang, this);
                 if (ownerGang != null) ControlPointHasBeenCaptured(newPoint);
                 controlPoints.Add(newPoint);
+
+                Logger.Log(string.Concat("Set up new spawn point for gang: ", ownerGang != null ? ownerGang.name : "(neutral point)"), 3);
+
                 return true;
             }
 
@@ -629,11 +647,11 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
-        /// gets a neutral or enemy point's position for this gang's members to head to
+        /// gets a neutral or enemy point's position for this gang's members to head to (it must be a position different from previousMoveTarget)
         /// </summary>
         /// <param name="gang"></param>
         /// <returns></returns>
-        public Vector3 GetMoveTargetForGang(Gang gang)
+        public Vector3 GetMoveTargetForGang(Gang gang, Vector3? previousMoveTarget = null)
         {
             WarControlPoint targetPoint = null;
 
@@ -647,9 +665,10 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (targetPoint == null)
+            if (targetPoint == null || (previousMoveTarget.HasValue && previousMoveTarget == targetPoint.position))
             {
-                return MindControl.SafePositionNearPlayer;
+                return MindControl.SafePositionNearPlayer + RandoMath.RandomDirection(true) * 
+                    ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.distanceToCaptureWarControlPoint);
             }
 
             return targetPoint.position;
@@ -695,24 +714,30 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public SpawnedDrivingGangMember SpawnAngryVehicle(bool isDefender)
         {
+            int maxPeopleToSpawnInVehicle = isDefender ?
+                maxSpawnedDefenders - spawnedDefenders :
+                maxSpawnedAttackers - spawnedAttackers;
+
+            if (maxPeopleToSpawnInVehicle < RandoMath.Max(1, ModOptions.instance.warMinAvailableSpawnsBeforeSpawningVehicle)) return null;
 
             if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
 
             Vector3 playerPos = MindControl.SafePositionNearPlayer;
             
-            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointForCar(playerPos, isDefender?
-                defenderVehicleSpawnDirection : attackerVehicleSpawnDirection);
+            Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointWithHeadingForCar(playerPos, isDefender?
+                defenderVehicleSpawnDirection : attackerVehicleSpawnDirection, out float carHeading);
+
+            if(World.GetDistance(playerPos, spawnPos) < ModOptions.instance.minDistanceCarSpawnFromPlayer)
+            {
+                Logger.Log("War: vehicle spawned too close to player! Try reset vehicle spawn directions", 3);
+                RefreshVehicleSpawnDirections();
+            }
 
             if (spawnPos == Vector3.Zero) return null;
 
             SpawnedDrivingGangMember spawnedVehicle = null;
 
-            int maxPeopleToSpawnInVehicle = isDefender ?
-                maxSpawnedDefenders - spawnedDefenders :
-                maxSpawnedAttackers - spawnedAttackers;
-
-            if (maxPeopleToSpawnInVehicle <= 0) return null;
-
+            
             if (isDefender)
             {
                 spawnedVehicle = SpawnManager.instance.SpawnGangVehicle(defendingGang,
@@ -724,6 +749,11 @@ namespace GTA.GangAndTurfMod
                     spawnPos, playerPos, false, false, IncrementAttackersCount, maxPeopleToSpawnInVehicle);
             }
             
+            if(spawnedVehicle != null)
+            {
+                //SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicle.vehicleIAmDriving, spawnPos);
+                spawnedVehicle.vehicleIAmDriving.Heading = carHeading;
+            }
 
             return spawnedVehicle;
         }
@@ -732,14 +762,18 @@ namespace GTA.GangAndTurfMod
         {
             Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
 
-            if (spawnPos == default) return null; //this means we don't have spawn points set yet
-
             if (isDefender)
             {
                 if (spawnedDefenders < maxSpawnedDefenders)
                 {
                     Logger.Log("war: try spawn defender", 4);
-                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount);
+
+                    if(spawnPos == default)
+                    {
+                        return SpawnMemberInsideExistingVehicle(true);
+                    }
+
+                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
                 }
                 else return null;
 
@@ -749,10 +783,49 @@ namespace GTA.GangAndTurfMod
                 if (spawnedAttackers < maxSpawnedAttackers)
                 {
                     Logger.Log("war: try spawn attacker", 4);
-                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount);
+
+                    if (spawnPos == default)
+                    {
+                        return SpawnMemberInsideExistingVehicle(false);
+                    }
+
+                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
                 }
                 else return null;
             }
+        }
+
+        /// <summary>
+        /// attempts to spawn a new member inside a "thinking" vehicle, if it has a free seat
+        /// </summary>
+        /// <param name="isDefender"></param>
+        /// <returns></returns>
+        private SpawnedGangMember SpawnMemberInsideExistingVehicle(bool isDefender)
+        {
+            Logger.Log("war: try spawn new passenger inside existing vehicle", 4);
+
+            Gang ownerGang = isDefender ? defendingGang : attackingGang;
+
+            SpawnedDrivingGangMember randomDriver = SpawnManager.instance.GetSpawnedDriversOfGang(ownerGang).RandomElement();
+            if (randomDriver != default)
+            {
+                if (randomDriver.vehicleIAmDriving.IsSeatFree(VehicleSeat.Any))
+                {
+                    SpawnManager.SuccessfulMemberSpawnDelegate onSpawn;
+                    if (isDefender) onSpawn = IncrementDefendersCount; else onSpawn = IncrementAttackersCount;
+                    SpawnedGangMember spawnedPassenger =
+                        SpawnManager.instance.SpawnGangMember(ownerGang, randomDriver.vehicleIAmDriving.Position, onSuccessfulMemberSpawn: onSpawn, true);
+                    if(spawnedPassenger != null)
+                    {
+                        spawnedPassenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
+                        spawnedPassenger.watchedPed.SetIntoVehicle(randomDriver.vehicleIAmDriving, VehicleSeat.Any);
+                        randomDriver.myPassengers.Add(spawnedPassenger.watchedPed);
+                        return spawnedPassenger;
+                    }
+                }
+            }
+            
+            return null;
         }
 
         private void IncrementDefendersCount() { spawnedDefenders++; }
@@ -835,6 +908,13 @@ namespace GTA.GangAndTurfMod
         public void ReassureWarBalance()
         {
             Logger.Log("war balancing: start", 3);
+
+            if (!ModOptions.instance.warMemberCullingForBalancingEnabled)
+            {
+                Logger.Log("war balancing: abort, warMemberCullingForBalancingEnabled is disabled", 3);
+                return;
+            }
+
             List<SpawnedGangMember> allLivingMembers =
                 SpawnManager.instance.GetAllLivingMembers();
 
@@ -912,7 +992,7 @@ namespace GTA.GangAndTurfMod
             World.SetRelationshipBetweenGroups(Relationship.Hate, attackingGang.relationGroupIndex, defendingGang.relationGroupIndex);
             World.SetRelationshipBetweenGroups(Relationship.Hate, defendingGang.relationGroupIndex, attackingGang.relationGroupIndex);
 
-            if (!ModOptions.instance.playerIsASpectator && IsPlayerGangInvolved())
+            if (!ModOptions.instance.protagonistsAreSpectators && IsPlayerGangInvolved())
             {
                 Gang enemyGang = defendingGang == GangManager.instance.PlayerGang ? attackingGang : defendingGang;
                 World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
@@ -963,7 +1043,8 @@ namespace GTA.GangAndTurfMod
 
             //if it's an AIvsAI fight, add the number of currently spawned members to the tickets!
             //this should prevent large masses of defenders from going poof when defending their newly taken zone
-            if (!playerGangInvolved && controlPoints.Count < desiredNumberOfControlPointsForThisWar)
+            if (!playerGangInvolved && controlPoints.Count < desiredNumberOfControlPointsForThisWar &&
+                ModOptions.instance.addAlreadySpawnedMembersToWarRequiredKills)
             {
                 defenderReinforcements += spawnedDefenders;
                 attackerReinforcements += spawnedAttackers;
@@ -1047,7 +1128,7 @@ namespace GTA.GangAndTurfMod
 
                                 Gang targetOwnerGang = considerRecommendations ?
                                     GangWarManager.instance.PickOwnerGangForControlPoint(availableNearbyPresetSpawns[presetSpawnIndex], this) :
-                                    defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang;
+                                    attackerSpawnPoints.Count >= 1 ? defendingGang : attackingGang;
 
                                 TrySetupAControlPoint(availableNearbyPresetSpawns[presetSpawnIndex],
                                     targetOwnerGang);
@@ -1060,8 +1141,8 @@ namespace GTA.GangAndTurfMod
                             {
                                 TrySetupAControlPoint(SpawnManager.instance.FindCustomSpawnPoint
                                     (controlPoints[0].position,
-                                    ModOptions.instance.GetAcceptableMemberSpawnDistance(10),
-                                    ModOptions.instance.minDistanceMemberSpawnFromPlayer,
+                                    RandoMath.CachedRandom.Next(ModOptions.instance.minDistanceBetweenWarSpawns, ModOptions.instance.maxDistanceBetweenWarSpawns),
+                                    ModOptions.instance.minDistanceBetweenWarSpawns,
                                     5),
                                     defenderSpawnPoints.Count <= desiredNumberOfControlPointsForThisWar * defenderReinforcementsAdvantage ? defendingGang : attackingGang);
                             }
@@ -1086,7 +1167,8 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         //(we don't start punishing before setting up the desired number of CPs)
-                        if(curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
+                        if(ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns > 0 &&
+                            curTime - msTimeOfLastNoSpawnsPunishment > ModOptions.instance.msTimeBetweenWarPunishingForNoSpawns)
                         {
                             msTimeOfLastNoSpawnsPunishment = curTime;
 
@@ -1147,7 +1229,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
             //if the player's gang leader is dead...
-            if (!Game.Player.IsAlive && !MindControl.instance.HasChangedBody)
+            if (!Game.Player.IsAlive && !MindControl.HasChangedBody)
             {
                 RunAutoResolveStep(1.05f);
                 return;

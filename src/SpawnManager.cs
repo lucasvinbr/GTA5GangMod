@@ -161,6 +161,28 @@ namespace GTA.GangAndTurfMod
             return finalpos;
         }
 
+        /// <summary>
+        /// gets the closest vehicle node and its heading
+        /// </summary>
+        /// <param name="desiredPos"></param>
+        /// <returns></returns>
+        public static Vector3 GenerateSpawnPosWithHeading(Vector3 desiredPos, out float heading)
+        {
+            Vector3 finalpos;
+            int roadTypeAsInt = (int)Nodetype.AnyRoad;
+
+            OutputArgument outCoords = new OutputArgument();
+            OutputArgument outRoadheading = new OutputArgument();
+
+            Function.Call<bool>(Hash.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING,
+                desiredPos.X, desiredPos.Y, desiredPos.Z, outCoords, outRoadheading, roadTypeAsInt, 3, 0);
+
+            finalpos = outCoords.GetResult<Vector3>();
+            heading = outRoadheading.GetResult<float>();
+
+            return finalpos;
+        }
+
         #endregion
 
         #region getters
@@ -310,7 +332,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (memberAIs[i].watchedPed != null)
                 {
-                    if (memberAIs[i] != MindControl.instance.currentlyControlledMember &&
+                    if (memberAIs[i] != MindControl.currentlyControlledMember &&
                         memberAIs[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
                     {
                         returnedList.Add(memberAIs[i].watchedPed);
@@ -475,6 +497,29 @@ namespace GTA.GangAndTurfMod
         }
 
         /// <summary>
+        /// finds a nice spot and heading in the general direction neither too close or far from the reference pos
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 FindGoodSpawnPointWithHeadingForCar(Vector3 referencePos, Vector3 targetDirectionFromReference, out float heading)
+        {
+            Vector3 getNextPosTarget;
+
+
+            getNextPosTarget = referencePos + targetDirectionFromReference *
+                          ModOptions.instance.GetAcceptableCarSpawnDistance();
+
+            if (WorldLocChecker.PlayerIsAwayFromRoads)
+            {
+                heading = RandoMath.RandomHeading();
+                return World.GetNextPositionOnSidewalk(getNextPosTarget);
+            }
+            else
+            {
+                return GenerateSpawnPosWithHeading(getNextPosTarget, out heading);
+            }
+        }
+
+        /// <summary>
         /// makes one attempt to place the target vehicle on a street.
         /// if it fails, the vehicle is returned to its original position
         /// </summary>
@@ -492,7 +537,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null)
+        public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null, bool spawnWithWeaponEquipped = false)
         {
             if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
@@ -509,12 +554,18 @@ namespace GTA.GangAndTurfMod
                 {
                     chosenMember.SetPedAppearance(newPed);
 
-                    newPed.Accuracy = ownerGang.memberAccuracyLevel;
+                    newPed.Accuracy = (int) (ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
 
                     newPed.CanWrithe = false; //no early dying
-                    newPed.MaxHealth = 100 + ownerGang.memberHealth;
-                    newPed.Health = 100 + ownerGang.memberHealth;
-                    newPed.Armor = ownerGang.memberArmor;
+                    int memberHealth = 100 + RandoMath.Max(1, (int)(ownerGang.memberHealth * ownerGang.memberHealthMultiplier));
+                    newPed.MaxHealth = memberHealth;
+                    newPed.Health = memberHealth;
+                    newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
+
+                    newPed.IsFireProof = ModOptions.instance.gangMembersAreFireproof;
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
+
+                    newPed.FiringPattern = ownerGang.membersFiringPattern;
 
                     if (ModOptions.instance.membersCanDropMoneyOnDeath)
                     {
@@ -546,13 +597,13 @@ namespace GTA.GangAndTurfMod
                     if (ownerGang.gangWeaponHashes.Count > 0)
                     {
                         //get one weap from each type... if possible AND we're not forcing melee only
-                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, false, true);
+                        newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.meleeWeapons), 1000, spawnWithWeaponEquipped, true);
                         if (!ModOptions.instance.membersSpawnWithMeleeOnly)
                         {
                             WeaponHash driveByGun = ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.driveByWeapons);
                             hasDriveByGun = driveByGun != WeaponHash.Unarmed;
                             newPed.Weapons.Give(driveByGun, 1000, false, true);
-                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, false, true);
+                            newPed.Weapons.Give(ownerGang.GetListedGunFromOwnedGuns(ModOptions.instance.primaryWeapons), 1000, spawnWithWeaponEquipped, true);
 
                             //and one extra
                             newPed.Weapons.Give(RandoMath.RandomElement(ownerGang.gangWeaponHashes), 1000, false, true);
@@ -564,6 +615,7 @@ namespace GTA.GangAndTurfMod
 
                     newPed.CanSwitchWeapons = true;
 
+                    Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 0);
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
 
@@ -618,7 +670,7 @@ namespace GTA.GangAndTurfMod
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;
                     newVehicle.SecondaryColor = ownerGang.secondaryVehicleColor;
 
-                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
+                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
 
                     if (driver != null)
                     {
@@ -643,7 +695,7 @@ namespace GTA.GangAndTurfMod
 
                         for (int i = 0; i < passengerCount; i++)
                         {
-                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn);
+                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
                             if (passenger != null)
                             {
                                 passenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;

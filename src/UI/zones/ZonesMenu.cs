@@ -86,7 +86,7 @@ namespace GTA.GangAndTurfMod
                         Gang ownerGang = curZone.ownerGangName == "none" ? null : GangManager.instance.GetGangByName(curZone.ownerGangName);
                         if (ownerGang == null)
                         {
-                            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.baseCostToTakeTurf))
+                            if (MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.baseCostToTakeTurf))
                             {
                                 GangManager.instance.PlayerGang.TakeZone(curZone);
                                 UI.ShowSubtitle("This zone is " + GangManager.instance.PlayerGang.name + " turf now!");
@@ -172,7 +172,7 @@ namespace GTA.GangAndTurfMod
             }
 
 
-            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-atkCost, true))
+            if (MindControl.AddOrSubtractMoneyToProtagonist(-atkCost, true))
             {
                 if (!GangWarManager.instance.TryStartWar(GangManager.instance.PlayerGang, targetZone, atkStrength))
                 {
@@ -181,7 +181,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    MindControl.instance.AddOrSubtractMoneyToProtagonist(-atkCost);
+                    MindControl.AddOrSubtractMoneyToProtagonist(-atkCost);
                 }
                 return true;
             }
@@ -210,7 +210,7 @@ namespace GTA.GangAndTurfMod
                     {
                         if (curZone.ownerGangName == GangManager.instance.PlayerGang.name)
                         {
-                            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost, true))
+                            if (MindControl.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost, true))
                             {
                                 if (curZone.value >= ModOptions.instance.maxTurfValue)
                                 {
@@ -221,7 +221,7 @@ namespace GTA.GangAndTurfMod
                                     curZone.value++;
                                     ZoneManager.instance.SaveZoneData(false);
                                     UI.ShowSubtitle("Zone level increased!");
-                                    MindControl.instance.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost);
+                                    MindControl.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost);
                                     UpdateZoneUpgradeBtn();
                                 }
                             }
@@ -269,7 +269,7 @@ namespace GTA.GangAndTurfMod
                             int valueDifference = curZone.value - GangManager.instance.PlayerGang.baseTurfValue;
                             if (valueDifference > 0)
                             {
-                                MindControl.instance.AddOrSubtractMoneyToProtagonist
+                                MindControl.AddOrSubtractMoneyToProtagonist
                                 (ModOptions.instance.baseCostToUpgradeSingleTurfValue * valueDifference);
                             }
 

@@ -63,6 +63,10 @@ namespace GTA.GangAndTurfMod
             new SpawnManager();
             ModOptions.LoadOptionsInstance();
 
+            ModOptions.OnModOptionsReloaded += ResetGangUpdateIntervals;
+            ModOptions.OnModOptionsReloaded += AdjustGangsToModOptions;
+            ModOptions.OnModOptionsReloaded += SetGangRelationsAccordingToAggrLevel;
+
             ticksSinceLastCarBkp = ModOptions.instance.ticksCooldownBackupCar;
             ticksSinceLastParaBkp = ModOptions.instance.ticksCooldownParachutingMember;
 
@@ -99,10 +103,12 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         private void SetUpAllGangs()
         {
+
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
                 gangData.gangs[i].relationGroupIndex = World.AddRelationshipGroup(gangData.gangs[i].name);
+
 
                 //if the player owns this gang, we love him
                 if (gangData.gangs[i].isPlayerOwned)
@@ -131,13 +137,23 @@ namespace GTA.GangAndTurfMod
             }
 
             //set gang relations...
-            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            SetGangRelationsAccordingToAggrLevel();
             //all gangs hate cops if set to very aggressive
             SetCopRelations(ModOptions.instance.gangMemberAggressiveness == ModOptions.GangMemberAggressivenessMode.veryAgressive);
         }
 
         /// <summary>
-        /// sets relations between gangs to a certain level according to the aggressiveness.
+        /// sets relations between gangs to a certain level according to the aggressiveness set in ModOptions.
+        /// Also makes all gangs ignore the player if playerIsSpectator is true
+        /// </summary>
+        /// <param name="aggrLevel"></param>
+        public void SetGangRelationsAccordingToAggrLevel()
+        {
+            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+        }
+
+        /// <summary>
+        /// sets relations between gangs to a certain level according to the provided aggressiveness.
         /// Also makes all gangs ignore the player if playerIsSpectator is true
         /// </summary>
         /// <param name="aggrLevel"></param>
@@ -159,6 +175,10 @@ namespace GTA.GangAndTurfMod
             }
             for (int i = gangData.gangs.Count - 1; i > -1; i--)
             {
+                //all gangs like the spectator protagonist!
+                World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, MindControl.spectatorProtagonistRelationGroup);
+                World.SetRelationshipBetweenGroups(Relationship.Respect, MindControl.spectatorProtagonistRelationGroup, gangData.gangs[i].relationGroupIndex);
+
                 //relations between gangs...
                 for (int j = 0; j < i; j++)
                 {
@@ -172,12 +192,58 @@ namespace GTA.GangAndTurfMod
                         World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
                         World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
                     }
-                }
 
-                //relations between player and gangs...
+
+                    if (gangData.gangs[i].isPlayerOwned)
+                    {
+                        World.SetRelationshipBetweenGroups(Relationship.Companion, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+                        World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    }
+                    else if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
+                    {
+                        //everyone should try to ignore the player, even during wars
+                        World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+                        World.SetRelationshipBetweenGroups(Relationship.Respect, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    }
+                    else if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(PlayerGang, gangData.gangs[i]))
+                    {
+                        World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+                        World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    }
+                    else
+                    {
+                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
+                        World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// updates gangs' relation levels with the player character
+        /// </summary>
+        public void RefreshPlayerRelationsWithAiGangs()
+        {
+            Relationship targetRelationLevel = Relationship.Hate;
+
+            switch (ModOptions.instance.gangMemberAggressiveness)
+            {
+                case ModOptions.GangMemberAggressivenessMode.veryAgressive:
+                    targetRelationLevel = Relationship.Hate;
+                    break;
+                case ModOptions.GangMemberAggressivenessMode.agressive:
+                    targetRelationLevel = Relationship.Dislike;
+                    break;
+                case ModOptions.GangMemberAggressivenessMode.defensive:
+                    targetRelationLevel = Relationship.Neutral;
+                    break;
+            }
+
+            for (int i = gangData.gangs.Count - 1; i > -1; i--)
+            {
                 if (!gangData.gangs[i].isPlayerOwned)
                 {
-                    if (ModOptions.instance.playerIsASpectator)
+                    if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
                     {
                         //everyone should try to ignore the player, even during wars
                         World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
@@ -361,7 +427,7 @@ namespace GTA.GangAndTurfMod
                 UI.Notify("The " + gangName + " have entered San Andreas!");
             }
 
-            SetGangRelationsAccordingToAggrLevel(ModOptions.instance.gangMemberAggressiveness);
+            SetGangRelationsAccordingToAggrLevel();
 
             return newGang;
         }
@@ -439,7 +505,7 @@ namespace GTA.GangAndTurfMod
                         rewardedCash += zoneReward;
                     }
 
-                    MindControl.instance.AddOrSubtractMoneyToProtagonist(rewardedCash);
+                    MindControl.AddOrSubtractMoneyToProtagonist(rewardedCash);
                     Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     if (ModOptions.instance.notificationsEnabled)
                         UI.Notify("Money won from controlled zones: " + rewardedCash.ToString());
@@ -507,7 +573,7 @@ namespace GTA.GangAndTurfMod
                 return null;
             }
 
-            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember, true))
+            if (MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember, true))
             {
                 Gang playergang = PlayerGang;
                 //only allow spawning if the player has turf
@@ -518,7 +584,7 @@ namespace GTA.GangAndTurfMod
                     if (spawnedPed != null)
                     {
                         ticksSinceLastParaBkp = 0;
-                        MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember);
+                        MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallParachutingMember);
                         return spawnedPed;
                     }
                     else
@@ -546,7 +612,7 @@ namespace GTA.GangAndTurfMod
                 UI.ShowSubtitle("You must wait before calling for car backup again! (This is configurable)");
                 return null;
             }
-            if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
+            if (MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
             {
                 Gang playergang = PlayerGang;
                 if (ZoneManager.instance.GetZonesControlledByGang(playergang.name).Count > 0)
@@ -560,7 +626,7 @@ namespace GTA.GangAndTurfMod
                     if (spawnedVehicle != null)
                     {
                         ticksSinceLastCarBkp = 0;
-                        MindControl.instance.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
+                        MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
                         UI.ShowSubtitle("A vehicle is on its way!", 1000);
 
                         return spawnedVehicle;

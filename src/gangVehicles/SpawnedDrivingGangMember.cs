@@ -12,11 +12,11 @@ namespace GTA.GangAndTurfMod
         public Vector3 destination;
         public Vehicle vehicleIAmDriving;
         public int updatesWhileGoingToDest;
-        public int updateLimitWhileGoing = 30;
+        public int updateLimitWhileGoing = 42;
 
         public bool playerAsDest = false;
 
-        public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120, RADIUS_DESTINATION_ARRIVED = 20;
+        public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120;
         
 
         private float targetSpeed;
@@ -29,7 +29,7 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// if the stuck counter gets to this value, we switch to another driving style in an attempt to get ourselves out of that position
         /// </summary>
-        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 4;
+        private const int CHANGE_DRIVESTYLE_STUCK_COUNTER_THRESHOLD = 6;
         /// <summary>
         /// if we're heading towards the destination and our current speed is equal or below this value, we consider ourselves to be stuck
         /// </summary>
@@ -55,14 +55,16 @@ namespace GTA.GangAndTurfMod
             {
                 if (deliveringCar)
                 {
-                    watchedPed.BlockPermanentEvents = true; //our driver shouldn't get distracted
+                    //since we want this vehicle to arrive,
+                    //our driver shouldn't get distracted with fights and stuff
+                    watchedPed.BlockPermanentEvents = true;
                 }
 
                 if (destination != Vector3.Zero)
                 {
                     //even if we are backup vehicles, we should despawn if TOO far
                     if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                            ModOptions.instance.maxDistanceCarSpawnFromPlayer * 8)
+                            ModOptions.instance.carWithDestinationDespawnDistanceFromPlayer)
                     {
                         DespawnProcedure();
                         return;
@@ -85,7 +87,7 @@ namespace GTA.GangAndTurfMod
 
                     //if we get too far from the player, despawn
                     if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                            ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3)
+                            ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                     {
 
                         DespawnProcedure();
@@ -96,7 +98,8 @@ namespace GTA.GangAndTurfMod
                     //it's probably close to the action
                     if (GangWarManager.instance.focusedWar != null)
                     {
-                        deliveringCar = !vehicleHasGuns; //leave the vehicle after arrival only if it's unarmed
+                        //leave the vehicle after arrival only if it's unarmed and the modOption is active
+                        deliveringCar = !vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival; 
                         destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
                         //if spawns still aren't set... try getting to the player
@@ -141,18 +144,30 @@ namespace GTA.GangAndTurfMod
             distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
 
             //if we're close to the destination...
-            if (distToDest < RADIUS_DESTINATION_ARRIVED) //tweaked to match my changes below -- zix
+            if (distToDest < ModOptions.instance.driverDistanceToDestForArrival)
             {
-                //leave the vehicle if we are a backup vehicle and the player's on foot
+                //if we were heading somewhere (not the player) or we're a backup vehicle and the player's on foot...
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
-                    if (deliveringCar || (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival))
+                    if (deliveringCar)
                     {
                         DriverLeaveVehicle();
                     }
                     else
                     {
-                        ClearAllRefs(true);
+                        //if we weren't planning to leave the vehicle here...
+                        if(!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival)
+                        {
+                            DropOffPassengers();
+                            destination = Vector3.Zero;
+                        }
+                        else
+                        {
+                            //ClearAllRefs(true);
+                            //testing this
+                            DropOffPassengers();
+                            destination = Vector3.Zero;
+                        }
                     }
                 }
             }
@@ -181,7 +196,7 @@ namespace GTA.GangAndTurfMod
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
                     (!playerAsDest || !playerInVehicle))
                 {
-                    if (playerAsDest && deliveringCar) //zix - extra config options
+                    if (playerAsDest && deliveringCar)
                     {
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
@@ -214,7 +229,7 @@ namespace GTA.GangAndTurfMod
                             if (ModOptions.instance.forceSpawnCars &&
                                 watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex &&
                                 vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                                ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3 &&
+                                ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2 &&
                                 !vehicleIAmDriving.IsOnScreen)
                             {
 
@@ -229,8 +244,8 @@ namespace GTA.GangAndTurfMod
                                 //just keep following on the ground in this case;
                                 //both allies and enemies should do it
                                 watchedPed.Task.DriveTo
-                                    (vehicleIAmDriving, destination, 15, 50,
-                                    ModOptions.instance.driverWithDestinationDrivingStyle);
+                                    (vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival, MAX_SPEED,
+                                    GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                             }
                             else
                             {
@@ -238,7 +253,7 @@ namespace GTA.GangAndTurfMod
                                 {
                                     Function.Call(Hash.TASK_VEHICLE_ESCORT, watchedPed, vehicleIAmDriving,
                                         MindControl.CurrentPlayerCharacter.CurrentVehicle, -1, -1,
-                                        ModOptions.instance.driverWithDestinationDrivingStyle, 30, 0, 35);
+                                        GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), 30, 0, 35);
                                 }
                                 else
                                 {
@@ -260,14 +275,23 @@ namespace GTA.GangAndTurfMod
                             }
 
                             watchedPed.Task.ClearAll();
-                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, 15, targetSpeed, 
-                                attemptingUnstuckVehicle ? DRIVESTYLE_REVERSE : ModOptions.instance.driverWithDestinationDrivingStyle);
+                            watchedPed.Task.DriveTo(vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival / 2, targetSpeed,
+                                GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                         }
                     }
                 }
             }
         }
 
+
+        private int GetAppropriateDrivingStyle(bool unstucking, float distToDest)
+        {
+            if (unstucking) return DRIVESTYLE_REVERSE;
+
+            return distToDest <= SLOW_DOWN_DIST / 2 ?
+                ModOptions.instance.nearbyDriverWithDestinationDrivingStyle :
+                ModOptions.instance.driverWithDestinationDrivingStyle;
+        }
 
         /// <summary>
         /// tells the driver to leave the vehicle, then clearAllRefs
@@ -282,6 +306,21 @@ namespace GTA.GangAndTurfMod
             }
 
             ClearAllRefs();
+        }
+
+        /// <summary>
+        /// attempts to make everyone not driving or operating a gun to leave the vehicle
+        /// </summary>
+        public void DropOffPassengers()
+        {
+            for(int i = myPassengers.Count - 1; i >= 0; i--)
+            {
+                if (myPassengers[i] != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, myPassengers[i]))
+                {
+                    myPassengers[i].Task.LeaveVehicle();
+                    myPassengers.RemoveAt(i);
+                }
+            }
         }
 
         /// <summary>
@@ -368,7 +407,10 @@ namespace GTA.GangAndTurfMod
             {
                 Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
                 myPassengers.Add(memberInSeat);
-                Function.Call(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat);
+                if(memberInSeat != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat))
+                {
+                    memberInSeat.BlockPermanentEvents = false;
+                }
             }
         }
 

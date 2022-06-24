@@ -27,9 +27,6 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public bool onCaptureCooldown = false;
 
-
-        public const float DISTANCE_TO_CAPTURE = 5;
-
         /// <summary>
         /// if the blip is being displayed, refreshes its size and color
         /// </summary>
@@ -125,7 +122,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (member.watchedPed != null && member.watchedPed.IsAlive && member.myGang != ownerGang)
                 {
-                    if (World.GetDistance(position, member.watchedPed.Position) <= DISTANCE_TO_CAPTURE)
+                    if (World.GetDistance(position, member.watchedPed.Position) <= ModOptions.instance.distanceToCaptureWarControlPoint)
                     {
                         //Capture!
                         if (member.myGang == warUsingThisPoint.defendingGang || member.myGang == warUsingThisPoint.attackingGang)

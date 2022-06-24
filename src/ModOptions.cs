@@ -1,4 +1,5 @@
 ﻿using GTA.Native;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -9,6 +10,11 @@ namespace GTA.GangAndTurfMod
     public class ModOptions
     {
         public static ModOptions instance;
+
+        /// <summary>
+        /// triggered whenever ModOptions is reset to defaults or reloaded from the XML
+        /// </summary>
+        public static Action OnModOptionsReloaded;
 
         public ModOptions() { }
 
@@ -71,7 +77,7 @@ namespace GTA.GangAndTurfMod
 
         public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
-        public bool playerIsASpectator = false;
+        public bool protagonistsAreSpectators = false;
 
         /// <summary>
         /// "gang members everywhere", but only in zones controlled by someone
@@ -83,12 +89,16 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberArmor = 100;
         public int maxGangMemberAccuracy = 30;
 
+        public bool gangMembersAreFireproof = false;
+        public bool gangMembersCanUseCover = true;
+
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 25000;
         public int msTimeBetweenWarPunishingForNoSpawns = 1500;
         public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
+        public float distanceToCaptureWarControlPoint = 5.0f;
         public int postWarBackupsAmount = 5;
         public int warsMinNumControlPoints = 2;
         public int warsMaxExtraControlPoints = 5;
@@ -96,6 +106,7 @@ namespace GTA.GangAndTurfMod
         public int extraKillsPerTurfValue = 7;
         public int maxExtraKillsForNumTurfsControlled = 10;
         public int extraKillsPerGeneralGangStrength = 2;
+        public bool addAlreadySpawnedMembersToWarRequiredKills = true;
         public int maxConcurrentWarsAgainstPlayer = 3;
         public int maxNumWarsAiGangCanBeInvolvedIn = 3;
 
@@ -122,10 +133,13 @@ namespace GTA.GangAndTurfMod
         public int baseCostToUpgradeHealth = 20000;
         public int baseCostToUpgradeAccuracy = 40000;
 
+        public float driverDistanceToDestForArrival = 25.0f;
+
         //special thanks to Eddlm for the driving style data! 
         //more info here: https://gtaforums.com/topic/822314-guide-driving-styles/
         public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
         public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
+        public int nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
 
         public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
@@ -166,11 +180,16 @@ namespace GTA.GangAndTurfMod
         public int minDistanceBetweenWarSpawns = 40;
         public int maxDistanceBetweenWarSpawns = 200;
         public int thinkingCarLimit = 5; //a "soft" limit, ignored by backup calls made by the player
+        public int warMinAvailableSpawnsBeforeSpawningVehicle = 0;
         public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
+        public bool warMemberCullingForBalancingEnabled = true;
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
         public int maxDistanceCarSpawnFromPlayer = 150;
+        
+        public int roamingCarDespawnDistanceFromPlayer = 250;
+        public int carWithDestinationDespawnDistanceFromPlayer = 450;
 
         [XmlIgnore]
         public List<WeaponHash> primaryWeapons = new List<WeaponHash>();
@@ -350,15 +369,6 @@ namespace GTA.GangAndTurfMod
             return RandoMath.Max(1, maxGangMemberArmor / numUpgradesUntilMaxMemberAttribute);
         }
 
-        /// <summary>
-        /// returns a number that attempts to represent how big the "numKills" values are compared to the default ones.
-        /// Values greater than 1.0 should indicate more kills are required than by default
-        /// </summary>
-        /// <returns></returns>
-        public float GetWarKillsComparedToDefault()
-        {
-            return (baseNumKillsBeforeWarVictory + extraKillsPerTurfValue * 3.5f) / (25 + 15 * 3.5f);
-        }
 
         /// <summary>
         /// gets a weapon from a list and check if it is in the buyables list.
@@ -502,8 +512,7 @@ namespace GTA.GangAndTurfMod
 
             PersistenceHandler.SaveToFile(instance, "ModOptions");
 
-            GangManager.instance.ResetGangUpdateIntervals();
-            GangManager.instance.SetGangRelationsAccordingToAggrLevel(instance.gangMemberAggressiveness);
+            OnModOptionsReloaded?.Invoke();
         }
 
         public void SetWeaponListDefaultValues()

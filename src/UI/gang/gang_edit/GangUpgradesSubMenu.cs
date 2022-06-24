@@ -50,7 +50,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == healthButton)
                 {
-                    if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost, true))
+                    if (MindControl.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost, true))
                     {
                         if (playerGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
                         {
@@ -59,7 +59,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
                             }
-                            MindControl.instance.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost);
+                            MindControl.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member health upgraded!");
                         }
@@ -76,7 +76,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == armorButton)
                 {
-                    if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost, true))
+                    if (MindControl.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost, true))
                     {
                         if (playerGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
                         {
@@ -85,7 +85,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
                             }
-                            MindControl.instance.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost);
+                            MindControl.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member armor upgraded!");
                         }
@@ -102,7 +102,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == accuracyButton)
                 {
-                    if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost, true))
+                    if (MindControl.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost, true))
                     {
                         if (playerGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                         {
@@ -111,7 +111,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
                             }
-                            MindControl.instance.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost);
+                            MindControl.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Member accuracy upgraded!");
                         }
@@ -128,7 +128,7 @@ namespace GTA.GangAndTurfMod
 
                 if (item == upgradeGangValueBtn)
                 {
-                    if (MindControl.instance.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost, true))
+                    if (MindControl.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost, true))
                     {
                         if (playerGang.baseTurfValue < ModOptions.instance.maxTurfValue)
                         {
@@ -137,7 +137,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.baseTurfValue = ModOptions.instance.maxTurfValue;
                             }
-                            MindControl.instance.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost);
+                            MindControl.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost);
                             GangManager.instance.SaveGangData();
                             UI.ShowSubtitle("Gang Base Strength upgraded!");
                         }

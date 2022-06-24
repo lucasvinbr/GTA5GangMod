@@ -37,8 +37,8 @@ namespace GTA.GangAndTurfMod
             inVehicle
         }
 
-        public const int ticksBetweenIdleChange = 10;
-        private int ticksSinceLastIdleChange = 0;
+        private const int UPDATES_BETWEEN_IDLE_CHANGE = 10;
+        private int updatesSinceLastIdleChange = 0;
 
         public MemberStatus curStatus = MemberStatus.none;
 
@@ -47,8 +47,11 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// the position where we spawned (or at least the position we were in when the memberAI was attached to us)
         /// </summary>
-        private Vector3 spawnPosition;
+        private Vector3 lastStuckCheckPosition;
 
+        /// <summary>
+        /// number of consecutive times this ped has failed the "is stuck" check
+        /// </summary>
         private int stuckCounter = 0;
 
         private const int STUCK_COUNTER_LIMIT = 4;
@@ -93,50 +96,51 @@ namespace GTA.GangAndTurfMod
                     {
                         //instead of idling while in a war, members should head for one of the key locations
                         
-                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < WarControlPoint.DISTANCE_TO_CAPTURE)
-                            moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang);
+                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
+                            moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang, moveDestination);
                         
                         if (moveDestination != Vector3.Zero)
                         {
                             watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
-                            if (spawnPosition.DistanceTo(watchedPed.Position) <= 0.5f)
+                            if (lastStuckCheckPosition.DistanceTo(watchedPed.Position) <= 0.5f)
                             {
                                 //maybe we're spawning inside a building?
                                 stuckCounter++;
                                 if (watchedPed.IsInWater)
                                 {
                                     //in water and not moving, very likely to be a bad spawn!
-                                    //if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
-                                    //    UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
-                                    watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
+                                    if (!watchedPed.IsOnScreen)
+                                    {
+                                        Logger.Log("member update: repositioning member stuck in water", 4);
+                                        watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
+                                        stuckCounter = 0;
+                                        lastStuckCheckPosition = watchedPed.Position;
+                                    }
 
-                                    //if (!myGang.isPlayerOwned)
-                                    //{
-                                    //    GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                    //}
-                                    stuckCounter = 0;
                                 }
                                 else if (stuckCounter > STUCK_COUNTER_LIMIT)
                                 {
-                                    //if (ModOptions.instance.notificationsEnabled && myGang.isPlayerOwned)
-                                    //    UI.Notify("(Gang War) allied member stuck! replacing spawn points recommended");
-                                    watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
-                                    stuckCounter = 0;
-
-                                    //if (!myGang.isPlayerOwned)
-                                    //{
-                                    //    GangWarManager.instance.ReplaceEnemySpawnPoint();
-                                    //}
+                                    if (!watchedPed.IsOnScreen)
+                                    {
+                                        Logger.Log("member update: repositioning stuck member", 4);
+                                        watchedPed.Position = SpawnManager.instance.FindGoodSpawnPointForMember();
+                                        stuckCounter = 0;
+                                        lastStuckCheckPosition = watchedPed.Position;
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                lastStuckCheckPosition = watchedPed.Position;
                             }
                         }
 
                         curStatus = MemberStatus.onFootThinking;
-                        ticksSinceLastIdleChange = 0;
+                        updatesSinceLastIdleChange = 0;
                     }
                     else
                     {
-                        if (curStatus != MemberStatus.onFootThinking || ticksSinceLastIdleChange > ticksBetweenIdleChange)
+                        if (curStatus != MemberStatus.onFootThinking || updatesSinceLastIdleChange > UPDATES_BETWEEN_IDLE_CHANGE)
                         {
                             curStatus = MemberStatus.onFootThinking;
                             if (RandoMath.RandomBool())
@@ -147,11 +151,11 @@ namespace GTA.GangAndTurfMod
                             {
                                 DoAnIdleAnim();
                             }
-                            ticksSinceLastIdleChange = 0 - RandoMath.CachedRandom.Next(10);
+                            updatesSinceLastIdleChange = 0 - RandoMath.CachedRandom.Next(10);
                         }
                         else
                         {
-                            ticksSinceLastIdleChange++;
+                            updatesSinceLastIdleChange++;
                         }
                     }
                 }
@@ -161,10 +165,10 @@ namespace GTA.GangAndTurfMod
                 if (watchedPed.IsInVehicle())
                 {
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
-                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (= no longer persistent, no longer with driver AI attached)...
+                    if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (no longer persistent, no longer with mod's driver AI attached)...
                     {
                         if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-               ModOptions.instance.maxDistanceCarSpawnFromPlayer * 3)
+               ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                         {
                             //we're too far to be important
                             Die();
@@ -294,7 +298,7 @@ namespace GTA.GangAndTurfMod
             this.watchedPed = targetPed;
             this.myGang = ourGang;
             this.hasDriveByGun = hasDriveByGun;
-            this.spawnPosition = targetPed.Position;
+            this.lastStuckCheckPosition = targetPed.Position;
         }
 
         /// <summary>
