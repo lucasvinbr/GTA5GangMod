@@ -110,7 +110,7 @@
     <Compile Include="src\utils\GangCalculations.cs" />
     <Compile Include="src\GangManager.cs" />
     <Compile Include="src\gangMembers\GangMemberUpdater.cs" />
-    <Compile Include="src\gangVehicles\GangVehicleUpdater .cs" />
+    <Compile Include="src\gangMembers\GangVehicleUpdater .cs" />
     <Compile Include="src\wars\GangWarManager.cs" />
     <Compile Include="src\utils\Logger.cs" />
     <Compile Include="src\UI\MenuScript.cs" />
@@ -118,9 +118,9 @@
     <Compile Include="src\ModOptions.cs" />
     <Compile Include="src\utils\persistence\PersistenceHandler.cs" />
     <Compile Include="src\gangMembers\data\PotentialGangMember.cs" />
-    <Compile Include="src\gangVehicles\PotentialGangVehicle.cs" />
+    <Compile Include="src\gangMembers\data\PotentialGangVehicle.cs" />
     <Compile Include="src\utils\RandoMath.cs" />
-    <Compile Include="src\gangVehicles\SpawnedDrivingGangMember.cs" />
+    <Compile Include="src\gangMembers\SpawnedDrivingGangMember.cs" />
     <Compile Include="src\gangMembers\SpawnedGangMember.cs" />
     <Compile Include="src\zones\TurfZone.cs" />
     <Compile Include="src\utils\UpdatedClass.cs" />

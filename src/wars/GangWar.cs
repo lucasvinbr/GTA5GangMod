@@ -957,10 +957,26 @@ namespace GTA.GangAndTurfMod
             Logger.Log("war balancing: end", 3);
         }
 
+        /// <summary>
+        /// true if one of the sides has no spawns and all car spawns are occupied by other gangs' cars
+        /// </summary>
+        /// <returns></returns>
+        public bool IsOneOfTheSidesInNeedOfACarSpawn()
+        {
+            if (SpawnManager.instance.HasThinkingDriversLimitBeenReached())
+            {
+                return (defenderSpawnPoints.Count == 0 && SpawnManager.instance.GetSpawnedDriversOfGang(defendingGang).Count == 0) ||
+                        (attackerSpawnPoints.Count == 0 && SpawnManager.instance.GetSpawnedDriversOfGang(attackingGang).Count == 0);
+            }
+            
+
+            return false;
+        }
+
 
         #endregion
 
-        
+
 
         /// <summary>
         /// true if the position is in the war zone or close enough to one of the war area blips

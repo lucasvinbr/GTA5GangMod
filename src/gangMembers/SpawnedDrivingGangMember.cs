@@ -98,8 +98,10 @@ namespace GTA.GangAndTurfMod
                     //it's probably close to the action
                     if (GangWarManager.instance.focusedWar != null)
                     {
-                        //leave the vehicle after arrival only if it's unarmed and the modOption is active
-                        deliveringCar = !vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival; 
+                        //leave the vehicle after arrival only if it's unarmed and the modOption is active...
+                        // or if the enemy needs a vehicle spawn slot
+                        deliveringCar =  (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival) ||
+                            GangWarManager.instance.focusedWar.IsOneOfTheSidesInNeedOfACarSpawn(); 
                         destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
                         //if spawns still aren't set... try getting to the player
@@ -109,7 +111,12 @@ namespace GTA.GangAndTurfMod
                             destination = MindControl.SafePositionNearPlayer;
                         }
 
-                        updatesWhileGoingToDest = 0;
+                        // we can stay around if we don't intend to leave the vehicle
+                        if (!deliveringCar)
+                        {
+                            updatesWhileGoingToDest = 0;
+                        }
+                        
                         RideToDest();
                         return;
                     }
@@ -191,6 +198,7 @@ namespace GTA.GangAndTurfMod
                     stuckCounter = 0;
                 }
 
+                //we've run out of time to reach the destination.
                 //give up, drop passengers and go away... but only if we're not chasing the player
                 //and he/she isn't on a vehicle
                 if (updatesWhileGoingToDest > updateLimitWhileGoing &&
