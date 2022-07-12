@@ -563,7 +563,6 @@ namespace GTA.GangAndTurfMod
                     newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
 
                     newPed.IsFireProof = ModOptions.instance.gangMembersAreFireproof;
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
 
                     newPed.FiringPattern = ownerGang.membersFiringPattern;
 
@@ -615,7 +614,8 @@ namespace GTA.GangAndTurfMod
 
                     newPed.CanSwitchWeapons = true;
 
-                    Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 0);
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
+
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
 
