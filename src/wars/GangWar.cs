@@ -71,11 +71,6 @@ namespace GTA.GangAndTurfMod
 
         private Vector3 attackerVehicleSpawnDirection, defenderVehicleSpawnDirection;
 
-        /// <summary>
-        /// TODO modoption?
-        /// </summary>
-        public const float PERCENT_SPAWNS_TO_USE_IN_AI_WAR = 0.8f;
-
         public Action<GangWar> OnReinforcementsChanged;
         public Action<GangWar> OnPlayerEnteredWarzone;
         public Action<GangWar> OnPlayerLeftWarzone;
@@ -161,7 +156,7 @@ namespace GTA.GangAndTurfMod
             else
             {
                 warBlip.IsShortRange = true;
-                allowedSpawnLimit = (int)RandoMath.Max(ModOptions.instance.spawnedMemberLimit * PERCENT_SPAWNS_TO_USE_IN_AI_WAR,
+                allowedSpawnLimit = (int)RandoMath.Max(ModOptions.instance.spawnedMemberLimit * ModOptions.instance.spawnLimitPercentToUseInAIOnlyWar,
                     ModOptions.instance.minSpawnsForEachSideDuringWars * 2);
             }
 
@@ -1208,7 +1203,7 @@ namespace GTA.GangAndTurfMod
 
                     if (SpawnManager.instance.livingMembersCount < allowedSpawnLimit)
                     {
-                        SpawnMember(spawnedDefenders < maxSpawnedDefenders && defenderSpawnPoints.Count > 0);
+                        SpawnMember((spawnedAttackers > spawnedDefenders || spawnedAttackers >= maxSpawnedAttackers) && spawnedDefenders < maxSpawnedDefenders);
                     }
 
                     //check one of the control points for capture
