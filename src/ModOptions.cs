@@ -94,6 +94,7 @@ namespace GTA.GangAndTurfMod
 
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
+        public bool lockCurWarReinforcementCount = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 25000;
         public int msTimeBetweenWarPunishingForNoSpawns = 1500;

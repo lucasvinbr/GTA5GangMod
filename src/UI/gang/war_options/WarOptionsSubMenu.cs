@@ -33,7 +33,12 @@ namespace GTA.GangAndTurfMod
                 ModOptions.instance.showReinforcementCountsForAIWars,
                "If enabled, reinforcement counts will also be shown when inside a war the player's gang is not involved in.");
 
+            UIMenuCheckboxItem lockReinforcementsToggle = new UIMenuCheckboxItem("Lock current war reinforcement count",
+                ModOptions.instance.lockCurWarReinforcementCount,
+               "If enabled, reinforcement counts of the current war will never drop, making the war never end. This doesn't affect auto-resolution of distant wars.");
+
             AddItem(showReinforcementsAIWarsToggle);
+            AddItem(lockReinforcementsToggle);
 
 
             UIMenuItem warSpawnsMenuBtn = new UIMenuItem("War Potential Spawns...", "Opens the War Potential Spawns Menu, which allows viewing, creating and deleting spawns to be used in wars.");
@@ -64,6 +69,12 @@ namespace GTA.GangAndTurfMod
                 if (item == showReinforcementsAIWarsToggle)
                 {
                     ModOptions.instance.showReinforcementCountsForAIWars = checked_;
+                    ModOptions.instance.SaveOptions(false);
+                }
+
+                if (item == lockReinforcementsToggle)
+                {
+                    ModOptions.instance.lockCurWarReinforcementCount = checked_;
                     ModOptions.instance.SaveOptions(false);
                 }
             };

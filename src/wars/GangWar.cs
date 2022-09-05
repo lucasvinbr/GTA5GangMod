@@ -846,6 +846,8 @@ namespace GTA.GangAndTurfMod
 
         public void DecrementAttackerReinforcements()
         {
+            if (ModOptions.instance.lockCurWarReinforcementCount) return;
+
             attackerReinforcements--;
 
             //have we lost too many? its a victory for the defenders then
@@ -862,6 +864,8 @@ namespace GTA.GangAndTurfMod
 
         public void DecrementDefenderReinforcements()
         {
+            if (ModOptions.instance.lockCurWarReinforcementCount) return;
+
             defenderReinforcements--;
 
             if (defenderReinforcements <= 0)
