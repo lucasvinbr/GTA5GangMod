@@ -715,6 +715,13 @@ namespace GTA.GangAndTurfMod
 
                         newVehicle.IsRadioEnabled = false;
 
+                        // extra handling to spawn flying helicopters
+                        if (newVehicle.Model.IsHelicopter)
+                        {
+                            newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
+                            Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
+                        }
+
                         thinkingDrivingMembersCount++;
                         Logger.Log("spawn car: end (success)", 4);
                         return driverAI;
@@ -738,8 +745,9 @@ namespace GTA.GangAndTurfMod
             SpawnedGangMember spawnedPara = SpawnGangMember(ownerGang, spawnPos);
             if (spawnedPara != null)
             {
-                spawnedPara.watchedPed.BlockPermanentEvents = true;
-                spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+                //spawnedPara.watchedPed.BlockPermanentEvents = true;
+                //spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+                spawnedPara.StartParachuting(destPos, 100);
                 return spawnedPara.watchedPed;
             }
 
