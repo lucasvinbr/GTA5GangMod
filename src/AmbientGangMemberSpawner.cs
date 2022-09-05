@@ -1,4 +1,5 @@
 ﻿using GTA.Math;
+using GTA.Native;
 using System;
 
 /// <summary>
@@ -105,13 +106,25 @@ namespace GTA.GangAndTurfMod
                 (MindControl.CurrentPlayerCharacter.Position);
             SpawnedDrivingGangMember spawnedVehicleAI = SpawnManager.instance.SpawnGangVehicle(curGang,
                                 vehSpawnPoint, Vector3.Zero, true);
+            
             if (spawnedVehicleAI != null)
             {
-                SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
                 Ped driver = spawnedVehicleAI.watchedPed;
-                if (driver != null) //if, for some reason, we don't have a driver, do nothing
+                if (driver != null)
                 {
-                    driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, ModOptions.instance.wanderingDriverDrivingStyle);
+                    Vehicle spawnedVehicle = spawnedVehicleAI.vehicleIAmDriving;
+
+                    if (spawnedVehicle.Model.IsCar)
+                    {
+                        SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
+                        driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, ModOptions.instance.wanderingDriverDrivingStyle);
+                    }
+                    else if (spawnedVehicle.Model.IsHelicopter)
+                    {
+                        // flee from player character!
+                        Function.Call(Hash.TASK_HELI_MISSION, driver, spawnedVehicleAI.vehicleIAmDriving, 0, MindControl.CurrentPlayerCharacter, 0, 0, 0, 8,
+                                    20.0f, 20.0f, 0.0f, -1, -1, -1, 32);
+                    }
                 }
             }
         }
