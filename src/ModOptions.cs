@@ -90,6 +90,7 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberAccuracy = 30;
 
         public bool gangMembersAreFireproof = false;
+        public bool gangMembersAreFallproofWhileParachuting = false;
         public bool gangMembersCanUseCover = true;
 
         public bool emptyZoneDuringWar = true;

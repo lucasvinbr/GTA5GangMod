@@ -73,6 +73,8 @@ namespace GTA.GangAndTurfMod
                 {
                     //UI.ShowSubtitle("member no longer parachuting", 800);
                     watchedPed.BlockPermanentEvents = false;
+                    watchedPed.AlwaysKeepTask = false;
+                    watchedPed.IsCollisionProof = false;
                     curStatus = MemberStatus.none;
                 }
                 else
@@ -352,20 +354,24 @@ namespace GTA.GangAndTurfMod
 
             //UI.ShowSubtitle("member is parachuting!", 800);
             watchedPed.BlockPermanentEvents = true;
+            watchedPed.AlwaysKeepTask = true;
+            watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;
             //watchedPed.Task.LeaveVehicle();
             //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
             //watchedPed.Task.ParachuteTo(destination);
             watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
             using (TaskSequence seq = new TaskSequence())
             {
+                //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);
                 if (watchedPed.IsInVehicle())
                 {
                     seq.AddTask.LeaveVehicle();
                 }
                 //seq.AddTask.Skydive();
-                seq.AddTask.Wait(msWaitBeforeOpeningParachute);
+                //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);
                 //seq.AddTask.UseParachute();
                 seq.AddTask.ParachuteTo(destination);
+                seq.Close();
                 watchedPed.Task.PerformSequence(seq);
             };
             curStatus = MemberStatus.parachuting;
