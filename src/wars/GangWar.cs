@@ -1102,7 +1102,7 @@ namespace GTA.GangAndTurfMod
 
                     if (curTime - msTimeOfLastCarSpawn > MS_TIME_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
                     {
-                        SpawnAngryVehicle(spawnedDefenders < maxSpawnedDefenders);
+                        SpawnAngryVehicle((spawnedAttackers > spawnedDefenders || spawnedAttackers >= maxSpawnedAttackers) && spawnedDefenders < maxSpawnedDefenders);
 
                         msTimeOfLastCarSpawn = curTime;
                     }
