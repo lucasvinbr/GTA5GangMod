@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
         public Vehicle vehicleIAmDriving;
         public int updatesWhileGoingToDest;
         public int updateLimitWhileGoing = 42;
-        public int updateLimitWhileDroppingOffPassengers = 80;
+        public int updateLimitWhileDroppingOffPassengers = 70;
 
         public VehicleType vehicleType;
         public bool playerAsDest = false;
@@ -156,7 +156,15 @@ namespace GTA.GangAndTurfMod
                 destination = MindControl.SafePositionNearPlayer;
             }
 
-            distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
+            if(vehicleType != VehicleType.heli)
+            {
+                distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
+            }
+            else
+            {
+                distToDest = vehicleIAmDriving.Position.DistanceTo2D(destination);
+            }
+            
 
             //if we're close to the destination...
             if (distToDest < ModOptions.instance.driverDistanceToDestForArrival)
@@ -178,6 +186,7 @@ namespace GTA.GangAndTurfMod
                         {
                             //stay around and keep dropping off passengers for a while
                             DropOffPassengers();
+
                             destination = Vector3.Zero;
 
                             updatesWhileGoingToDest++;
@@ -185,6 +194,10 @@ namespace GTA.GangAndTurfMod
                             if(updatesWhileGoingToDest > updateLimitWhileDroppingOffPassengers)
                             {
                                 ClearAllRefs(true);
+                            }
+                            else
+                            {
+                                watchedPed.Task.FightAgainstHatedTargets(200);
                             }
                         }
                     }
@@ -279,8 +292,9 @@ namespace GTA.GangAndTurfMod
                                 }
                                 else
                                 {
+                                    // hover over destination (hopefully this means "hover over player's heli")
                                     Function.Call(Hash.TASK_HELI_MISSION, watchedPed, vehicleIAmDriving, 0, 0, destination.X, destination.Y, destination.Z, 9,
-                                    MAX_SPEED / 2, ModOptions.instance.driverDistanceToDestForArrival / 2, 0.0f, -1, -1, -1, 32);
+                                    MAX_SPEED / 2, ModOptions.instance.driverDistanceToDestForArrival / 2, 0.0f, -1, -1, -1, 0);
                                 }
                             }
                             else
@@ -315,8 +329,10 @@ namespace GTA.GangAndTurfMod
 
                             if (vehicleType == VehicleType.heli)
                             {
-                                Function.Call(Hash.TASK_HELI_MISSION, watchedPed, vehicleIAmDriving, 0, 0, destination.X, destination.Y, destination.Z, 9,
-                                    targetSpeed, ModOptions.instance.driverDistanceToDestForArrival / 2, 0.0f, -1, -1, -1, 32);
+                                // pilot ped, piloted heli, target veh, target ped, targed destination X, Y, Z, mission code (9 - circle around dest, 4 - go to dest),
+                                // move speed, landing radius, target heading, ?, ?, ?, landing flags (32 - land on dest, 0 - hover over dest)
+                                Function.Call(Hash.TASK_HELI_MISSION, watchedPed, vehicleIAmDriving, 0, 0, destination.X, destination.Y, destination.Z, 4,
+                                    targetSpeed, 5, 0, -1, -1, -1, 32);
                             }
                             else
                             {
@@ -363,12 +379,12 @@ namespace GTA.GangAndTurfMod
             int numParachuting = 0;
             for (int i = myPassengers.Count - 1; i >= 0; i--)
             {
-                if (myPassengers[i] != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, myPassengers[i]))
+                if (myPassengers[i] != watchedPed)
                 {
                     //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + myPassengers[i].SeatIndex + ". veh has guns? " + vehicleHasGuns + " in air? " + vehicleIsInAir, 800);
                     if (shouldParachute)
                     {
-                        SpawnManager.instance.GetTargetMemberAI(myPassengers[i], true)?.StartParachuting(destination, 0 + numParachuting * 800);
+                        SpawnManager.instance.GetTargetMemberAI(myPassengers[i], true)?.StartParachuting(destination, 0 + numParachuting * 1200);
                         numParachuting++;
                     }
                     else
@@ -485,7 +501,7 @@ namespace GTA.GangAndTurfMod
             {
                 Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
                 myPassengers.Add(memberInSeat);
-                if(memberInSeat != watchedPed && !Function.Call<bool>(Hash.CONTROL_MOUNTED_WEAPON, memberInSeat))
+                if(memberInSeat != watchedPed)
                 {
                     memberInSeat.BlockPermanentEvents = false;
                 }
