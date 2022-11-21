@@ -143,6 +143,9 @@ namespace GTA.GangAndTurfMod
         public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
         public int nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
 
+        public int driverUpdateLimitWhileGoingToDest = 42;
+        public int driverUpdateLimitWhileDroppingOffPassengers = 70;
+
         public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;

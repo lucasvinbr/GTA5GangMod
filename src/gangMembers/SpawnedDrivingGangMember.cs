@@ -18,8 +18,7 @@ namespace GTA.GangAndTurfMod
         public Vector3 destination;
         public Vehicle vehicleIAmDriving;
         public int updatesWhileGoingToDest;
-        public int updateLimitWhileGoing = 42;
-        public int updateLimitWhileDroppingOffPassengers = 70;
+        public int updatesWhileDroppingPassengers;
 
         public VehicleType vehicleType;
         public bool playerAsDest = false;
@@ -189,13 +188,13 @@ namespace GTA.GangAndTurfMod
 
                             destination = Vector3.Zero;
 
-                            updatesWhileGoingToDest++;
+                            updatesWhileDroppingPassengers++;
 
-                            if(updatesWhileGoingToDest > updateLimitWhileDroppingOffPassengers)
+                            if(updatesWhileDroppingPassengers > ModOptions.instance.driverUpdateLimitWhileDroppingOffPassengers)
                             {
                                 ClearAllRefs(true);
                             }
-                            else
+                            else /*if(vehicleType != VehicleType.heli)*/
                             {
                                 watchedPed.Task.FightAgainstHatedTargets(200);
                             }
@@ -226,7 +225,7 @@ namespace GTA.GangAndTurfMod
                 //we've run out of time to reach the destination.
                 //give up, drop passengers and go away... but only if we're not chasing the player
                 //and he/she isn't on a vehicle
-                if (updatesWhileGoingToDest > updateLimitWhileGoing &&
+                if (updatesWhileGoingToDest > ModOptions.instance.driverUpdateLimitWhileGoingToDest &&
                     (!playerAsDest || !playerInVehicle))
                 {
                     if (playerAsDest && deliveringCar)
@@ -473,6 +472,7 @@ namespace GTA.GangAndTurfMod
             this.isFriendlyToPlayer = isFriendlyToPlayer;
             Function.Call(Hash.SET_DRIVER_ABILITY, watchedPed, 1.0f);
             updatesWhileGoingToDest = 0;
+            updatesWhileDroppingPassengers = 0;
             attemptingUnstuckVehicle = false;
             stuckCounter = 0;
             SetWatchedPassengers();
