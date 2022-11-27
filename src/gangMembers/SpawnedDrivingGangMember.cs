@@ -194,7 +194,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 ClearAllRefs(true);
                             }
-                            else /*if(vehicleType != VehicleType.heli)*/
+                            else if(vehicleHasGuns)
                             {
                                 watchedPed.Task.FightAgainstHatedTargets(200);
                             }
