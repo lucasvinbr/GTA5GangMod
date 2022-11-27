@@ -33,8 +33,8 @@ namespace GTA.GangAndTurfMod
             purple
         }
 
-        //we just save the torso and leg data.
-        //torso component id is believed to be 3 and legs 4
+        //we save head, hair, torso and leg data (we don't save hair texture here, we do only in the extended save mode).
+        //head id is believed to be 0, hair is 2, torso 3 and legs 4
         //if data is saved with a value of -1, it wasn't considered important (by the person who saved) to the linked color
 
         public int modelHash;
