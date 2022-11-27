@@ -42,6 +42,12 @@ namespace GTA.GangAndTurfMod
         public int headDrawableIndex, headTextureIndex;
         public int torsoDrawableIndex, torsoTextureIndex;
         public int legsDrawableIndex, legsTextureIndex;
+        /// <summary>
+        /// a "version number" of the registration.
+        /// this exists to make sure we don't break old registrations and adapt some checks to fit them.
+        /// this shouldn't affect registrations' "is equal" checks
+        /// </summary>
+        public int regVersion;
         public DressStyle myStyle;
         public MemberColor linkedColor;
 
@@ -82,6 +88,7 @@ namespace GTA.GangAndTurfMod
             this.torsoTextureIndex = torsoTextureIndex;
             this.legsDrawableIndex = legsDrawableIndex;
             this.legsTextureIndex = legsTextureIndex;
+            this.regVersion = 1;
         }
 
         /// <summary>
@@ -138,6 +145,7 @@ namespace GTA.GangAndTurfMod
             this.hairDrawableIndex = -1;
             this.headDrawableIndex = -1;
             this.headTextureIndex = -1;
+            this.regVersion = 0;
         }
 
         /// <summary>
@@ -149,23 +157,55 @@ namespace GTA.GangAndTurfMod
 
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
 
-            //if we're not a legacy registration, set the head and hair data too
-            if (hairDrawableIndex != -1)
+            // old version (no regVersion, regVersion 0):
+            // check if hairDrawableIndex is set, to make sure this entry is recent enough
+            // and/or intentionally edits head/hair data
+            if(regVersion < 1)
             {
-                int randomHairTex = RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
-                    targetPed, 2, hairDrawableIndex));
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
+                if (hairDrawableIndex != -1)
+                {
+                    int randomHairTex = RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 2, hairDrawableIndex));
+                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
+                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
+                }
+            }
+            else
+            {
+                if(headDrawableIndex != -1)
+                {
+                    int headTexIndex = headTextureIndex != -1 ?
+                        headTextureIndex :
+                        RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                            targetPed, 0, headTextureIndex));
+                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTexIndex, pedPalette);
+                }
+
+                if(hairDrawableIndex != -1)
+                {
+                    int randomHairTex = RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 2, hairDrawableIndex));
+                    Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, randomHairTex, pedPalette);
+                }
+            }
+            
+
+            if (torsoDrawableIndex != -1)
+            {
+                int torsoTexIndex = torsoTextureIndex != -1 ?
+                    torsoTextureIndex :
+                    RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 3, torsoDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTexIndex, pedPalette);
             }
 
-            if (torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            if (legsDrawableIndex != -1)
             {
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
-            }
-
-            if (legsDrawableIndex != -1 && legsTextureIndex != -1)
-            {
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+                int legsTexIndex = legsTextureIndex != -1 ?
+                    legsTextureIndex :
+                    RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 4, legsDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTexIndex, pedPalette);
             }
 
         }
