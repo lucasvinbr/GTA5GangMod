@@ -77,6 +77,8 @@ namespace GTA.GangAndTurfMod
 
         public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
+        public string preferredLanguage;
+
         public bool protagonistsAreSpectators = false;
 
         /// <summary>
@@ -505,13 +507,15 @@ namespace GTA.GangAndTurfMod
 
             List<GangColorTranslation> gangColors = similarColors;
             List<VehicleColor> playerExclusiveColors = extraPlayerExclusiveColors;
+            string language = preferredLanguage;
 
             instance = new ModOptions
             {
+                preferredLanguage = language,
                 possibleGangFirstNames = gangFirstNames,
                 possibleGangLastNames = gangLastNames,
                 similarColors = gangColors,
-                extraPlayerExclusiveColors = playerExclusiveColors
+                extraPlayerExclusiveColors = playerExclusiveColors,
             };
 
             instance.SetupPrimaryWeapons();
