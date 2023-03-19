@@ -33,6 +33,7 @@ namespace GTA.GangAndTurfMod
                 {
                     UI.Notify("an error occurred when trying to load xml file " + fileName + "! error: " + e.ToString());
                     Logger.Log("loading file " + fileName + " failed! error: " + e.ToString(), 1);
+                    Logger.WriteDedicatedErrorFile("loading file " + fileName + " failed! error: " + e.ToString());
                     //backup the bad file! It's very sad to lose saved data, even if it's corrupted somehow
                     string bkpFilePath = Application.StartupPath + "/gangModData/" + fileName + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".xml";
                     File.Copy(filePath, bkpFilePath, true);
@@ -80,6 +81,7 @@ namespace GTA.GangAndTurfMod
             {
                 UI.Notify("an error occurred while trying to save gang mod data! error: " + e.ToString());
                 Logger.Log("failed to save file: " + fileName + "! Error: " + e.ToString(), 1);
+                Logger.WriteDedicatedErrorFile("failed to save file: " + fileName + "! Error: " + e.ToString());
             }
 
         }
