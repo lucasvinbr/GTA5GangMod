@@ -346,10 +346,13 @@ namespace GTA.GangAndTurfMod
 
         /// <summary>
         /// leaves our current vehicle (if any) and starts the parachuting procedure!
+        /// (Cancels if the ped is currently controlled by the player)
         /// </summary>
         /// <param name="destination"></param>
         public void StartParachuting(Vector3 destination, int msWaitBeforeOpeningParachute = 0)
         {
+            if (MindControl.currentlyControlledMember == this) return;
+
             if (destination == default || destination == Vector3.Zero) destination = MindControl.SafePositionNearPlayer;
 
             //UI.ShowSubtitle("member is parachuting!", 800);

@@ -58,6 +58,11 @@ namespace GTA.GangAndTurfMod
 
         public override void Update()
         {
+            if (MindControl.CurrentPlayerCharacter == watchedPed)
+            {
+                return;
+            }
+
             if (vehicleIAmDriving.IsAlive && watchedPed.IsAlive)
             {
                 if (deliveringCar || vehicleType != VehicleType.car)
@@ -360,7 +365,7 @@ namespace GTA.GangAndTurfMod
         public void DriverLeaveVehicle()
         {
             //leave vehicle, everyone stops being important
-            if (!watchedPed.IsPlayer)
+            if (MindControl.CurrentPlayerCharacter != watchedPed)
             {
                 watchedPed.Task.LeaveVehicle();
                 watchedPed.BlockPermanentEvents = false;
@@ -380,17 +385,22 @@ namespace GTA.GangAndTurfMod
             {
                 if (myPassengers[i] != watchedPed)
                 {
-                    //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + myPassengers[i].SeatIndex + ". veh has guns? " + vehicleHasGuns + " in air? " + vehicleIsInAir, 800);
+                    //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + myPassengers[i].SeatIndex + ". veh has guns? " + vehicleHasGuns, 800);
                     if (shouldParachute)
                     {
                         SpawnManager.instance.GetTargetMemberAI(myPassengers[i], true)?.StartParachuting(destination, 0 + numParachuting * 1200);
                         numParachuting++;
+                        myPassengers.RemoveAt(i);
                     }
                     else
                     {
-                        myPassengers[i].Task.LeaveVehicle();
+                        if(MindControl.CurrentPlayerCharacter != myPassengers[i])
+                        {
+                            myPassengers[i].Task.LeaveVehicle();
+                            myPassengers.RemoveAt(i);
+                        }
                     }
-                    myPassengers.RemoveAt(i);
+                    
                 }
             }
         }
@@ -412,8 +422,9 @@ namespace GTA.GangAndTurfMod
                 vehicleIAmDriving = null;
             }
 
-            if (makeDriverRoamPostClear && watchedPed.IsInVehicle())
+            if (makeDriverRoamPostClear && watchedPed.IsInVehicle() && MindControl.CurrentPlayerCharacter != watchedPed)
             {
+
                 if (vehicleType != VehicleType.heli)
                 {
                     watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
