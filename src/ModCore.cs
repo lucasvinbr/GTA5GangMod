@@ -29,7 +29,8 @@ namespace GTA.GangAndTurfMod
 
             MindControl.SetupData();
             gangManagerScript = new GangManager();
-            
+
+            Localization.Initialize();
 
             menuScript = new MenuScript();
 

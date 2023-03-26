@@ -11,6 +11,12 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class PersistenceHandler
     {
+        /// <summary>
+        /// attempts to load data from a file. The path is expected to be GTAV/gangModData/{fileName}.xml
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public static T LoadFromFile<T>(string fileName)
         {
 
