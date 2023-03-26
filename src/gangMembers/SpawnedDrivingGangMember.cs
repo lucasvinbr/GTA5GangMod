@@ -492,7 +492,7 @@ namespace GTA.GangAndTurfMod
             if (vehicleIAmDriving.Model.IsHelicopter)
             {
                 vehicleType = VehicleType.heli;
-            }else if(!vehicleIAmDriving.Model.IsPlane || vehicleIAmDriving.Model.IsBoat)
+            }else if(vehicleIAmDriving.Model.IsPlane || vehicleIAmDriving.Model.IsBoat)
             {
                 vehicleType = VehicleType.unsupported;
             }
