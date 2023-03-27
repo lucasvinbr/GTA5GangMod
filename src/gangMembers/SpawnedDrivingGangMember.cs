@@ -176,9 +176,26 @@ namespace GTA.GangAndTurfMod
                 //if we were heading somewhere (not the player) or we're a backup vehicle and the player's on foot...
                 if (!playerAsDest || (playerAsDest && !playerInVehicle))
                 {
-                    if (deliveringCar && vehicleType == VehicleType.car)
+                    if (deliveringCar)
                     {
-                        DriverLeaveVehicle();
+                        if(vehicleType == VehicleType.car)
+                        {
+                            DriverLeaveVehicle();
+                        } 
+                        else if(vehicleType == VehicleType.heli)
+                        {
+                            // land, then leave heli
+
+                            // pilot ped, piloted heli, target veh, target ped, targed destination X, Y, Z, mission code (9 - circle around dest, 4 - go to dest),
+                            // move speed, landing radius, target heading, ?, ?, ?, landing flags (32 - land on dest, 0 - hover over dest)
+                            Function.Call(Hash.TASK_HELI_MISSION, watchedPed, vehicleIAmDriving, 0, 0, destination.X, destination.Y, destination.Z, 4,
+                                    MAX_SPEED, ModOptions.instance.driverDistanceToDestForArrival, 0, -1, -1, -1, 32);
+
+                            if(vehicleIAmDriving.IsOnAllWheels)
+                            {
+                                DriverLeaveVehicle();
+                            }
+                        }
                     }
                     else
                     {
@@ -367,6 +384,7 @@ namespace GTA.GangAndTurfMod
             //leave vehicle, everyone stops being important
             if (MindControl.CurrentPlayerCharacter != watchedPed)
             {
+                //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + "'s driver is leaving vehicle", 800);
                 watchedPed.Task.LeaveVehicle();
                 watchedPed.BlockPermanentEvents = false;
             }
@@ -487,6 +505,8 @@ namespace GTA.GangAndTurfMod
             attemptingUnstuckVehicle = false;
             stuckCounter = 0;
             SetWatchedPassengers();
+
+            //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
 
             vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
             if (vehicleIAmDriving.Model.IsHelicopter)
