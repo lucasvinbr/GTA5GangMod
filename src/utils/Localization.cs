@@ -68,26 +68,29 @@ namespace GTA.GangAndTurfMod
                 SetCurrentLangCulture(CultureInfo.GetCultureInfo("en-US"));
             }
 
-            Logger.Log(CurrentlyUsedFile.DebugDumpLocaleData(), 5);
+            Logger.Log(CurrentlyUsedFile?.DebugDumpLocaleData(), 5);
             Logger.Log(GetTextByKey("test_locale", "locale test: does not work"), 1);
         }
 
         public static void FetchAndStoreAvailableLanguages()
         {
             AvailableLanguageCultures = new List<CultureInfo>();
-            foreach (var filePath in Directory.EnumerateFiles(LocalesPath))
+            if (Directory.Exists(LocalesPath))
             {
-                if (filePath.EndsWith(".xml"))
+                foreach (var filePath in Directory.EnumerateFiles(LocalesPath))
                 {
-                    var fileNameNoExtension = Path.GetFileNameWithoutExtension(filePath);
-                    try
+                    if (filePath.EndsWith(".xml"))
                     {
-                        var fileCulture = CultureInfo.GetCultureInfo(fileNameNoExtension);
-                        AvailableLanguageCultures.Add(fileCulture);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.WriteDedicatedErrorFile(ex);
+                        var fileNameNoExtension = Path.GetFileNameWithoutExtension(filePath);
+                        try
+                        {
+                            var fileCulture = CultureInfo.GetCultureInfo(fileNameNoExtension);
+                            AvailableLanguageCultures.Add(fileCulture);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.WriteDedicatedErrorFile(ex);
+                        }
                     }
                 }
             }
