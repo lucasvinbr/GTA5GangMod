@@ -84,6 +84,7 @@
     <Compile Include="src\AmbientGangMemberSpawner.cs" />
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\gangMembers\data\ExtendedPotentialGangMember.cs" />
+    <Compile Include="src\utils\Localization.cs" />
     <Compile Include="src\zones\CustomTurfZone.cs" />
     <Compile Include="src\UI\gang\generic\PickAiGangMenu.cs" />
     <Compile Include="src\UI\ModMenu.cs" />
@@ -131,7 +132,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <GTAGameDestination>"E:\steam\steamapps\common\Grand Theft Auto V\scripts\GangAndTurfMod.dll"</GTAGameDestination>
+    <GTAGameDestination>"F:\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\GangAndTurfMod.dll"</GTAGameDestination>
     <PostBuildEvent>copy $(TargetPath) $(GTAGameDestination)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
