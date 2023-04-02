@@ -132,14 +132,14 @@ namespace GTA.GangAndTurfMod
                         {
                             if (PotentialSpawnsForWars.RemovePositionAndSave(MindControl.SafePositionNearPlayer))
                             {
-                                UI.ShowSubtitle("Potential Spawn Removed!");
+                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_removed", "Potential Spawn Removed!"));
                             }
                         }
                         else
                         {
                             if (PotentialSpawnsForWars.AddPositionAndSave(MindControl.SafePositionNearPlayer))
                             {
-                                UI.ShowSubtitle("Potential Spawn Added!");
+                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_added", "Potential Spawn Added!"));
                             }
                         }
                     }
@@ -224,7 +224,7 @@ namespace GTA.GangAndTurfMod
                                 playerGangDrivers[i].deliveringCar = true;
                                 playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
                                 playerGangDrivers[i].Update();
-                                UI.Notify("Car told to back you up!");
+                                UI.Notify(Localization.GetTextByKey("notify_car_told_to_backup", "Car told to back you up!"));
                                 return;
                             }
                         }
@@ -241,7 +241,7 @@ namespace GTA.GangAndTurfMod
                                 if (playerGangMembers[i].IsInGroup)
                                 {
                                     Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                                    UI.Notify("A member has left your group");
+                                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
                                 }
                                 else
                                 {
@@ -250,7 +250,7 @@ namespace GTA.GangAndTurfMod
                                     Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
                                     if (playerGangMembers[i].IsInGroup)
                                     {
-                                        UI.Notify("A member has joined your group");
+                                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
                                     }
                                     else
                                     {
@@ -274,7 +274,7 @@ namespace GTA.GangAndTurfMod
                             if (playerGangMembers[i].IsInGroup)
                             {
                                 Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                                UI.Notify("A member has left your group");
+                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
                             }
                             else
                             {
@@ -283,7 +283,7 @@ namespace GTA.GangAndTurfMod
                                 Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
                                 if (playerGangMembers[i].IsInGroup)
                                 {
-                                    UI.Notify("A member has joined your group");
+                                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
                                 }
                             }
                             break;
@@ -328,7 +328,7 @@ namespace GTA.GangAndTurfMod
 
         private void OnAbort(object sender, EventArgs e)
         {
-            UI.Notify("Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.");
+            UI.Notify(Localization.GetTextByKey("notify_mod_abort_removing_blips", "Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors."));
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
             if (MindControl.HasChangedBody)
             {

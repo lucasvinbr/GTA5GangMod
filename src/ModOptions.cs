@@ -445,7 +445,7 @@ namespace GTA.GangAndTurfMod
             if (newKey == Keys.Escape || newKey == Keys.ShiftKey ||
                 newKey == Keys.Insert || newKey == Keys.ControlKey)
             {
-                UI.ShowSubtitle("That key can't be used because some settings would become unaccessible due to conflicts.");
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_cannot_be_used_due_to_conflicts", "That key can't be used because some settings would become unaccessible due to conflicts."));
                 return;
             }
 
@@ -460,7 +460,7 @@ namespace GTA.GangAndTurfMod
 
             if (curKeys.Contains(newKey))
             {
-                UI.ShowSubtitle("That key is already being used by this mod's commands.");
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_already_being_used_by_mod", "That key is already being used by this mod's commands."));
                 return;
             }
             else
@@ -481,7 +481,8 @@ namespace GTA.GangAndTurfMod
                         break;
                 }
 
-                UI.ShowSubtitle("Key changed!");
+                
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_was_changed", "Key changed!"));
                 SaveOptions();
             }
         }

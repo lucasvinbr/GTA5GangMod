@@ -1,5 +1,6 @@
 ﻿using GTA.Native;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
@@ -243,7 +244,7 @@ namespace GTA.GangAndTurfMod
 
             if (MemberPool.memberList.Count <= 0)
             {
-                UI.Notify("GTA5GangNTurfMod Warning: empty/bad memberpool file! Enemy gangs won't spawn");
+                UI.Notify(Localization.GetTextByKey("notify_warn_bad_memberpool_file", "GTA5GangNTurfMod Warning: empty/bad memberpool file! Enemy gangs won't spawn"));
                 return null;
             }
 
@@ -266,8 +267,10 @@ namespace GTA.GangAndTurfMod
                         return returnedMember;
                     }
                 }
-
-                UI.Notify("failed to find a potential member of style " + style.ToString() + " and color " + color.ToString());
+                
+                UI.Notify(string.Format(Localization.GetTextByKey("notify_failed_find_pot_member_style_x_color_y", "failed to find a potential member of style {0} and color {1}"),
+                    style.ToString(),
+                    color.ToString()));
             }
 
             return returnedMember;

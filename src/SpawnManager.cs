@@ -1,6 +1,7 @@
 ﻿using GTA.Math;
 using GTA.Native;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace GTA.GangAndTurfMod
@@ -585,7 +586,7 @@ namespace GTA.GangAndTurfMod
 
                         //set blip name - got to use native, the c# blip.name returns error ingame
                         Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, ownerGang.name + " member");
+                        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Format(Localization.GetTextByKey("blip_member_of_gang_x", "{0} member"), ownerGang.name));
                         Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
                     }
 
