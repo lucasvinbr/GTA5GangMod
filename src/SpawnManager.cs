@@ -375,7 +375,10 @@ namespace GTA.GangAndTurfMod
         }
 
 
-
+        /// <summary>
+        /// true if there are too many drivers with driver AI attached
+        /// </summary>
+        /// <returns></returns>
         public bool HasThinkingDriversLimitBeenReached()
         {
             return thinkingDrivingMembersCount >= ModOptions.instance.thinkingCarLimit;
@@ -557,7 +560,7 @@ namespace GTA.GangAndTurfMod
 
                     newPed.Accuracy = (int) (ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
 
-                    newPed.CanWrithe = false; //no early dying
+                    newPed.CanWrithe = ModOptions.instance.gangMembersCanWrithe; //no early dying?
                     int memberHealth = 100 + RandoMath.Max(1, (int)(ownerGang.memberHealth * ownerGang.memberHealthMultiplier));
                     newPed.MaxHealth = memberHealth;
                     newPed.Health = memberHealth;
