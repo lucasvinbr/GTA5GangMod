@@ -28,13 +28,14 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public Vector3 moveDestination;
 
-        
+
         public enum MemberStatus
         {
             none,
             onFootThinking,
             combat,
-            inVehicle
+            inVehicle,
+            parachuting
         }
 
         private const int UPDATES_BETWEEN_IDLE_CHANGE = 10;
@@ -60,10 +61,27 @@ namespace GTA.GangAndTurfMod
         {
             Logger.Log("member update: start", 5);
 
-            if ((watchedPed.IsInAir) || MindControl.CurrentPlayerCharacter == watchedPed)
+            if (MindControl.CurrentPlayerCharacter == watchedPed)
             {
                 Logger.Log("member update: end (isPlayer or etc)", 5);
                 return;
+            }
+
+            if (curStatus == MemberStatus.parachuting)
+            {
+                if(!watchedPed.IsAlive || watchedPed.HeightAboveGround < 2.0f)
+                {
+                    //UI.ShowSubtitle("member no longer parachuting", 800);
+                    watchedPed.BlockPermanentEvents = false;
+                    watchedPed.AlwaysKeepTask = false;
+                    watchedPed.IsCollisionProof = false;
+                    curStatus = MemberStatus.none;
+                }
+                else
+                {
+                    Logger.Log("member update: end (still parachuting)", 5);
+                    return;
+                }
             }
 
             if (!watchedPed.IsAlive)
@@ -96,9 +114,9 @@ namespace GTA.GangAndTurfMod
                     {
                         //instead of idling while in a war, members should head for one of the key locations
                         
-                        if(moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
+                        if (moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
                             moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang, moveDestination);
-                        
+
                         if (moveDestination != Vector3.Zero)
                         {
                             watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
@@ -176,6 +194,7 @@ namespace GTA.GangAndTurfMod
                             return;
                         }
 
+
                         //if we were a driving member, we must be allowed to "be distracted" again
                         watchedPed.BlockPermanentEvents = false;
 
@@ -184,21 +203,45 @@ namespace GTA.GangAndTurfMod
                             //possibly leave the vehicle if the driver has left already
                             if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
                             {
-                                watchedPed.Task.LeaveVehicle();
+                                if (curVehicle.HeightAboveGround > 15.0f)
+                                {
+                                    StartParachuting(MindControl.SafePositionNearPlayer);
+                                }
+                                else
+                                {
+                                    watchedPed.Task.LeaveVehicle();
+                                }
+
                                 stuckCounter = 0;
                             }
                         }
                         else
                         {
                             //even if we're inside an awesome vehicle, we should probably leave it if we appear to be stuck
-                            if(!watchedPed.IsInCombat && curVehicle.Speed < 20)
+                            if (!watchedPed.IsInCombat && curVehicle.Speed < 20)
                             {
                                 stuckCounter++;
 
-                                if(stuckCounter > STUCK_COUNTER_LIMIT)
+                                if (stuckCounter > STUCK_COUNTER_LIMIT)
                                 {
-                                    watchedPed.Task.LeaveVehicle();
-                                    
+                                    if (curVehicle.Model.IsHelicopter)
+                                    {
+                                        if(watchedPed.SeatIndex != VehicleSeat.Driver)
+                                        {
+                                            StartParachuting(MindControl.SafePositionNearPlayer);
+                                        }
+                                        else
+                                        {
+                                            // fly around the player!
+                                            Vector3 curPlayerPos = MindControl.SafePositionNearPlayer;
+                                            Function.Call(Hash.TASK_HELI_CHASE, watchedPed, MindControl.CurrentPlayerCharacter, curPlayerPos.X, curPlayerPos.Y, curPlayerPos.Z + 80); ;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        watchedPed.Task.LeaveVehicle();
+                                    }
+
                                     stuckCounter = 0;
                                 }
                             }
@@ -299,6 +342,42 @@ namespace GTA.GangAndTurfMod
             this.myGang = ourGang;
             this.hasDriveByGun = hasDriveByGun;
             this.lastStuckCheckPosition = targetPed.Position;
+        }
+
+        /// <summary>
+        /// leaves our current vehicle (if any) and starts the parachuting procedure!
+        /// (Cancels if the ped is currently controlled by the player)
+        /// </summary>
+        /// <param name="destination"></param>
+        public void StartParachuting(Vector3 destination, int msWaitBeforeOpeningParachute = 0)
+        {
+            if (MindControl.currentlyControlledMember == this) return;
+
+            if (destination == default || destination == Vector3.Zero) destination = MindControl.SafePositionNearPlayer;
+
+            //UI.ShowSubtitle("member is parachuting!", 800);
+            watchedPed.BlockPermanentEvents = true;
+            watchedPed.AlwaysKeepTask = true;
+            watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;
+            //watchedPed.Task.LeaveVehicle();
+            //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
+            //watchedPed.Task.ParachuteTo(destination);
+            watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
+            using (TaskSequence seq = new TaskSequence())
+            {
+                //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);
+                if (watchedPed.IsInVehicle())
+                {
+                    seq.AddTask.LeaveVehicle();
+                }
+                //seq.AddTask.Skydive();
+                //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);
+                //seq.AddTask.UseParachute();
+                seq.AddTask.ParachuteTo(destination);
+                seq.Close();
+                watchedPed.Task.PerformSequence(seq);
+            };
+            curStatus = MemberStatus.parachuting;
         }
 
         /// <summary>

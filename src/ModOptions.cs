@@ -77,6 +77,8 @@ namespace GTA.GangAndTurfMod
 
         public GangMemberAggressivenessMode gangMemberAggressiveness = GangMemberAggressivenessMode.veryAgressive;
 
+        public string preferredLanguage;
+
         public bool protagonistsAreSpectators = false;
 
         /// <summary>
@@ -90,10 +92,12 @@ namespace GTA.GangAndTurfMod
         public int maxGangMemberAccuracy = 30;
 
         public bool gangMembersAreFireproof = false;
+        public bool gangMembersAreFallproofWhileParachuting = false;
         public bool gangMembersCanUseCover = true;
 
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
+        public bool lockCurWarReinforcementCount = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 25000;
         public int msTimeBetweenWarPunishingForNoSpawns = 1500;
@@ -141,6 +145,9 @@ namespace GTA.GangAndTurfMod
         public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
         public int nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
 
+        public int driverUpdateLimitWhileGoingToDest = 42;
+        public int driverUpdateLimitWhileDroppingOffPassengers = 70;
+
         public int numUpgradesUntilMaxMemberAttribute = 10;
         public int costToCallBackupCar = 900;
         public int costToCallParachutingMember = 250;
@@ -175,6 +182,7 @@ namespace GTA.GangAndTurfMod
         public int spawnedMembersBeforeAmbientGenStops = 20;
         public int msBaseIntervalBetweenAmbientSpawns = 15000;
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
+        public float spawnLimitPercentToUseInAIOnlyWar = 0.8f;
         public int preservedDeadBodyLimit = 0;
         public int minSpawnsForEachSideDuringWars = 5;
         public int minDistanceBetweenWarSpawns = 40;
@@ -499,13 +507,15 @@ namespace GTA.GangAndTurfMod
 
             List<GangColorTranslation> gangColors = similarColors;
             List<VehicleColor> playerExclusiveColors = extraPlayerExclusiveColors;
+            string language = preferredLanguage;
 
             instance = new ModOptions
             {
+                preferredLanguage = language,
                 possibleGangFirstNames = gangFirstNames,
                 possibleGangLastNames = gangLastNames,
                 similarColors = gangColors,
-                extraPlayerExclusiveColors = playerExclusiveColors
+                extraPlayerExclusiveColors = playerExclusiveColors,
             };
 
             instance.SetupPrimaryWeapons();

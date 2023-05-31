@@ -563,7 +563,6 @@ namespace GTA.GangAndTurfMod
                     newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
 
                     newPed.IsFireProof = ModOptions.instance.gangMembersAreFireproof;
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
 
                     newPed.FiringPattern = ownerGang.membersFiringPattern;
 
@@ -615,7 +614,8 @@ namespace GTA.GangAndTurfMod
 
                     newPed.CanSwitchWeapons = true;
 
-                    Function.Call(Hash.SET_PED_COMBAT_RANGE, newPed, 0);
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
+
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
 
@@ -715,6 +715,13 @@ namespace GTA.GangAndTurfMod
 
                         newVehicle.IsRadioEnabled = false;
 
+                        // extra handling to spawn flying helicopters
+                        if (newVehicle.Model.IsHelicopter)
+                        {
+                            newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
+                            Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
+                        }
+
                         thinkingDrivingMembersCount++;
                         Logger.Log("spawn car: end (success)", 4);
                         return driverAI;
@@ -738,8 +745,9 @@ namespace GTA.GangAndTurfMod
             SpawnedGangMember spawnedPara = SpawnGangMember(ownerGang, spawnPos);
             if (spawnedPara != null)
             {
-                spawnedPara.watchedPed.BlockPermanentEvents = true;
-                spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+                //spawnedPara.watchedPed.BlockPermanentEvents = true;
+                //spawnedPara.watchedPed.Task.ParachuteTo(destPos);
+                spawnedPara.StartParachuting(destPos, 100);
                 return spawnedPara.watchedPed;
             }
 

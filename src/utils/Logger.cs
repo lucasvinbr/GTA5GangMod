@@ -23,7 +23,16 @@ namespace GTA.GangAndTurfMod
             {
                 File.AppendAllText("GangAndTurfMod.log", DateTime.Now + " : " + message + Environment.NewLine);
             }
+        }
 
+        /// <summary>
+        /// logs the message to a separate file, marked with a timestamp
+        /// </summary>
+        /// <param name="message"></param>
+        public static void WriteDedicatedErrorFile(object message)
+        {
+            string errorFileName = string.Concat("error_GangAndTurfMod_", DateTime.Now.ToString("yyyyMMdd-HHmm"), ".log");
+            File.AppendAllText(errorFileName, DateTime.Now + " : " + message + Environment.NewLine);
         }
 
         /// <summary>

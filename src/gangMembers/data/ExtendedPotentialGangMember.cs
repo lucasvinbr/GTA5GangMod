@@ -67,25 +67,37 @@ namespace GTA.GangAndTurfMod
         {
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
 
-            //if we're not a legacy registration, set the head and hair data too
-            if (hairDrawableIndex != -1)
+            if(headDrawableIndex != -1)
             {
-                int hairTexIndex = hairTextureIndex != -1 ? 
-                    hairTextureIndex : 
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
+            }
+            
+            if(hairDrawableIndex != -1)
+            {
+                int hairTexIndex = hairTextureIndex != -1 ?
+                    hairTextureIndex :
                     RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
                         targetPed, 2, hairDrawableIndex));
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);
+
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 2, hairDrawableIndex, hairTexIndex, pedPalette);
             }
 
-            if (torsoDrawableIndex != -1 && torsoTextureIndex != -1)
+            if (torsoDrawableIndex != -1)
             {
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTextureIndex, pedPalette);
+                int torsoTexIndex = torsoTextureIndex != -1 ?
+                    torsoTextureIndex :
+                    RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 3, torsoDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 3, torsoDrawableIndex, torsoTexIndex, pedPalette);
             }
 
-            if (legsDrawableIndex != -1 && legsTextureIndex != -1)
+            if (legsDrawableIndex != -1)
             {
-                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTextureIndex, pedPalette);
+                int legsTexIndex = legsTextureIndex != -1 ?
+                    legsTextureIndex :
+                    RandoMath.CachedRandom.Next(Function.Call<int>(Hash.GET_NUMBER_OF_PED_TEXTURE_VARIATIONS,
+                        targetPed, 4, legsDrawableIndex));
+                Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 4, legsDrawableIndex, legsTexIndex, pedPalette);
             }
 
             //new data time!

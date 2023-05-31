@@ -71,11 +71,6 @@ namespace GTA.GangAndTurfMod
 
         private Vector3 attackerVehicleSpawnDirection, defenderVehicleSpawnDirection;
 
-        /// <summary>
-        /// TODO modoption?
-        /// </summary>
-        public const float PERCENT_SPAWNS_TO_USE_IN_AI_WAR = 0.8f;
-
         public Action<GangWar> OnReinforcementsChanged;
         public Action<GangWar> OnPlayerEnteredWarzone;
         public Action<GangWar> OnPlayerLeftWarzone;
@@ -161,7 +156,7 @@ namespace GTA.GangAndTurfMod
             else
             {
                 warBlip.IsShortRange = true;
-                allowedSpawnLimit = (int)RandoMath.Max(ModOptions.instance.spawnedMemberLimit * PERCENT_SPAWNS_TO_USE_IN_AI_WAR,
+                allowedSpawnLimit = (int)RandoMath.Max(ModOptions.instance.spawnedMemberLimit * ModOptions.instance.spawnLimitPercentToUseInAIOnlyWar,
                     ModOptions.instance.minSpawnsForEachSideDuringWars * 2);
             }
 
@@ -846,6 +841,8 @@ namespace GTA.GangAndTurfMod
 
         public void DecrementAttackerReinforcements()
         {
+            if (ModOptions.instance.lockCurWarReinforcementCount) return;
+
             attackerReinforcements--;
 
             //have we lost too many? its a victory for the defenders then
@@ -862,6 +859,8 @@ namespace GTA.GangAndTurfMod
 
         public void DecrementDefenderReinforcements()
         {
+            if (ModOptions.instance.lockCurWarReinforcementCount) return;
+
             defenderReinforcements--;
 
             if (defenderReinforcements <= 0)
@@ -957,10 +956,26 @@ namespace GTA.GangAndTurfMod
             Logger.Log("war balancing: end", 3);
         }
 
+        /// <summary>
+        /// true if one of the sides has no spawns and all car spawns are occupied by other gangs' cars
+        /// </summary>
+        /// <returns></returns>
+        public bool IsOneOfTheSidesInNeedOfACarSpawn()
+        {
+            if (SpawnManager.instance.HasThinkingDriversLimitBeenReached())
+            {
+                return (defenderSpawnPoints.Count == 0 && SpawnManager.instance.GetSpawnedDriversOfGang(defendingGang).Count == 0) ||
+                        (attackerSpawnPoints.Count == 0 && SpawnManager.instance.GetSpawnedDriversOfGang(attackingGang).Count == 0);
+            }
+            
+
+            return false;
+        }
+
 
         #endregion
 
-        
+
 
         /// <summary>
         /// true if the position is in the war zone or close enough to one of the war area blips
@@ -1087,7 +1102,7 @@ namespace GTA.GangAndTurfMod
 
                     if (curTime - msTimeOfLastCarSpawn > MS_TIME_BETWEEN_CAR_SPAWNS && RandoMath.RandomBool())
                     {
-                        SpawnAngryVehicle(spawnedDefenders < maxSpawnedDefenders);
+                        SpawnAngryVehicle((spawnedAttackers > spawnedDefenders || spawnedAttackers >= maxSpawnedAttackers) && spawnedDefenders < maxSpawnedDefenders);
 
                         msTimeOfLastCarSpawn = curTime;
                     }
@@ -1188,7 +1203,7 @@ namespace GTA.GangAndTurfMod
 
                     if (SpawnManager.instance.livingMembersCount < allowedSpawnLimit)
                     {
-                        SpawnMember(spawnedDefenders < maxSpawnedDefenders && defenderSpawnPoints.Count > 0);
+                        SpawnMember((spawnedAttackers > spawnedDefenders || spawnedAttackers >= maxSpawnedAttackers) && spawnedDefenders < maxSpawnedDefenders);
                     }
 
                     //check one of the control points for capture
