@@ -1,4 +1,6 @@
-﻿namespace GTA.GangAndTurfMod
+﻿using System.Security.Policy;
+
+namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// this script contains methods used to define and calculate values used in many aspects of the mod.
@@ -32,8 +34,12 @@
 
         public static int CalculateAttackCost(Gang attackerGang, GangWarManager.AttackStrength attackType)
         {
+            if (attackType == GangWarManager.AttackStrength.light) return ModOptions.instance.baseCostToTakeTurf;
+
             int attackTypeInt = (int)attackType;
-            return ModOptions.instance.baseCostToTakeTurf + ModOptions.instance.baseCostToTakeTurf * attackTypeInt * attackTypeInt * attackTypeInt;
+            float attackScale = attackTypeInt / 3.0f;
+
+            return ModOptions.instance.baseCostToTakeTurf + (int) (ModOptions.instance.maxAdditionalCostToTakeTurf * attackScale * attackScale);
         }
 
         public static GangWarManager.AttackStrength CalculateRequiredAttackStrength(Gang attackerGang, int defenderStrength)
@@ -59,7 +65,7 @@
         {
             // maxed attack should have almost as many reinforcements as a maxed zone
             return (int) ((ModOptions.instance.extraKillsPerTurfValue * ModOptions.instance.maxTurfValue * ((int) attackType / 3.0f) + ModOptions.instance.baseNumKillsBeforeWarVictory +
-                attackerGang.GetBonusReinforcementsCount()) * 0.9f * attackerGang.memberAmountInWarsMultiplier);
+                attackerGang.GetBonusReinforcementsCount()) * 0.95f * attackerGang.memberAmountInWarsMultiplier);
         }
 
         public static int CalculateDefenderReinforcements(Gang defenderGang, TurfZone targetZone)

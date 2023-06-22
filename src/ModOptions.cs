@@ -131,6 +131,7 @@ namespace GTA.GangAndTurfMod
         public float rewardMultiplierPerZone = 0.0f;
 
         public int baseCostToTakeTurf = 3000;
+        public int maxAdditionalCostToTakeTurf = 100000;
         public int rewardForTakingEnemyTurf = 5000;
 
         public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
