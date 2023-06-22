@@ -669,6 +669,13 @@ namespace GTA.GangAndTurfMod
             {
                 Logger.Log("spawn car: start", 4);
                 Vehicle newVehicle = World.CreateVehicle(RandoMath.RandomElement(ownerGang.carVariations).modelHash, spawnPos);
+
+                if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
+                {
+                    newVehicle.Delete();
+                    return null;
+                }
+
                 if (newVehicle != null)
                 {
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;
