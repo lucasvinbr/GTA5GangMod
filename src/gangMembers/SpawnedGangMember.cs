@@ -201,8 +201,10 @@ namespace GTA.GangAndTurfMod
                         if (curVehicle.IsSeatFree(VehicleSeat.Driver))
                         {
                             //possibly leave the vehicle if the driver has left already
-                            if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
+                            if (!watchedPed.IsUsingAnyVehicleWeapon())
                             {
+                                Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
+
                                 if (curVehicle.HeightAboveGround > 15.0f)
                                 {
                                     StartParachuting(MindControl.SafePositionNearPlayer);
@@ -214,27 +216,39 @@ namespace GTA.GangAndTurfMod
 
                                 stuckCounter = 0;
                             }
+                            else
+                            {
+                                watchedPed.Task.FightAgainstHatedTargets(200);
+                            }
                         }
                         else
                         {
                             //even if we're inside an awesome vehicle, we should probably leave it if we appear to be stuck
-                            if (!watchedPed.IsInCombat && curVehicle.Speed < 20)
+                            if (curVehicle.Speed < 20)
                             {
                                 stuckCounter++;
 
+                                if (!watchedPed.IsInCombat)
+                                {
+                                    watchedPed.Task.FightAgainstHatedTargets(200);
+                                }
+                                else
+                                {
+                                    if (watchedPed.IsUsingAnyVehicleWeapon())
+                                    {
+                                        stuckCounter = 0;
+                                    }
+                                }
+
                                 if (stuckCounter > STUCK_COUNTER_LIMIT)
                                 {
+                                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
+
                                     if (curVehicle.Model.IsHelicopter)
                                     {
                                         if(watchedPed.SeatIndex != VehicleSeat.Driver)
                                         {
                                             StartParachuting(MindControl.SafePositionNearPlayer);
-                                        }
-                                        else
-                                        {
-                                            // fly around the player!
-                                            Vector3 curPlayerPos = MindControl.SafePositionNearPlayer;
-                                            Function.Call(Hash.TASK_HELI_CHASE, watchedPed, MindControl.CurrentPlayerCharacter, curPlayerPos.X, curPlayerPos.Y, curPlayerPos.Z + 80); ;
                                         }
                                     }
                                     else

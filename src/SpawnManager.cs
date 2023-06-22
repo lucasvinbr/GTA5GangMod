@@ -620,8 +620,8 @@ namespace GTA.GangAndTurfMod
 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
 
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // BF_CanFightArmedPedsWhenNotArmed 
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true); // BF_AlwaysFight 
 
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;

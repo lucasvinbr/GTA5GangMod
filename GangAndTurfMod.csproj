@@ -85,6 +85,7 @@
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\gangMembers\data\ExtendedPotentialGangMember.cs" />
     <Compile Include="src\utils\Localization.cs" />
+    <Compile Include="src\utils\persistence\PedExtension.cs" />
     <Compile Include="src\zones\CustomTurfZone.cs" />
     <Compile Include="src\UI\gang\generic\PickAiGangMenu.cs" />
     <Compile Include="src\UI\ModMenu.cs" />
