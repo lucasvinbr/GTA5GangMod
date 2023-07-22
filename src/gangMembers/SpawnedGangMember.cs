@@ -100,7 +100,7 @@ namespace GTA.GangAndTurfMod
                 {
                     GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
-                Die(allowPreserving: true);
+                Die(allowPreserving: watchedPed.IsOnScreen || dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
                 Logger.Log("member update: end (dead)", 5);
                 return;
             }
@@ -122,14 +122,16 @@ namespace GTA.GangAndTurfMod
                 {
                     if (GangWarManager.instance.focusedWar != null)
                     {
+                        //draw weapon!
+                        watchedPed.Weapons.Select(watchedPed.Weapons.BestWeapon);
                         //instead of idling while in a war, members should head for one of the key locations
-                        
                         if (moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
                             moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang, moveDestination);
 
                         if (moveDestination != Vector3.Zero)
                         {
                             watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
+
                             if (lastStuckCheckPosition.DistanceTo(watchedPed.Position) <= 0.5f)
                             {
                                 //maybe we're spawning inside a building?
