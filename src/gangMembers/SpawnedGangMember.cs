@@ -67,6 +67,8 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
+            float dist2DToPlyr = watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position);
+
             if (curStatus == MemberStatus.parachuting)
             {
                 if(!watchedPed.IsAlive || watchedPed.HeightAboveGround < 2.0f)
@@ -80,6 +82,14 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     Logger.Log("member update: end (still parachuting)", 5);
+
+                    if (dist2DToPlyr > ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
+                    {
+                        //we're too far to be important
+                        Die();
+                        Logger.Log("member update: end (parachuting: too far, despawn)", 5);
+                        return;
+                    }
                     return;
                 }
             }
@@ -99,7 +109,7 @@ namespace GTA.GangAndTurfMod
             {
                 watchedPed.BlockPermanentEvents = false;
 
-                if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
+                if (dist2DToPlyr >
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
                 {
                     //we're too far to be important
@@ -185,7 +195,7 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
                     if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (no longer persistent, no longer with mod's driver AI attached)...
                     {
-                        if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
+                        if (dist2DToPlyr >
                ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                         {
                             //we're too far to be important
