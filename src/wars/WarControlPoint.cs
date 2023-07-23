@@ -146,5 +146,24 @@ namespace GTA.GangAndTurfMod
 
         }
 
+        /// <summary>
+        /// attaches a onkilled event to check if the recently spawned member was "spawnkilled".
+        /// If so, neutralizes this point, in an attempt to prevent this from happening repeatedly
+        /// </summary>
+        /// <param name="member"></param>
+        public void AttachDeathCheckEventToSpawnedMember(SpawnedGangMember member)
+        {
+            member.OnKilled += () =>
+            {
+                if(ownerGang == member.myGang &&
+                ((ModCore.curGameTime - member.timeOfSpawn <= 5000) || (World.GetDistance(position, member.watchedPed.Position) < 5.0f)))
+                {
+                    ownerGang = null;
+                    warUsingThisPoint.ControlPointHasBeenCaptured(this);
+                    UpdateBlipAppearance();
+                }
+            };
+        }
+
     }
 }

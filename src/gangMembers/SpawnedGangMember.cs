@@ -1,5 +1,6 @@
 ﻿using GTA.Math;
 using GTA.Native;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -44,6 +45,13 @@ namespace GTA.GangAndTurfMod
         public MemberStatus curStatus = MemberStatus.none;
 
         public bool hasDriveByGun = false;
+
+        public int timeOfSpawn;
+
+        /// <summary>
+        /// does not trigger if the ped despawns due to being too far away
+        /// </summary>
+        public Action OnKilled;
 
         /// <summary>
         /// the position where we spawned (or at least the position we were in when the memberAI was attached to us)
@@ -100,6 +108,7 @@ namespace GTA.GangAndTurfMod
                 {
                     GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
+                OnKilled?.Invoke();
                 Die(allowPreserving: watchedPed.IsOnScreen || dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
                 Logger.Log("member update: end (dead)", 5);
                 return;
@@ -326,6 +335,7 @@ namespace GTA.GangAndTurfMod
 
             }
 
+            OnKilled = null;
             myGang = null;
 
             curStatus = MemberStatus.none;
@@ -368,6 +378,8 @@ namespace GTA.GangAndTurfMod
             this.myGang = ourGang;
             this.hasDriveByGun = hasDriveByGun;
             this.lastStuckCheckPosition = targetPed.Position;
+
+            timeOfSpawn = ModCore.curGameTime;
         }
 
         /// <summary>

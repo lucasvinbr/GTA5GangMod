@@ -674,9 +674,9 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         /// <param name="gang"></param>
         /// <returns></returns>
-        public Vector3 GetSpawnPositionForGang(Gang gang)
+        public Vector3 GetSpawnPositionForGang(Gang gang, out WarControlPoint pickedPoint)
         {
-            WarControlPoint pickedPoint = gang == attackingGang ? attackerSpawnPoints.RandomElement() : defenderSpawnPoints.RandomElement();
+            pickedPoint = gang == attackingGang ? attackerSpawnPoints.RandomElement() : defenderSpawnPoints.RandomElement();
 
             if (pickedPoint != null)
             {
@@ -795,7 +795,9 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedGangMember SpawnMember(bool isDefender)
         {
-            Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
+            Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang, out WarControlPoint pickedPoint);
+
+            SpawnedGangMember spawnedGangMember = null;
 
             if (isDefender)
             {
@@ -803,14 +805,16 @@ namespace GTA.GangAndTurfMod
                 {
                     Logger.Log("war: try spawn defender", 4);
 
-                    if(spawnPos == default)
+                    if(pickedPoint == null)
                     {
-                        return SpawnMemberInsideExistingVehicle(true);
+                        spawnedGangMember = SpawnMemberInsideExistingVehicle(true);
                     }
-
-                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
+                    else
+                    {
+                        spawnedGangMember = SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
+                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                    }
                 }
-                else return null;
 
             }
             else
@@ -819,15 +823,19 @@ namespace GTA.GangAndTurfMod
                 {
                     Logger.Log("war: try spawn attacker", 4);
 
-                    if (spawnPos == default)
+                    if (pickedPoint == null)
                     {
-                        return SpawnMemberInsideExistingVehicle(false);
+                        spawnedGangMember = SpawnMemberInsideExistingVehicle(false);
                     }
-
-                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
+                    else
+                    {
+                        spawnedGangMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
+                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                    }
                 }
-                else return null;
             }
+
+            return spawnedGangMember;
         }
 
         /// <summary>

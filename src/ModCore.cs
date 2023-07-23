@@ -16,6 +16,9 @@ namespace GTA.GangAndTurfMod
         public MenuScript menuScript;
         public ZoneManager zoneManagerScript;
 
+        /// <summary>
+        /// time in ms
+        /// </summary>
         public static int curGameTime;
 
         public ModCore()
