@@ -95,6 +95,8 @@ namespace GTA.GangAndTurfMod
         public bool gangMembersAreFallproofWhileParachuting = false;
         public bool gangMembersCanUseCover = true;
         public bool gangMembersCanWrithe = false;
+        public bool gangMembersRagdollWhenShot = true;
+        public bool gangMembersReactToFriendliesBeingShot = true;
         public bool gangHelicoptersEnabled = true;
 
         public bool emptyZoneDuringWar = true;
