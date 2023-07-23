@@ -447,18 +447,9 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    if (!vehicleHasGuns)
-                    {
-                        // flee from player character!
-                        Function.Call(Hash.TASK_HELI_MISSION, watchedPed, watchedPed.CurrentVehicle, 0, MindControl.CurrentPlayerCharacter, 0, 0, 0, 8,
-                                    20.0f, 20.0f, 0.0f, -1, -1, -1, 32);
-                    }
-                    else
-                    {
-                        // fly around the player!
-                        Vector3 curPlayerPos = MindControl.SafePositionNearPlayer;
-                        Function.Call(Hash.TASK_HELI_CHASE, watchedPed, MindControl.CurrentPlayerCharacter, curPlayerPos.X, curPlayerPos.Y, curPlayerPos.Z + 80);
-                    }
+                    // flee from player character!
+                    Function.Call(Hash.TASK_HELI_MISSION, watchedPed, watchedPed.CurrentVehicle, 0, MindControl.CurrentPlayerCharacter, 0, 0, 0, 8,
+                                20.0f, 20.0f, 0.0f, -1, -1, -1, 32);
                 }
                 
             }
