@@ -94,6 +94,10 @@ namespace GTA.GangAndTurfMod
         public bool gangMembersAreFireproof = false;
         public bool gangMembersAreFallproofWhileParachuting = false;
         public bool gangMembersCanUseCover = true;
+        public bool gangMembersCanWrithe = false;
+        public bool gangMembersRagdollWhenShot = true;
+        public bool gangMembersReactToFriendliesBeingShot = true;
+        public bool gangHelicoptersEnabled = true;
 
         public bool emptyZoneDuringWar = true;
         public bool showReinforcementCountsForAIWars = false;
@@ -129,6 +133,7 @@ namespace GTA.GangAndTurfMod
         public float rewardMultiplierPerZone = 0.0f;
 
         public int baseCostToTakeTurf = 3000;
+        public int maxAdditionalCostToTakeTurf = 100000;
         public int rewardForTakingEnemyTurf = 5000;
 
         public int baseCostToUpgradeGeneralGangTurfValue = 1000000;
@@ -184,6 +189,7 @@ namespace GTA.GangAndTurfMod
         public int spawnedMemberLimit = 30; //max number of living gang members at any time
         public float spawnLimitPercentToUseInAIOnlyWar = 0.8f;
         public int preservedDeadBodyLimit = 0;
+        public int maxDistanceToPreserveKilledOffscreen = 80;
         public int minSpawnsForEachSideDuringWars = 5;
         public int minDistanceBetweenWarSpawns = 40;
         public int maxDistanceBetweenWarSpawns = 200;
@@ -445,7 +451,7 @@ namespace GTA.GangAndTurfMod
             if (newKey == Keys.Escape || newKey == Keys.ShiftKey ||
                 newKey == Keys.Insert || newKey == Keys.ControlKey)
             {
-                UI.ShowSubtitle("That key can't be used because some settings would become unaccessible due to conflicts.");
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_cannot_be_used_due_to_conflicts", "That key can't be used because some settings would become unaccessible due to conflicts."));
                 return;
             }
 
@@ -460,7 +466,7 @@ namespace GTA.GangAndTurfMod
 
             if (curKeys.Contains(newKey))
             {
-                UI.ShowSubtitle("That key is already being used by this mod's commands.");
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_already_being_used_by_mod", "That key is already being used by this mod's commands."));
                 return;
             }
             else
@@ -481,7 +487,8 @@ namespace GTA.GangAndTurfMod
                         break;
                 }
 
-                UI.ShowSubtitle("Key changed!");
+                
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_was_changed", "Key changed!"));
                 SaveOptions();
             }
         }

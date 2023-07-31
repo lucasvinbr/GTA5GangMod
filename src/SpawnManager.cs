@@ -1,6 +1,7 @@
 ﻿using GTA.Math;
 using GTA.Native;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace GTA.GangAndTurfMod
@@ -374,7 +375,10 @@ namespace GTA.GangAndTurfMod
         }
 
 
-
+        /// <summary>
+        /// true if there are too many drivers with driver AI attached
+        /// </summary>
+        /// <returns></returns>
         public bool HasThinkingDriversLimitBeenReached()
         {
             return thinkingDrivingMembersCount >= ModOptions.instance.thinkingCarLimit;
@@ -556,7 +560,7 @@ namespace GTA.GangAndTurfMod
 
                     newPed.Accuracy = (int) (ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
 
-                    newPed.CanWrithe = false; //no early dying
+                    newPed.CanWrithe = ModOptions.instance.gangMembersCanWrithe; //no early dying?
                     int memberHealth = 100 + RandoMath.Max(1, (int)(ownerGang.memberHealth * ownerGang.memberHealthMultiplier));
                     newPed.MaxHealth = memberHealth;
                     newPed.Health = memberHealth;
@@ -585,7 +589,7 @@ namespace GTA.GangAndTurfMod
 
                         //set blip name - got to use native, the c# blip.name returns error ingame
                         Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, ownerGang.name + " member");
+                        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Format(Localization.GetTextByKey("blip_member_of_gang_x", "{0} member"), ownerGang.name));
                         Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
                     }
 
@@ -616,8 +620,13 @@ namespace GTA.GangAndTurfMod
 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
 
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // alwaysFight = true and canFightArmedWhenNotArmed. which one is which is unknown
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true);
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // BF_CanFightArmedPedsWhenNotArmed 
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true); // BF_AlwaysFight 
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 68, !ModOptions.instance.gangMembersReactToFriendliesBeingShot); // BF_DisableReactToBuddyShot
+
+                    newPed.SetConfigFlag(107, !ModOptions.instance.gangMembersRagdollWhenShot); //CPED_CONFIG_FLAG_DontActivateRagdollFromBulletImpact 
+                    newPed.SetConfigFlag(227, true); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
+                    newPed.SetConfigFlag(237, false); //CPED_CONFIG_FLAG_BlocksPathingWhenDead  
 
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;
@@ -665,6 +674,13 @@ namespace GTA.GangAndTurfMod
             {
                 Logger.Log("spawn car: start", 4);
                 Vehicle newVehicle = World.CreateVehicle(RandoMath.RandomElement(ownerGang.carVariations).modelHash, spawnPos);
+
+                if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
+                {
+                    newVehicle.Delete();
+                    return null;
+                }
+
                 if (newVehicle != null)
                 {
                     newVehicle.PrimaryColor = ownerGang.vehicleColor;

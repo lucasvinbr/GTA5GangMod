@@ -106,7 +106,7 @@ namespace GTA.GangAndTurfMod
         {
             if (Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
             {
-                UI.ShowSubtitle("Your member has been arrested!");
+                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_was_arrested", "Your member has been arrested!"));
                 RestorePlayerBody();
                 return;
             }
@@ -178,7 +178,7 @@ namespace GTA.GangAndTurfMod
                             Blip protagonistBlip = theOriginalPed.AddBlip();
                             protagonistBlip.Sprite = BlipSprite.Creator;
                             Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "Last Used Protagonist");
+                            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, Localization.GetTextByKey("blip_last_used_protagonist", "Last Used Protagonist"));
                             Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, protagonistBlip);
 
 

@@ -9,7 +9,9 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class GangBlipColorSubMenu : UIMenu
     {
-        public GangBlipColorSubMenu() : base("Gang and Turf Mod", "Gang Blip Color")
+        public GangBlipColorSubMenu() : base(
+            Localization.GetTextByKey("menu_title_mod_name", "Gang and Turf Mod"),
+            Localization.GetTextByKey("menu_title_gang_blip_color","Gang Blip Color"))
         {
             Setup();
         }
@@ -66,7 +68,7 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 0; i < colorCodesArray.Length; i++)
             {
-                AddItem(new UIMenuItem(blipColorNamesArray[i], "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change."));
+                AddItem(new UIMenuItem(Localization.GetTextByKey("blip_color_name_" + colorCodesArray[i],blipColorNamesArray[i]), Localization.GetTextByKey("menu_button_desc_gang_blip_color", "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.")));
             }
 
             RefreshIndex();
@@ -90,7 +92,7 @@ namespace GTA.GangAndTurfMod
                         GangManager.instance.PlayerGang.blipColor = colorCodesArray[i];
                         playerGangOriginalBlipColor = colorCodesArray[i];
                         GangManager.instance.SaveGangData(false);
-                        UI.ShowSubtitle("Gang blip color changed!");
+                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_blip_color_changed", "Gang blip color changed!"));
                         break;
                     }
                 }

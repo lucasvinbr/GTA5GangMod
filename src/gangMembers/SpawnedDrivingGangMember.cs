@@ -216,10 +216,6 @@ namespace GTA.GangAndTurfMod
                             {
                                 ClearAllRefs(true);
                             }
-                            else if(vehicleHasGuns)
-                            {
-                                watchedPed.Task.FightAgainstHatedTargets(200);
-                            }
                         }
                     }
                 }
@@ -401,22 +397,23 @@ namespace GTA.GangAndTurfMod
             int numParachuting = 0;
             for (int i = myPassengers.Count - 1; i >= 0; i--)
             {
-                if (myPassengers[i] != watchedPed)
+                var passenger = myPassengers[i];
+                if (passenger != watchedPed && MindControl.CurrentPlayerCharacter != passenger)
                 {
-                    //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + myPassengers[i].SeatIndex + ". veh has guns? " + vehicleHasGuns, 800);
+
+                    if (passenger.IsUsingAnyVehicleWeapon()) continue;
+
+                    //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + passenger.SeatIndex + ". veh has guns? " + vehicleHasGuns, 800);
                     if (shouldParachute)
                     {
-                        SpawnManager.instance.GetTargetMemberAI(myPassengers[i], true)?.StartParachuting(destination, 0 + numParachuting * 1200);
+                        SpawnManager.instance.GetTargetMemberAI(passenger, true)?.StartParachuting(destination, 0 + numParachuting * 1200);
                         numParachuting++;
                         myPassengers.RemoveAt(i);
                     }
                     else
                     {
-                        if(MindControl.CurrentPlayerCharacter != myPassengers[i])
-                        {
-                            myPassengers[i].Task.LeaveVehicle();
-                            myPassengers.RemoveAt(i);
-                        }
+                        passenger.Task.LeaveVehicle();
+                        myPassengers.RemoveAt(i);
                     }
                     
                 }
@@ -504,11 +501,13 @@ namespace GTA.GangAndTurfMod
             updatesWhileDroppingPassengers = 0;
             attemptingUnstuckVehicle = false;
             stuckCounter = 0;
+
+            vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
+
             SetWatchedPassengers();
 
             //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
 
-            vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
             if (vehicleIAmDriving.Model.IsHelicopter)
             {
                 vehicleType = VehicleType.heli;
@@ -535,6 +534,15 @@ namespace GTA.GangAndTurfMod
                 if(memberInSeat != watchedPed)
                 {
                     memberInSeat.BlockPermanentEvents = false;
+
+                }
+
+                if (vehicleHasGuns)
+                {
+                    if (memberInSeat.IsUsingAnyVehicleWeapon())
+                    {
+                        Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, memberInSeat, 3, false); // BF_CanLeaveVehicle  
+                    }
                 }
             }
         }

@@ -259,6 +259,13 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
+                if(watchedGang.moneyAvailable < 0)
+                {
+                    // things are bad!
+                    // if we don't already own at least one zone, we should be wiped out instead of force-attacking in this case
+                    return;
+                }
+
                 if (GangWarManager.instance.IsZoneContested(targetZone) ||
                     (ownerGang.isPlayerOwned && 
                         GangWarManager.instance.GetAllCurrentWarsInvolvingGang(ownerGang).Count >= ModOptions.instance.maxConcurrentWarsAgainstPlayer))

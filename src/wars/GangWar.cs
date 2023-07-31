@@ -674,9 +674,9 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         /// <param name="gang"></param>
         /// <returns></returns>
-        public Vector3 GetSpawnPositionForGang(Gang gang)
+        public Vector3 GetSpawnPositionForGang(Gang gang, out WarControlPoint pickedPoint)
         {
-            WarControlPoint pickedPoint = gang == attackingGang ? attackerSpawnPoints.RandomElement() : defenderSpawnPoints.RandomElement();
+            pickedPoint = gang == attackingGang ? attackerSpawnPoints.RandomElement() : defenderSpawnPoints.RandomElement();
 
             if (pickedPoint != null)
             {
@@ -693,11 +693,51 @@ namespace GTA.GangAndTurfMod
         /// The directions are intended as "incentives" for the attackers and defenders to come from different sides
         /// instead of on top of each other
         /// </summary>
-        public void RefreshVehicleSpawnDirections()
+        public void RefreshVehicleSpawnDirections(bool forceRandom = false)
         {
-            defenderVehicleSpawnDirection = RandoMath.RandomDirection(true);
+            if (forceRandom)
+            {
+                defenderVehicleSpawnDirection = RandoMath.RandomDirection(true);
+            }
+            else
+            {
+                // if the war is using spawn points, consider them for the directions.
+                // if not, consider the gang's owned zones.
+                // if the gang has no zones... yeah, just randomize haha
+                defenderVehicleSpawnDirection = Vector3.Zero;
+                if (defenderSpawnPoints.Count > 0)
+                {
+                    foreach(var spawn in defenderSpawnPoints)
+                    {
+                        defenderVehicleSpawnDirection += spawn.position;
+                    }
+
+                    defenderVehicleSpawnDirection.Z = 0;
+                    defenderVehicleSpawnDirection.Normalize();
+
+                }
+                else
+                {
+                    var defenderZones = ZoneManager.instance.GetZonesControlledByGang(defendingGang.name);
+                    if (defenderZones.Count > 0)
+                    {
+                        foreach (var defZone in defenderZones)
+                        {
+                            defenderVehicleSpawnDirection += defZone.zoneBlipPosition;
+                        }
+
+                        defenderVehicleSpawnDirection.Z = 0;
+                        defenderVehicleSpawnDirection.Normalize();
+                    }
+                    else
+                    {
+                        defenderVehicleSpawnDirection = RandoMath.RandomDirection(true);
+                    }
+                }
+                
+            }
+            
             attackerVehicleSpawnDirection = defenderVehicleSpawnDirection * -1;
-            //TODO consider spawn points?
         }
 
         #endregion
@@ -722,10 +762,10 @@ namespace GTA.GangAndTurfMod
             Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointWithHeadingForCar(playerPos, isDefender?
                 defenderVehicleSpawnDirection : attackerVehicleSpawnDirection, out float carHeading);
 
-            if(World.GetDistance(playerPos, spawnPos) < ModOptions.instance.minDistanceCarSpawnFromPlayer)
+            if(World.GetDistance(playerPos, spawnPos) < ModOptions.instance.minDistanceCarSpawnFromPlayer / 4)
             {
                 Logger.Log("War: vehicle spawned too close to player! Try reset vehicle spawn directions", 3);
-                RefreshVehicleSpawnDirections();
+                RefreshVehicleSpawnDirections(true);
             }
 
             if (spawnPos == Vector3.Zero) return null;
@@ -755,7 +795,9 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedGangMember SpawnMember(bool isDefender)
         {
-            Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang);
+            Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang, out WarControlPoint pickedPoint);
+
+            SpawnedGangMember spawnedGangMember = null;
 
             if (isDefender)
             {
@@ -763,14 +805,16 @@ namespace GTA.GangAndTurfMod
                 {
                     Logger.Log("war: try spawn defender", 4);
 
-                    if(spawnPos == default)
+                    if(pickedPoint == null)
                     {
-                        return SpawnMemberInsideExistingVehicle(true);
+                        spawnedGangMember = SpawnMemberInsideExistingVehicle(true);
                     }
-
-                    return SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
+                    else
+                    {
+                        spawnedGangMember = SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
+                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                    }
                 }
-                else return null;
 
             }
             else
@@ -779,15 +823,19 @@ namespace GTA.GangAndTurfMod
                 {
                     Logger.Log("war: try spawn attacker", 4);
 
-                    if (spawnPos == default)
+                    if (pickedPoint == null)
                     {
-                        return SpawnMemberInsideExistingVehicle(false);
+                        spawnedGangMember = SpawnMemberInsideExistingVehicle(false);
                     }
-
-                    return SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
+                    else
+                    {
+                        spawnedGangMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
+                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                    }
                 }
-                else return null;
             }
+
+            return spawnedGangMember;
         }
 
         /// <summary>

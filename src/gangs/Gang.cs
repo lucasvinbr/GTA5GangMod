@@ -333,12 +333,18 @@ namespace GTA.GangAndTurfMod
         {
             if (doNotify && ModOptions.instance.notificationsEnabled)
             {
-                string notificationMsg = string.Concat("The ", name, " have taken ", takenZone.zoneName);
+                string notificationMsg;
+
                 if (takenZone.ownerGangName != "none")
                 {
-                    notificationMsg = string.Concat(notificationMsg, " from the ", takenZone.ownerGangName);
+                    notificationMsg = string.Format(Localization.GetTextByKey("notify_the_x_have_taken_y_from_the_z", "The {0} have taken {1} from the {2}!"),
+                        name, takenZone.zoneName, takenZone.ownerGangName);
                 }
-                notificationMsg = string.Concat(notificationMsg, "!");
+                else
+                {
+                    notificationMsg = string.Format(Localization.GetTextByKey("notify_the_x_have_taken_y", "The {0} have taken {1}!"),
+                    name, takenZone.zoneName);
+                }
                 UI.Notify(notificationMsg);
             }
             takenZone.value = baseTurfValue;

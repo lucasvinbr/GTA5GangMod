@@ -1,5 +1,6 @@
 ﻿using GTA.Math;
 using GTA.Native;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -45,6 +46,13 @@ namespace GTA.GangAndTurfMod
 
         public bool hasDriveByGun = false;
 
+        public int timeOfSpawn;
+
+        /// <summary>
+        /// does not trigger if the ped despawns due to being too far away
+        /// </summary>
+        public Action OnKilled;
+
         /// <summary>
         /// the position where we spawned (or at least the position we were in when the memberAI was attached to us)
         /// </summary>
@@ -67,6 +75,8 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
+            float dist2DToPlyr = watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position);
+
             if (curStatus == MemberStatus.parachuting)
             {
                 if(!watchedPed.IsAlive || watchedPed.HeightAboveGround < 2.0f)
@@ -80,6 +90,14 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     Logger.Log("member update: end (still parachuting)", 5);
+
+                    if (dist2DToPlyr > ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
+                    {
+                        //we're too far to be important
+                        Die();
+                        Logger.Log("member update: end (parachuting: too far, despawn)", 5);
+                        return;
+                    }
                     return;
                 }
             }
@@ -90,7 +108,8 @@ namespace GTA.GangAndTurfMod
                 {
                     GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
-                Die(allowPreserving: true);
+                OnKilled?.Invoke();
+                Die(allowPreserving: watchedPed.IsOnScreen || dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
                 Logger.Log("member update: end (dead)", 5);
                 return;
             }
@@ -99,7 +118,7 @@ namespace GTA.GangAndTurfMod
             {
                 watchedPed.BlockPermanentEvents = false;
 
-                if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
+                if (dist2DToPlyr >
                ModOptions.instance.maxDistanceMemberSpawnFromPlayer * 1.5f)
                 {
                     //we're too far to be important
@@ -112,14 +131,16 @@ namespace GTA.GangAndTurfMod
                 {
                     if (GangWarManager.instance.focusedWar != null)
                     {
+                        //draw weapon!
+                        watchedPed.Weapons.Select(watchedPed.Weapons.BestWeapon);
                         //instead of idling while in a war, members should head for one of the key locations
-                        
                         if (moveDestination == Vector3.Zero || watchedPed.Position.DistanceTo(moveDestination) < ModOptions.instance.distanceToCaptureWarControlPoint)
                             moveDestination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(myGang, moveDestination);
 
                         if (moveDestination != Vector3.Zero)
                         {
                             watchedPed.Task.RunTo(moveDestination + RandoMath.RandomDirection(true));
+
                             if (lastStuckCheckPosition.DistanceTo(watchedPed.Position) <= 0.5f)
                             {
                                 //maybe we're spawning inside a building?
@@ -185,7 +206,7 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = watchedPed.CurrentVehicle;
                     if (!curVehicle.IsPersistent) //if our vehicle has reached its destination (no longer persistent, no longer with mod's driver AI attached)...
                     {
-                        if (watchedPed.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
+                        if (dist2DToPlyr >
                ModOptions.instance.roamingCarDespawnDistanceFromPlayer)
                         {
                             //we're too far to be important
@@ -201,8 +222,10 @@ namespace GTA.GangAndTurfMod
                         if (curVehicle.IsSeatFree(VehicleSeat.Driver))
                         {
                             //possibly leave the vehicle if the driver has left already
-                            if (!Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, curVehicle))
+                            if (!watchedPed.IsUsingAnyVehicleWeapon())
                             {
+                                Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
+
                                 if (curVehicle.HeightAboveGround > 15.0f)
                                 {
                                     StartParachuting(MindControl.SafePositionNearPlayer);
@@ -214,27 +237,39 @@ namespace GTA.GangAndTurfMod
 
                                 stuckCounter = 0;
                             }
+                            else
+                            {
+                                watchedPed.Task.FightAgainstHatedTargets(200);
+                            }
                         }
                         else
                         {
                             //even if we're inside an awesome vehicle, we should probably leave it if we appear to be stuck
-                            if (!watchedPed.IsInCombat && curVehicle.Speed < 20)
+                            if (curVehicle.Speed < 20)
                             {
                                 stuckCounter++;
 
+                                if (!watchedPed.IsInCombat)
+                                {
+                                    watchedPed.Task.FightAgainstHatedTargets(200);
+                                }
+                                else
+                                {
+                                    if (watchedPed.IsUsingAnyVehicleWeapon())
+                                    {
+                                        stuckCounter = 0;
+                                    }
+                                }
+
                                 if (stuckCounter > STUCK_COUNTER_LIMIT)
                                 {
+                                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
+
                                     if (curVehicle.Model.IsHelicopter)
                                     {
                                         if(watchedPed.SeatIndex != VehicleSeat.Driver)
                                         {
                                             StartParachuting(MindControl.SafePositionNearPlayer);
-                                        }
-                                        else
-                                        {
-                                            // fly around the player!
-                                            Vector3 curPlayerPos = MindControl.SafePositionNearPlayer;
-                                            Function.Call(Hash.TASK_HELI_CHASE, watchedPed, MindControl.CurrentPlayerCharacter, curPlayerPos.X, curPlayerPos.Y, curPlayerPos.Z + 80); ;
                                         }
                                     }
                                     else
@@ -300,6 +335,7 @@ namespace GTA.GangAndTurfMod
 
             }
 
+            OnKilled = null;
             myGang = null;
 
             curStatus = MemberStatus.none;
@@ -342,6 +378,8 @@ namespace GTA.GangAndTurfMod
             this.myGang = ourGang;
             this.hasDriveByGun = hasDriveByGun;
             this.lastStuckCheckPosition = targetPed.Position;
+
+            timeOfSpawn = ModCore.curGameTime;
         }
 
         /// <summary>
