@@ -45,6 +45,8 @@ namespace GTA.GangAndTurfMod
 
         public int hairColorID;
 
+        public string voiceName;
+
         public enum FreemodeGender
         {
             any,
@@ -72,6 +74,7 @@ namespace GTA.GangAndTurfMod
             motherHeadBlendID = -1;
             fatherHeadBlendID = -1;
             hairColorID = -1;
+            voiceName = "";
         }
 
         public FreemodePotentialGangMember(Ped targetPed, DressStyle myStyle, MemberColor linkedColor) : base(targetPed, myStyle, linkedColor)
@@ -129,6 +132,8 @@ namespace GTA.GangAndTurfMod
 
 
             Function.Call(Hash._SET_PED_HAIR_COLOR, targetPed, hairColor, hairColor);
+
+            Function.Call(Hash.SET_AMBIENT_VOICE_NAME, targetPed, voiceName);
 
             //according to what I saw using menyoo, eye colors go from 0 to 32.
             //colors after 23 go pretty crazy, like demon-eyed, so I've decided to stop at 23
@@ -238,6 +243,7 @@ namespace GTA.GangAndTurfMod
                     freeListEntry.legsTextureIndex == potentialEntry.legsTextureIndex &&
                     freeListEntry.torsoDrawableIndex == potentialEntry.torsoDrawableIndex &&
                     freeListEntry.torsoTextureIndex == potentialEntry.torsoTextureIndex &&
+                    freeListEntry.voiceName == potentialEntry.voiceName &&
                     RandoMath.AreIntArrayContentsTheSame(freeListEntry.extraDrawableIndexes, potentialEntry.extraDrawableIndexes) &&
                     RandoMath.AreIntArrayContentsTheSame(freeListEntry.extraTextureIndexes, potentialEntry.extraTextureIndexes) &&
                     RandoMath.AreIntArrayContentsTheSame(freeListEntry.propDrawableIndexes, potentialEntry.propDrawableIndexes) &&
