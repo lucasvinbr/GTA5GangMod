@@ -812,7 +812,10 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         spawnedGangMember = SpawnManager.instance.SpawnGangMember(defendingGang, spawnPos, onSuccessfulMemberSpawn: IncrementDefendersCount, true);
-                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                        if(spawnedGangMember != null)
+                        {
+                            pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                        }
                     }
                 }
 
@@ -830,7 +833,10 @@ namespace GTA.GangAndTurfMod
                     else
                     {
                         spawnedGangMember = SpawnManager.instance.SpawnGangMember(attackingGang, spawnPos, onSuccessfulMemberSpawn: IncrementAttackersCount, true);
-                        pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                        if (spawnedGangMember != null)
+                        {
+                            pickedPoint.AttachDeathCheckEventToSpawnedMember(spawnedGangMember);
+                        }
                     }
                 }
             }
