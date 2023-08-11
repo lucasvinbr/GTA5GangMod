@@ -579,7 +579,7 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
-                        // Capture vehicle mods
+                        // Capture vehicle mods here
                         List<VehicleModData> capturedMods = new List<VehicleModData>();
                         foreach (VehicleMod modType in Enum.GetValues(typeof(VehicleMod)))
                         {
@@ -594,7 +594,7 @@ namespace GTA.GangAndTurfMod
                         PotentialGangVehicle newGangVehicle = new PotentialGangVehicle(curVehicle.Model.Hash);
                         newGangVehicle.VehicleMods = capturedMods;
 
-                        if (GangManager.instance.PlayerGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
+                        if (GangManager.instance.PlayerGang.AddGangCar(newGangVehicle))
                         {
                             UI.ShowSubtitle("Gang vehicle added!");
                         }
@@ -623,7 +623,22 @@ namespace GTA.GangAndTurfMod
                     Vehicle curVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                     if (curVehicle != null)
                     {
-                        if (pickedGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
+                        // Capture vehicle mods
+                        List<VehicleModData> capturedMods = new List<VehicleModData>();
+                        foreach (VehicleMod modType in Enum.GetValues(typeof(VehicleMod)))
+                        {
+                            int modIndex = curVehicle.GetMod(modType);
+                            if (modIndex != -1) // If the mod is installed
+                            {
+                                capturedMods.Add(new VehicleModData { ModType = modType, ModValue = modIndex });
+                            }
+                        }
+
+                        // Create a new PotentialGangVehicle and set its mods
+                        PotentialGangVehicle newGangVehicle = new PotentialGangVehicle(curVehicle.Model.Hash);
+                        newGangVehicle.VehicleMods = capturedMods;
+
+                        if (pickedGang.AddGangCar(newGangVehicle))
                         {
                             UI.ShowSubtitle("Gang vehicle added!");
                         }
