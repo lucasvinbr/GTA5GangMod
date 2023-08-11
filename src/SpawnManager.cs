@@ -673,7 +673,24 @@ namespace GTA.GangAndTurfMod
             if (ownerGang.carVariations.Count > 0)
             {
                 Logger.Log("spawn car: start", 4);
-                Vehicle newVehicle = World.CreateVehicle(RandoMath.RandomElement(ownerGang.carVariations).modelHash, spawnPos);
+                PotentialGangVehicle potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
+
+                Vehicle newVehicle = World.CreateVehicle(potentialGangVehicle.modelHash, spawnPos);
+
+                // Apply the stored mods to the newVehicle
+                if (potentialGangVehicle.VehicleMods != null)
+                {
+                    // Ensure the vehicle has a valid modkit ID
+                    Function.Call(Hash.SET_VEHICLE_MOD_KIT, newVehicle, 0);
+
+                    foreach (var modData in potentialGangVehicle.VehicleMods)
+                    {
+                        if (modData.ModValue != -1)
+                        {
+                            newVehicle.SetMod(modData.ModType, modData.ModValue, false);
+                        }
+                    }
+                }
 
                 if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
                 {

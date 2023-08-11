@@ -3,9 +3,17 @@ using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
 {
+    public class VehicleModData
+    {
+        public VehicleMod ModType { get; set; } // Use the VehicleMod enum directly
+        public int ModValue { get; set; }
+    }
+
     public class PotentialGangVehicle
     {
         public int modelHash;
+
+        public List<VehicleModData> VehicleMods { get; set; }
 
         [XmlIgnore]
         public static PotentialCarPool CarPool
