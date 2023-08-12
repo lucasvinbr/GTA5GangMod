@@ -19,6 +19,7 @@ namespace GTA.GangAndTurfMod
 
         private static int originalProtagonistRelationGroup;
         public static int spectatorProtagonistRelationGroup;
+        private static Ped lastControlledPed = null;
 
         /// <summary>
         /// the character currently controlled by the player. 
@@ -148,7 +149,6 @@ namespace GTA.GangAndTurfMod
                     //in a war, this counts as a casualty in our team
 
                     Function.Call((Hash)0xAE99FB955581844A, CurrentPlayerCharacter.Handle, -1, -1, 0, 0, 0, 0);
-                    
                     Game.Player.IgnoredByEveryone = true;
                 }
 
@@ -162,10 +162,10 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public static void TryBodyChange()
         {
+            List<Ped> playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang(GangManager.instance.PlayerGang);
+
             if (!HasChangedBody)
             {
-                List<Ped> playerGangMembers = SpawnManager.instance.GetSpawnedPedsOfGang
-                    (GangManager.instance.PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
                     if (Game.Player.IsTargetting(playerGangMembers[i]))
@@ -201,13 +201,30 @@ namespace GTA.GangAndTurfMod
             }
             else
             {
-                RestorePlayerBody();
-            }
+                Ped aimedGangMember = null;
+                for (int i = 0; i < playerGangMembers.Count; i++)
+                {
+                    if (Game.Player.IsTargetting(playerGangMembers[i]) && playerGangMembers[i] != theOriginalPed)
+                    {
+                        aimedGangMember = playerGangMembers[i];
+                        break;
+                    }
+                }
 
+                if (aimedGangMember != null && aimedGangMember.IsAlive)
+                {
+                    TakePedBody(aimedGangMember);
+                }
+                else
+                {
+                    RestorePlayerBody();
+                }
+            }
         }
 
         private static void TakePedBody(Ped targetPed)
         {
+
             targetPed.Task.ClearAllImmediately();
             Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth - 100;
             targetPed.Armor += targetPed.Health - 100;
@@ -221,6 +238,16 @@ namespace GTA.GangAndTurfMod
             currentlyControlledMember = SpawnManager.instance.GetTargetMemberAI(targetPed);
 
             Game.Player.CanControlCharacter = true;
+            GangManager.instance.RefreshPlayerRelationsWithAiGangs();
+
+            if (lastControlledPed != null && lastControlledPed.Exists())
+            {
+                lastControlledPed.Health = lastControlledPed.Armor + 100;
+                lastControlledPed.RelationshipGroup = GangManager.instance.PlayerGang.relationGroupIndex;
+                lastControlledPed.Task.ClearAllImmediately();
+            }
+
+            lastControlledPed = targetPed;
         }
 
         /// <summary>
@@ -279,6 +306,13 @@ namespace GTA.GangAndTurfMod
 
         public static void RestorePlayerBody()
         {
+            if (lastControlledPed != null && lastControlledPed.Exists())
+            {
+                lastControlledPed.Health = lastControlledPed.Armor + 100;
+                lastControlledPed.RelationshipGroup = GangManager.instance.PlayerGang.relationGroupIndex;
+                lastControlledPed.Task.ClearAllImmediately();
+            }
+
             Ped oldPed = CurrentPlayerCharacter;
             //return to original body
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
