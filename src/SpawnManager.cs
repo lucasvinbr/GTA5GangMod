@@ -677,21 +677,6 @@ namespace GTA.GangAndTurfMod
 
                 Vehicle newVehicle = World.CreateVehicle(potentialGangVehicle.modelHash, spawnPos);
 
-                // Apply the stored mods to the newVehicle
-                if (potentialGangVehicle.VehicleMods != null)
-                {
-                    // Ensure the vehicle has a valid modkit ID
-                    Function.Call(Hash.SET_VEHICLE_MOD_KIT, newVehicle, 0);
-
-                    foreach (var modData in potentialGangVehicle.VehicleMods)
-                    {
-                        if (modData.ModValue != -1)
-                        {
-                            newVehicle.SetMod(modData.ModType, modData.ModValue, false);
-                        }
-                    }
-                }
-
                 if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
                 {
                     newVehicle.Delete();
@@ -753,6 +738,21 @@ namespace GTA.GangAndTurfMod
                         {
                             newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
                             Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
+                        }
+
+                        // Apply the stored mods to the newVehicle
+                        if (potentialGangVehicle.VehicleMods != null)
+                        {
+                            // Ensure the vehicle has a valid modkit ID
+                            Function.Call(Hash.SET_VEHICLE_MOD_KIT, newVehicle, 0);
+
+                            foreach (var modData in potentialGangVehicle.VehicleMods)
+                            {
+                                if (modData.ModValue != -1)
+                                {
+                                    newVehicle.SetMod(modData.ModType, modData.ModValue, false);
+                                }
+                            }
                         }
 
                         thinkingDrivingMembersCount++;
