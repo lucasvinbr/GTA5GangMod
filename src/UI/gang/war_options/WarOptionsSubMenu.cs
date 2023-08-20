@@ -1,13 +1,14 @@
-﻿using NativeUI;
+﻿using LemonUI;
+using LemonUI.Menus;
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// submenu for setting spawn points and skipping wars
     /// </summary>
-    public class WarOptionsSubMenu : UIMenu
+    public class WarOptionsSubMenu : NativeMenu
     {
-        public WarOptionsSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "War Options")
+        public WarOptionsSubMenu(ObjectPool menuPool) : base("Gang and Turf Mod", "War Options")
         {
             warPotentialSpawnsSubMenu = new WarPotentialSpawnsSubMenu();
 
@@ -24,25 +25,25 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void Setup()
         {
-            UIMenuItem skipWarBtn = new UIMenuItem("Skip current War",
+            NativeItem skipWarBtn = new NativeItem("Skip current War",
                "If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.");
 
-            AddItem(skipWarBtn);
+            Add(skipWarBtn);
 
-            UIMenuCheckboxItem showReinforcementsAIWarsToggle = new UIMenuCheckboxItem("Show reinforcement counts for AI Wars", 
+            NativeCheckboxItem showReinforcementsAIWarsToggle = new NativeCheckboxItem("Show reinforcement counts for AI Wars", 
                 ModOptions.instance.showReinforcementCountsForAIWars,
                "If enabled, reinforcement counts will also be shown when inside a war the player's gang is not involved in.");
 
-            UIMenuCheckboxItem lockReinforcementsToggle = new UIMenuCheckboxItem("Lock current war reinforcement count",
+            NativeCheckboxItem lockReinforcementsToggle = new NativeCheckboxItem("Lock current war reinforcement count",
                 ModOptions.instance.lockCurWarReinforcementCount,
                "If enabled, reinforcement counts of the current war will never drop, making the war never end. This doesn't affect auto-resolution of distant wars.");
 
-            AddItem(showReinforcementsAIWarsToggle);
-            AddItem(lockReinforcementsToggle);
+            Add(showReinforcementsAIWarsToggle);
+            Add(lockReinforcementsToggle);
 
 
-            UIMenuItem warSpawnsMenuBtn = new UIMenuItem("War Potential Spawns...", "Opens the War Potential Spawns Menu, which allows viewing, creating and deleting spawns to be used in wars.");
-            AddItem(warSpawnsMenuBtn);
+            NativeItem warSpawnsMenuBtn = new NativeItem("War Potential Spawns...", "Opens the War Potential Spawns Menu, which allows viewing, creating and deleting spawns to be used in wars.");
+            Add(warSpawnsMenuBtn);
             BindMenuToItem(warPotentialSpawnsSubMenu, warSpawnsMenuBtn);
 
             OnItemSelect += (sender, item, index) =>
@@ -59,7 +60,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        UI.ShowSubtitle("There is no war in progress here.");
+                        UI.Screen.ShowSubtitle("There is no war in progress here.");
                     }
                 }
             };
@@ -79,7 +80,7 @@ namespace GTA.GangAndTurfMod
                 }
             };
 
-            RefreshIndex();
+            
         }
 
     }

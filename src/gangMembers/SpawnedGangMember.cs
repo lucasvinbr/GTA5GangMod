@@ -81,7 +81,7 @@ namespace GTA.GangAndTurfMod
             {
                 if(!watchedPed.IsAlive || watchedPed.HeightAboveGround < 2.0f)
                 {
-                    //UI.ShowSubtitle("member no longer parachuting", 800);
+                    //UI.Screen.ShowSubtitle("member no longer parachuting", 800);
                     watchedPed.BlockPermanentEvents = false;
                     watchedPed.AlwaysKeepTask = false;
                     watchedPed.IsCollisionProof = false;
@@ -393,7 +393,7 @@ namespace GTA.GangAndTurfMod
 
             if (destination == default || destination == Vector3.Zero) destination = MindControl.SafePositionNearPlayer;
 
-            //UI.ShowSubtitle("member is parachuting!", 800);
+            //UI.Screen.ShowSubtitle("member is parachuting!", 800);
             watchedPed.BlockPermanentEvents = true;
             watchedPed.AlwaysKeepTask = true;
             watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;

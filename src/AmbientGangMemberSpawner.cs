@@ -31,7 +31,7 @@ namespace GTA.GangAndTurfMod
                 // also reduce police influence
                 if (enabled)
                 {
-                    Game.WantedMultiplier = (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
+                    Function.Call(Hash.SET_WANTED_LEVEL_MULTIPLIER, (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf);
                     Game.MaxWantedLevel = RandoMath.Max(CalculateMaxWantedLevelInTurf(curTurfZone.value), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
                 }
 

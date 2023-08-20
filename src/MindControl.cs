@@ -106,7 +106,7 @@ namespace GTA.GangAndTurfMod
         {
             if (Function.Call<bool>(Hash.IS_PLAYER_BEING_ARRESTED, Game.Player, true))
             {
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_was_arrested", "Your member has been arrested!"));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_was_arrested", "Your member has been arrested!"));
                 RestorePlayerBody();
                 return;
             }
@@ -211,10 +211,10 @@ namespace GTA.GangAndTurfMod
             targetPed.Task.ClearAllImmediately();
             Game.Player.MaxArmor = targetPed.Armor + targetPed.MaxHealth - 100;
             targetPed.Armor += targetPed.Health - 100;
-            //UI.Notify("health: " + targetPed.Health.ToString());
-            //UI.Notify("our armor is " + targetPed.Armor.ToString());
-            //UI.Notify("max armor is " + Game.Player.MaxArmor.ToString());
-            //UI.Notify("calculation: " + (targetPed.Armor + targetPed.MaxHealth - 100).ToString());
+            //UI.Notification.Show("health: " + targetPed.Health.ToString());
+            //UI.Notification.Show("our armor is " + targetPed.Armor.ToString());
+            //UI.Notification.Show("max armor is " + Game.Player.MaxArmor.ToString());
+            //UI.Notification.Show("calculation: " + (targetPed.Armor + targetPed.MaxHealth - 100).ToString());
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;

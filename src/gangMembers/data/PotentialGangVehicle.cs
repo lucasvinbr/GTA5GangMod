@@ -76,7 +76,7 @@ namespace GTA.GangAndTurfMod
             if (CarPool.carList.Count <= 0)
             {
                 
-                UI.Notify(Localization.GetTextByKey("notify_warn_bad_carpool_file", "GTA5GangNTurfMod Warning: empty/bad carpool file! Enemy gangs won't have cars"));
+                UI.Notification.Show(Localization.GetTextByKey("notify_warn_bad_carpool_file", "GTA5GangNTurfMod Warning: empty/bad carpool file! Enemy gangs won't have cars"));
                 return null;
             }
 

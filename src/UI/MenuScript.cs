@@ -1,5 +1,6 @@
 ﻿using GTA.Native;
-using NativeUI;
+using LemonUI;
+using LemonUI.Menus;
 using System;
 using System.Collections.Generic;
 
@@ -7,16 +8,17 @@ using System.Collections.Generic;
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
-    /// the nativeUI-implementing class
-    /// -------------thanks to the NativeUI developers!-------------
+    /// the lemonUI-implementing class
+    /// -------------thanks to the LemonUI developers!-------------
+    /// https://github.com/LemonUIbyLemon/LemonUI
     /// </summary>
     public class MenuScript
     {
-        private readonly MenuPool menuPool;
+        private readonly ObjectPool menuPool;
 
-        private readonly UIMenu memberMenu, carMenu;
+        private readonly NativeMenu memberMenu, carMenu;
 
-        private UIMenu specificGangMemberRegSubMenu, specificCarRegSubMenu;
+        private NativeMenu specificGangMemberRegSubMenu, specificCarRegSubMenu;
 
         private readonly ZonesMenu zonesMenu;
         private readonly GangMenu gangMenu;
@@ -63,12 +65,12 @@ namespace GTA.GangAndTurfMod
 
             ModOptions.OnModOptionsReloaded += RefreshCostsTexts;
 
-            menuPool = new MenuPool();
+            menuPool = new ObjectPool();
 
             pickAiGangMenu = new PickAiGangMenu(menuPool);
             zonesMenu = new ZonesMenu(menuPool);
-            memberMenu = new UIMenu("Gang and Turf Mod", "Gang Member Registration Controls");
-            carMenu = new UIMenu("Gang and Turf Mod", "Gang Vehicle Registration Controls");
+            memberMenu = new NativeMenu("Gang and Turf Mod", "Gang Member Registration Controls");
+            carMenu = new NativeMenu("Gang and Turf Mod", "Gang Vehicle Registration Controls");
             gangMenu = new GangMenu(menuPool);
 
             menuPool.Add(memberMenu);
@@ -89,10 +91,10 @@ namespace GTA.GangAndTurfMod
             AddRemovePlayerVehicleButton();
             AddRemoveVehicleEverywhereButton();
 
-            memberMenu.RefreshIndex();
+            memberMenu.
 
             //add mouse click as another "select" button
-            menuPool.SetKey(UIMenu.MenuControls.Select, Control.PhoneSelect);
+            menuPool.SetKey(NativeMenu.MenuControls.Select, Control.PhoneSelect);
             InstructionalButton clickButton = new InstructionalButton(Control.PhoneSelect, "Select");
             zonesMenu.AddInstructionalButton(clickButton);
             gangMenu.AddInstructionalButton(clickButton);
@@ -121,12 +123,12 @@ namespace GTA.GangAndTurfMod
                     closestPed = World.GetClosestPed(MindControl.CurrentPlayerCharacter.Position + MindControl.CurrentPlayerCharacter.ForwardVector * 6.0f, 5.5f);
                     if (closestPed != null)
                     {
-                        UI.ShowSubtitle("ped selected!");
+                        UI.Screen.ShowSubtitle("ped selected!");
                         World.AddExplosion(closestPed.Position, ExplosionType.Steam, 1.0f, 0.1f);
                     }
                     else
                     {
-                        UI.ShowSubtitle("Couldn't find a ped in front of you! You have selected yourself.");
+                        UI.Screen.ShowSubtitle("Couldn't find a ped in front of you! You have selected yourself.");
                         closestPed = MindControl.CurrentPlayerCharacter;
                         World.AddExplosion(closestPed.Position, ExplosionType.Extinguisher, 1.0f, 0.1f);
                     }
@@ -135,7 +137,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    UI.ShowSubtitle("vehicle selected!");
+                    UI.Screen.ShowSubtitle("vehicle selected!");
                     carMenu.Visible = !carMenu.Visible;
                 }
                 RefreshNewEnemyMenuContent();
@@ -152,7 +154,7 @@ namespace GTA.GangAndTurfMod
             }
         }
 
-        public void OpenPickAiGangMenu(UIMenu callerMenu, string menuSubtitle, Action<Gang> onGangPicked)
+        public void OpenPickAiGangMenu(NativeMenu callerMenu, string menuSubtitle, Action<Gang> onGangPicked)
         {
             callerMenu.Visible = false;
             pickAiGangMenu.Open(callerMenu, menuSubtitle, onGangPicked);
@@ -231,11 +233,11 @@ namespace GTA.GangAndTurfMod
 
             UIMenuListItem styleList = new UIMenuListItem("Member Dressing Style", memberStyles, 0, "The way the selected member is dressed. Used by the AI when picking members (if the AI gang's chosen style is the same as this member's, it may choose this member).");
             UIMenuListItem colorList = new UIMenuListItem("Member Color", memberColors, 0, "The color the member will be assigned to. Used by the AI when picking members (if the AI gang's color is the same as this member's, it may choose this member).");
-            UIMenuCheckboxItem extendedModeToggle = new UIMenuCheckboxItem("Extended Save Mode", savePotentialMembersAsExtended, "If enabled, saves all clothing indexes for non-freemode peds. Can help with some addon peds.");
+            NativeCheckboxItem extendedModeToggle = new NativeCheckboxItem("Extended Save Mode", savePotentialMembersAsExtended, "If enabled, saves all clothing indexes for non-freemode peds. Can help with some addon peds.");
 
-            memberMenu.AddItem(styleList);
-            memberMenu.AddItem(colorList);
-            memberMenu.AddItem(extendedModeToggle);
+            memberMenu.Add(styleList);
+            memberMenu.Add(colorList);
+            memberMenu.Add(extendedModeToggle);
             memberMenu.OnListChange += (sender, item, index) =>
             {
                 if (item == styleList)
@@ -261,8 +263,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddSaveMemberButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Save Potential Member for future AI gangs", "Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.");
-            memberMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Save Potential Member for future AI gangs", "Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.");
+            memberMenu.Add(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -271,11 +273,11 @@ namespace GTA.GangAndTurfMod
                     {
                         if (PotentialGangMember.AddMemberAndSavePool(new FreemodePotentialGangMember(closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
-                            UI.ShowSubtitle("Potential freemode member added!");
+                            UI.Screen.ShowSubtitle("Potential freemode member added!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("A similar potential member already exists.");
+                            UI.Screen.ShowSubtitle("A similar potential member already exists.");
                         }
                     }
                     else
@@ -286,11 +288,11 @@ namespace GTA.GangAndTurfMod
 
                         if (addAttempt)
                         {
-                            UI.ShowSubtitle("Potential member added!");
+                            UI.Screen.ShowSubtitle("Potential member added!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("A similar potential member already exists.");
+                            UI.Screen.ShowSubtitle("A similar potential member already exists.");
                         }
                     }
 
@@ -300,8 +302,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddNewPlayerGangMemberButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Save ped type for your gang", "Saves the selected ped type as a member of your gang, with the specified data. The selected ped himself won't be a member, however.");
-            memberMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Save ped type for your gang", "Saves the selected ped type as a member of your gang, with the specified data. The selected ped himself won't be a member, however.");
+            memberMenu.Add(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -311,11 +313,11 @@ namespace GTA.GangAndTurfMod
                         if (GangManager.instance.PlayerGang.AddMemberVariation(new FreemodePotentialGangMember
                        (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
-                            UI.ShowSubtitle("Freemode Member added successfully!");
+                            UI.Screen.ShowSubtitle("Freemode Member added successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your gang already has a similar member.");
+                            UI.Screen.ShowSubtitle("Your gang already has a similar member.");
                         }
                     }
                     else
@@ -329,11 +331,11 @@ namespace GTA.GangAndTurfMod
 
                         if (addAttempt)
                         {
-                            UI.ShowSubtitle("Member added successfully!");
+                            UI.Screen.ShowSubtitle("Member added successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your gang already has a similar member.");
+                            UI.Screen.ShowSubtitle("Your gang already has a similar member.");
                         }
                     }
 
@@ -355,11 +357,11 @@ namespace GTA.GangAndTurfMod
                         if (pickedGang.AddMemberVariation(new FreemodePotentialGangMember
                        (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
-                            UI.ShowSubtitle("Freemode Member added successfully!");
+                            UI.Screen.ShowSubtitle("Freemode Member added successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That gang already has a similar member.");
+                            UI.Screen.ShowSubtitle("That gang already has a similar member.");
                         }
                     }
                     else
@@ -373,11 +375,11 @@ namespace GTA.GangAndTurfMod
 
                         if (addAttempt)
                         {
-                            UI.ShowSubtitle("Member added successfully!");
+                            UI.Screen.ShowSubtitle("Member added successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That gang already has a similar member.");
+                            UI.Screen.ShowSubtitle("That gang already has a similar member.");
                         }
                     }
                 }
@@ -399,20 +401,17 @@ namespace GTA.GangAndTurfMod
             {
                 if (!gangsList[i].isPlayerOwned)
                 {
-                    specificGangMemberRegSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
-                    specificCarRegSubMenu.AddItem(new UIMenuItem(gangsList[i].name));
+                    specificGangMemberRegSubMenu.Add(new NativeItem(gangsList[i].name));
+                    specificCarRegSubMenu.Add(new NativeItem(gangsList[i].name));
                 }
             }
-
-            specificGangMemberRegSubMenu.RefreshIndex();
-            specificCarRegSubMenu.RefreshIndex();
 
         }
 
         private void AddRemoveGangMemberButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Remove ped type from respective gang", "If the selected ped type was a member of a gang, it will no longer be. The selected ped himself will still be a member, however. This works for your own gang and for the enemies.");
-            memberMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Remove ped type from respective gang", "If the selected ped type was a member of a gang, it will no longer be. The selected ped himself will still be a member, however. This works for your own gang and for the enemies.");
+            memberMenu.Add(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -420,7 +419,7 @@ namespace GTA.GangAndTurfMod
                     Gang ownerGang = GangManager.instance.GetGangByRelGroup(closestPed.RelationshipGroup);
                     if (ownerGang == null)
                     {
-                        UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
+                        UI.Screen.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
                         return;
                     }
                     if (closestPed.Model == PedHash.FreemodeFemale01 || closestPed.Model == PedHash.FreemodeMale01)
@@ -428,11 +427,11 @@ namespace GTA.GangAndTurfMod
                         if (ownerGang.RemoveMemberVariation(new FreemodePotentialGangMember
                         (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
-                            UI.ShowSubtitle("Member removed successfully!");
+                            UI.Screen.ShowSubtitle("Member removed successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
+                            UI.Screen.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
                         }
                     }
                     else
@@ -442,11 +441,11 @@ namespace GTA.GangAndTurfMod
                         ownerGang.RemoveMemberVariation(new ExtendedPotentialGangMember
                         (closestPed, (PotentialGangMember.DressStyle)memberStyle, (PotentialGangMember.MemberColor)memberColor)))
                         {
-                            UI.ShowSubtitle("Member removed successfully!");
+                            UI.Screen.ShowSubtitle("Member removed successfully!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
+                            UI.Screen.ShowSubtitle("The ped doesn't seem to be in a gang.", 8000);
                         }
                     }
                 }
@@ -455,8 +454,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddRemoveFromAllGangsButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Remove ped type from all gangs and pool", "Removes the ped type from all gangs and from the member pool, which means future gangs also won't try to use this type. The selected ped himself will still be a gang member, however.");
-            memberMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Remove ped type from all gangs and pool", "Removes the ped type from all gangs and from the member pool, which means future gangs also won't try to use this type. The selected ped himself will still be a gang member, however.");
+            memberMenu.Add(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -468,11 +467,11 @@ namespace GTA.GangAndTurfMod
 
                         if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove))
                         {
-                            UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                            UI.Screen.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Ped type not found in pool.");
+                            UI.Screen.ShowSubtitle("Ped type not found in pool.");
                         }
 
                         for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
@@ -490,11 +489,11 @@ namespace GTA.GangAndTurfMod
                         if (PotentialGangMember.RemoveMemberAndSavePool(memberToRemove) ||
                         PotentialGangMember.RemoveMemberAndSavePool(memberToRemoveEx))
                         {
-                            UI.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
+                            UI.Screen.ShowSubtitle("Ped type removed from pool! (It might not be the only similar ped in the pool)");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Ped type not found in pool.");
+                            UI.Screen.ShowSubtitle("Ped type not found in pool.");
                         }
 
                         for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
@@ -508,8 +507,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddMakeFriendlyToPlayerGangButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Make Ped friendly to your gang", "Makes the selected ped (and everyone from his group) and your gang become allies. Can't be used with cops or gangs from this mod! NOTE: this only lasts until scripts are loaded again");
-            memberMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Make Ped friendly to your gang", "Makes the selected ped (and everyone from his group) and your gang become allies. Can't be used with cops or gangs from this mod! NOTE: this only lasts until scripts are loaded again");
+            memberMenu.Add(newButton);
             memberMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -522,7 +521,7 @@ namespace GTA.GangAndTurfMod
 
                         if (GangManager.instance.GetGangByRelGroup(closestPedRelGroup) != null)
                         {
-                            UI.ShowSubtitle("That ped is a gang member! Gang members cannot be marked as allies");
+                            UI.Screen.ShowSubtitle("That ped is a gang member! Gang members cannot be marked as allies");
                             return;
                         }
 
@@ -530,11 +529,11 @@ namespace GTA.GangAndTurfMod
                         Gang playerGang = GangManager.instance.PlayerGang;
                         World.SetRelationshipBetweenGroups(Relationship.Respect, playerGang.relationGroupIndex, closestPedRelGroup);
                         World.SetRelationshipBetweenGroups(Relationship.Respect, closestPedRelGroup, playerGang.relationGroupIndex);
-                        UI.ShowSubtitle("That ped's group is now an allied group!");
+                        UI.Screen.ShowSubtitle("That ped's group is now an allied group!");
                     }
                     else
                     {
-                        UI.ShowSubtitle("That ped is a cop! Cops cannot be marked as allies");
+                        UI.Screen.ShowSubtitle("That ped is a cop! Cops cannot be marked as allies");
                     }
                 }
             };
@@ -542,8 +541,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddSaveVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Register Vehicle as usable by AI Gangs", "Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.");
-            carMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Register Vehicle as usable by AI Gangs", "Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.");
+            carMenu.Add(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -553,16 +552,16 @@ namespace GTA.GangAndTurfMod
                     {
                         if (PotentialGangVehicle.AddVehicleAndSavePool(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            UI.ShowSubtitle("Vehicle added to pool!");
+                            UI.Screen.ShowSubtitle("Vehicle added to pool!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That vehicle has already been added to the pool.");
+                            UI.Screen.ShowSubtitle("That vehicle has already been added to the pool.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You are not inside a vehicle.");
+                        UI.Screen.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
             };
@@ -570,8 +569,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddRegisterPlayerVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Register Vehicle for your Gang", "Makes the vehicle type you are driving become one of the default types used by your gang.");
-            carMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Register Vehicle for your Gang", "Makes the vehicle type you are driving become one of the default types used by your gang.");
+            carMenu.Add(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -581,16 +580,16 @@ namespace GTA.GangAndTurfMod
                     {
                         if (GangManager.instance.PlayerGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            UI.ShowSubtitle("Gang vehicle added!");
+                            UI.Screen.ShowSubtitle("Gang vehicle added!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That vehicle is already registered for your gang.");
+                            UI.Screen.ShowSubtitle("That vehicle is already registered for your gang.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You are not inside a vehicle.");
+                        UI.Screen.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
             };
@@ -610,16 +609,16 @@ namespace GTA.GangAndTurfMod
                     {
                         if (pickedGang.AddGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            UI.ShowSubtitle("Gang vehicle added!");
+                            UI.Screen.ShowSubtitle("Gang vehicle added!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That vehicle is already registered for that gang.");
+                            UI.Screen.ShowSubtitle("That vehicle is already registered for that gang.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You are not inside a vehicle.");
+                        UI.Screen.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
             };
@@ -627,8 +626,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddRemovePlayerVehicleButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Remove Vehicle Type from your Gang", "Removes the vehicle type you are driving from the possible vehicle types for your gang.");
-            carMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Remove Vehicle Type from your Gang", "Removes the vehicle type you are driving from the possible vehicle types for your gang.");
+            carMenu.Add(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -638,16 +637,16 @@ namespace GTA.GangAndTurfMod
                     {
                         if (GangManager.instance.PlayerGang.RemoveGangCar(new PotentialGangVehicle(curVehicle.Model.Hash)))
                         {
-                            UI.ShowSubtitle("Gang vehicle removed!");
+                            UI.Screen.ShowSubtitle("Gang vehicle removed!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("That vehicle is not registered for your gang.");
+                            UI.Screen.ShowSubtitle("That vehicle is not registered for your gang.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You are not inside a vehicle.");
+                        UI.Screen.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
             };
@@ -655,8 +654,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddRemoveVehicleEverywhereButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Remove Vehicle Type from all gangs and pool", "Removes the vehicle type you are driving from the possible vehicle types for all gangs, including yours. Existing gangs will also stop using that car and get another one if needed.");
-            carMenu.AddItem(newButton);
+            NativeItem newButton = new NativeItem("Remove Vehicle Type from all gangs and pool", "Removes the vehicle type you are driving from the possible vehicle types for all gangs, including yours. Existing gangs will also stop using that car and get another one if needed.");
+            carMenu.Add(newButton);
             carMenu.OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -668,11 +667,11 @@ namespace GTA.GangAndTurfMod
 
                         if (PotentialGangVehicle.RemoveVehicleAndSavePool(removedVehicle))
                         {
-                            UI.ShowSubtitle("Vehicle type removed from pool!");
+                            UI.Screen.ShowSubtitle("Vehicle type removed from pool!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Vehicle type not found in pool.");
+                            UI.Screen.ShowSubtitle("Vehicle type not found in pool.");
                         }
 
                         for (int i = 0; i < GangManager.instance.gangData.gangs.Count; i++)
@@ -682,7 +681,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        UI.ShowSubtitle("You are not inside a vehicle.");
+                        UI.Screen.ShowSubtitle("You are not inside a vehicle.");
                     }
                 }
             };

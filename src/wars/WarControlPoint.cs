@@ -38,11 +38,13 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.Bunker;
                     myBlip.Color = BlipColor.White;
+                    myBlip.ShowsOutlineIndicator = false;
                 }
                 else
                 {
                     myBlip.Sprite = BlipSprite.AdversaryBunker;
                     Function.Call(Hash.SET_BLIP_COLOUR, myBlip, ownerGang.blipColor);
+                    myBlip.ShowsOutlineIndicator = true;
 
                     if (ownerGang.isPlayerOwned)
                     {
@@ -55,17 +57,15 @@ namespace GTA.GangAndTurfMod
 
                 }
 
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("War Control Point (under ", ownerGang.name, " control)"));
+                    myBlip.Name = string.Concat("War Control Point (under ", ownerGang.name, " control)");
                 }
                 else
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("War Control Point (neutral)"));
+                    myBlip.Name = string.Concat("War Control Point (neutral)");
                 }
 
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, myBlip);
             }
 
         }
@@ -91,7 +91,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
 
@@ -107,7 +107,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
         }

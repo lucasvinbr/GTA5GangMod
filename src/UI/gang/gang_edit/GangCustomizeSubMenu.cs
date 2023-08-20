@@ -1,13 +1,14 @@
-﻿using NativeUI;
+﻿using LemonUI;
+using LemonUI.Menus;
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// submenu for all of the player's gang editing options
     /// </summary>
-    public class GangCustomizeSubMenu : UIMenu
+    public class GangCustomizeSubMenu : NativeMenu
     {
-        public GangCustomizeSubMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Gang Customization/Upgrades")
+        public GangCustomizeSubMenu(ObjectPool menuPool) : base("Gang and Turf Mod", "Gang Customization/Upgrades")
         {
             gangUpgradesSubMenu = new GangUpgradesSubMenu();
             gangWeaponsSubMenu = new GangWeaponsSubMenu();
@@ -38,31 +39,31 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void Setup()
         {
-            UIMenuItem gangUpgradesBtn = new UIMenuItem("Gang Upgrades...", "Opens the Gang Upgrades menu, where it's possible to upgrade your members' attributes and general gang strength.");
-            AddItem(gangUpgradesBtn);
+            NativeItem gangUpgradesBtn = new NativeItem("Gang Upgrades...", "Opens the Gang Upgrades menu, where it's possible to upgrade your members' attributes and general gang strength.");
+            Add(gangUpgradesBtn);
             BindMenuToItem(gangUpgradesSubMenu, gangUpgradesBtn);
 
-            UIMenuItem gangWeaponsBtn = new UIMenuItem("Gang Weapons...", "Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by your gang members.");
-            AddItem(gangWeaponsBtn);
+            NativeItem gangWeaponsBtn = new NativeItem("Gang Weapons...", "Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by your gang members.");
+            Add(gangWeaponsBtn);
             BindMenuToItem(gangWeaponsSubMenu, gangWeaponsBtn);
 
-            UIMenuItem gangCarColorsBtn = new UIMenuItem("Gang Car Colors...", "Opens the Gang Car Colors menu, where it's possible to change the colors of your gang vehicles.");
-            AddItem(gangCarColorsBtn);
+            NativeItem gangCarColorsBtn = new NativeItem("Gang Car Colors...", "Opens the Gang Car Colors menu, where it's possible to change the colors of your gang vehicles.");
+            Add(gangCarColorsBtn);
             BindMenuToItem(gangCarColorsSubMenu, gangCarColorsBtn);
 
-            UIMenuItem gangBlipColorBtn = new UIMenuItem("Gang Blip Color...", "Opens the Gang Blip Color menu, where it's possible to change the color of your gang blips (members, vehicles and turf).");
-            AddItem(gangBlipColorBtn);
+            NativeItem gangBlipColorBtn = new NativeItem("Gang Blip Color...", "Opens the Gang Blip Color menu, where it's possible to change the color of your gang blips (members, vehicles and turf).");
+            Add(gangBlipColorBtn);
             BindMenuToItem(gangBlipColorSubMenu, gangBlipColorBtn);
 
             AddRenameGangButton();
 
-            RefreshIndex();
+            
         }
 
         private void AddRenameGangButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Rename Gang", "Opens the input prompt for resetting your gang's name.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Rename Gang", "Opens the input prompt for resetting your gang's name.");
+            Add(newButton);
 
             OnItemSelect += (sender, item, index) =>
             {
@@ -83,11 +84,11 @@ namespace GTA.GangAndTurfMod
                         GangManager.instance.PlayerGang.name = typedText;
                         GangManager.instance.SaveGangData();
 
-                        UI.ShowSubtitle("Your gang is now known as the " + typedText);
+                        UI.Screen.ShowSubtitle("Your gang is now known as the " + typedText);
                     }
                     else
                     {
-                        UI.ShowSubtitle("That name is not allowed, sorry! (It may be in use already)");
+                        UI.Screen.ShowSubtitle("That name is not allowed, sorry! (It may be in use already)");
                     }
                 }
             };

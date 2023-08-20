@@ -1,11 +1,11 @@
-﻿using NativeUI;
+﻿using LemonUI.Menus;
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// submenu for setting potential spawn points and skipping wars
     /// </summary>
-    public class WarPotentialSpawnsSubMenu : UIMenu
+    public class WarPotentialSpawnsSubMenu : NativeMenu
     {
         public WarPotentialSpawnsSubMenu() : base("Gang and Turf Mod", "War Potential Spawns Menu")
         {
@@ -17,13 +17,13 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void Setup()
         {
-            UIMenuCheckboxItem showSpawnBlipsToggle = new UIMenuCheckboxItem("Show spawns on map", false,
+            NativeCheckboxItem showSpawnBlipsToggle = new NativeCheckboxItem("Show spawns on map", false,
                "For debugging purposes. If enabled, the nearest spawns will be marked with blips on the map.");
 
-            UIMenuItem addNewSpawnBtn = new UIMenuItem("Add New Potential Spawn Here",
+            NativeItem addNewSpawnBtn = new NativeItem("Add New Potential Spawn Here",
                "Adds a new position to be used as a spawn/control point in Gang Wars. You must be on the ground for the spawn to work correctly!");
 
-            UIMenuItem removeSpawnBtn = new UIMenuItem("Remove Nearby Spawn",
+            NativeItem removeSpawnBtn = new NativeItem("Remove Nearby Spawn",
                "The first spawn found nearby will be deleted from the potential spawns.");
 
 
@@ -36,9 +36,9 @@ namespace GTA.GangAndTurfMod
                 }
             };
 
-            AddItem(showSpawnBlipsToggle);
-            AddItem(addNewSpawnBtn);
-            AddItem(removeSpawnBtn);
+            Add(showSpawnBlipsToggle);
+            Add(addNewSpawnBtn);
+            Add(removeSpawnBtn);
 
             OnItemSelect += (sender, item, index) =>
             {
@@ -46,17 +46,17 @@ namespace GTA.GangAndTurfMod
                 {
                     if (MindControl.CurrentPlayerCharacter.IsInAir)
                     {
-                        UI.ShowSubtitle("You must be on the ground to add a potential spawn!");
+                        UI.Screen.ShowSubtitle("You must be on the ground to add a potential spawn!");
                         return;
                     }
 
                     if(PotentialSpawnsForWars.AddPositionAndSave(MindControl.CurrentPlayerCharacter.Position))
                     {
-                        UI.ShowSubtitle("Potential spawn added!");
+                        UI.Screen.ShowSubtitle("Potential spawn added!");
                     }
                     else
                     {
-                        UI.ShowSubtitle("There's another spawn too close to this one!");
+                        UI.Screen.ShowSubtitle("There's another spawn too close to this one!");
                     }
                     
                 }
@@ -64,16 +64,16 @@ namespace GTA.GangAndTurfMod
                 {
                     if (PotentialSpawnsForWars.RemovePositionAndSave(MindControl.CurrentPlayerCharacter.Position))
                     {
-                        UI.ShowSubtitle("Potential spawn removed!");
+                        UI.Screen.ShowSubtitle("Potential spawn removed!");
                     }
                     else
                     {
-                        UI.ShowSubtitle("Couldn't find a potential spawn nearby! Try getting closer.");
+                        UI.Screen.ShowSubtitle("Couldn't find a potential spawn nearby! Try getting closer.");
                     }
                 }
             };
 
-            RefreshIndex();
+            
         }
 
     }

@@ -52,7 +52,7 @@ namespace GTA.GangAndTurfMod
             offroadAttempts = 0;
             offroadCheckVector = World.GetNextPositionOnStreet
                           (playerPos + RandoMath.RandomDirection(true) * ModOptions.instance.maxDistanceCarSpawnFromPlayer);
-            //UI.Notify(playerPos.ToString() + " from " + offroadCheckVector.ToString());
+            //UI.Notification.Show(playerPos.ToString() + " from " + offroadCheckVector.ToString());
             while (offroadAttempts < 3 &&
                 World.GetDistance(playerPos, offroadCheckVector) > ModOptions.instance.maxDistanceCarSpawnFromPlayer * 1.3f)
             {

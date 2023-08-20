@@ -1,4 +1,4 @@
-﻿using NativeUI;
+﻿
 using System.Collections.Generic;
 
 namespace GTA.GangAndTurfMod
@@ -6,15 +6,15 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for buying/selling gang weapons
     /// </summary>
-    public class GangWeaponsSubMenu : UIMenu
+    public class GangWeaponsSubMenu : NativeMenu
     {
         public GangWeaponsSubMenu() : base("Gang and Turf Mod", "Gang Weapons")
         {
             Setup();
         }
 
-        private readonly Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem> buyableWeaponCheckboxesDict =
-    new Dictionary<ModOptions.BuyableWeapon, UIMenuCheckboxItem>();
+        private readonly Dictionary<ModOptions.BuyableWeapon, NativeCheckboxItem> buyableWeaponCheckboxesDict =
+    new Dictionary<ModOptions.BuyableWeapon, NativeCheckboxItem>();
 
         /// <summary>
         /// adds all buttons and events to the menu
@@ -28,7 +28,7 @@ namespace GTA.GangAndTurfMod
             {
                 Gang playerGang = GangManager.instance.PlayerGang;
 
-                foreach (KeyValuePair<ModOptions.BuyableWeapon, UIMenuCheckboxItem> kvp in buyableWeaponCheckboxesDict)
+                foreach (KeyValuePair<ModOptions.BuyableWeapon, NativeCheckboxItem> kvp in buyableWeaponCheckboxesDict)
                 {
                     if (kvp.Value == item)
                     {
@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod
                             playerGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
                             MindControl.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
                             GangManager.instance.SaveGangData();
-                            UI.ShowSubtitle("Weapon Removed!");
+                            UI.Screen.ShowSubtitle("Weapon Removed!");
                             item.Checked = false;
                         }
                         else
@@ -46,12 +46,12 @@ namespace GTA.GangAndTurfMod
                             {
                                 playerGang.gangWeaponHashes.Add(kvp.Key.wepHash);
                                 GangManager.instance.SaveGangData();
-                                UI.ShowSubtitle("Weapon Bought!");
+                                UI.Screen.ShowSubtitle("Weapon Bought!");
                                 item.Checked = true;
                             }
                             else
                             {
-                                UI.ShowSubtitle("You don't have enough money to buy that weapon for your gang.");
+                                UI.Screen.ShowSubtitle("You don't have enough money to buy that weapon for your gang.");
                                 item.Checked = false;
                             }
                         }
@@ -63,7 +63,7 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        private void GangWeaponsSubMenu_OnMenuOpen(UIMenu sender)
+        private void GangWeaponsSubMenu_OnMenuOpen(NativeMenu sender)
         {
             RefreshBuyableWeaponsMenuContent();
         }
@@ -83,14 +83,14 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 0; i < weaponsList.Count; i++)
             {
-                UIMenuCheckboxItem weaponCheckBox = new UIMenuCheckboxItem
+                NativeCheckboxItem weaponCheckBox = new NativeCheckboxItem
                         (string.Concat(weaponsList[i].wepHash.ToString(), " - ", weaponsList[i].price.ToString()),
                         playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash));
                 buyableWeaponCheckboxesDict.Add(weaponsList[i], weaponCheckBox);
-                AddItem(weaponCheckBox);
+                Add(weaponCheckBox);
             }
 
-            RefreshIndex();
+            
         }
 
 

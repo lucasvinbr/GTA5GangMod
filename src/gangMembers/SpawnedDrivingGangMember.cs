@@ -380,7 +380,7 @@ namespace GTA.GangAndTurfMod
             //leave vehicle, everyone stops being important
             if (MindControl.CurrentPlayerCharacter != watchedPed)
             {
-                //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + "'s driver is leaving vehicle", 800);
+                //UI.Screen.ShowSubtitle(vehicleIAmDriving.FriendlyName + "'s driver is leaving vehicle", 800);
                 watchedPed.Task.LeaveVehicle();
                 watchedPed.BlockPermanentEvents = false;
             }
@@ -403,7 +403,7 @@ namespace GTA.GangAndTurfMod
 
                     if (passenger.IsUsingAnyVehicleWeapon()) continue;
 
-                    //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + passenger.SeatIndex + ". veh has guns? " + vehicleHasGuns, 800);
+                    //UI.Screen.ShowSubtitle(vehicleIAmDriving.FriendlyName + " is dropping off passenger " + passenger.SeatIndex + ". veh has guns? " + vehicleHasGuns, 800);
                     if (shouldParachute)
                     {
                         SpawnManager.instance.GetTargetMemberAI(passenger, true)?.StartParachuting(destination, 0 + numParachuting * 1200);
@@ -506,7 +506,7 @@ namespace GTA.GangAndTurfMod
 
             SetWatchedPassengers();
 
-            //UI.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
+            //UI.Screen.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
 
             if (vehicleIAmDriving.Model.IsHelicopter)
             {

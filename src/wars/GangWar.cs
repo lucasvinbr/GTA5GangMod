@@ -1,6 +1,6 @@
 ﻿using GTA.Math;
 using GTA.Native;
-using NativeUI;
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -143,7 +143,7 @@ namespace GTA.GangAndTurfMod
                         defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
                     }
 
-                    UI.Notify(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
+                    UI.Notification.Show(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
                     attackerReinforcements.ToString(),
                     " against our ",
                     defenderReinforcements.ToString()));
@@ -285,7 +285,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 if (ModOptions.instance.notificationsEnabled)
-                    UI.Notify(battleReport);
+                    UI.Notification.Show(battleReport);
             }
 
 
@@ -313,15 +313,15 @@ namespace GTA.GangAndTurfMod
                         (battleProfit);
 
                     if (ModOptions.instance.notificationsEnabled)
-                        UI.Notify("Victory rewards: $" + battleProfit.ToString());
+                        UI.Notification.Show("Victory rewards: $" + battleProfit.ToString());
 
                     if (defenderVictory)
                     {
-                        UI.ShowSubtitle(warZone.zoneName + " remains ours!");
+                        UI.Screen.ShowSubtitle(warZone.zoneName + " remains ours!");
                     }
                     else
                     {
-                        UI.ShowSubtitle(warZone.zoneName + " is ours!");
+                        UI.Screen.ShowSubtitle(warZone.zoneName + " is ours!");
                     }
                 }
                 else
@@ -329,11 +329,11 @@ namespace GTA.GangAndTurfMod
                     //player was involved and lost!
                     if (defenderVictory)
                     {
-                        UI.ShowSubtitle("We've lost this battle. They keep the turf.");
+                        UI.Screen.ShowSubtitle("We've lost this battle. They keep the turf.");
                     }
                     else
                     {
-                        UI.ShowSubtitle(warZone.zoneName + " has been taken by the " + attackingGang.name + "!");
+                        UI.Screen.ShowSubtitle(warZone.zoneName + " has been taken by the " + attackingGang.name + "!");
                     }
                 }
 
@@ -444,7 +444,7 @@ namespace GTA.GangAndTurfMod
 
             //if (availableNearbyPresetSpawns.Count < 2)
             //{
-            //    UI.Notify("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
+            //    UI.Notification.Show("Less than 2 preset potential spawns were found nearby. One or both teams' spawns will be generated.");
             //}
 
             if(desiredNumberOfControlPointsForThisWar > 0)

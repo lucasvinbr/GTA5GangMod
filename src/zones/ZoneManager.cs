@@ -140,7 +140,7 @@ namespace GTA.GangAndTurfMod
                 zoneInfoMsg = "Current zone is " + zoneName + ".  It hasn't been marked as takeable yet.";
             }
 
-            UI.ShowSubtitle(zoneInfoMsg);
+            UI.Screen.ShowSubtitle(zoneInfoMsg);
         }
 
         public static int CompareZonesByDistToPlayer(TurfZone x, TurfZone y)
@@ -258,7 +258,7 @@ namespace GTA.GangAndTurfMod
                     }
                     break;
                 default:
-                    UI.Notify("Invalid blip display type");
+                    UI.Notification.Show("Invalid blip display type");
                     break;
             }
         }

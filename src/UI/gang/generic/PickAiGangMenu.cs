@@ -1,4 +1,5 @@
-﻿using NativeUI;
+﻿using LemonUI;
+using LemonUI.Menus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,9 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// generic menu for selecting an AI gang and then doing something with it
     /// </summary>
-    public class PickAiGangMenu : UIMenu
+    public class PickAiGangMenu : NativeMenu
     {
-        public PickAiGangMenu(MenuPool menuPool) : base("Gang and Turf Mod", "Pick Ai Gang Menu")
+        public PickAiGangMenu(ObjectPool menuPool) : base("Gang and Turf Mod", "Pick Ai Gang Menu")
         {
             menuPool.Add(this);
 
@@ -19,11 +20,11 @@ namespace GTA.GangAndTurfMod
 
         private Action<Gang> OnGangPicked;
 
-        private UIMenu previousMenu;
+        private NativeMenu previousMenu;
 
-        public void Open(UIMenu previousMenu, string menuSubtitle, Action<Gang> onGangPicked)
+        public void Open(NativeMenu previousMenu, string menuSubtitle, Action<Gang> onGangPicked)
         {
-            Subtitle.Caption = menuSubtitle;
+            Name = menuSubtitle;
             Clear();
             AddGangsToMenu();
             OnGangPicked = onGangPicked;
@@ -46,7 +47,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    UI.ShowSubtitle("The gang selected could not be found! Has it been wiped out or renamed?");
+                    UI.Screen.ShowSubtitle("The gang selected could not be found! Has it been wiped out or renamed?");
                 }
             };
 
@@ -67,11 +68,11 @@ namespace GTA.GangAndTurfMod
             {
                 if (!gang.isPlayerOwned)
                 {
-                    AddItem(new UIMenuItem(gang.name));
+                    Add(new NativeItem(gang.name));
                 }
             }
 
-            RefreshIndex();
+            
         }
 
     }

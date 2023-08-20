@@ -1,14 +1,14 @@
-﻿using NativeUI;
-using static NativeUI.UIMenuDynamicListItem;
+﻿
+using LemonUI.Menus;
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// submenu for creating and editing custom zones
     /// </summary>
-    public class CustomZonesSubMenu : UIMenu
+    public class CustomZonesSubMenu : NativeMenu
     {
-        public CustomZonesSubMenu() : base("Gang and Turf Mod", "Custom Zones Menu")
+        public CustomZonesSubMenu() : base("Gang and Turf Mod", Localization.GetTextByKey("AAAA", "Custom Zones Menu"))
         {
         }
 
@@ -26,40 +26,20 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void Setup()
         {
-            UIMenuItem createZoneBtn = new UIMenuItem("Create New Custom Zone Here",
-                "Opens the text input for a new Custom Zone. After a valid and unique name is entered, a new zone will be created in this position.");
+            NativeItem createZoneBtn = new NativeItem(Localization.GetTextByKey("customzones_menu_button_create_zone", "Create New Custom Zone Here"),
+                Localization.GetTextByKey("customzones_menu_button_desc_create_zone", "Opens the text input for a new Custom Zone. After a valid and unique name is entered, a new zone will be created in this position."));
 
-            UIMenuItem renameZoneBtn = new UIMenuItem("Edit this Custom Zone's Name",
-                "If inside a custom zone, opens the input for setting a new name.");
+            NativeItem renameZoneBtn = new NativeItem(Localization.GetTextByKey("customzones_menu_button_edit_zone_name", "Edit this Custom Zone's Name"),
+                Localization.GetTextByKey("customzones_menu_button_desc_edit_zone_name", "If inside a custom zone, opens the input for setting a new name."));
 
-            UIMenuDynamicListItem radiusEditor = new UIMenuDynamicListItem
-                ("Edit Zone Radius", "Edit this zone's size radius.",
-                CustomTurfZone.DEFAULT_ZONE_RADIUS.ToString(), ChangeRadiusEvent);
+            NativeSliderItem radiusEditor = new NativeSliderItem
+                (Localization.GetTextByKey("customzones_menu_button_edit_zone_radius", "Edit Zone Radius"),
+                Localization.GetTextByKey("customzones_menu_button_desc_edit_zone_radius", "Edit this zone's size radius."),
+                (int) CustomTurfZone.MAX_ZONE_RADIUS, (int) CustomTurfZone.DEFAULT_ZONE_RADIUS);
 
-
-            OnItemSelect += (sender, selectedItem, index) =>
-            {
-                //TODO check if there's a better menu code for this
-                if (selectedItem == createZoneBtn)
-                {
-                    Visible = !Visible;
-                    MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterCustomZoneName, "FMMC_KEY_TIP12N", "New Zone Name");
-                }
-                else if (selectedItem == renameZoneBtn)
-                {
-                    CustomTurfZone zone = GetLocalCustomZone();
-                    if (zone != null)
-                    {
-                        Visible = !Visible;
-                        editingZoneName = true;
-                        MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterCustomZoneName, "FMMC_KEY_TIP12N", zone.zoneName);
-                    }
-                    else
-                    {
-                        UI.ShowSubtitle("You are not inside a custom zone.");
-                    }
-                }
-            };
+            createZoneBtn.Activated += CreateZoneBtn_Activated;
+            renameZoneBtn.Activated += RenameZoneBtn_Activated;
+            radiusEditor.ValueChanged += RadiusEditor_ValueChanged;
 
             MenuScript.instance.OnInputFieldDone += (desiredInputType, typedText) =>
             {
@@ -81,38 +61,67 @@ namespace GTA.GangAndTurfMod
 
             string ChangeRadiusEvent(UIMenuDynamicListItem sender, ChangeDirection direction)
             {
-                float currentRadius = float.Parse(sender.CurrentListItem);
-
-                CustomTurfZone zone = GetLocalCustomZone();
-                if (zone != null)
-                {
-                    currentRadius = direction == ChangeDirection.Right ?
-                    currentRadius + 10 :
-                    RandoMath.Max(currentRadius - 10, CustomTurfZone.MIN_ZONE_RADIUS);
-
-                    zone.areaRadius = currentRadius;
-                    zone.RemoveBlip();
-                    zone.CreateAttachedBlip(true);
-
-                    ZoneManager.instance.SaveZoneData();
-
-                    UI.ShowSubtitle("Radius Changed!");
-                }
-                else
-                {
-                    UI.ShowSubtitle("You are not inside a custom zone.");
-                }
-
-
-
-                return currentRadius.ToString();
+                
             }
 
-            AddItem(createZoneBtn);
-            AddItem(radiusEditor);
-            AddItem(renameZoneBtn);
+            Add(createZoneBtn);
+            Add(radiusEditor);
+            Add(renameZoneBtn);
 
-            RefreshIndex();
+            
+        }
+
+        private void RadiusEditor_ValueChanged(object sender, System.EventArgs e)
+        {
+            var slider = (NativeSliderItem)sender;
+            float currentRadius = slider.Value;
+
+            if(currentRadius < CustomTurfZone.MIN_ZONE_RADIUS)
+            {
+                slider.Value = (int) CustomTurfZone.MIN_ZONE_RADIUS;
+                return;
+            }
+
+            CustomTurfZone zone = GetLocalCustomZone();
+            if (zone != null)
+            {
+                zone.areaRadius = currentRadius;
+                zone.RemoveBlip();
+                zone.CreateAttachedBlip(true);
+
+                ZoneManager.instance.SaveZoneData();
+
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_custom_zone_radius_changed", "Radius Changed!"));
+            }
+            else
+            {
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_not_inside_custom_zone", "You are not inside a custom zone."));
+            }
+
+
+
+            return currentRadius.ToString();
+        }
+
+        private void RenameZoneBtn_Activated(object sender, System.EventArgs e)
+        {
+            CustomTurfZone zone = GetLocalCustomZone();
+            if (zone != null)
+            {
+                Visible = !Visible;
+                editingZoneName = true;
+                MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterCustomZoneName, "FMMC_KEY_TIP12N", zone.zoneName);
+            }
+            else
+            {
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_not_inside_custom_zone", "You are not inside a custom zone."));
+            }
+        }
+
+        private void CreateZoneBtn_Activated(object sender, System.EventArgs e)
+        {
+            Visible = !Visible;
+            MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterCustomZoneName, "FMMC_KEY_TIP12N", Localization.GetTextByKey("customzones_menu_input_placeholder_new_zone_name", "New Zone Name"));
         }
 
 
@@ -136,12 +145,12 @@ namespace GTA.GangAndTurfMod
         {
             if (newName == "zone" || newName == "")
             {
-                UI.ShowSubtitle("That name cannot be used!");
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_provided_name_cannot_be_used", "That name cannot be used!"));
             }
 
             if (ZoneManager.instance.DoesZoneWithNameExist(newName))
             {
-                UI.ShowSubtitle("A zone with that name already exists.");
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_zone_with_provided_name_already_exists", "A zone with that name already exists."));
             }
             else
             {
@@ -152,7 +161,7 @@ namespace GTA.GangAndTurfMod
 
                 ZoneManager.instance.UpdateZoneData(newZone);
 
-                UI.ShowSubtitle("Zone Created!");
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_custom_zone_created", "Zone Created!"));
             }
         }
 
@@ -160,7 +169,7 @@ namespace GTA.GangAndTurfMod
         {
             if (newName == "zone" || newName == "")
             {
-                UI.ShowSubtitle("That name cannot be used!");
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_provided_name_cannot_be_used", "That name cannot be used!"));
             }
 
             CustomTurfZone zone = GetLocalCustomZone();
@@ -168,18 +177,18 @@ namespace GTA.GangAndTurfMod
             {
                 if (ZoneManager.instance.DoesZoneWithNameExist(newName))
                 {
-                    UI.ShowSubtitle("A zone with that name already exists.");
+                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_zone_with_provided_name_already_exists", "A zone with that name already exists."));
                 }
                 else
                 {
                     zone.zoneName = newName;
-                    UI.ShowSubtitle("Zone renamed!");
+                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_custom_zone_renamed", "Zone renamed!"));
                     ZoneManager.instance.SaveZoneData();
                 }
             }
             else
             {
-                UI.ShowSubtitle("You are not inside a custom zone.");
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_not_inside_custom_zone", "You are not inside a custom zone."));
             }
         }
 

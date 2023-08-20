@@ -18,7 +18,7 @@ namespace GTA.GangAndTurfMod
 
         public float areaRadius;
 
-        public const float MIN_ZONE_RADIUS = 20.0f, DEFAULT_ZONE_RADIUS = 50.0f;
+        public const float MIN_ZONE_RADIUS = 20.0f, DEFAULT_ZONE_RADIUS = 50.0f, MAX_ZONE_RADIUS = 500.0f;
 
         public CustomTurfZone()
         {
@@ -48,7 +48,7 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     myBlip.Color = BlipColor.White;
-                    myBlip.HideNumber();
+                    myBlip.RemoveNumberLabel();
 
                     if (areaBlip != null)
                     {
@@ -70,7 +70,7 @@ namespace GTA.GangAndTurfMod
                         Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
                     }
 
-                    myBlip.ShowNumber(value);
+                    myBlip.NumberLabel = value;
 
                     if (areaBlip != null)
                     {
@@ -79,17 +79,15 @@ namespace GTA.GangAndTurfMod
                     }
                 }
 
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
-                {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")"));
+                { 
+                    myBlip.Name = string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")");
                 }
                 else
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (neutral territory)"));
+                    myBlip.Name = string.Concat(zoneName, " (neutral territory)");
                 }
 
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, myBlip);
             }
 
         }
@@ -117,7 +115,7 @@ namespace GTA.GangAndTurfMod
 
             if (areaBlip != null)
             {
-                areaBlip.Remove();
+                areaBlip.Delete();
                 areaBlip = null;
             }
         }

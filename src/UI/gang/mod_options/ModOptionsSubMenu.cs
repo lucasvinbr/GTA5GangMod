@@ -1,4 +1,5 @@
-﻿using NativeUI;
+﻿using LemonUI;
+using LemonUI.Menus;
 using System.Collections.Generic;
 
 namespace GTA.GangAndTurfMod
@@ -8,7 +9,7 @@ namespace GTA.GangAndTurfMod
     /// </summary>
     public class ModOptionsSubMenu : ModMenu
     {
-        public ModOptionsSubMenu(MenuPool menuPool) : base("Mod Options")
+        public ModOptionsSubMenu(ObjectPool menuPool) : base("modoptions_submenu_main", "Mod Options")
         {
             keyBindingsSubMenu = new KeyBindingsSubMenu();
 
@@ -75,7 +76,7 @@ namespace GTA.GangAndTurfMod
                  {
                      if (nowChecked)
                      {
-                         UI.ShowSubtitle("Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well");
+                         UI.Screen.ShowSubtitle("Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well");
                      }
                  });
             
@@ -90,13 +91,13 @@ namespace GTA.GangAndTurfMod
             AddResetWeaponOptionsButton();
             AddResetOptionsButton();
 
-            RefreshIndex();
+            
         }
 
         private void AddKeyBindingMenu()
         {
-            UIMenuItem newButton = new UIMenuItem("Key Bindings...", "Opens the Key Bindings Menu, which allows setting which keys are linked to this mod's commands.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Key Bindings...", "Opens the Key Bindings Menu, which allows setting which keys are linked to this mod's commands.");
+            Add(newButton);
             BindMenuToItem(keyBindingsSubMenu, newButton);
         }
 
@@ -110,7 +111,7 @@ namespace GTA.GangAndTurfMod
             };
 
             aggOption = new UIMenuListItem("Member Aggressiveness", aggModes, (int)ModOptions.instance.gangMemberAggressiveness, "This controls how aggressive members from all gangs will be. Very aggressive members will shoot at cops and other gangs on sight, aggressive members will shoot only at other gangs on sight and defensive members will only shoot when one of them is attacked or aimed at.");
-            AddItem(aggOption);
+            Add(aggOption);
 
             aggOption.Index = (int)ModOptions.instance.gangMemberAggressiveness;
 
@@ -125,8 +126,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddForceAIGangsTickButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Run an Update on all AI Gangs", "Makes all AI Gangs try to upgrade themselves and/or invade other territories immediately. Their normal updates, which happen from time to time (configurable in the ModOptions file), will still happen normally after this.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Run an Update on all AI Gangs", "Makes all AI Gangs try to upgrade themselves and/or invade other territories immediately. Their normal updates, which happen from time to time (configurable in the ModOptions file), will still happen normally after this.");
+            Add(newButton);
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -138,8 +139,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddForceAIAttackButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Force an AI Gang to Attack this zone", "If you control the current zone, makes a random AI Gang attack it, starting a war. The AI gang won't spend money to make this attack.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Force an AI Gang to Attack this zone", "If you control the current zone, makes a random AI Gang attack it, starting a war. The AI gang won't spend money to make this attack.");
+            Add(newButton);
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -154,22 +155,22 @@ namespace GTA.GangAndTurfMod
                             {
                                 if (!GangWarManager.instance.TryStartWar(enemyAttackerAI.watchedGang, curZone, GangWarManager.AttackStrength.medium))
                                 {
-                                    UI.ShowSubtitle("Couldn't start a war. Is a war already in progress in this zone?");
+                                    UI.Screen.ShowSubtitle("Couldn't start a war. Is a war already in progress in this zone?");
                                 }
                             }
                             else
                             {
-                                UI.ShowSubtitle("The zone you are in is not controlled by your gang.");
+                                UI.Screen.ShowSubtitle("The zone you are in is not controlled by your gang.");
                             }
                         }
                         else
                         {
-                            UI.ShowSubtitle("The zone you are in has not been marked as takeable.");
+                            UI.Screen.ShowSubtitle("The zone you are in has not been marked as takeable.");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("There aren't any enemy gangs in San Andreas!");
+                        UI.Screen.ShowSubtitle("There aren't any enemy gangs in San Andreas!");
                     }
                 }
             };
@@ -177,8 +178,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddReloadOptionsButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Reload Mod Options", "Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.");
+            Add(newButton);
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -191,8 +192,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddResetWeaponOptionsButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Reset Weapon List and Prices to Defaults", "Resets the weapon list in the ModOptions file back to the default values. The new options take effect immediately.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Reset Weapon List and Prices to Defaults", "Resets the weapon list in the ModOptions file back to the default values. The new options take effect immediately.");
+            Add(newButton);
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)
@@ -208,8 +209,8 @@ namespace GTA.GangAndTurfMod
 
         private void AddResetOptionsButton()
         {
-            UIMenuItem newButton = new UIMenuItem("Reset Mod Options to Defaults", "Resets all the options in the ModOptions file back to the default values (except the possible gang first and last names). The new options take effect immediately.");
-            AddItem(newButton);
+            NativeItem newButton = new NativeItem("Reset Mod Options to Defaults", "Resets all the options in the ModOptions file back to the default values (except the possible gang first and last names). The new options take effect immediately.");
+            Add(newButton);
             OnItemSelect += (sender, item, index) =>
             {
                 if (item == newButton)

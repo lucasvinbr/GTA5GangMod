@@ -1,4 +1,4 @@
-﻿using NativeUI;
+﻿
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +7,7 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for setting gang blips' color
     /// </summary>
-    public class GangBlipColorSubMenu : UIMenu
+    public class GangBlipColorSubMenu : NativeMenu
     {
         public GangBlipColorSubMenu() : base(
             Localization.GetTextByKey("menu_title_mod_name", "Gang and Turf Mod"),
@@ -68,10 +68,10 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 0; i < colorCodesArray.Length; i++)
             {
-                AddItem(new UIMenuItem(Localization.GetTextByKey("blip_color_name_" + colorCodesArray[i],blipColorNamesArray[i]), Localization.GetTextByKey("menu_button_desc_gang_blip_color", "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.")));
+                Add(new NativeItem(Localization.GetTextByKey("blip_color_name_" + colorCodesArray[i],blipColorNamesArray[i]), Localization.GetTextByKey("menu_button_desc_gang_blip_color", "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.")));
             }
 
-            RefreshIndex();
+            
 
             OnIndexChange += (sender, index) =>
             {
@@ -92,7 +92,7 @@ namespace GTA.GangAndTurfMod
                         GangManager.instance.PlayerGang.blipColor = colorCodesArray[i];
                         playerGangOriginalBlipColor = colorCodesArray[i];
                         GangManager.instance.SaveGangData(false);
-                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_blip_color_changed", "Gang blip color changed!"));
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_blip_color_changed", "Gang blip color changed!"));
                         break;
                     }
                 }
@@ -100,13 +100,13 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        private void GangBlipColorSubMenu_OnMenuClose(UIMenu sender)
+        private void GangBlipColorSubMenu_OnMenuClose(NativeMenu sender)
         {
             GangManager.instance.PlayerGang.blipColor = playerGangOriginalBlipColor;
             ZoneManager.instance.RefreshZoneBlips();
         }
 
-        private void StoreOriginalBlipColor(UIMenu sender)
+        private void StoreOriginalBlipColor(NativeMenu sender)
         {
             playerGangOriginalBlipColor = GangManager.instance.PlayerGang.blipColor;
         }

@@ -1,21 +1,21 @@
-﻿using NativeUI;
+﻿
 
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
     /// submenu for creating and editing custom zones
     /// </summary>
-    public class GangUpgradesSubMenu : UIMenu
+    public class GangUpgradesSubMenu : NativeMenu
     {
         public GangUpgradesSubMenu() : base("Gang and Turf Mod", "Gang Upgrades")
         {
             AddGangUpgradesBtns();
-            RefreshIndex();
+            
         }
 
         private int healthUpgradeCost, armorUpgradeCost, accuracyUpgradeCost, gangValueUpgradeCost;
 
-        private UIMenuItem healthButton, armorButton, accuracyButton, upgradeGangValueBtn;
+        private NativeItem healthButton, armorButton, accuracyButton, upgradeGangValueBtn;
 
 
         public void UpdateUpgradeCosts()
@@ -35,14 +35,14 @@ namespace GTA.GangAndTurfMod
         private void AddGangUpgradesBtns()
         {
             //upgrade buttons
-            healthButton = new UIMenuItem("Upgrade Member Health - " + healthUpgradeCost.ToString(), "Increases gang member starting and maximum health. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
-            armorButton = new UIMenuItem("Upgrade Member Armor - " + armorUpgradeCost.ToString(), "Increases gang member starting body armor. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
-            accuracyButton = new UIMenuItem("Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString(), "Increases gang member firing accuracy. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
-            upgradeGangValueBtn = new UIMenuItem("Upgrade Gang Base Strength - " + gangValueUpgradeCost.ToString(), "Increases the level territories have after you take them. This level affects the income provided, the reinforcements available in a war and reduces general police presence. The limit is configurable via the ModOptions file.");
-            AddItem(healthButton);
-            AddItem(armorButton);
-            AddItem(accuracyButton);
-            AddItem(upgradeGangValueBtn);
+            healthButton = new NativeItem("Upgrade Member Health - " + healthUpgradeCost.ToString(), "Increases gang member starting and maximum health. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            armorButton = new NativeItem("Upgrade Member Armor - " + armorUpgradeCost.ToString(), "Increases gang member starting body armor. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            accuracyButton = new NativeItem("Upgrade Member Accuracy - " + accuracyUpgradeCost.ToString(), "Increases gang member firing accuracy. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.");
+            upgradeGangValueBtn = new NativeItem("Upgrade Gang Base Strength - " + gangValueUpgradeCost.ToString(), "Increases the level territories have after you take them. This level affects the income provided, the reinforcements available in a war and reduces general police presence. The limit is configurable via the ModOptions file.");
+            Add(healthButton);
+            Add(armorButton);
+            Add(accuracyButton);
+            Add(upgradeGangValueBtn);
 
             OnItemSelect += (sender, item, index) =>
             {
@@ -61,16 +61,16 @@ namespace GTA.GangAndTurfMod
                             }
                             MindControl.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost);
                             GangManager.instance.SaveGangData();
-                            UI.ShowSubtitle("Member health upgraded!");
+                            UI.Screen.ShowSubtitle("Member health upgraded!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your members' health is at its maximum limit (it can be configured in the ModOptions file)");
+                            UI.Screen.ShowSubtitle("Your members' health is at its maximum limit (it can be configured in the ModOptions file)");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                        UI.Screen.ShowSubtitle("You don't have enough money to buy that upgrade.");
                     }
                 }
 
@@ -87,16 +87,16 @@ namespace GTA.GangAndTurfMod
                             }
                             MindControl.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost);
                             GangManager.instance.SaveGangData();
-                            UI.ShowSubtitle("Member armor upgraded!");
+                            UI.Screen.ShowSubtitle("Member armor upgraded!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your members' armor is at its maximum limit (it can be configured in the ModOptions file)");
+                            UI.Screen.ShowSubtitle("Your members' armor is at its maximum limit (it can be configured in the ModOptions file)");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                        UI.Screen.ShowSubtitle("You don't have enough money to buy that upgrade.");
                     }
                 }
 
@@ -113,16 +113,16 @@ namespace GTA.GangAndTurfMod
                             }
                             MindControl.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost);
                             GangManager.instance.SaveGangData();
-                            UI.ShowSubtitle("Member accuracy upgraded!");
+                            UI.Screen.ShowSubtitle("Member accuracy upgraded!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your members' accuracy is at its maximum limit (it can be configured in the ModOptions file)");
+                            UI.Screen.ShowSubtitle("Your members' accuracy is at its maximum limit (it can be configured in the ModOptions file)");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                        UI.Screen.ShowSubtitle("You don't have enough money to buy that upgrade.");
                     }
                 }
 
@@ -139,16 +139,16 @@ namespace GTA.GangAndTurfMod
                             }
                             MindControl.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost);
                             GangManager.instance.SaveGangData();
-                            UI.ShowSubtitle("Gang Base Strength upgraded!");
+                            UI.Screen.ShowSubtitle("Gang Base Strength upgraded!");
                         }
                         else
                         {
-                            UI.ShowSubtitle("Your Gang Base Strength is at its maximum limit (it can be configured in the ModOptions file)");
+                            UI.Screen.ShowSubtitle("Your Gang Base Strength is at its maximum limit (it can be configured in the ModOptions file)");
                         }
                     }
                     else
                     {
-                        UI.ShowSubtitle("You don't have enough money to buy that upgrade.");
+                        UI.Screen.ShowSubtitle("You don't have enough money to buy that upgrade.");
                     }
                 }
 

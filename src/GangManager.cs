@@ -381,7 +381,7 @@ namespace GTA.GangAndTurfMod
 
             if (notifyMsg && ModOptions.instance.notificationsEnabled)
             {
-                UI.Notify(Localization.GetTextByKey("notify_created_gang_for_player", "Created new gang for the player!"));
+                UI.Notification.Show(Localization.GetTextByKey("notify_created_gang_for_player", "Created new gang for the player!"));
             }
 
             return playerGang;
@@ -391,7 +391,7 @@ namespace GTA.GangAndTurfMod
         {
             if (PotentialGangMember.MemberPool.memberList.Count <= 0)
             {
-                UI.Notify(Localization.GetTextByKey("notify_enemy_gang_creation_failed", "Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs"));
+                UI.Notification.Show(Localization.GetTextByKey("notify_enemy_gang_creation_failed", "Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs"));
                 return null;
             }
             //set gang name from options
@@ -424,7 +424,7 @@ namespace GTA.GangAndTurfMod
             SaveGangData();
             if (notifyMsg)
             {
-                UI.Notify(string.Format(Localization.GetTextByKey("notify_gang_x_has_entered", "The {0} have entered San Andreas!"), newGang.name));
+                UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_has_entered", "The {0} have entered San Andreas!"), newGang.name));
             }
 
             SetGangRelationsAccordingToAggrLevel();
@@ -453,7 +453,7 @@ namespace GTA.GangAndTurfMod
 
         public void KillGang(GangAI aiWatchingTheGang)
         {
-            UI.Notify(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), aiWatchingTheGang.watchedGang.name));
+            UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), aiWatchingTheGang.watchedGang.name));
 
             //save the fallen gang in a file
             AddGangToWipedOutList(aiWatchingTheGang.watchedGang);
@@ -508,7 +508,7 @@ namespace GTA.GangAndTurfMod
                     MindControl.AddOrSubtractMoneyToProtagonist(rewardedCash);
                     Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     if (ModOptions.instance.notificationsEnabled)
-                        UI.Notify(Localization.GetTextByKey("notify_money_won_from_zones", "Money won from controlled zones: ") + rewardedCash.ToString());
+                        UI.Notification.Show(Localization.GetTextByKey("notify_money_won_from_zones", "Money won from controlled zones: ") + rewardedCash.ToString());
                 }
             }
             else
@@ -569,7 +569,7 @@ namespace GTA.GangAndTurfMod
         {
             if (ticksSinceLastParaBkp < ModOptions.instance.ticksCooldownParachutingMember)
             {
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_must_wait_before_parachuting_backup_again", "You must wait before calling for parachuting backup again! (This is configurable)"));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_must_wait_before_parachuting_backup_again", "You must wait before calling for parachuting backup again! (This is configurable)"));
                 return null;
             }
 
@@ -589,17 +589,17 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_too_many_members_around_or_no_member_registered", "There are too many gang members around or you haven't registered any member."));
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_too_many_members_around_or_no_member_registered", "There are too many gang members around or you haven't registered any member."));
                     }
                 }
                 else
                 {
-                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_must_control_territory_to_call_backup", "You need to have control of at least one territory in order to call for backup."));
+                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_must_control_territory_to_call_backup", "You need to have control of at least one territory in order to call for backup."));
                 }
             }
             else
             {
-                UI.ShowSubtitle(string.Format(Localization.GetTextByKey("subtitle_need_x_to_call_parachuting", "You need ${0} to call a parachuting member!"), ModOptions.instance.costToCallParachutingMember.ToString()));
+                UI.Screen.ShowSubtitle(string.Format(Localization.GetTextByKey("subtitle_need_x_to_call_parachuting", "You need ${0} to call a parachuting member!"), ModOptions.instance.costToCallParachutingMember.ToString()));
             }
 
             return null;
@@ -609,7 +609,7 @@ namespace GTA.GangAndTurfMod
         {
             if (ticksSinceLastCarBkp < ModOptions.instance.ticksCooldownBackupCar)
             {
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_must_wait_before_car_backup_again", "You must wait before calling for car backup again! (This is configurable)"));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_must_wait_before_car_backup_again", "You must wait before calling for car backup again! (This is configurable)"));
                 return null;
             }
             if (MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar, true))
@@ -628,23 +628,23 @@ namespace GTA.GangAndTurfMod
                         ticksSinceLastCarBkp = 0;
                         MindControl.AddOrSubtractMoneyToProtagonist(-ModOptions.instance.costToCallBackupCar);
                         
-                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_vehicle_on_its_way", "A vehicle is on its way!"), 1000);
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_vehicle_on_its_way", "A vehicle is on its way!"), 1000);
 
                         return spawnedVehicle;
                     }
                     else
                     {
-                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_too_many_members_around_or_no_member_or_car_registered", "There are too many gang members around or you haven't registered any member or car."));
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_too_many_members_around_or_no_member_or_car_registered", "There are too many gang members around or you haven't registered any member or car."));
                     }
                 }
                 else
                 {
-                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_must_control_territory_to_call_backup", "You need to have control of at least one territory in order to call for backup."));
+                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_must_control_territory_to_call_backup", "You need to have control of at least one territory in order to call for backup."));
                 }
             }
             else
             {
-                UI.ShowSubtitle(string.Format(Localization.GetTextByKey("subtitle_need_x_to_call_vehicle_backup", "You need ${0} to call a vehicle!"), ModOptions.instance.costToCallBackupCar.ToString()));
+                UI.Screen.ShowSubtitle(string.Format(Localization.GetTextByKey("subtitle_need_x_to_call_vehicle_backup", "You need ${0} to call a vehicle!"), ModOptions.instance.costToCallBackupCar.ToString()));
             }
 
             return null;
