@@ -92,6 +92,39 @@ namespace GTA.GangAndTurfMod
 
             return returnedVehicle;
         }
+
+        /// <summary>
+        /// true if both are the same model and have the same mods
+        /// </summary>
+        /// <param name="otherVehicle"></param>
+        /// <returns></returns>
+        public bool Equals(PotentialGangVehicle otherVehicle)
+        {
+            if(otherVehicle.modelHash == modelHash)
+            {
+                if(otherVehicle.VehicleMods == null && VehicleMods == null)
+                {
+                    return true;
+                }
+
+                if(otherVehicle.VehicleMods != null && VehicleMods != null &&
+                    otherVehicle.VehicleMods.Count == VehicleMods.Count)
+                {
+                    foreach (var vehMod in VehicleMods)
+                    {
+                        if (otherVehicle.VehicleMods.Find(vm => vm.ModValue == vehMod.ModValue && vm.ModType == vehMod.ModType) == null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+            }
+
+            return false;
+        }
     }
 
     public class PotentialCarPool

@@ -272,16 +272,8 @@ namespace GTA.GangAndTurfMod
 
         public bool AddGangCar(PotentialGangVehicle newVehicleType)
         {
-            for (int i = 0; i < carVariations.Count; i++)
-            {
-                if (newVehicleType.modelHash != carVariations[i].modelHash)
-                {
-                    continue;
-                }
-                else
-                {
-                    return false;
-                }
+            if(carVariations.Find(veh => veh.Equals(newVehicleType)) != null){
+                return false;
             }
 
             carVariations.Add(newVehicleType);
