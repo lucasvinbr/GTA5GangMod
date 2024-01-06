@@ -628,6 +628,8 @@ namespace GTA.GangAndTurfMod
                     newPed.SetConfigFlag(227, true); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
                     newPed.SetConfigFlag(237, false); //CPED_CONFIG_FLAG_BlocksPathingWhenDead  
 
+                    newPed.DrownsInWater = false;
+
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;
 
