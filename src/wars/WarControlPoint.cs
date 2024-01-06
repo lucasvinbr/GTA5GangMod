@@ -153,6 +153,8 @@ namespace GTA.GangAndTurfMod
         /// <param name="member"></param>
         public void AttachDeathCheckEventToSpawnedMember(SpawnedGangMember member)
         {
+            if (member == null) return;
+
             member.OnKilled += () =>
             {
                 if(ownerGang == member.myGang &&
