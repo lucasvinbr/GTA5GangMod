@@ -628,6 +628,8 @@ namespace GTA.GangAndTurfMod
                     newPed.SetConfigFlag(227, true); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
                     newPed.SetConfigFlag(237, false); //CPED_CONFIG_FLAG_BlocksPathingWhenDead  
 
+                    newPed.DrownsInWater = false;
+
                     //enlist this new gang member in the spawned list!
                     SpawnedGangMember newMemberAI = null;
 
@@ -673,7 +675,9 @@ namespace GTA.GangAndTurfMod
             if (ownerGang.carVariations.Count > 0)
             {
                 Logger.Log("spawn car: start", 4);
-                Vehicle newVehicle = World.CreateVehicle(RandoMath.RandomElement(ownerGang.carVariations).modelHash, spawnPos);
+                PotentialGangVehicle potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
+
+                Vehicle newVehicle = World.CreateVehicle(potentialGangVehicle.modelHash, spawnPos);
 
                 if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
                 {
@@ -736,6 +740,21 @@ namespace GTA.GangAndTurfMod
                         {
                             newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
                             Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
+                        }
+
+                        // Apply the stored mods to the newVehicle
+                        if (potentialGangVehicle.VehicleMods != null)
+                        {
+                            // Ensure the vehicle has a valid modkit ID
+                            Function.Call(Hash.SET_VEHICLE_MOD_KIT, newVehicle, 0);
+
+                            foreach (var modData in potentialGangVehicle.VehicleMods)
+                            {
+                                if (modData.ModValue != -1)
+                                {
+                                    newVehicle.SetMod(modData.ModType, modData.ModValue, false);
+                                }
+                            }
                         }
 
                         thinkingDrivingMembersCount++;
