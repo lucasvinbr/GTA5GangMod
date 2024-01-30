@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalizationFile xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<LanguageCode>pt-BR</LanguageCode>
+	<Locales>
+		<LocaleKey>
+			<Key>playergang_default_name</Key>
+			<Value>Gangue do jogador</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_created_gang_for_player</Key>
+			<Value>Nova gangue criada para o jogador!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>test_locale</Key>
+			<Value>locales funcionam? sim, ok</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_enemy_gang_creation_failed</Key>
+			<Value>Falha na criação de gangue inimiga: arquivo memberPool inválido, vazio ou não encontrado. Tente adicionar aparências para gangues IA</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_gang_x_has_entered</Key>
+			<Value>Os {0} entraram em San Andreas!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_gang_x_wiped_out</Key>
+			<Value>Os {0} foram eliminados!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_money_won_from_zones</Key>
+			<Value>Dinheiro obtido do território controlado: </Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_wait_before_parachuting_backup_again</Key>
+			<Value>É preciso esperar antes de chamar reforços de paraquedas novamente! (O tempo de espera é configurável)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_no_member_registered</Key>
+			<Value>Existem gângsteres demais por perto ou não existem aparências de gângster registradas para sua gangue.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_control_territory_to_call_backup</Key>
+			<Value>Sua gangue precisa controlar pelo menos um território para que você possa chamar reforços.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_need_x_to_call_parachuting</Key>
+			<Value>Você precisa de ${0} para chamar um gângster de paraquedas!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_wait_before_car_backup_again</Key>
+			<Value>É preciso esperar antes de chamar um veículo de reforços novamente! (O tempo de espera é configurável)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_vehicle_on_its_way</Key>
+			<Value>Um veículo está a caminho!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_no_member_or_car_registered</Key>
+			<Value>Existem gângsteres demais por perto ou não existem aparências de gângster nem/ou veículos registrados para sua gangue.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_need_x_to_call_vehicle_backup</Key>
+			<Value>Você precisa de ${0} para chamar um veículo de reforços!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_freemodemember_attempted_face_blending_invalid_ped_type</Key>
+			<Value>Tentativa de face blending para tipo inválido de ped: </Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_warn_bad_memberpool_file</Key>
+			<Value>Alerta do GTA5GangNTurfMod: arquivo memberpool vazio ou inválido! Gangues inimigas não serão geradas</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_failed_find_pot_member_style_x_color_y</Key>
+			<Value>Falha ao tentar encontrar aparência de gângster de estilo {0} e cor {1}</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_warn_bad_carpool_file</Key>
+			<Value>Alerta do GTA5GangNTurfMod: arquivo carpool vazio ou inválido! Gangues inimigas não terão veículos</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_the_x_have_taken_y</Key>
+			<Value>Os {0} tomaram {1}!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_the_x_have_taken_y_from_the_z</Key>
+			<Value>Os {0} tomaram {1} dos {2}!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_was_arrested</Key>
+			<Value>O seu gângster foi preso!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_last_used_protagonist</Key>
+			<Value>Último protagonista controlado</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_potential_spawn_removed</Key>
+			<Value>Possível ponto de surgimento removido!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_potential_spawn_added</Key>
+			<Value>Possível ponto de surgimento adicionado!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_car_told_to_backup</Key>
+			<Value>Veículo alvo foi ordenado a te escoltar!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_joined_your_group</Key>
+			<Value>Um gângster entrou no seu grupo</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_left_your_group</Key>
+			<Value>Um gângster saiu do seu grupo</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_mod_abort_removing_blips</Key>
+			<Value>Gang and Turf mod: removendo blips. Se você não pressionou Insert, favor verificar seu arquivo de log e reportar quaisquer erros.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_cannot_be_used_due_to_conflicts</Key>
+			<Value>A tecla escolhida não pode ser usada porque há conflitos que deixariam algumas funcionalidades inacessíveis.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_already_being_used_by_mod</Key>
+			<Value>A tecla escolhida já está sendo utilizada por alguma funcionalidade do mod.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_was_changed</Key>
+			<Value>Tecla alterada!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_title_mod_name</Key>
+			<Value>Gang and Turf Mod</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_mod_name</Key>
+			<Value>Menu principal</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_call_backup_vehicle_cost_x</Key>
+			<Value>Chamar veículo de reforços (${0})</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_call_backup_vehicle</Key>
+			<Value>Manda um dos veículos de sua gangue para sua localização atual. O motorista deixa o veículo ao chegar.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_call_parachuting_member_cost_x</Key>
+			<Value>Chamar gângster de paraquedas (${0})</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_call_parachuting_member</Key>
+			<Value>Manda um gângster cair de paraquedas em sua posição atual (a sobrevivência do gângster não é garantida!).</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_member_of_gang_x</Key>
+			<Value>Membro dos {0}</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_war_options</Key>
+			<Value>Opções das guerras...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_war_options</Key>
+			<Value>Abre o menu das opções das guerras, contendo funcionalidades úteis durante uma guerra de gangue.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_gang_customization_upgrades</Key>
+			<Value>Customização/Melhoras da gangue...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_gang_customization_upgrades</Key>
+			<Value>Abre o menu de customização e melhoras da gangue.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_mod_options</Key>
+			<Value>Opções do mod...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_mod_options</Key>
+			<Value>Abre o menu de opções do mod, que permite alterar diversas configurações do mod. Algumas opções não podem ser alteradas nesse menu, só podendo ser alteradas diretamente no arquivo ModOptions.xml.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_spawn_enemy_backup_vehicle</Key>
+			<Value>Chamar veículo de reforços inimigo</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_spawn_enemy_backup_vehicle</Key>
+			<Value>Manda um veículo de uma gangue inimiga para sua posição atual.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_select_gang_spawn_vehicle</Key>
+			<Value>Escolha a gangue da qual mandar um veículo</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_vehicle_spawned</Key>
+			<Value>Veículo enviado!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_picked_gang_has_no_vehicles_members</Key>
+			<Value>Existem gângsteres demais por perto ou a gangue escolhida não tem veículos/aparências de gângster registradas.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_title_gang_blip_color</Key>
+			<Value>Cor do Blip </Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_gang_blip_color</Key>
+			<Value>The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_0</Key>
+			<Value>white</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_4</Key>
+			<Value>white-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_13</Key>
+			<Value>white snowy</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_1</Key>
+			<Value>red</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_6</Key>
+			<Value>red-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_76</Key>
+			<Value>dark red</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_2</Key>
+			<Value>green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_11</Key>
+			<Value>green-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_25</Key>
+			<Value>dark green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_52</Key>
+			<Value>darker green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_15</Key>
+			<Value>turquoise</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_3</Key>
+			<Value>blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_18</Key>
+			<Value>light blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_38</Key>
+			<Value>dark blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_54</Key>
+			<Value>darker blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_7</Key>
+			<Value>purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_19</Key>
+			<Value>purple-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_27</Key>
+			<Value>dark purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_83</Key>
+			<Value>dark purple-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_58</Key>
+			<Value>very dark purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_17</Key>
+			<Value>orange</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_51</Key>
+			<Value>orange-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_44</Key>
+			<Value>orange-3</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_20</Key>
+			<Value>gray</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_39</Key>
+			<Value>light gray</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_21</Key>
+			<Value>brown</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_56</Key>
+			<Value>beige</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_23</Key>
+			<Value>pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_8</Key>
+			<Value>pink-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_41</Key>
+			<Value>smooth pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_48</Key>
+			<Value>strong pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_40</Key>
+			<Value>black</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_66</Key>
+			<Value>yellow</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_28</Key>
+			<Value>gold-ish</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_46</Key>
+			<Value>yellow-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_33</Key>
+			<Value>light yellow</Value>
+		</LocaleKey>
+	</Locales>
+</LocalizationFile>

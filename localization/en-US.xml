@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocalizationFile xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<LanguageCode>en-US</LanguageCode>
+	<Locales>
+		<LocaleKey>
+			<Key>playergang_default_name</Key>
+			<Value>Player's Gang</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_created_gang_for_player</Key>
+			<Value>Created new gang for the player!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>test_locale</Key>
+			<Value>locale test: yes, it works</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_enemy_gang_creation_failed</Key>
+			<Value>Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_gang_x_has_entered</Key>
+			<Value>The {0} have entered San Andreas!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_gang_x_wiped_out</Key>
+			<Value>The {0} have been wiped out!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_money_won_from_zones</Key>
+			<Value>Money won from controlled zones: </Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_wait_before_parachuting_backup_again</Key>
+			<Value>You must wait before calling for parachuting backup again! (This is configurable)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_no_member_registered</Key>
+			<Value>There are too many gang members around or you haven't registered any member.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_control_territory_to_call_backup</Key>
+			<Value>You need to have control of at least one territory in order to call for backup.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_need_x_to_call_parachuting</Key>
+			<Value>You need ${0} to call a parachuting member!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_must_wait_before_car_backup_again</Key>
+			<Value>You must wait before calling for car backup again! (This is configurable)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_vehicle_on_its_way</Key>
+			<Value>A vehicle is on its way!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_no_member_or_car_registered</Key>
+			<Value>There are too many gang members around or you haven't registered any member or car.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_need_x_to_call_vehicle_backup</Key>
+			<Value>You need ${0} to call a vehicle!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_freemodemember_attempted_face_blending_invalid_ped_type</Key>
+			<Value>attempted face blending for invalid ped type: </Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_warn_bad_memberpool_file</Key>
+			<Value>GTA5GangNTurfMod Warning: empty/bad memberpool file! Enemy gangs won't spawn</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_failed_find_pot_member_style_x_color_y</Key>
+			<Value>failed to find a potential member of style {0} and color {1}</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_warn_bad_carpool_file</Key>
+			<Value>GTA5GangNTurfMod Warning: empty/bad carpool file! Enemy gangs won't have cars</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_the_x_have_taken_y</Key>
+			<Value>The {0} have taken {1}!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_the_x_have_taken_y_from_the_z</Key>
+			<Value>The {0} have taken {1} from the {2}!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_was_arrested</Key>
+			<Value>Your member has been arrested!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_last_used_protagonist</Key>
+			<Value>Last Used Protagonist</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_potential_spawn_removed</Key>
+			<Value>Potential Spawn Removed!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_potential_spawn_added</Key>
+			<Value>Potential Spawn Added!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_car_told_to_backup</Key>
+			<Value>Car told to back you up!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_joined_your_group</Key>
+			<Value>A member has joined your group</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_member_left_your_group</Key>
+			<Value>A member has left your group</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>notify_mod_abort_removing_blips</Key>
+			<Value>Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_cannot_be_used_due_to_conflicts</Key>
+			<Value>That key can't be used because some settings would become unaccessible due to conflicts.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_already_being_used_by_mod</Key>
+			<Value>That key is already being used by this mod's commands.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_key_was_changed</Key>
+			<Value>Key changed!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_title_mod_name</Key>
+			<Value>Gang and Turf Mod</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_mod_name</Key>
+			<Value>Main Menu</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_call_backup_vehicle_cost_x</Key>
+			<Value>Call Backup Vehicle (${0})</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_call_backup_vehicle</Key>
+			<Value>Calls one of your gang's vehicles to your position. The driver will leave the vehicle once it arrives.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_call_parachuting_member_cost_x</Key>
+			<Value>Call Parachuting Member (${0})</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_call_parachuting_member</Key>
+			<Value>Calls a gang member who parachutes to your position (member survival not guaranteed!).</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_member_of_gang_x</Key>
+			<Value>{0} member</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_war_options</Key>
+			<Value>War Options...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_war_options</Key>
+			<Value>Opens the War Menu, containing options useful in a Gang War.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_gang_customization_upgrades</Key>
+			<Value>Gang Customization/Upgrades...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_gang_customization_upgrades</Key>
+			<Value>Opens the Gang Customization and Upgrades menu.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_mod_options</Key>
+			<Value>Mod Options...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_mod_options</Key>
+			<Value>Opens the Mod Options Menu, which allows various configurations of the mod to be tweaked. Options not found in this menu can only be tweaked directly in the ModOptions.xml file.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_spawn_enemy_backup_vehicle</Key>
+			<Value>Spawn Enemy Backup Vehicle</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_spawn_enemy_backup_vehicle</Key>
+			<Value>Spawns a vehicle of the target AI gang, attempting to reach your location.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_select_gang_spawn_vehicle</Key>
+			<Value>Select gang from which to spawn a vehicle</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_vehicle_spawned</Key>
+			<Value>Vehicle spawned!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_too_many_members_around_or_picked_gang_has_no_vehicles_members</Key>
+			<Value>There are too many gang members around or the picked gang has no vehicles/members registered.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_title_gang_blip_color</Key>
+			<Value>Gang Blip Color</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_desc_gang_blip_color</Key>
+			<Value>The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_title_gang_weapons</Key>
+			<Value>Gang Weapons</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_gang_weapon_removed</Key>
+			<Value>Weapon Removed!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_gang_weapon_bought</Key>
+			<Value>Weapon Bought!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_not_enough_money_to_buy_gang_weapon</Key>
+			<Value>You don't have enough money to buy that weapon for your gang.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_0</Key>
+			<Value>white</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_4</Key>
+			<Value>white-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_13</Key>
+			<Value>white snowy</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_1</Key>
+			<Value>red</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_6</Key>
+			<Value>red-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_76</Key>
+			<Value>dark red</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_2</Key>
+			<Value>green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_11</Key>
+			<Value>green-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_25</Key>
+			<Value>dark green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_52</Key>
+			<Value>darker green</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_15</Key>
+			<Value>turquoise</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_3</Key>
+			<Value>blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_18</Key>
+			<Value>light blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_38</Key>
+			<Value>dark blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_54</Key>
+			<Value>darker blue</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_7</Key>
+			<Value>purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_19</Key>
+			<Value>purple-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_27</Key>
+			<Value>dark purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_83</Key>
+			<Value>dark purple-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_58</Key>
+			<Value>very dark purple</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_17</Key>
+			<Value>orange</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_51</Key>
+			<Value>orange-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_44</Key>
+			<Value>orange-3</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_20</Key>
+			<Value>gray</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_39</Key>
+			<Value>light gray</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_21</Key>
+			<Value>brown</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_56</Key>
+			<Value>beige</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_23</Key>
+			<Value>pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_8</Key>
+			<Value>pink-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_41</Key>
+			<Value>smooth pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_48</Key>
+			<Value>strong pink</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_40</Key>
+			<Value>black</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_66</Key>
+			<Value>yellow</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_28</Key>
+			<Value>gold-ish</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_46</Key>
+			<Value>yellow-2</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>blip_color_name_33</Key>
+			<Value>light yellow</Value>
+		</LocaleKey>
+	</Locales>
+</LocalizationFile>
