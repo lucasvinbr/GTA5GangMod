@@ -8,96 +8,64 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for setting gang cars' colors. Contains another submenu for the colors list
     /// </summary>
-    public class GangCarColorsSubMenu : NativeMenu
+    public class GangCarColorsSubMenu : ModMenu
     {
-        public GangCarColorsSubMenu(ObjectPool menuPool) : base("Gang and Turf Mod", "Gang Car Colors")
+        public GangCarColorsSubMenu(ObjectPool menuPool) : base("gang_car_colors", "Gang Car Colors")
         {
-            colorsMenu = new NativeMenu("Gand and Turf Mod", "Car Colors List");
+            colorsMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_car_colors_list", "Car Colors List"));
             menuPool.Add(colorsMenu);
             menuPool.Add(this);
-
-            Setup();
         }
 
         private readonly NativeMenu colorsMenu;
         private bool settingPrimaryColor = true;
-        private readonly Dictionary<VehicleColor, NativeItem> carColorEntries =
-            new Dictionary<VehicleColor, NativeItem>();
+        private readonly List<VehicleColor> vehicleColors = new List<VehicleColor>();
 
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
-        public void Setup()
+        protected override void Setup()
         {
-            NativeItem primaryBtn = new NativeItem("Customize Primary Car Color");
-            NativeItem secondaryBtn = new NativeItem("Customize Secondary Car Color");
-
-            OnItemSelect += (sender, selectedItem, index) =>
-            {
-                settingPrimaryColor = selectedItem == primaryBtn;
-            };
-
-            //it's the same menu for both options
-            BindMenuToItem(colorsMenu, primaryBtn);
-            BindMenuToItem(colorsMenu, secondaryBtn);
-
-            
+            base.Setup();
 
             SetupColorsMenu();
         }
 
         private void SetupColorsMenu()
         {
-            FillCarColorEntries();
 
-            VehicleColor[] carColorsArray = carColorEntries.Keys.ToArray();
-            NativeItem[] colorButtonsArray = carColorEntries.Values.ToArray();
-
-            for (int i = 0; i < colorButtonsArray.Length; i++)
+            colorsMenu.SelectedIndexChanged += (sender, args) =>
             {
-                colorsMenu.Add(colorButtonsArray[i]);
-            }
-
-            colorsMenu.
-
-            colorsMenu.OnIndexChange += (sender, index) =>
-            {
+                int newIndex = args.Index;
                 Vehicle playerVehicle = MindControl.CurrentPlayerCharacter.CurrentVehicle;
                 if (playerVehicle != null)
                 {
                     if (settingPrimaryColor)
                     {
-                        playerVehicle.PrimaryColor = carColorsArray[index];
+                        playerVehicle.Mods.PrimaryColor = vehicleColors[newIndex];
                     }
                     else
                     {
-                        playerVehicle.SecondaryColor = carColorsArray[index];
+                        playerVehicle.Mods.SecondaryColor = vehicleColors[newIndex];
                     }
                 }
             };
 
-            colorsMenu.OnItemSelect += (sender, item, checked_) =>
+            colorsMenu.ItemActivated += (sender, args) =>
             {
-                for (int i = 0; i < carColorsArray.Length; i++)
+                Gang playerGang = GangManager.instance.PlayerGang;
+
+                if (settingPrimaryColor)
                 {
-                    if (item == carColorEntries[carColorsArray[i]])
-                    {
-                        Gang playerGang = GangManager.instance.PlayerGang;
-
-                        if (settingPrimaryColor)
-                        {
-                            playerGang.vehicleColor = carColorsArray[i];
-                        }
-                        else
-                        {
-                            playerGang.secondaryVehicleColor = carColorsArray[i];
-                        }
-
-                        GangManager.instance.SaveGangData(false);
-                        UI.Screen.ShowSubtitle("Gang vehicle color changed!");
-                        break;
-                    }
+                    playerGang.vehicleColor = vehicleColors[SelectedIndex];
                 }
+                else
+                {
+                    playerGang.secondaryVehicleColor = vehicleColors[SelectedIndex];
+                }
+
+                GangManager.instance.SaveGangData(false);
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_vehicle_color_changed", "Gang vehicle color changed!"));
             };
         }
 
@@ -107,7 +75,7 @@ namespace GTA.GangAndTurfMod
             {
                 for (int i = 0; i < colorList.vehicleColors.Count; i++)
                 {
-                    carColorEntries.Add(colorList.vehicleColors[i], new NativeItem(colorList.vehicleColors[i].ToString(), "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change."));
+                    Add(new NativeItem(colorList.vehicleColors[i].ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
                 }
 
             }
@@ -120,8 +88,31 @@ namespace GTA.GangAndTurfMod
             //and the extra colors, only chooseable by the player!
             foreach (VehicleColor extraColor in ModOptions.instance.extraPlayerExclusiveColors)
             {
-                carColorEntries.Add(extraColor, new NativeItem(extraColor.ToString(), "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change."));
+                Add(new NativeItem(extraColor.ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
             }
+        }
+
+        protected override void RecreateItems()
+        {
+            Clear();
+            colorsMenu.Clear();
+
+            NativeItem primaryBtn = new NativeSubmenuItem(colorsMenu, this);
+            primaryBtn.Title = Localization.GetTextByKey("menu_button_customize_primary_car_color", "Customize Primary Car Color");
+            NativeItem secondaryBtn = new NativeSubmenuItem(colorsMenu, this);
+            secondaryBtn.Title = Localization.GetTextByKey("menu_button_customize_secondary_car_color", "Customize Secondary Car Color");
+
+            primaryBtn.Activated += (sender, args) =>
+            {
+                settingPrimaryColor = true;
+            };
+
+            secondaryBtn.Activated += (sender, args) =>
+            {
+                settingPrimaryColor = false;
+            };
+
+            FillCarColorEntries();
         }
     }
 }

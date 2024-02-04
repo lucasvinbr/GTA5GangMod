@@ -8,13 +8,10 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for buying/selling gang weapons
     /// </summary>
-    public class GangWeaponsSubMenu : NativeMenu
+    public class GangWeaponsSubMenu : ModMenu
     {
-        public GangWeaponsSubMenu() : base(
-            Localization.GetTextByKey("menu_title_mod_name", "Gang and Turf Mod"),
-            Localization.GetTextByKey("menu_title_gang_weapons", "Gang Weapons"))
+        public GangWeaponsSubMenu() : base("gang_weapons", "Gang Weapons")
         {
-            Setup();
         }
 
         private readonly Dictionary<ModOptions.BuyableWeapon, NativeCheckboxItem> buyableWeaponCheckboxesDict =
@@ -23,7 +20,7 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
-        public void Setup()
+        protected override void Setup()
         {
             //whenever this menu opens, updated options are removed and added again
             Shown += GangWeaponsSubMenu_OnMenuOpen;
@@ -95,9 +92,11 @@ namespace GTA.GangAndTurfMod
                 Add(weaponCheckBox);
             }
 
-            
         }
 
-
+        protected override void RecreateItems()
+        {
+            RefreshBuyableWeaponsMenuContent();
+        }
     }
 }

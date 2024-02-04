@@ -147,7 +147,7 @@ namespace GTA.GangAndTurfMod
                 nodeNumber, roadTypeAsInt, 300f, 300f);
             if (forceOffroad)
             {
-                while (!Function.Call<bool>(Hash._GET_IS_SLOW_ROAD_FLAG, nodeID) && nodeNumber < 500)
+                while (!Function.Call<bool>(Hash.GET_VEHICLE_NODE_IS_SWITCHED_OFF, nodeID) && nodeNumber < 500)
                 {
                     nodeNumber++;
                     nodeID = Function.Call<int>(Hash.GET_NTH_CLOSEST_VEHICLE_NODE_ID,
@@ -356,11 +356,13 @@ namespace GTA.GangAndTurfMod
 
             List<Ped> hostilePeds = new List<Ped>();
 
+            var refPedRelGroup = referencePed.RelationshipGroup;
+
             foreach (Ped ped in detectedPeds)
             {
-                if (referencePed.RelationshipGroup != ped.RelationshipGroup && ped.IsAlive)
+                if (refPedRelGroup != ped.RelationshipGroup && ped.IsAlive)
                 {
-                    int pedRelation = (int)World.GetRelationshipBetweenGroups(ped.RelationshipGroup, referencePed.RelationshipGroup);
+                    int pedRelation = (int)refPedRelGroup.GetRelationshipBetweenGroups(ped.RelationshipGroup);
                     //if the relationship between them is hate or they were neutral and our reference ped has been hit by this ped...
                     if (pedRelation == 5 ||
                         (pedRelation >= 3 && referencePed.HasBeenDamagedBy(ped)))

@@ -107,14 +107,14 @@ namespace GTA.GangAndTurfMod
             //set up the relationshipgroups
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
-                gangData.gangs[i].relationGroupIndex = World.AddRelationshipGroup(gangData.gangs[i].name);
+                var gangRelationGroup = World.AddRelationshipGroup(gangData.gangs[i].name);
+                gangData.gangs[i].relGroup = gangRelationGroup;
 
 
                 //if the player owns this gang, we love him
                 if (gangData.gangs[i].isPlayerOwned)
                 {
-                    World.SetRelationshipBetweenGroups(Relationship.Companion, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                    World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                    gangRelationGroup.SetRelationshipBetweenGroups(Game.Player.Character.RelationshipGroup, Relationship.Companion, true);
                 }
                 else
                 {
@@ -173,47 +173,44 @@ namespace GTA.GangAndTurfMod
                     targetRelationLevel = Relationship.Neutral;
                     break;
             }
+
+            var playerCharRelGroup = Game.Player.Character.RelationshipGroup;
+
             for (int i = gangData.gangs.Count - 1; i > -1; i--)
             {
                 //all gangs like the spectator protagonist!
-                World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, MindControl.spectatorProtagonistRelationGroup);
-                World.SetRelationshipBetweenGroups(Relationship.Respect, MindControl.spectatorProtagonistRelationGroup, gangData.gangs[i].relationGroupIndex);
+                var gangRelGroup = gangData.gangs[i].relGroup;
+                gangRelGroup.SetRelationshipBetweenGroups(MindControl.spectatorProtagonistRelationGroup, Relationship.Respect, true);
 
                 //relations between gangs...
                 for (int j = 0; j < i; j++)
                 {
                     if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(gangData.gangs[i], gangData.gangs[j]))
                     {
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(gangData.gangs[j].relGroup, targetRelationLevel, true);
                     }
                     else
                     {
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, gangData.gangs[j].relationGroupIndex);
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[j].relationGroupIndex, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(gangData.gangs[j].relGroup, Relationship.Hate, true);
                     }
 
 
                     if (gangData.gangs[i].isPlayerOwned)
                     {
-                        World.SetRelationshipBetweenGroups(Relationship.Companion, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Companion, true);
                     }
                     else if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
                     {
-                        //everyone should try to ignore the player, even during wars
-                        World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(Relationship.Respect, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        //everyone should try to ignore the spectator player, even during wars... unless they're mind controlling a member
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Respect, true);
                     }
                     else if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(PlayerGang, gangData.gangs[i]))
                     {
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, targetRelationLevel, true);
                     }
                     else
                     {
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Hate, true);
                     }
                 }
             }
@@ -239,25 +236,25 @@ namespace GTA.GangAndTurfMod
                     break;
             }
 
+            var playerCharRelGroup = Game.Player.Character.RelationshipGroup;
+
             for (int i = gangData.gangs.Count - 1; i > -1; i--)
             {
                 if (!gangData.gangs[i].isPlayerOwned)
                 {
+                    var gangRelGroup = gangData.gangs[i].relGroup;
                     if (ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
                     {
                         //everyone should try to ignore the player, even during wars
-                        World.SetRelationshipBetweenGroups(Relationship.Respect, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(Relationship.Respect, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Respect, true);
                     }
                     else if (!GangWarManager.instance.AreGangsCurrentlyFightingEachOther(PlayerGang, gangData.gangs[i]))
                     {
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(targetRelationLevel, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, targetRelationLevel, true);
                     }
                     else
                     {
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, gangData.gangs[i].relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                        World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, gangData.gangs[i].relationGroupIndex);
+                        gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Hate, true);
                     }
                 }
             }
@@ -271,8 +268,8 @@ namespace GTA.GangAndTurfMod
 
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
-                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, copHash, gangData.gangs[i].relationGroupIndex);
-                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, gangData.gangs[i].relationGroupIndex, copHash);
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, copHash, gangData.gangs[i].relGroup.Hash);
+                Function.Call(Hash.SET_RELATIONSHIP_BETWEEN_GROUPS, relationLevel, gangData.gangs[i].relGroup.Hash, copHash);
             }
         }
 
@@ -415,7 +412,7 @@ namespace GTA.GangAndTurfMod
             GetMembersForGang(newGang);
 
             //relations...
-            newGang.relationGroupIndex = World.AddRelationshipGroup(gangName);
+            newGang.relGroup = World.AddRelationshipGroup(gangName);
 
             gangData.gangs.Add(newGang);
 
@@ -665,11 +662,11 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        public Gang GetGangByRelGroup(int relGroupIndex)
+        public Gang GetGangByRelGroup(RelationshipGroup relGroup)
         {
             for (int i = 0; i < gangData.gangs.Count; i++)
             {
-                if (gangData.gangs[i].relationGroupIndex == relGroupIndex)
+                if (gangData.gangs[i].relGroup == relGroup)
                 {
                     return gangData.gangs[i];
                 }

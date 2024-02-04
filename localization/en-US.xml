@@ -204,7 +204,7 @@
 			<Value>There are too many gang members around or the picked gang has no vehicles/members registered.</Value>
 		</LocaleKey>
 		<LocaleKey>
-			<Key>menu_title_gang_blip_color</Key>
+			<Key>mod_menu_title_gang_blip_color</Key>
 			<Value>Gang Blip Color</Value>
 		</LocaleKey>
 		<LocaleKey>
@@ -212,7 +212,7 @@
 			<Value>The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.</Value>
 		</LocaleKey>
 		<LocaleKey>
-			<Key>menu_title_gang_weapons</Key>
+			<Key>mod_menu_title_gang_weapons</Key>
 			<Value>Gang Weapons</Value>
 		</LocaleKey>
 		<LocaleKey>
@@ -226,6 +226,798 @@
 		<LocaleKey>
 			<Key>subtitle_not_enough_money_to_buy_gang_weapon</Key>
 			<Value>You don't have enough money to buy that weapon for your gang.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_key_bindings</Key>
+			<Value>Key Bindings</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_gang_control</Key>
+			<Value>Gang Control Key</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_gang_control_desc</Key>
+			<Value>The key used to open the Gang/Mod Menu. Used with shift to open the Member Registration Menu. Default is B.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_zone_control</Key>
+			<Value>Zone Control Key</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_zone_control_desc</Key>
+			<Value>The key used to check the current zone's name and ownership. Used with shift to open the Zone Menu and with control to toggle zone blip display modes. Default is N.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_add_remove_member_from_group</Key>
+			<Value>Add or Remove Member from Group</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_add_remove_member_from_group_desc</Key>
+			<Value>The key used to add/remove the targeted friendly gang member to/from your group. Members of your group will follow you. Default is H.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_mind_control</Key>
+			<Value>Take Control of Member</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_set_keybinding_mind_control_desc</Key>
+			<Value>The key used to take control of the targeted friendly gang member. Pressing this key while already in control of a member and not aiming at another will restore protagonist control. Default is J.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_press_new_keybinding_for_command</Key>
+			<Value>Press the new key for this command.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_modoptions_submenu_main</Key>
+			<Value>Mod Options</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_toggle_modoption_notificationsEnabled</Key>
+			<Value>Notifications enabled?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_notificationsEnabled_desc</Key>
+			<Value>Enables/disables the displaying of messages whenever a gang takes over a zone.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_ambientSpawningEnabled</Key>
+			<Value>Ambient member spawning?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_ambientSpawningEnabled_desc</Key>
+			<Value>If enabled, members from the gang which owns the zone you are in will spawn once in a while. This option does not affect member spawning via backup calls or gang wars.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_ignoreTurfOwnershipWhenAmbientSpawning</Key>
+			<Value>Ambient spawning: random gangs</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_ignoreTurfOwnershipWhenAmbientSpawning_desc</Key>
+			<Value>If enabled, ambient spawning will spawn members from any gang instead of only from the one which owns the zone you are in. This option does not affect member spawning via backup calls or gang wars.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_preventAIExpansion</Key>
+			<Value>Prevent AI Gangs' Expansion?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_preventAIExpansion_desc</Key>
+			<Value>If checked, AI Gangs won't start wars or take neutral zones.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_showGangMemberBlips</Key>
+			<Value>Show Member and Car Blips?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_showGangMemberBlips_desc</Key>
+			<Value>If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_membersSpawnWithMeleeOnly</Key>
+			<Value>Gang members use melee weapons only?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_membersSpawnWithMeleeOnly_desc</Key>
+			<Value>If checked, all gang members will spawn with melee weapons only, even if they purchase firearms or are set to start with pistols.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_warAgainstPlayerEnabled</Key>
+			<Value>Enemy gangs can attack your turf?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_warAgainstPlayerEnabled_desc</Key>
+			<Value>If unchecked, enemy gangs won't start a war against you, but you will still be able to start a war against them.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_forceSpawnCars</Key>
+			<Value>Backup cars can teleport to always arrive?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_forceSpawnCars_desc</Key>
+			<Value>If enabled, backup cars, after taking too long to get to the player, will teleport close by. This will only affect friendly vehicles.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_gangsStartWithPistols</Key>
+			<Value>Gangs start with Pistols?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_gangsStartWithPistols_desc</Key>
+			<Value>If checked, all gangs, except the player's, will start with pistols. Pistols will not be given to gangs already in town.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_toggle_modoption_joypadControls</Key>
+			<Value>Use joypad controls?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_joypadControls_desc</Key>
+			<Value>Enables/disables the use of joypad commands to recruit members (pad right), call backup (pad left) and output zone info (pad up). Commands are used while aiming. All credit goes to zixum.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_joypad_controls_activated</Key>
+			<Value>Joypad controls activated. Remember to disable them when not using a joypad, as it is possible to use the commands with mouse/keyboard as well</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_protagonistsAreSpectators</Key>
+			<Value>Player Is a Spectator</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_protagonistsAreSpectators_desc</Key>
+			<Value>If enabled, all gangs should ignore the player, even during wars.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_open_key_bindings</Key>
+			<Value>Key Bindings...</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_open_key_bindings_desc</Key>
+			<Value>Opens the Key Bindings Menu, which allows setting which keys are linked to this mod's commands.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_force_run_update_ai_gangs</Key>
+			<Value>Run an Update on all AI Gangs</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_force_run_update_ai_gangs_desc</Key>
+			<Value>Makes all AI Gangs try to upgrade themselves and/or invade other territories immediately. Their normal updates, which happen from time to time (configurable in the ModOptions file), will still happen normally after this.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_force_ai_gang_attack_this_zone</Key>
+			<Value>Force an AI Gang to Attack this zone</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_force_ai_gang_attack_this_zone_desc</Key>
+			<Value>If you control the current zone, makes a random AI Gang attack it, starting a war. The AI gang won't spend money to make this attack.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_couldnt_start_forced_war</Key>
+			<Value>Couldn't start a war. Is a war already in progress in this zone?</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_zone_you_in_not_controlled_by_your_gang</Key>
+			<Value>The zone you are in is not controlled by your gang.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_zone_you_in_not_takeable</Key>
+			<Value>The zone you are in has not been marked as takeable.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_no_enemy_gangs_exist</Key>
+			<Value>There aren't any enemy gangs in San Andreas!</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_reload_modoptions</Key>
+			<Value>Reload Mod Options</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_reload_modoptions_desc</Key>
+			<Value>Reload the settings defined by the ModOptions file. Use this if you tweaked the ModOptions file while playing for its new settings to take effect.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_reset_weapon_list_prices</Key>
+			<Value>Reset Weapon List and Prices to Defaults</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_reset_weapon_list_prices_desc</Key>
+			<Value>Resets the weapon list in the ModOptions file back to the default values. The new options take effect immediately.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_reset_modoptions</Key>
+			<Value>Reset Mod Options to Defaults</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_reset_modoptions_desc</Key>
+			<Value>Resets all the options in the ModOptions file back to the default values (except the possible gang first and last names). The new options take effect immediately.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>mod_menu_title_gang_car_colors</Key>
+			<Value>Gang Car Colors</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>mod_menu_title_car_colors_list</Key>
+			<Value>Car Colors List</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_customize_primary_car_color</Key>
+			<Value>Customize Primary Car Color</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_customize_secondary_car_color</Key>
+			<Value>Customize Secondary Car Color</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_gang_vehicle_color_changed</Key>
+			<Value>Gang vehicle color changed!</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_pick_car_color_desc</Key>
+			<Value>Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>mod_menu_title_gang_customize</Key>
+			<Value>Gang Customization/Upgrades</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>menu_button_rename_gang</Key>
+			<Value>Rename Gang</Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_rename_gang_desc</Key>
+			<Value>Opens the input prompt for resetting your gang's name.</Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_your_gang_now_known_as_the_</Key>
+			<Value>Your gang is now known as the </Value>
+		</LocaleKey>
+				<LocaleKey>
+			<Key>subtitle_name_not_allowed</Key>
+			<Value>That name is not allowed, sorry! (It may be in use already)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_upgrades</Key>
+			<Value>Gang Upgrades...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_upgrades_desc</Key>
+			<Value>Opens the Gang Upgrades menu, where it's possible to upgrade your members' attributes and general gang strength.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_weapons</Key>
+			<Value>Gang Weapons...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_weapons_desc</Key>
+			<Value>Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by your gang members.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_car_colors</Key>
+			<Value>Gang Car Colors...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_car_colors_desc</Key>
+			<Value>Opens the Gang Car Colors menu, where it's possible to change the colors of your gang vehicles.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_blip_color</Key>
+			<Value>Gang Blip Color...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_blip_color_desc</Key>
+			<Value>Opens the Gang Blip Color menu, where it's possible to change the color of your gang blips (members, vehicles and turf).</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_pick_ai_gang</Key>
+			<Value>Pick Ai Gang Menu</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_selected_gang_not_found</Key>
+			<Value>The gang selected could not be found! Has it been wiped out or renamed?</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_war_options</Key>
+			<Value>War Options</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_skip_current_war</Key>
+			<Value>Skip current War</Value>
+		</LocaleKey>
+               <LocaleKey>
+			<Key>menu_button_skip_current_war_desc</Key>
+			<Value>If a war is currently occurring, it will instantly end, and its outcome will be defined by the strength and reinforcements of the involved gangs and a touch of randomness.</Value>
+		</LocaleKey>
+			   <LocaleKey>
+			<Key>menu_toggle_modoption_showReinforcementCountsForAIWars</Key>
+			<Value>Show reinforcement counts for AI Wars</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_showReinforcementCountsForAIWars_desc</Key>
+			<Value>If enabled, reinforcement counts will also be shown when inside a war the player's gang is not involved in.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_lockCurWarReinforcementCount</Key>
+			<Value>Lock current war reinforcement count</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_lockCurWarReinforcementCount_desc</Key>
+			<Value>If enabled, reinforcement counts of the current war will never drop, making the war never end. This doesn't affect auto-resolution of distant wars.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_no_war_in_progress_here</Key>
+			<Value>There is no war in progress here.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_submenu_war_potential_spawns</Key>
+			<Value>War Potential Spawns...</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_submenu_war_potential_spawns_desc</Key>
+			<Value>Opens the War Potential Spawns Menu, which allows viewing, creating and deleting spawns to be used in wars.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>mod_menu_title_war_potential_spawns</Key>
+			<Value>War Potential Spawns Menu</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_show_pot_spawns_on_map</Key>
+			<Value>Show spawns on map</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_show_pot_spawns_on_map_desc</Key>
+			<Value>For debugging purposes. If enabled, the nearest spawns will be marked with blips on the map.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_add_pot_spawn_here</Key>
+			<Value>Add New Potential Spawn Here</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_add_pot_spawn_here_desc</Key>
+			<Value>Adds a new position to be used as a spawn/control point in Gang Wars. You must be on the ground for the spawn to work correctly!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_nearby_pot_spawn</Key>
+			<Value>Remove Nearby Spawn</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_nearby_pot_spawn_desc</Key>
+			<Value>The first spawn found nearby will be deleted from the potential spawns.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_must_be_on_ground_add_pot_spawn</Key>
+			<Value>You must be on the ground to add a potential spawn!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_pot_spawn_added</Key>
+			<Value>Potential spawn added!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_another_pot_spawn_too_close</Key>
+			<Value>There's another spawn too close to this one!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_pot_spawn_removed</Key>
+			<Value>Potential spawn removed!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_no_pot_spawn_nearby</Key>
+			<Value>Couldn't find a potential spawn nearby! Try getting closer.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>mod_menu_title_gang_upgrades</Key>
+			<Value>Gang Upgrades</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_health</Key>
+			<Value>Upgrade Member Health</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_health_desc</Key>
+			<Value>Increases gang member starting and maximum health. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_armor</Key>
+			<Value>Upgrade Member Armor</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_armor_desc</Key>
+			<Value>Increases gang member starting body armor. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_accuracy</Key>
+			<Value>Upgrade Member Accuracy</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_member_accuracy_desc</Key>
+			<Value>Increases gang member firing accuracy. The cost increases with the amount of upgrades made. The limit is configurable via the ModOptions file.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_gang_base_strength</Key>
+			<Value>Upgrade Gang Base Strength</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_gang_base_strength_desc</Key>
+			<Value>Increases the level territories have after you take them. This level affects the income provided, the reinforcements available in a war and reduces general police presence. The limit is configurable via the ModOptions file.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_health_upgraded</Key>
+			<Value>Member health upgraded!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_health_maxed_configurable</Key>
+			<Value>Your members' health is at its maximum limit (it can be configured in the ModOptions file)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_not_enough_money_for_upgrade</Key>
+			<Value>You don't have enough money to buy that upgrade.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_armor_upgraded</Key>
+			<Value>Member armor upgraded!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_health_maxed_configurable</Key>
+			<Value>Your members' armor is at its maximum limit (it can be configured in the ModOptions file)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_accuracy_upgraded</Key>
+			<Value>Member accuracy upgraded!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_accuracy_maxed_configurable</Key>
+			<Value>Your members' accuracy is at its maximum limit (it can be configured in the ModOptions file)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_gang_strength_upgraded</Key>
+			<Value>Gang Base Strength upgraded!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_gang_strength_maxed_configurable</Key>
+			<Value>Your Gang Base Strength is at its maximum limit (it can be configured in the ModOptions file)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>mod_menu_title_member_registration</Key>
+			<Value>Gang Member Registration Controls</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>mod_menu_title_vehicle_registration</Key>
+			<Value>Gang Vehicle Registration Controls</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_ped_selected</Key>
+			<Value>ped selected!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_couldnt_find_ped_in_front_selected_self</Key>
+			<Value>Couldn't find a ped in front of you! You have selected yourself.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_selected</Key>
+			<Value>vehicle selected!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_white</Key>
+			<Value>White</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_black</Key>
+			<Value>Black</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_red</Key>
+			<Value>Red</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_green</Key>
+			<Value>Green</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_blue</Key>
+			<Value>Blue</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_yellow</Key>
+			<Value>Yellow</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_gray</Key>
+			<Value>Gray</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_pink</Key>
+			<Value>Pink</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_color_purple</Key>
+			<Value>Purple</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_style_business</Key>
+			<Value>Business</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_style_street</Key>
+			<Value>Street</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_style_beach</Key>
+			<Value>Beach</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_style_special</Key>
+			<Value>Special</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_style</Key>
+			<Value>Member Dressing Style</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_style_desc</Key>
+			<Value>The way the selected member is dressed. Used by the AI when picking members (if the AI gang's chosen style is the same as this member's, it may choose this member).</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_color</Key>
+			<Value>Member Color</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_color_desc</Key>
+			<Value>The color the member will be assigned to. Used by the AI when picking members (if the AI gang's color is the same as this member's, it may choose this member).</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_extended_member_registration</Key>
+			<Value>Extended Save Mode</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_extended_member_registration_desc</Key>
+			<Value>If enabled, saves all clothing indexes for non-freemode peds. Can help with some addon peds.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_save_pot_member_for_ai_gangs</Key>
+			<Value>Save Potential Member for future AI gangs</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_save_pot_member_for_ai_gangs_desc</Key>
+			<Value>Saves the selected ped as a potential gang member with the specified data. AI gangs will be able to choose him\\her.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_potential_freemode_member_added</Key>
+			<Value>Potential freemode member added!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_similar_potential_member_exists</Key>
+			<Value>A similar potential member already exists.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_potential_member_added</Key>
+			<Value>Potential member added!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_save_member_to_your_gang</Key>
+			<Value>Save ped type for your gang</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_save_member_to_your_gang_desc</Key>
+			<Value>Saves the selected ped type as a member of your gang, with the specified data. The selected ped himself won't be a member, however.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_your_gang_has_similar_member</Key>
+			<Value>Your gang already has a similar member.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_save_member_for_specific_enemy_gang</Key>
+			<Value>Save ped type for a specific enemy gang...</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_that_gang_has_similar_member</Key>
+			<Value>That gang already has a similar member.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_member_respective_gang</Key>
+			<Value>Remove ped type from respective gang</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_member_respective_gang_desc</Key>
+			<Value>If the selected ped type was a member of a gang, it will no longer be. The selected ped himself will still be a member, however. This works for your own gang and for the enemies.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_ped_not_in_any_gang</Key>
+			<Value>The ped doesn't seem to be in a gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_member_removed</Key>
+			<Value>Member removed successfully!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_member_all_gangs_pool</Key>
+			<Value>Remove ped type from all gangs and pool</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_member_all_gangs_pool_desc</Key>
+			<Value>Removes the ped type from all gangs and from the member pool, which means future gangs also won't try to use this type. The selected ped himself will still be a gang member, however.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_ped_removed_from_pool</Key>
+			<Value>Ped type removed from pool! (It might not be the only similar ped in the pool)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_ped_not_in_pool</Key>
+			<Value>Ped type not found in pool.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_make_ped_friendly_your_gang</Key>
+			<Value>Make Ped friendly to your gang</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_make_ped_friendly_your_gang_desc</Key>
+			<Value>Makes the selected ped (and everyone from his group) and your gang become allies. Can't be used with cops or gangs from this mod! NOTE: this only lasts until scripts are loaded again</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_cannot_make_member_friendly</Key>
+			<Value>That ped is a gang member! Gang members cannot be marked as allies</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_ped_group_is_now_friendly</Key>
+			<Value>That ped's group is now an allied group!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_cannot_make_cop_friendly</Key>
+			<Value>That ped is a cop! Cops cannot be marked as allies</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_register_vehicle_ai_gangs</Key>
+			<Value>Register Vehicle as usable by AI Gangs</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_register_vehicle_ai_gangs_desc</Key>
+			<Value>Makes the vehicle type you are driving become chooseable as one of the types used by AI gangs.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_added_pool</Key>
+			<Value>Vehicle added to pool!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_already_in_pool</Key>
+			<Value>That vehicle has already been added to the pool.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_not_inside_vehicle</Key>
+			<Value>You are not inside a vehicle.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_register_vehicle_your_gang</Key>
+			<Value>Register Vehicle for your Gang</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_register_vehicle_your_gang_desc</Key>
+			<Value>Makes the vehicle type you are driving become one of the default types used by your gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_added_to_gang</Key>
+			<Value>Gang vehicle added!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_already_in_your_gang</Key>
+			<Value>That vehicle is already registered for your gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_register_vehicle_specific_enemy_gang</Key>
+			<Value>Register vehicle for a specific enemy gang...</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_already_in_that_gang</Key>
+			<Value>That vehicle is already registered for that gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_vehicle_from_your_gang</Key>
+			<Value>Remove Vehicle Type from your Gang</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_vehicle_from_your_gang_desc</Key>
+			<Value>Removes the vehicle type you are driving from the possible vehicle types for your gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_removed</Key>
+			<Value>Gang vehicle removed!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_not_in_your_gang</Key>
+			<Value>That vehicle is not registered for your gang.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_vehicle_all_gangs_pool</Key>
+			<Value>Remove Vehicle Type from all gangs and pool</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_remove_vehicle_all_gangs_pool_desc</Key>
+			<Value>Removes the vehicle type you are driving from the possible vehicle types for all gangs, including yours. Existing gangs will also stop using that car and get another one if needed.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_removed_pool</Key>
+			<Value>Vehicle type removed from pool!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_vehicle_not_in_pool</Key>
+			<Value>Vehicle type not found in pool.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>mod_menu_title_zone_controls</Key>
+			<Value>Zone Controls</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_zone_x_is_now_neutral</Key>
+			<Value>{0} is now neutral again.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_your_gang_doesnt_own_this_zone</Key>
+			<Value>Your gang does not own this zone.</Value>
+		</LocaleKey>
+^<LocaleKey>
+			<Key>menu_button_take_zone_cost_x_desc</Key>
+			<Value>Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of ${0}. If it belongs to another gang, a battle will begin!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_zone</Key>
+			<Value>Upgrade current zone</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_upgrade_zone_not_takeable_suffix</Key>
+			<Value>(Not takeable)</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_start_war_light_attack</Key>
+			<Value>Light Attack</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_start_war_medium_attack</Key>
+			<Value>Medium Attack</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_start_war_large_attack</Key>
+			<Value>Large Attack</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_start_war_massive_attack</Key>
+			<Value>Massive Attack</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>zone_attack_submenu_main</Key>
+			<Value>Gang War Attack Options</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_custom_zones_menu</Key>
+			<Value>Edit/Create Custom Zones...</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_desc_custom_zones_menu</Key>
+			<Value>Opens the Custom Zones Menu</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_add_zone_to_takeables_set_blip_pos</Key>
+			<Value>Add Current Zone to Takeables/Set Blip Position</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_button_desc_add_zone_to_takeables_set_blip_pos</Key>
+			<Value>Makes the zone you are in become takeable by gangs and/or sets your position as the zone's reference position (if toggled, this zone's blip will show here).</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>subtitle_zone_data_updated</Key>
+			<Value>Zone Data Updated!</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_aggressiveness</Key>
+			<Value>Member Aggressiveness</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_listitem_member_aggressiveness_desc</Key>
+			<Value>This controls how aggressive members from all gangs will be. Very aggressive members will shoot at cops and other gangs on sight, aggressive members will shoot only at other gangs on sight and defensive members will only shoot when one of them is attacked or aimed at.</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_aggressiveness_level_very_aggressive</Key>
+			<Value>V. Aggressive</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_aggressiveness_level_aggressive</Key>
+			<Value>Aggressive</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>member_aggressiveness_level_defensive</Key>
+			<Value>Defensive</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>blip_color_name_0</Key>

@@ -17,8 +17,8 @@ namespace GTA.GangAndTurfMod
         private static int moneyFromLastProtagonist = 0;
         private static int defaultMaxHealth = 200;
 
-        private static int originalProtagonistRelationGroup;
-        public static int spectatorProtagonistRelationGroup;
+        private static RelationshipGroup originalProtagonistRelationGroup;
+        public static RelationshipGroup spectatorProtagonistRelationGroup;
 
         /// <summary>
         /// the character currently controlled by the player. 
@@ -51,11 +51,11 @@ namespace GTA.GangAndTurfMod
             {
                 if (CurrentPlayerCharacter.IsInAir || CurrentPlayerCharacter.IsInFlyingVehicle)
                 {
-                    rayResult = World.Raycast(CurrentPlayerCharacter.Position, Vector3.WorldDown, 99999.0f, IntersectOptions.Map);
-                    if (rayResult.DitHitAnything)
+                    rayResult = World.Raycast(CurrentPlayerCharacter.Position, Vector3.WorldDown, 99999.0f, IntersectFlags.Map);
+                    if (rayResult.DidHit)
                     {
                         Logger.Log("SafePositionNearPlayer: ray ok!", 4);
-                        return rayResult.HitCoords;
+                        return rayResult.HitPosition;
                     }
                     else
                     {
@@ -85,8 +85,7 @@ namespace GTA.GangAndTurfMod
             spectatorProtagonistRelationGroup = World.AddRelationshipGroup("GangAndTurfModSpectatorProtagonist");
 
             //player shouldn't be attacked by the ai-controlled protagonist while mind controlling a member
-            World.SetRelationshipBetweenGroups(Relationship.Companion, spectatorProtagonistRelationGroup, Game.Player.Character.RelationshipGroup);
-            World.SetRelationshipBetweenGroups(Relationship.Companion, Game.Player.Character.RelationshipGroup, spectatorProtagonistRelationGroup);
+            spectatorProtagonistRelationGroup.SetRelationshipBetweenGroups(Game.Player.Character.RelationshipGroup, Relationship.Companion, true);
         }
 
         public static void Tick()
@@ -168,7 +167,7 @@ namespace GTA.GangAndTurfMod
                     (GangManager.instance.PlayerGang);
                 for (int i = 0; i < playerGangMembers.Count; i++)
                 {
-                    if (Game.Player.IsTargetting(playerGangMembers[i]))
+                    if (Game.Player.IsTargeting(playerGangMembers[i]))
                     {
                         if (playerGangMembers[i].IsAlive)
                         {
@@ -177,10 +176,7 @@ namespace GTA.GangAndTurfMod
                             //adds a blip to the protagonist so that we know where we left him
                             Blip protagonistBlip = theOriginalPed.AddBlip();
                             protagonistBlip.Sprite = BlipSprite.Creator;
-                            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, Localization.GetTextByKey("blip_last_used_protagonist", "Last Used Protagonist"));
-                            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, protagonistBlip);
-
+                            protagonistBlip.Name = Localization.GetTextByKey("blip_last_used_protagonist", "Last Used Protagonist");
 
                             defaultMaxHealth = theOriginalPed.MaxHealth;
                             moneyFromLastProtagonist = Game.Player.Money;
@@ -230,7 +226,7 @@ namespace GTA.GangAndTurfMod
         private static void DiscardDeadBody(Ped theBody)
         {
             hasDiedWithChangedBody = false;
-            theBody.RelationshipGroup = GangManager.instance.PlayerGang.relationGroupIndex;
+            theBody.RelationshipGroup = GangManager.instance.PlayerGang.relGroup;
             theBody.IsInvincible = false;
             theBody.Health = 0;
             theBody.Kill();
@@ -283,7 +279,7 @@ namespace GTA.GangAndTurfMod
             //return to original body
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, theOriginalPed, true, true);
             Game.Player.MaxArmor = 100;
-            theOriginalPed.CurrentBlip.Remove();
+            theOriginalPed.AttachedBlip.Delete();
             theOriginalPed.MaxHealth = defaultMaxHealth;
             if (theOriginalPed.Health > theOriginalPed.MaxHealth) theOriginalPed.Health = theOriginalPed.MaxHealth;
             theOriginalPed.Task.ClearAllImmediately();
@@ -303,7 +299,7 @@ namespace GTA.GangAndTurfMod
             else
             {
                 oldPed.Health = oldPed.Armor + 100;
-                oldPed.RelationshipGroup = GangManager.instance.PlayerGang.relationGroupIndex;
+                oldPed.RelationshipGroup = GangManager.instance.PlayerGang.relGroup;
                 oldPed.Task.ClearAllImmediately();
             }
 

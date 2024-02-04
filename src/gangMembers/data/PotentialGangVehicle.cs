@@ -5,7 +5,7 @@ namespace GTA.GangAndTurfMod
 {
     public class VehicleModData
     {
-        public VehicleMod ModType { get; set; } // Use the VehicleMod enum directly
+        public VehicleModType ModType { get; set; } // Use the VehicleModType enum directly
         public int ModValue { get; set; }
     }
 

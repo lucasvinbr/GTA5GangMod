@@ -96,7 +96,7 @@ namespace GTA.GangAndTurfMod
                         GangManager.instance.CallCarBackup();
                     }
 
-                    if (Game.IsControlJustPressed(0, Control.ScriptPadUp))
+                    if (Game.IsControlJustReleased(Control.ScriptPadUp))
                     {
                         zoneManagerScript.OutputCurrentZoneInfo();
                     }
@@ -198,12 +198,12 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit;
             if (MindControl.CurrentPlayerCharacter.IsInVehicle())
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds,
                     MindControl.CurrentPlayerCharacter.CurrentVehicle);
             }
             else
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds);
             }
 
             if (hit.HitEntity != null)
@@ -305,12 +305,12 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit;
             if (MindControl.CurrentPlayerCharacter.IsInVehicle())
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds,
                     MindControl.CurrentPlayerCharacter.CurrentVehicle);
             }
             else
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds);
             }
 
             if (hit.HitEntity != null)

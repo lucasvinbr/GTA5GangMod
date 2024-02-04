@@ -8,11 +8,10 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// menu for most zone-related actions
     /// </summary>
-    public class ZonesMenu : NativeMenu
+    public class ZonesMenu : ModMenu
     {
-        public ZonesMenu(ObjectPool menuPool) : base("Gang and Turf Mod", Localization.GetTextByKey("zone_menu_main", "Zone Controls"))
+        public ZonesMenu(ObjectPool menuPool) : base("zone_controls", "Zone Controls")
         {
-
             warAttackStrengthMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("zone_attack_submenu_main", "Gang War Attack Options"));
             customZonesSubMenu = new CustomZonesSubMenu();
 
@@ -20,21 +19,9 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(warAttackStrengthMenu);
             menuPool.Add(customZonesSubMenu);
 
-            //add buttons to self and warMenu...
-            AddGangWarAtkOptions();
-            AddGangTakeoverButton();
-            AddZoneUpgradeButton();
-            AddAbandonZoneButton();
-            AddSaveZoneButton();
-
             customZonesSubMenu.Setup();
-
-            Add(new NativeSubmenuItem(customZonesSubMenu, this)
-            {
-                Title = Localization.GetTextByKey("menu_button_custom_zones_menu", "Edit/Create Custom Zones..."),
-                Description = Localization.GetTextByKey("menu_button_desc_custom_zones_menu", "Opens the Custom Zones Menu")
-            });
         }
+    
 
         public NativeMenu warAttackStrengthMenu;
 
@@ -278,7 +265,8 @@ namespace GTA.GangAndTurfMod
                             (ModOptions.instance.baseCostToUpgradeSingleTurfValue * valueDifference);
                         }
 
-                        UI.Screen.ShowSubtitle(curZone.zoneName + " is now neutral again.");
+                        UI.Screen.ShowSubtitle(string.Format(Localization.GetTextByKey("subtitle_zone_x_is_now_neutral", "{0} is now neutral again."),
+                            curZone.zoneName));
 
                         if (curZone.IsBeingContested())
                         {
@@ -290,7 +278,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("AAAA", "Your gang does not own this zone."));
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_your_gang_doesnt_own_this_zone", "Your gang does not own this zone."));
                     }
                 }
             };
@@ -298,8 +286,9 @@ namespace GTA.GangAndTurfMod
 
         public void UpdateTakeOverBtnText()
         {
-            takeZoneButton.Description = "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of $" +
-                ModOptions.instance.baseCostToTakeTurf.ToString() + ". If it belongs to another gang, a battle will begin!";
+            takeZoneButton.Description = string.Format(
+                Localization.GetTextByKey("menu_button_take_zone_cost_x_desc",
+                "Makes the zone you are in become part of your gang's turf. If it's not controlled by any gang, it will instantly become yours for a price of ${0}. If it belongs to another gang, a battle will begin!"), ModOptions.instance.baseCostToTakeTurf.ToString());
         }
 
         public void UpdateZoneUpgradeBtn()
@@ -307,12 +296,12 @@ namespace GTA.GangAndTurfMod
             TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
             if (curZone == null)
             {
-                upgradeZoneValueBtn.Text = Localization.GetTextByKey("AAAA", "Upgrade current zone - (Not takeable)");
+                upgradeZoneValueBtn.Title = Localization.GetTextByKey("menu_button_upgrade_zone", "Upgrade current zone") + " - " + Localization.GetTextByKey("menu_button_upgrade_zone_not_takeable_suffix", "(Not takeable)");
             }
             else
             {
                 curZoneValueUpgradeCost = GangCalculations.CalculateTurfValueUpgradeCost(curZone.value);
-                upgradeZoneValueBtn.Text = "Upgrade current zone - " + curZoneValueUpgradeCost.ToString();
+                upgradeZoneValueBtn.Title = Localization.GetTextByKey("menu_button_upgrade_zone", "Upgrade current zone") + " - " + curZoneValueUpgradeCost.ToString();
             }
 
         }
@@ -327,10 +316,10 @@ namespace GTA.GangAndTurfMod
             warLargeAtkCost = GangCalculations.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.large);
             warMassAtkCost = GangCalculations.CalculateAttackCost(playerGang, GangWarManager.AttackStrength.massive);
 
-            warLightAtkBtn.Text = "Light Attack - " + warLightAtkCost.ToString();
-            warMedAtkBtn.Text = "Medium Attack - " + warMedAtkCost.ToString();
-            warLargeAtkBtn.Text = "Large Attack - " + warLargeAtkCost.ToString();
-            warMassAtkBtn.Text = "Massive Attack - " + warMassAtkCost.ToString();
+            warLightAtkBtn.Title = Localization.GetTextByKey("menu_button_start_war_light_attack", "Light Attack") + " - " + warLightAtkCost.ToString();
+            warMedAtkBtn.Title = Localization.GetTextByKey("menu_button_start_war_medium_attack", "Medium Attack") + " - " + warMedAtkCost.ToString();
+            warLargeAtkBtn.Title = Localization.GetTextByKey("menu_button_start_war_large_attack", "Large Attack") + " - " + warLargeAtkCost.ToString();
+            warMassAtkBtn.Title = Localization.GetTextByKey("menu_button_start_war_massive_attack", "Massive Attack") + " - " + warMassAtkCost.ToString();
 
             warLightAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.light, defenderNumbers);
             warMedAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.medium, defenderNumbers);
@@ -339,6 +328,22 @@ namespace GTA.GangAndTurfMod
 
         }
 
+        protected override void RecreateItems()
+        {
+            Clear();
 
+            warAttackStrengthMenu.Name = Localization.GetTextByKey("zone_attack_submenu_main", "Gang War Attack Options");
+            //add buttons to self and warMenu...
+            AddGangWarAtkOptions();
+            AddGangTakeoverButton();
+            AddZoneUpgradeButton();
+            AddAbandonZoneButton();
+            AddSaveZoneButton();
+            Add(new NativeSubmenuItem(customZonesSubMenu, this)
+            {
+                Title = Localization.GetTextByKey("menu_button_custom_zones_menu", "Edit/Create Custom Zones..."),
+                Description = Localization.GetTextByKey("menu_button_desc_custom_zones_menu", "Opens the Custom Zones Menu")
+            });
+        }
     }
 }

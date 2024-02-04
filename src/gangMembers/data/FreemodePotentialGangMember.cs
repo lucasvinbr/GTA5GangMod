@@ -93,7 +93,7 @@ namespace GTA.GangAndTurfMod
             //time to get the new data
             for (int i = 0; i < headOverlayIndexes.Length; i++)
             {
-                headOverlayIndexes[i] = Function.Call<int>(Hash._GET_PED_HEAD_OVERLAY_VALUE, targetPed, i);
+                headOverlayIndexes[i] = Function.Call<int>(Hash.GET_PED_HEAD_OVERLAY, targetPed, i);
 
                 if (i < propDrawableIndexes.Length)
                 {
@@ -131,13 +131,13 @@ namespace GTA.GangAndTurfMod
             int hairColor = hairColorID == -1 ? RandoMath.CachedRandom.Next(0, 64) : hairColorID; 
 
 
-            Function.Call(Hash._SET_PED_HAIR_COLOR, targetPed, hairColor, hairColor);
+            Function.Call(Hash.SET_PED_HAIR_TINT, targetPed, hairColor, hairColor);
 
             Function.Call(Hash.SET_AMBIENT_VOICE_NAME, targetPed, voiceName);
 
             //according to what I saw using menyoo, eye colors go from 0 to 32.
             //colors after 23 go pretty crazy, like demon-eyed, so I've decided to stop at 23
-            Function.Call(Hash._SET_PED_EYE_COLOR, targetPed, RandoMath.CachedRandom.Next(0, 23));
+            Function.Call(Hash.SET_HEAD_BLEND_EYE_COLOR, targetPed, RandoMath.CachedRandom.Next(0, 23));
 
             //new data time!
             for (int i = 0; i < headOverlayIndexes.Length; i++)
@@ -149,7 +149,7 @@ namespace GTA.GangAndTurfMod
                 //we only mess with beard, eyebrow, blush, lipstick and chest hair colors
                 if (i == 1 || i == 2 || i == 5 || i == 8 || i == 10)
                 {
-                    Function.Call(Hash._SET_PED_HEAD_OVERLAY_COLOR, targetPed, i, 2, hairColor, 0);
+                    Function.Call(Hash.SET_PED_HEAD_OVERLAY_TINT, targetPed, i, 2, hairColor, 0);
                 }
 
 

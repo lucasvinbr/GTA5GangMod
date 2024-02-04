@@ -59,10 +59,6 @@ namespace GTA.GangAndTurfMod
                 }
             };
 
-            string ChangeRadiusEvent(UIMenuDynamicListItem sender, ChangeDirection direction)
-            {
-                
-            }
 
             Add(createZoneBtn);
             Add(radiusEditor);
@@ -99,8 +95,6 @@ namespace GTA.GangAndTurfMod
             }
 
 
-
-            return currentRadius.ToString();
         }
 
         private void RenameZoneBtn_Activated(object sender, System.EventArgs e)

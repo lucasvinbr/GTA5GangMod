@@ -17,9 +17,11 @@ namespace GTA.GangAndTurfMod
         public int moneyAvailable;
         public bool isPlayerOwned = false;
 
-        //the gang's relationshipgroup
+        /// <summary>
+        /// the gang's relationshipGroup. Not saved in the xml
+        /// </summary>
         [XmlIgnore]
-        public int relationGroupIndex;
+        public RelationshipGroup relGroup;
 
         public int memberAccuracyLevel = 1;
         public int memberHealth = 10;

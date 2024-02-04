@@ -9,13 +9,10 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for setting gang blips' color
     /// </summary>
-    public class GangBlipColorSubMenu : NativeMenu
+    public class GangBlipColorSubMenu : ModMenu
     {
-        public GangBlipColorSubMenu() : base(
-            Localization.GetTextByKey("menu_title_mod_name", "Gang and Turf Mod"),
-            Localization.GetTextByKey("menu_title_gang_blip_color","Gang Blip Color"))
+        public GangBlipColorSubMenu() : base("gang_blip_color", "Gang Blip Color")
         {
-            Setup();
         }
 
         private int playerGangOriginalBlipColor = 0;
@@ -63,15 +60,12 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
-        public void Setup()
+        protected override void Setup()
         {
+            base.Setup();
+
             string[] blipColorNamesArray = blipColorEntries.Keys.ToArray();
             int[] colorCodesArray = blipColorEntries.Values.ToArray();
-
-            for (int i = 0; i < colorCodesArray.Length; i++)
-            {
-                Add(new NativeItem(Localization.GetTextByKey("blip_color_name_" + colorCodesArray[i],blipColorNamesArray[i]), Localization.GetTextByKey("menu_button_desc_gang_blip_color", "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.")));
-            }
 
 
             SelectedIndexChanged += (sender, eventData) =>
@@ -82,7 +76,7 @@ namespace GTA.GangAndTurfMod
 
             Shown += StoreOriginalBlipColor;
 
-            Closed += GangBlipColorSubMenu_OnMenuClose;
+            Closed += RestoreColorsAndRefreshBlips;
 
             ItemActivated += (sender, itemActivatedArgs) =>
             {
@@ -102,7 +96,7 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        private void GangBlipColorSubMenu_OnMenuClose(object sender, EventArgs _)
+        private void RestoreColorsAndRefreshBlips(object sender, EventArgs _)
         {
             GangManager.instance.PlayerGang.blipColor = playerGangOriginalBlipColor;
             ZoneManager.instance.RefreshZoneBlips();
@@ -111,6 +105,20 @@ namespace GTA.GangAndTurfMod
         private void StoreOriginalBlipColor(object sender, EventArgs _)
         {
             playerGangOriginalBlipColor = GangManager.instance.PlayerGang.blipColor;
+        }
+
+        protected override void RecreateItems()
+        {
+            Clear();
+
+            string[] blipColorNamesArray = blipColorEntries.Keys.ToArray();
+            int[] colorCodesArray = blipColorEntries.Values.ToArray();
+
+            for (int i = 0; i < colorCodesArray.Length; i++)
+            {
+                Add(new NativeItem(Localization.GetTextByKey("blip_color_name_" + colorCodesArray[i], blipColorNamesArray[i]), Localization.GetTextByKey("menu_button_desc_gang_blip_color", "The color change can be seen immediately on turf blips. Click or press enter after selecting a color to save the color change.")));
+            }
+
         }
     }
 }

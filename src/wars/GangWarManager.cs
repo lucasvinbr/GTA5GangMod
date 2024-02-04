@@ -1,9 +1,12 @@
 ﻿using GTA.Math;
 using GTA.Native;
+using GTA.UI;
+using LemonUI;
 
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Screen = GTA.UI.Screen;
 
 namespace GTA.GangAndTurfMod
 {
@@ -24,7 +27,7 @@ namespace GTA.GangAndTurfMod
             defendingFromEnemy
         }
 
-        public UIResText alliedNumText, enemyNumText;
+        public TextElement alliedNumText, enemyNumText;
 
         public bool shouldDisplayReinforcementsTexts = false;
 
@@ -68,18 +71,18 @@ namespace GTA.GangAndTurfMod
             this.Tick += OnTick;
             this.Aborted += OnAbort;
 
-            alliedNumText = new UIResText("400", new Point(), 0.5f, Color.CadetBlue);
-            enemyNumText = new UIResText("400", new Point(), 0.5f, Color.Red);
+            alliedNumText = new TextElement("400", new Point(), 0.5f, Color.CadetBlue);
+            enemyNumText = new TextElement("400", new Point(), 0.5f, Color.Red);
 
             alliedNumText.Outline = true;
             enemyNumText.Outline = true;
+            
+            alliedNumText.Alignment = Alignment.Center;
+            enemyNumText.Alignment = Alignment.Center;
 
-            alliedNumText.TextAlignment = UIResText.Alignment.Centered;
-            enemyNumText.TextAlignment = UIResText.Alignment.Centered;
+            float screenRatio = Screen.Width / Screen.Height;
 
-            float screenRatio = (float)Game.ScreenResolution.Width / Game.ScreenResolution.Height;
-
-            int proportionalScreenWidth = (int)(1080 * screenRatio); //nativeUI UIResText works with 1080p height
+            int proportionalScreenWidth = (int)(1080 * screenRatio);
 
             alliedNumText.Position = new Point((proportionalScreenWidth / 2) - 120, 10);
             enemyNumText.Position = new Point((proportionalScreenWidth / 2) + 120, 10);

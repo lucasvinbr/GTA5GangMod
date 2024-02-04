@@ -1,4 +1,5 @@
 ﻿
+using LemonUI.Menus;
 using static GTA.GangAndTurfMod.MenuScript;
 
 namespace GTA.GangAndTurfMod
@@ -6,11 +7,10 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// submenu for setting the mod's key bindings
     /// </summary>
-    public class KeyBindingsSubMenu : NativeMenu
+    public class KeyBindingsSubMenu : ModMenu
     {
-        public KeyBindingsSubMenu() : base("Gang and Turf Mod", "Key Bindings")
+        public KeyBindingsSubMenu() : base("key_bindings", "Key Bindings")
         {
-            Setup();
         }
 
 
@@ -19,51 +19,57 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
-        public void Setup()
+        protected override void Setup()
         {
-            openGangMenuBtn = new NativeItem("Gang Control Key - " + ModOptions.instance.openGangMenuKey.ToString(), "The key used to open the Gang/Mod Menu. Used with shift to open the Member Registration Menu. Default is B.");
-            openZoneMenuBtn = new NativeItem("Zone Control Key - " + ModOptions.instance.openZoneMenuKey.ToString(), "The key used to check the current zone's name and ownership. Used with shift to open the Zone Menu and with control to toggle zone blip display modes. Default is N.");
-            addToGroupBtn = new NativeItem("Add or Remove Member from Group - " + ModOptions.instance.addToGroupKey.ToString(), "The key used to add/remove the targeted friendly gang member to/from your group. Members of your group will follow you. Default is H.");
-            mindControlBtn = new NativeItem("Take Control of Member - " + ModOptions.instance.mindControlKey.ToString(), "The key used to take control of the targeted friendly gang member. Pressing this key while already in control of a member will restore protagonist control. Default is J.");
-            Add(openGangMenuBtn);
-            Add(openZoneMenuBtn);
-            Add(addToGroupBtn);
-            Add(mindControlBtn);
-            
+            base.Setup();
 
-            OnItemSelect += (sender, item, index) =>
+            ItemActivated += (sender, eventData) =>
             {
-                UI.Screen.ShowSubtitle("Press the new key for this command.");
+                var pickedItem = eventData.Item;
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_press_new_keybinding_for_command", "Press the new key for this command."));
                 instance.curInputType = DesiredInputType.changeKeyBinding;
 
-                if (item == openGangMenuBtn)
+                if (pickedItem == openGangMenuBtn)
                 {
-                    MenuScript.instance.targetKeyBindToChange = ChangeableKeyBinding.GangMenuBtn;
+                    instance.targetKeyBindToChange = ChangeableKeyBinding.GangMenuBtn;
                 }
-                if (item == openZoneMenuBtn)
+                if (pickedItem == openZoneMenuBtn)
                 {
-                    MenuScript.instance.targetKeyBindToChange = ChangeableKeyBinding.ZoneMenuBtn;
+                    instance.targetKeyBindToChange = ChangeableKeyBinding.ZoneMenuBtn;
                 }
-                if (item == addToGroupBtn)
+                if (pickedItem == addToGroupBtn)
                 {
-                    MenuScript.instance.targetKeyBindToChange = ChangeableKeyBinding.AddGroupBtn;
+                    instance.targetKeyBindToChange = ChangeableKeyBinding.AddGroupBtn;
                 }
-                if (item == mindControlBtn)
+                if (pickedItem == mindControlBtn)
                 {
-                    MenuScript.instance.targetKeyBindToChange = ChangeableKeyBinding.MindControlBtn;
+                    instance.targetKeyBindToChange = ChangeableKeyBinding.MindControlBtn;
                 }
             };
 
-            MenuScript.instance.OnKeyBindingChanged += RefreshKeyBindings;
+            instance.OnKeyBindingChanged += RefreshKeyBindings;
         }
 
         public void RefreshKeyBindings()
         {
-            openGangMenuBtn.Text = "Gang Control Key - " + ModOptions.instance.openGangMenuKey.ToString();
-            openZoneMenuBtn.Text = "Zone Control Key - " + ModOptions.instance.openZoneMenuKey.ToString();
-            addToGroupBtn.Text = "Add or Remove Member from Group - " + ModOptions.instance.addToGroupKey.ToString();
-            mindControlBtn.Text = "Take Control of Member - " + ModOptions.instance.mindControlKey.ToString();
+            openGangMenuBtn.Title = Localization.GetTextByKey("menu_button_set_keybinding_gang_control", "Gang Control Key") + " - " + ModOptions.instance.openGangMenuKey.ToString();
+            openZoneMenuBtn.Title = Localization.GetTextByKey("menu_button_set_keybinding_zone_control", "Zone Control Key") + " - " + ModOptions.instance.openZoneMenuKey.ToString();
+            addToGroupBtn.Title = Localization.GetTextByKey("menu_button_set_keybinding_add_remove_member_from_group", "Add or Remove Member from Group") + " - " + ModOptions.instance.addToGroupKey.ToString();
+            mindControlBtn.Title = Localization.GetTextByKey("menu_button_set_keybinding_mind_control", "Take Control of Member") + " - " + ModOptions.instance.mindControlKey.ToString();
         }
 
+        protected override void RecreateItems()
+        {
+            Clear();
+
+            openGangMenuBtn = new NativeItem(Localization.GetTextByKey("menu_button_set_keybinding_gang_control", "Gang Control Key") + " - " + ModOptions.instance.openGangMenuKey.ToString(), Localization.GetTextByKey("menu_button_set_keybinding_gang_control_desc", "The key used to open the Gang/Mod Menu. Used with shift to open the Member Registration Menu. Default is B."));
+            openZoneMenuBtn = new NativeItem(Localization.GetTextByKey("menu_button_set_keybinding_zone_control", "Zone Control Key") + " - " + ModOptions.instance.openZoneMenuKey.ToString(), Localization.GetTextByKey("menu_button_set_keybinding_zone_control_desc", "The key used to check the current zone's name and ownership. Used with shift to open the Zone Menu and with control to toggle zone blip display modes. Default is N."));
+            addToGroupBtn = new NativeItem(Localization.GetTextByKey("menu_button_set_keybinding_add_remove_member_from_group", "Add or Remove Member from Group") + " - " + ModOptions.instance.addToGroupKey.ToString(), Localization.GetTextByKey("menu_button_set_keybinding_add_remove_member_from_group_desc", "The key used to add/remove the targeted friendly gang member to/from your group. Members of your group will follow you. Default is H."));
+            mindControlBtn = new NativeItem(Localization.GetTextByKey("menu_button_set_keybinding_mind_control", "Take Control of Member") + " - " + ModOptions.instance.mindControlKey.ToString(), Localization.GetTextByKey("menu_button_set_keybinding_mind_control_desc", "The key used to take control of the targeted friendly gang member. Pressing this key while already in control of a member and not aiming at another will restore protagonist control. Default is J."));
+            Add(openGangMenuBtn);
+            Add(openZoneMenuBtn);
+            Add(addToGroupBtn);
+            Add(mindControlBtn);
+        }
     }
 }

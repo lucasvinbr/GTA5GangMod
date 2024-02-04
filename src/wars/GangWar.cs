@@ -105,7 +105,7 @@ namespace GTA.GangAndTurfMod
 
             if (warAreaBlips[1] != null)
             {
-                warAreaBlips[1].Remove();
+                warAreaBlips[1].Delete();
                 warAreaBlips[1] = null;
             }
 
@@ -160,9 +160,7 @@ namespace GTA.GangAndTurfMod
                     ModOptions.instance.minSpawnsForEachSideDuringWars * 2);
             }
 
-            Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("Gang War (", attackerGang.name, " attacking ", defenderGang.name + ")"));
-            Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, warBlip);
+            warBlip.Name = string.Concat("Gang War (", attackerGang.name, " attacking ", defenderGang.name + ")");
 
             msTimeOfLastAutoResolveStep = ModCore.curGameTime;
             msTimeWarStarted = ModCore.curGameTime;
@@ -353,12 +351,12 @@ namespace GTA.GangAndTurfMod
 
             if (warBlip != null)
             {
-                warBlip.Remove();
+                warBlip.Delete();
 
                 foreach (Blip areaBlip in warAreaBlips)
                 {
                     if (areaBlip != null)
-                        areaBlip.Remove();
+                        areaBlip.Delete();
                 }
             }
 
@@ -1037,7 +1035,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool IsPositionInsideWarzone(Vector3 position)
         {
-            if (warZone.IsLocationInside(World.GetZoneName(position), position)) return true;
+            if (warZone.IsLocationInside(World.GetZoneDisplayName(position), position)) return true;
 
             foreach (Blip warAreaBlip in warAreaBlips)
             {
@@ -1058,14 +1056,12 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void SetHateRelationsBetweenGangs()
         {
-            World.SetRelationshipBetweenGroups(Relationship.Hate, attackingGang.relationGroupIndex, defendingGang.relationGroupIndex);
-            World.SetRelationshipBetweenGroups(Relationship.Hate, defendingGang.relationGroupIndex, attackingGang.relationGroupIndex);
+            attackingGang.relGroup.SetRelationshipBetweenGroups(defendingGang.relGroup, Relationship.Hate, true);
 
             if (!ModOptions.instance.protagonistsAreSpectators && IsPlayerGangInvolved())
             {
                 Gang enemyGang = defendingGang == GangManager.instance.PlayerGang ? attackingGang : defendingGang;
-                World.SetRelationshipBetweenGroups(Relationship.Hate, enemyGang.relationGroupIndex, Game.Player.Character.RelationshipGroup);
-                World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, enemyGang.relationGroupIndex);
+                enemyGang.relGroup.SetRelationshipBetweenGroups(Game.Player.Character.RelationshipGroup, Relationship.Hate, true);
             }
         }
 
@@ -1127,7 +1123,7 @@ namespace GTA.GangAndTurfMod
             //hide the "redder" area blip
             if (warAreaBlips[1] != null)
             {
-                warAreaBlips[1].Remove();
+                warAreaBlips[1].Delete();
                 warAreaBlips[1] = null;
             }
         }
@@ -1150,7 +1146,7 @@ namespace GTA.GangAndTurfMod
 
                     if (ModOptions.instance.freezeWantedLevelDuringWars)
                     {
-                        Game.WantedMultiplier = 0;
+                        Function.Call(Hash.SET_WANTED_LEVEL_MULTIPLIER, 0.0f);
                     }
 
 
@@ -1314,12 +1310,12 @@ namespace GTA.GangAndTurfMod
         {
             if (warBlip != null)
             {
-                warBlip.Remove();
+                warBlip.Delete();
 
                 foreach (Blip areaBlip in warAreaBlips)
                 {
                     if (areaBlip != null)
-                        areaBlip.Remove();
+                        areaBlip.Delete();
                 }
 
             }

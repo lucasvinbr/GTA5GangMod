@@ -9,13 +9,11 @@ namespace GTA.GangAndTurfMod
     /// <summary>
     /// generic menu for selecting an AI gang and then doing something with it
     /// </summary>
-    public class PickAiGangMenu : NativeMenu
+    public class PickAiGangMenu : ModMenu
     {
-        public PickAiGangMenu(ObjectPool menuPool) : base("Gang and Turf Mod", "Pick Ai Gang Menu")
+        public PickAiGangMenu(ObjectPool menuPool) : base("pick_ai_gang", "Pick Ai Gang Menu")
         {
             menuPool.Add(this);
-
-            Setup();
         }
 
         private Action<Gang> OnGangPicked;
@@ -35,11 +33,11 @@ namespace GTA.GangAndTurfMod
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
-        public void Setup()
+        protected override void Setup()
         {
-            OnItemSelect += (sender, item, checked_) =>
+            ItemActivated += (sender, args) =>
             {
-                Gang targetGang = GangManager.instance.GetGangByName(item.Text);
+                Gang targetGang = GangManager.instance.GetGangByName(args.Item.Title);
 
                 if (targetGang != null)
                 {
@@ -47,11 +45,11 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    UI.Screen.ShowSubtitle("The gang selected could not be found! Has it been wiped out or renamed?");
+                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_selected_gang_not_found", "The gang selected could not be found! Has it been wiped out or renamed?"));
                 }
             };
 
-            OnMenuClose += (sender) =>
+            Closed += (sender, args) =>
             {
                 if (previousMenu != null)
                 {
@@ -75,5 +73,10 @@ namespace GTA.GangAndTurfMod
             
         }
 
+        protected override void RecreateItems()
+        {
+            Clear();
+            AddGangsToMenu();
+        }
     }
 }
