@@ -374,6 +374,28 @@ namespace GTA.GangAndTurfMod
             if (!defenderVictory)
             {
                 attackingGang.TakeZone(warZone);
+                if (ModOptions.instance.survivorsBecomeZoneValueOnAttackerVictory)
+                {
+                    // add some levels based on how many attackers survived and the attack size
+                    int startingAttackers = GangCalculations.CalculateAttackerReinforcements(attackingGang, curWarAtkStrength);
+                    float remainingPercent = attackerReinforcements / (float)startingAttackers;
+                    int valueIfAllSurvived = GangCalculations.CalculateTurfValueEquivalentToGangAttack(curWarAtkStrength);
+                    warZone.ChangeValue((int)(valueIfAllSurvived * remainingPercent));
+
+                    Logger.Log($"atker victory! starting atkers: {startingAttackers}, remainingPct: {remainingPercent}, valueIfAllSurvived: {valueIfAllSurvived}, final value: {(int)(valueIfAllSurvived * remainingPercent)}", 3);
+                }
+            }
+            else
+            {
+                if (ModOptions.instance.zonesCanLoseValueOnDefenderVictory && warZone.value > 0)
+                {
+                    // the zone loses some levels based on how many defenders died
+                    int startingDefenders = GangCalculations.CalculateDefenderReinforcements(defendingGang, warZone);
+                    float remainingDefendersPercent = RandoMath.ClampValue(defenderReinforcements / (float) startingDefenders, 0.0f, 1.0f);
+                    warZone.ChangeValue(RandoMath.CeilToInt(warZone.value * remainingDefendersPercent));
+
+                    Logger.Log($"defender victory! starting defers: {startingDefenders}, remainingPct: {remainingDefendersPercent}, final value: {RandoMath.CeilToInt(warZone.value * remainingDefendersPercent)}", 3);
+                }
             }
 
             onWarEnded?.Invoke(this, defenderVictory);
@@ -747,6 +769,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public SpawnedDrivingGangMember SpawnAngryVehicle(bool isDefender)
         {
+
             int maxPeopleToSpawnInVehicle = isDefender ?
                 maxSpawnedDefenders - spawnedDefenders :
                 maxSpawnedAttackers - spawnedAttackers;
@@ -993,9 +1016,11 @@ namespace GTA.GangAndTurfMod
                 {
                     //ok, it's fine to cull this member...
                     //but is it necessary right now?
+                    int numThirdPartyMembers = SpawnManager.instance.livingMembersCount - spawnedAttackers - spawnedDefenders;
                     if((member.myGang == attackingGang && spawnedAttackers > maxSpawnedAttackers) ||
                        (member.myGang == defendingGang && spawnedDefenders > maxSpawnedDefenders) ||
-                       (!IsGangFightingInThisWar(member.myGang) && SpawnManager.instance.livingMembersCount >= allowedSpawnLimit &&
+                       (!IsGangFightingInThisWar(member.myGang) && 
+                       numThirdPartyMembers / (float) SpawnManager.instance.livingMembersCount >= ModOptions.instance.maxThirdPartyMemberPercentIfCullingEnabled &&
                             (spawnedAttackers < minSpawns ||
                              spawnedDefenders < minSpawns)))
                     {

@@ -126,6 +126,10 @@ namespace GTA.GangAndTurfMod
         public int maxRewardPerZoneOwned = 6000;
         public int maxTurfValue = 10;
 
+        public int msTimeBetweenZoneAutoUpgrades = 60000;
+        public bool zonesCanLoseValueOnDefenderVictory = true;
+        public bool survivorsBecomeZoneValueOnAttackerVictory = true;
+
         /// <summary>
         /// percentage sum, per zone owned, over the total reward received.
         /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
@@ -197,6 +201,7 @@ namespace GTA.GangAndTurfMod
         public int warMinAvailableSpawnsBeforeSpawningVehicle = 0;
         public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
         public bool warMemberCullingForBalancingEnabled = true;
+        public float maxThirdPartyMemberPercentIfCullingEnabled = 0.33f;
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;

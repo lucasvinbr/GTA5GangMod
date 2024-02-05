@@ -20,6 +20,7 @@ namespace GTA.GangAndTurfMod
         /// time in ms
         /// </summary>
         public static int curGameTime;
+        public static bool doneStarting = false;
 
         public ModCore()
         {
@@ -36,6 +37,8 @@ namespace GTA.GangAndTurfMod
             Localization.Initialize();
 
             menuScript = new MenuScript();
+
+            zoneManagerScript.SetupZoneUpgradeTimes();
 
             this.Aborted += OnAbort;
 
@@ -58,6 +61,10 @@ namespace GTA.GangAndTurfMod
                 Yield();
                 successfulInit = GangVehicleUpdater.Initialize();
             }
+
+            Logger.Log($"ped capacity: {World.PedCapacity}", 2);
+
+            doneStarting = true;
         }
 
         private void OnTick(object sender, EventArgs e)
@@ -66,6 +73,7 @@ namespace GTA.GangAndTurfMod
             gangManagerScript.Tick();
             MindControl.Tick();
             menuScript.Tick();
+            zoneManagerScript.Tick();
 
             //war stuff that should happen every frame
             if (GangWarManager.instance.shouldDisplayReinforcementsTexts)
@@ -98,7 +106,7 @@ namespace GTA.GangAndTurfMod
 
                     if (Game.IsControlJustReleased(Control.ScriptPadUp))
                     {
-                        zoneManagerScript.OutputCurrentZoneInfo();
+                        zoneManagerScript.OutputCurrentWarOrZoneInfo();
                     }
                 }
             }
@@ -151,7 +159,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (e.Modifiers == Keys.None)
                     {
-                        zoneManagerScript.OutputCurrentZoneInfo();
+                        zoneManagerScript.OutputCurrentWarOrZoneInfo();
                     }
                     else if (e.Modifiers == Keys.Shift)
                     {

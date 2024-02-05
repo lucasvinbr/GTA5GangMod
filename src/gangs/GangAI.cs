@@ -204,10 +204,10 @@ namespace GTA.GangAndTurfMod
             {
                 if (myZones[i].value >= lastCheckedValue) continue; //we already know we can't afford upgrading from this turf level
                 upgradeCost = GangCalculations.CalculateTurfValueUpgradeCost(myZones[i].value);
-                if (watchedGang.moneyAvailable >= upgradeCost)
+                if (watchedGang.moneyAvailable >= upgradeCost && !myZones[i].IsBeingContested())
                 {
                     watchedGang.AddMoney(-upgradeCost);
-                    myZones[i].value++;
+                    myZones[i].ChangeValue(myZones[i].value + 1);
                     ZoneManager.instance.SaveZoneData(false);
                     return;
                 }

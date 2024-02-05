@@ -85,6 +85,13 @@ namespace GTA.GangAndTurfMod
 
             Localization.OnLanguageChanged += () => RecreateItems();
 
+            //foreach(var poolItem in menuPool)
+            //{
+            //    var menu = (NativeMenu)poolItem;
+
+            //    menu.UseMouse = true;
+            //}
+
             //add mouse click as another 'select' button
             //menuPool.SetKey(NativeMenu.MenuControls.Select, Control.PhoneSelect);
             //InstructionalButton clickButton = new InstructionalButton(Control.PhoneSelect, "Select");

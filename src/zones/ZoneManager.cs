@@ -35,7 +35,7 @@ namespace GTA.GangAndTurfMod
 
         public static ZoneManager instance;
         public TurfZoneData zoneData;
-
+        private int lastUpdatedZoneIndex = 0;
 
         public ZoneManager()
         {
@@ -47,6 +47,15 @@ namespace GTA.GangAndTurfMod
                 zoneData = new TurfZoneData();
             }
 
+        }
+
+        public void SetupZoneUpgradeTimes()
+        {
+            var zones = zoneData.zoneList;
+            for (int i = 0; i < zones.Count; i++)
+            {
+                zones[i].timeNextUpgrade = zones[i].GetTimeForNextUpgrade();
+            }
         }
 
         public void SaveZoneData(bool notifySuccess = true)
@@ -74,6 +83,428 @@ namespace GTA.GangAndTurfMod
         }
 
         #endregion
+
+        /// <summary>
+        /// this controls any zone-related actions that depend on some passing of time
+        /// </summary>
+        public void Tick()
+        {
+            var zones = zoneData.zoneList;
+            if (lastUpdatedZoneIndex >= zones.Count - 1)
+            {
+                lastUpdatedZoneIndex = 0;
+            }
+            
+            int curTime = ModCore.curGameTime;
+            for (int i = lastUpdatedZoneIndex; i < zones.Count; i++)
+            {
+                lastUpdatedZoneIndex = i;
+                var zone = zones[i];
+                if (zone.timeNextUpgrade < curTime &&
+                zone.ownerGangName != "none" && zone.value != ModOptions.instance.maxTurfValue &&
+                !zone.IsBeingContested())
+                {
+                    Logger.Log($"auto upgrading zone {zone.GetDisplayName()} to level {zone.value + 1}", 3);
+                    Logger.Log($"lastUpdatedZoneIndex: {lastUpdatedZoneIndex}", 4);
+                    zone.ChangeValue(zone.value + 1);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// if the player is inside a war zone, shows info on the war. If not, shows info on the current zone
+        /// </summary>
+        public void OutputCurrentWarOrZoneInfo()
+        {
+            var curWar = GangWarManager.instance.focusedWar;
+            if (curWar != null)
+            {
+                string outputMsg = string.Concat("Current warzone: ", curWar.warZone.GetDisplayName(), ", level ", curWar.warZone.value.ToString(), " - ", curWar.attackingGang.name, " attacking ", curWar.defendingGang.name);
+                UI.Screen.ShowSubtitle(outputMsg);
+            }
+            else
+            {
+                OutputCurrentZoneInfo();
+            }
+        }
+
+        public void OutputCurrentZoneInfo()
+        {
+            string legacyName = LegacyGetZoneName(World.GetZoneDisplayName(MindControl.CurrentPlayerCharacter.Position));
+            string zoneInfoMsg;
+            TurfZone currentZone = GetZoneInLocation(legacyName, MindControl.CurrentPlayerCharacter.Position);
+
+            if (currentZone != null)
+            {
+                zoneInfoMsg = "Current zone is " + currentZone.GetDisplayName() + ".";
+                if (currentZone.ownerGangName != "none")
+                {
+                    if (GangManager.instance.GetGangByName(currentZone.ownerGangName) == null)
+                    {
+                        GiveGangZonesToAnother(currentZone.ownerGangName, "none");
+                        currentZone.ownerGangName = "none";
+                        SaveZoneData(false);
+                        zoneInfoMsg += " It isn't owned by any gang.";
+                    }
+                    else
+                    {
+                        zoneInfoMsg += " It is owned by the " + currentZone.ownerGangName + ".";
+
+                        zoneInfoMsg += " Its current level is " + currentZone.value.ToString();
+                    }
+                }
+                else
+                {
+                    zoneInfoMsg += " It isn't owned by any gang.";
+                }
+            }
+            else
+            {
+                zoneInfoMsg = "Current zone is " + World.GetZoneLocalizedName(MindControl.CurrentPlayerCharacter.Position) + ".  It hasn't been marked as takeable yet.";
+            }
+
+            UI.Screen.ShowSubtitle(zoneInfoMsg);
+        }
+
+        public static int CompareZonesByDistToPlayer(TurfZone x, TurfZone y)
+        {
+            if (x == null)
+            {
+                if (y == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (y == null)
+                {
+                    return 1;
+                }
+                else
+                {
+                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
+                    return playerPos.DistanceTo2D(x.zoneBlipPosition).
+                        CompareTo(playerPos.DistanceTo2D(y.zoneBlipPosition));
+                }
+            }
+        }
+
+
+        public static int CompareZonesByValue(TurfZone x, TurfZone y)
+        {
+            if (x == null)
+            {
+                if (y == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                if (y == null)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return y.value.CompareTo(x.value);
+                }
+            }
+        }
+
+        #region blip related methods
+
+
+        public void ChangeBlipDisplay()
+        {
+            curBlipDisplay++;
+            if (curBlipDisplay > ZoneBlipDisplay.allZones)
+            {
+                curBlipDisplay = ZoneBlipDisplay.none;
+            }
+
+            RefreshZoneBlips();
+        }
+
+        public void ChangeBlipDisplay(ZoneBlipDisplay desiredDisplayType)
+        {
+            curBlipDisplay = desiredDisplayType;
+            if (curBlipDisplay > ZoneBlipDisplay.allZones)
+            {
+                curBlipDisplay = ZoneBlipDisplay.none;
+            }
+
+            RefreshZoneBlips();
+        }
+
+        public void RefreshZoneBlips()
+        {
+            switch (curBlipDisplay)
+            {
+                case ZoneBlipDisplay.none:
+                    for (int i = 0; i < zoneData.zoneList.Count; i++)
+                    {
+                        zoneData.zoneList[i].RemoveBlip();
+                    }
+                    break;
+                case ZoneBlipDisplay.allZones:
+                    //refresh the closest since we only show area blips for the closest
+                    zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
+                    for (int i = 0; i < zoneData.zoneList.Count; i++)
+                    {
+                        zoneData.zoneList[i].CreateAttachedBlip(i < 5);
+                        zoneData.zoneList[i].UpdateBlip();
+                    }
+                    break;
+                case ZoneBlipDisplay.fiveClosest:
+                    zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
+                    for (int i = 0; i < zoneData.zoneList.Count; i++)
+                    {
+                        if (i < 5)
+                        {
+                            zoneData.zoneList[i].CreateAttachedBlip(true);
+                            zoneData.zoneList[i].UpdateBlip();
+                        }
+                        else
+                        {
+                            zoneData.zoneList[i].RemoveBlip();
+                        }
+                    }
+                    break;
+                default:
+                    UI.Notification.Show("Invalid blip display type");
+                    break;
+            }
+        }
+
+        #endregion
+
+        public void GiveGangZonesToAnother(string FromGang, string ToGang)
+        {
+            List<TurfZone> fromGangZones = GetZonesControlledByGang(FromGang);
+            for (int i = 0; i < fromGangZones.Count; i++)
+            {
+                fromGangZones[i].ownerGangName = ToGang;
+            }
+
+            SaveZoneData(false);
+        }
+
+        #region getters
+
+
+
+        public bool DoesZoneWithNameExist(string zoneName)
+        {
+            return GetZoneByName(zoneName) != null;
+        }
+
+        public TurfZone GetZoneInLocation(Vector3 location)
+        {
+            //prioritize custom zones
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
+                    zoneData.zoneList[i].IsLocationInside(string.Empty, location))
+                {
+                    return zoneData.zoneList[i];
+                }
+            }
+
+            //fall back to getting by zone name
+            return GetZoneByName(ZoneManager.LegacyGetZoneName(World.GetZoneDisplayName(location)));
+        }
+
+        public TurfZone GetZoneInLocation(string zoneName, Vector3 location)
+        {
+            //prioritize custom zones
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
+                    zoneData.zoneList[i].IsLocationInside(zoneName, location))
+                {
+                    return zoneData.zoneList[i];
+                }
+            }
+
+            //fall back to getting by zone name
+            return GetZoneByName(zoneName);
+        }
+
+        /// <summary>
+        /// returns zone in location and a flag telling whether it's a custom zone or not
+        /// </summary>
+        /// <param name="zoneName"></param>
+        /// <param name="location"></param>
+        /// <returns></returns>
+        public TurfZone GetZoneInLocation(string zoneName, Vector3 location, out bool isCustomZone)
+        {
+            //prioritize custom zones
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
+                    zoneData.zoneList[i].IsLocationInside(zoneName, location))
+                {
+                    isCustomZone = true;
+                    return zoneData.zoneList[i];
+                }
+            }
+
+            //fall back to getting by zone name
+            isCustomZone = false;
+            return GetZoneByName(zoneName);
+        }
+
+
+        /// <summary>
+        /// not exposed in favor of other zone retrieval options that better handle custom zones
+        /// </summary>
+        /// <param name="zoneName"></param>
+        /// <returns></returns>
+        private TurfZone GetZoneByName(string zoneName)
+        {
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                if (zoneData.zoneList[i].zoneName == zoneName)
+                {
+                    return zoneData.zoneList[i];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// gets the turfzone of where the player is
+        /// </summary>
+        /// <returns></returns>
+        public TurfZone GetCurrentTurfZone()
+        {
+            return GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
+        }
+
+        public List<TurfZone> GetZonesControlledByGang(string desiredGangName)
+        {
+            List<TurfZone> ownedZones = new List<TurfZone>();
+
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                if (zoneData.zoneList[i].ownerGangName == desiredGangName)
+                {
+                    ownedZones.Add(zoneData.zoneList[i]);
+                }
+            }
+
+            return ownedZones;
+        }
+
+        /// <summary>
+        /// returns how much, in 0 to 1 percentage, of the "takeable world" the target gang owns
+        /// </summary>
+        /// <param name="desiredGangName"></param>
+        /// <returns></returns>
+        public float GetPercentOfZonesOwnedByGang(string desiredGangName)
+        {
+            int numOwnedZones = 0;
+            foreach(TurfZone z in zoneData.zoneList)
+            {
+                if(z.ownerGangName == desiredGangName)
+                {
+                    numOwnedZones++;
+                }
+            }
+
+            return (float)numOwnedZones / zoneData.zoneList.Count;
+        }
+
+        public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, bool randomBetween3Closest = true)
+        {
+            float smallestDistance = 0;
+            //we start our top 3 closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
+            //the result may not be the 3 closest zones, but thats okay
+            List<TurfZone> top3ClosestZones = new List<TurfZone> { targetZone, targetZone, targetZone };
+            int timesFoundBetterZone = 0;
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                float distanceToThisZone = World.GetDistance(targetZone.zoneBlipPosition, zoneData.zoneList[i].zoneBlipPosition);
+                if (distanceToThisZone != 0 &&
+                    (!hostileOrNeutralZonesOnly || targetZone.ownerGangName != zoneData.zoneList[i].ownerGangName))
+                {
+                    if (smallestDistance == 0 || smallestDistance > distanceToThisZone)
+                    {
+                        timesFoundBetterZone++;
+                        top3ClosestZones.Insert(0, zoneData.zoneList[i]);
+                        top3ClosestZones.RemoveAt(3);
+                        smallestDistance = distanceToThisZone;
+                    }
+                }
+            }
+
+            if (randomBetween3Closest && timesFoundBetterZone >= 3) //only get a random from top 3 if we found 3 different zones
+            {
+                return RandoMath.RandomElement(top3ClosestZones);
+            }
+            else
+            {
+                return top3ClosestZones[0];
+            }
+
+        }
+
+        public TurfZone GetRandomZone(bool preferablyNeutralZone = false)
+        {
+            if (!preferablyNeutralZone)
+            {
+                return RandoMath.RandomElement(zoneData.zoneList);
+            }
+            else
+            {
+                if (zoneData.zoneList.Count > 0)
+                {
+                    List<TurfZone> possibleTurfChoices = new List<TurfZone>();
+
+                    possibleTurfChoices.AddRange(zoneData.zoneList);
+
+                    for (int i = 0; i < zoneData.zoneList.Count; i++)
+                    {
+                        if (possibleTurfChoices.Count == 0)
+                        {
+                            //we've run out of options! abort
+                            break;
+                        }
+                        TurfZone chosenZone = RandoMath.RandomElement(possibleTurfChoices);
+                        if (!preferablyNeutralZone || chosenZone.ownerGangName == "none")
+                        {
+                            return chosenZone;
+                        }
+                        else
+                        {
+                            possibleTurfChoices.Remove(chosenZone);
+                        }
+                    }
+
+                    //if we couldn't find a neutral zone, just get any zone
+                    return GetRandomZone(false);
+                }
+
+            }
+
+            return null;
+        }
+
+
+        #endregion
+
 
         #region legacy zone name fetching
         /// <summary>
@@ -278,380 +709,6 @@ namespace GTA.GangAndTurfMod
             }
         }
         #endregion
-        public TurfZone GetZoneInLocation(Vector3 location)
-        {
-            //prioritize custom zones
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
-                    zoneData.zoneList[i].IsLocationInside(string.Empty, location))
-                {
-                    return zoneData.zoneList[i];
-                }
-            }
-
-            //fall back to getting by zone name
-            return GetZoneByName(ZoneManager.LegacyGetZoneName(World.GetZoneDisplayName(location)));
-        }
-
-        public TurfZone GetZoneInLocation(string zoneName, Vector3 location)
-        {
-            //prioritize custom zones
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
-                    zoneData.zoneList[i].IsLocationInside(zoneName, location))
-                {
-                    return zoneData.zoneList[i];
-                }
-            }
-
-            //fall back to getting by zone name
-            return GetZoneByName(zoneName);
-        }
-
-        /// <summary>
-        /// returns zone in location and a flag telling whether it's a custom zone or not
-        /// </summary>
-        /// <param name="zoneName"></param>
-        /// <param name="location"></param>
-        /// <returns></returns>
-        public TurfZone GetZoneInLocation(string zoneName, Vector3 location, out bool isCustomZone)
-        {
-            //prioritize custom zones
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                if (zoneData.zoneList[i].GetType() != typeof(TurfZone) &&
-                    zoneData.zoneList[i].IsLocationInside(zoneName, location))
-                {
-                    isCustomZone = true;
-                    return zoneData.zoneList[i];
-                }
-            }
-
-            //fall back to getting by zone name
-            isCustomZone = false;
-            return GetZoneByName(zoneName);
-        }
-
-        public void OutputCurrentZoneInfo()
-        {
-            string legacyName = LegacyGetZoneName(World.GetZoneDisplayName(MindControl.CurrentPlayerCharacter.Position));
-            string zoneInfoMsg;
-            TurfZone currentZone = GetZoneInLocation(legacyName, MindControl.CurrentPlayerCharacter.Position);
-
-            if (currentZone != null)
-            {
-                zoneInfoMsg = "Current zone is " + currentZone.GetDisplayName() + ".";
-                if (currentZone.ownerGangName != "none")
-                {
-                    if (GangManager.instance.GetGangByName(currentZone.ownerGangName) == null)
-                    {
-                        GiveGangZonesToAnother(currentZone.ownerGangName, "none");
-                        currentZone.ownerGangName = "none";
-                        SaveZoneData(false);
-                        zoneInfoMsg += " It isn't owned by any gang.";
-                    }
-                    else
-                    {
-                        zoneInfoMsg += " It is owned by the " + currentZone.ownerGangName + ".";
-
-                        zoneInfoMsg += " Its current level is " + currentZone.value.ToString();
-                    }
-                }
-                else
-                {
-                    zoneInfoMsg += " It isn't owned by any gang.";
-                }
-            }
-            else
-            {
-                zoneInfoMsg = "Current zone is " + World.GetZoneLocalizedName(MindControl.CurrentPlayerCharacter.Position) + ".  It hasn't been marked as takeable yet.";
-            }
-
-            UI.Screen.ShowSubtitle(zoneInfoMsg);
-        }
-
-        public static int CompareZonesByDistToPlayer(TurfZone x, TurfZone y)
-        {
-            if (x == null)
-            {
-                if (y == null)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            else
-            {
-                if (y == null)
-                {
-                    return 1;
-                }
-                else
-                {
-                    Vector3 playerPos = MindControl.CurrentPlayerCharacter.Position;
-                    return playerPos.DistanceTo2D(x.zoneBlipPosition).
-                        CompareTo(playerPos.DistanceTo2D(y.zoneBlipPosition));
-                }
-            }
-        }
-
-
-        public static int CompareZonesByValue(TurfZone x, TurfZone y)
-        {
-            if (x == null)
-            {
-                if (y == null)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            else
-            {
-                if (y == null)
-                {
-                    return 1;
-                }
-                else
-                {
-                    return y.value.CompareTo(x.value);
-                }
-            }
-        }
-
-        #region blip related methods
-
-
-        public void ChangeBlipDisplay()
-        {
-            curBlipDisplay++;
-            if (curBlipDisplay > ZoneBlipDisplay.allZones)
-            {
-                curBlipDisplay = ZoneBlipDisplay.none;
-            }
-
-            RefreshZoneBlips();
-        }
-
-        public void ChangeBlipDisplay(ZoneBlipDisplay desiredDisplayType)
-        {
-            curBlipDisplay = desiredDisplayType;
-            if (curBlipDisplay > ZoneBlipDisplay.allZones)
-            {
-                curBlipDisplay = ZoneBlipDisplay.none;
-            }
-
-            RefreshZoneBlips();
-        }
-
-        public void RefreshZoneBlips()
-        {
-            switch (curBlipDisplay)
-            {
-                case ZoneBlipDisplay.none:
-                    for (int i = 0; i < zoneData.zoneList.Count; i++)
-                    {
-                        zoneData.zoneList[i].RemoveBlip();
-                    }
-                    break;
-                case ZoneBlipDisplay.allZones:
-                    //refresh the closest since we only show area blips for the closest
-                    zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
-                    for (int i = 0; i < zoneData.zoneList.Count; i++)
-                    {
-                        zoneData.zoneList[i].CreateAttachedBlip(i < 5);
-                        zoneData.zoneList[i].UpdateBlip();
-                    }
-                    break;
-                case ZoneBlipDisplay.fiveClosest:
-                    zoneData.zoneList.Sort(CompareZonesByDistToPlayer);
-                    for (int i = 0; i < zoneData.zoneList.Count; i++)
-                    {
-                        if (i < 5)
-                        {
-                            zoneData.zoneList[i].CreateAttachedBlip(true);
-                            zoneData.zoneList[i].UpdateBlip();
-                        }
-                        else
-                        {
-                            zoneData.zoneList[i].RemoveBlip();
-                        }
-                    }
-                    break;
-                default:
-                    UI.Notification.Show("Invalid blip display type");
-                    break;
-            }
-        }
-
-        #endregion
-
-        public void GiveGangZonesToAnother(string FromGang, string ToGang)
-        {
-            List<TurfZone> fromGangZones = GetZonesControlledByGang(FromGang);
-            for (int i = 0; i < fromGangZones.Count; i++)
-            {
-                fromGangZones[i].ownerGangName = ToGang;
-            }
-
-            SaveZoneData(false);
-        }
-
-        #region getters
-
-
-        public bool DoesZoneWithNameExist(string zoneName)
-        {
-            return GetZoneByName(zoneName) != null;
-        }
-
-        /// <summary>
-        /// not exposed in favor of other zone retrieval options that better handle custom zones
-        /// </summary>
-        /// <param name="zoneName"></param>
-        /// <returns></returns>
-        private TurfZone GetZoneByName(string zoneName)
-        {
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                if (zoneData.zoneList[i].zoneName == zoneName)
-                {
-                    return zoneData.zoneList[i];
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// gets the turfzone of where the player is
-        /// </summary>
-        /// <returns></returns>
-        public TurfZone GetCurrentTurfZone()
-        {
-            return GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
-        }
-
-        public List<TurfZone> GetZonesControlledByGang(string desiredGangName)
-        {
-            List<TurfZone> ownedZones = new List<TurfZone>();
-
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                if (zoneData.zoneList[i].ownerGangName == desiredGangName)
-                {
-                    ownedZones.Add(zoneData.zoneList[i]);
-                }
-            }
-
-            return ownedZones;
-        }
-
-        /// <summary>
-        /// returns how much, in 0 to 1 percentage, of the "takeable world" the target gang owns
-        /// </summary>
-        /// <param name="desiredGangName"></param>
-        /// <returns></returns>
-        public float GetPercentOfZonesOwnedByGang(string desiredGangName)
-        {
-            int numOwnedZones = 0;
-            foreach(TurfZone z in zoneData.zoneList)
-            {
-                if(z.ownerGangName == desiredGangName)
-                {
-                    numOwnedZones++;
-                }
-            }
-
-            return (float)numOwnedZones / zoneData.zoneList.Count;
-        }
-
-        public TurfZone GetClosestZoneToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, bool randomBetween3Closest = true)
-        {
-            float smallestDistance = 0;
-            //we start our top 3 closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
-            //the result may not be the 3 closest zones, but thats okay
-            List<TurfZone> top3ClosestZones = new List<TurfZone> { targetZone, targetZone, targetZone };
-            int timesFoundBetterZone = 0;
-            for (int i = 0; i < zoneData.zoneList.Count; i++)
-            {
-                float distanceToThisZone = World.GetDistance(targetZone.zoneBlipPosition, zoneData.zoneList[i].zoneBlipPosition);
-                if (distanceToThisZone != 0 &&
-                    (!hostileOrNeutralZonesOnly || targetZone.ownerGangName != zoneData.zoneList[i].ownerGangName))
-                {
-                    if (smallestDistance == 0 || smallestDistance > distanceToThisZone)
-                    {
-                        timesFoundBetterZone++;
-                        top3ClosestZones.Insert(0, zoneData.zoneList[i]);
-                        top3ClosestZones.RemoveAt(3);
-                        smallestDistance = distanceToThisZone;
-                    }
-                }
-            }
-
-            if (randomBetween3Closest && timesFoundBetterZone >= 3) //only get a random from top 3 if we found 3 different zones
-            {
-                return RandoMath.RandomElement(top3ClosestZones);
-            }
-            else
-            {
-                return top3ClosestZones[0];
-            }
-
-        }
-
-        public TurfZone GetRandomZone(bool preferablyNeutralZone = false)
-        {
-            if (!preferablyNeutralZone)
-            {
-                return RandoMath.RandomElement(zoneData.zoneList);
-            }
-            else
-            {
-                if (zoneData.zoneList.Count > 0)
-                {
-                    List<TurfZone> possibleTurfChoices = new List<TurfZone>();
-
-                    possibleTurfChoices.AddRange(zoneData.zoneList);
-
-                    for (int i = 0; i < zoneData.zoneList.Count; i++)
-                    {
-                        if (possibleTurfChoices.Count == 0)
-                        {
-                            //we've run out of options! abort
-                            break;
-                        }
-                        TurfZone chosenZone = RandoMath.RandomElement(possibleTurfChoices);
-                        if (!preferablyNeutralZone || chosenZone.ownerGangName == "none")
-                        {
-                            return chosenZone;
-                        }
-                        else
-                        {
-                            possibleTurfChoices.Remove(chosenZone);
-                        }
-                    }
-
-                    //if we couldn't find a neutral zone, just get any zone
-                    return GetRandomZone(false);
-                }
-
-            }
-
-            return null;
-        }
-
-
-        #endregion
-
 
 
 

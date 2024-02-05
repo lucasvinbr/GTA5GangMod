@@ -545,7 +545,7 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedGangMember SpawnGangMember(Gang ownerGang, Vector3 spawnPos, SuccessfulMemberSpawnDelegate onSuccessfulMemberSpawn = null, bool spawnWithWeaponEquipped = false)
         {
-            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
+            if (!ModCore.doneStarting || livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.memberVariations == null)
             {
                 //don't start spawning, we're on the limit already or we failed to find a good spawn point or we haven't started up our data properly yet
                 return null;
@@ -665,7 +665,7 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null, int maxMembersToSpawnInVehicle = -1)
         {
-            if (livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
+            if (!ModCore.doneStarting || livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
             {
                 //don't start spawning, we're on the limit already or we failed to find a good spawn point or we haven't started up our data properly yet
                 return null;

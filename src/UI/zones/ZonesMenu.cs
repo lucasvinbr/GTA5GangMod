@@ -212,7 +212,7 @@ namespace GTA.GangAndTurfMod
                             }
                             else
                             {
-                                curZone.value++;
+                                curZone.ChangeValue(curZone.value + 1);
                                 ZoneManager.instance.SaveZoneData(false);
                                 UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_zone_level_increased", "Zone level increased!"));
                                 MindControl.AddOrSubtractMoneyToProtagonist(-curZoneValueUpgradeCost);
@@ -258,7 +258,7 @@ namespace GTA.GangAndTurfMod
                                 curZone.ownerGangName, curZone.zoneName));
                         }
                         curZone.ownerGangName = "none";
-                        curZone.value = 0;
+                        curZone.ChangeValue(0);
 
                         int valueDifference = curZone.value - GangManager.instance.PlayerGang.baseTurfValue;
                         if (valueDifference > 0)

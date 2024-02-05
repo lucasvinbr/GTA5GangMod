@@ -42,6 +42,25 @@ namespace GTA.GangAndTurfMod
             return ModOptions.instance.baseCostToTakeTurf + (int) (ModOptions.instance.maxAdditionalCostToTakeTurf * attackScale * attackScale);
         }
 
+        /// <summary>
+        /// assuming a maxed attack equals max turf value, returns the turf value equivalent to the provided attack type
+        /// </summary>
+        /// <param name="attackType"></param>
+        /// <returns></returns>
+        public static int CalculateTurfValueEquivalentToGangAttack(GangWarManager.AttackStrength attackType)
+        {
+            if (attackType == GangWarManager.AttackStrength.light) return 0;
+
+            int maxAttackIntensity = (int)GangWarManager.AttackStrength.massive;
+            // attack intensity doesn't scale up linearly
+            maxAttackIntensity *= maxAttackIntensity;
+
+            int attackTypeInt = (int)attackType;
+            attackTypeInt *= attackTypeInt;
+
+            return RandoMath.CeilToInt(ModOptions.instance.maxTurfValue * (attackTypeInt / (float) maxAttackIntensity));
+        }
+
         public static GangWarManager.AttackStrength CalculateRequiredAttackStrength(Gang attackerGang, int defenderStrength)
         {
             GangWarManager.AttackStrength requiredAtk = GangWarManager.AttackStrength.light;
@@ -64,7 +83,9 @@ namespace GTA.GangAndTurfMod
         public static int CalculateAttackerReinforcements(Gang attackerGang, GangWarManager.AttackStrength attackType)
         {
             // maxed attack should have almost as many reinforcements as a maxed zone
-            return (int) ((ModOptions.instance.extraKillsPerTurfValue * ModOptions.instance.maxTurfValue * ((int) attackType / 3.0f) + ModOptions.instance.baseNumKillsBeforeWarVictory +
+            int attackTypeAsTurfValue = CalculateTurfValueEquivalentToGangAttack(attackType);
+            return (int) ((ModOptions.instance.extraKillsPerTurfValue * ModOptions.instance.maxTurfValue * (attackTypeAsTurfValue / (float) ModOptions.instance.maxTurfValue) +
+                ModOptions.instance.baseNumKillsBeforeWarVictory +
                 attackerGang.GetBonusReinforcementsCount()) * 0.95f * attackerGang.memberAmountInWarsMultiplier);
         }
 

@@ -182,6 +182,12 @@ namespace GTA.GangAndTurfMod
             return value;
         }
 
+        public static int CeilToInt(float value)
+        {
+            //Logger.Log($"ceiltoint {value} = {(int)(value + 1)}", 4);
+            return (int)(value + 1);
+        }
+
         public static bool AreIntArrayContentsTheSame(int[] arrayX, int[] arrayY)
         {
             if (arrayX == null || arrayY == null) return false;

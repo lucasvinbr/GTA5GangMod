@@ -341,7 +341,7 @@ namespace GTA.GangAndTurfMod
                 }
                 UI.Notification.Show(notificationMsg);
             }
-            takenZone.value = baseTurfValue;
+            takenZone.ChangeValue(baseTurfValue);
             takenZone.ownerGangName = name;
             ZoneManager.instance.UpdateZoneData(takenZone);
         }

@@ -21,16 +21,31 @@ namespace GTA.GangAndTurfMod
         [XmlIgnore]
         protected Blip myBlip;
 
+        [XmlIgnore]
+        public int timeNextUpgrade;
+
         public TurfZone(string zoneName)
         {
             this.zoneName = zoneName;
             ownerGangName = "none";
+            timeNextUpgrade = GetTimeForNextUpgrade();
         }
 
         public TurfZone()
         {
             this.zoneName = "zone";
             this.ownerGangName = "none";
+        }
+
+        public int GetTimeForNextUpgrade()
+        {
+            return ModCore.curGameTime + ModOptions.instance.msTimeBetweenZoneAutoUpgrades + RandoMath.CachedRandom.Next(ModOptions.instance.msTimeBetweenZoneAutoUpgrades);
+        }
+
+        public void ChangeValue(int newValue)
+        {
+            value = RandoMath.ClampValue(newValue, 0, ModOptions.instance.maxTurfValue);
+            timeNextUpgrade = GetTimeForNextUpgrade();
         }
 
         /// <summary>
