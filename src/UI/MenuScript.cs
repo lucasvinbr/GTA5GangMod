@@ -19,7 +19,7 @@ namespace GTA.GangAndTurfMod
 
         private readonly NativeMenu memberMenu, carMenu;
 
-        private NativeMenu specificGangMemberRegSubMenu, specificCarRegSubMenu;
+        private readonly NativeMenu specificGangMemberRegSubMenu, specificCarRegSubMenu;
 
         private readonly ZonesMenu zonesMenu;
         private readonly GangMenu gangMenu;
@@ -72,6 +72,8 @@ namespace GTA.GangAndTurfMod
             zonesMenu = new ZonesMenu(menuPool);
             memberMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_member_registration", "Gang Member Registration Controls"));
             carMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_vehicle_registration", "Gang Vehicle Registration Controls"));
+            specificCarRegSubMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_specific_vehicle_registration", "Gang Vehicle Registration"));
+            specificGangMemberRegSubMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_specific_member_registration", "Gang Member Registration"));
             gangMenu = new GangMenu(menuPool);
 
             menuPool.Add(memberMenu);

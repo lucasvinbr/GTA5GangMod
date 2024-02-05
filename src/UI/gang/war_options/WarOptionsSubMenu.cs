@@ -14,9 +14,17 @@ namespace GTA.GangAndTurfMod
 
             menuPool.Add(this);
             menuPool.Add(warPotentialSpawnsSubMenu);
+
+            RecreateItems();
         }
 
         private readonly WarPotentialSpawnsSubMenu warPotentialSpawnsSubMenu;
+
+        protected override void Setup()
+        {
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
+        }
 
         protected override void RecreateItems()
         {

@@ -83,7 +83,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        Game.WantedMultiplier = 1;
+                        Function.Call(Hash.SET_WANTED_LEVEL_MULTIPLIER, 1.0f);
                         Game.MaxWantedLevel = 6;
                     }
 
@@ -117,7 +117,7 @@ namespace GTA.GangAndTurfMod
                     if (spawnedVehicle.Model.IsCar)
                     {
                         SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
-                        driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, ModOptions.instance.wanderingDriverDrivingStyle);
+                        driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
                     }
                     else if (spawnedVehicle.Model.IsHelicopter)
                     {

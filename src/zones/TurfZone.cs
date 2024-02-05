@@ -33,6 +33,14 @@ namespace GTA.GangAndTurfMod
             this.ownerGangName = "none";
         }
 
+        /// <summary>
+        /// returns the zone's localized name
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetDisplayName()
+        {
+            return World.GetZoneLocalizedName(zoneBlipPosition);
+        }
 
         /// <summary>
         /// true if the provided ingame zone and/or location are considered to be "inside" this turf zone
@@ -64,7 +72,7 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     myBlip.Color = BlipColor.White;
-                    myBlip.HideNumber();
+                    myBlip.RemoveNumberLabel();
                 }
                 else
                 {
@@ -80,20 +88,18 @@ namespace GTA.GangAndTurfMod
                         Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
                     }
 
-                    myBlip.ShowNumber(value);
+                    myBlip.NumberLabel = value;
                 }
 
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")"));
+                    myBlip.Name = string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")");
                 }
                 else
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (neutral territory)"));
+                    myBlip.Name = string.Concat(zoneName, " (neutral territory)");
                 }
 
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, myBlip);
             }
 
         }
@@ -119,7 +125,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
         }

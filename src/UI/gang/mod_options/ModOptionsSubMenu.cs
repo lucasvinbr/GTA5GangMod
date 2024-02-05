@@ -16,18 +16,16 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(this);
             menuPool.Add(keyBindingsSubMenu);
 
+            RecreateItems();
         }
 
         private readonly KeyBindingsSubMenu keyBindingsSubMenu;
 
 
-        /// <summary>
-        /// adds all buttons and events to the menu
-        /// </summary>
         protected override void Setup()
         {
-            base.Setup();
-            
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
         }
 
         private void AddKeyBindingMenu()

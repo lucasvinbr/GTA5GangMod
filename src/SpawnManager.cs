@@ -196,7 +196,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (memberAIs[i].watchedPed != null)
                 {
-                    if (memberAIs[i].watchedPed.RelationshipGroup == desiredGang.relationGroupIndex)
+                    if (memberAIs[i].watchedPed.RelationshipGroup == desiredGang.relGroup)
                     {
                         returnedList.Add(memberAIs[i].watchedPed);
                     }
@@ -275,7 +275,7 @@ namespace GTA.GangAndTurfMod
             {
                 if (livingDrivingMembers[i].watchedPed != null)
                 {
-                    if (livingDrivingMembers[i].watchedPed.RelationshipGroup == desiredGang.relationGroupIndex)
+                    if (livingDrivingMembers[i].watchedPed.RelationshipGroup == desiredGang.relGroup)
                     {
                         returnedList.Add(livingDrivingMembers[i]);
                     }
@@ -334,7 +334,7 @@ namespace GTA.GangAndTurfMod
                 if (memberAIs[i].watchedPed != null)
                 {
                     if (memberAIs[i] != MindControl.currentlyControlledMember &&
-                        memberAIs[i].watchedPed.RelationshipGroup != myGang.relationGroupIndex)
+                        memberAIs[i].watchedPed.RelationshipGroup != myGang.relGroup)
                     {
                         returnedList.Add(memberAIs[i].watchedPed);
                     }
@@ -585,14 +585,11 @@ namespace GTA.GangAndTurfMod
                     if (ModOptions.instance.showGangMemberBlips)
                     {
                         newPed.AddBlip();
-                        newPed.CurrentBlip.IsShortRange = true;
-                        newPed.CurrentBlip.Scale = 0.65f;
-                        Function.Call(Hash.SET_BLIP_COLOUR, newPed.CurrentBlip, ownerGang.blipColor);
+                        newPed.AttachedBlip.IsShortRange = true;
+                        newPed.AttachedBlip.Scale = 0.65f;
+                        Function.Call(Hash.SET_BLIP_COLOUR, newPed.AttachedBlip, ownerGang.blipColor);
 
-                        //set blip name - got to use native, the c# blip.name returns error ingame
-                        Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
-                        Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Format(Localization.GetTextByKey("blip_member_of_gang_x", "{0} member"), ownerGang.name));
-                        Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, newPed.CurrentBlip);
+                        newPed.AttachedBlip.Name = string.Format(Localization.GetTextByKey("blip_member_of_gang_x", "{0} member"), ownerGang.name);
                     }
 
 
@@ -616,7 +613,7 @@ namespace GTA.GangAndTurfMod
                     }
 
                     //set the relationship group
-                    newPed.RelationshipGroup = ownerGang.relationGroupIndex;
+                    newPed.RelationshipGroup = ownerGang.relGroup;
 
                     newPed.CanSwitchWeapons = true;
 
@@ -689,8 +686,8 @@ namespace GTA.GangAndTurfMod
 
                 if (newVehicle != null)
                 {
-                    newVehicle.PrimaryColor = ownerGang.vehicleColor;
-                    newVehicle.SecondaryColor = ownerGang.secondaryVehicleColor;
+                    newVehicle.Mods.PrimaryColor = ownerGang.vehicleColor;
+                    newVehicle.Mods.SecondaryColor = ownerGang.secondaryVehicleColor;
 
                     SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
 
@@ -699,7 +696,7 @@ namespace GTA.GangAndTurfMod
                         driver.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
                         driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
 
-                        int passengerCount = newVehicle.PassengerSeats;
+                        int passengerCount = newVehicle.PassengerCapacity;
 
                         if(destPos == Vector3.Zero)
                         {
@@ -730,9 +727,9 @@ namespace GTA.GangAndTurfMod
                         if (ModOptions.instance.showGangMemberBlips)
                         {
                             newVehicle.AddBlip();
-                            newVehicle.CurrentBlip.IsShortRange = true;
+                            newVehicle.AttachedBlip.IsShortRange = true;
 
-                            Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.CurrentBlip, ownerGang.blipColor);
+                            Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.AttachedBlip, ownerGang.blipColor);
                         }
 
                         newVehicle.IsRadioEnabled = false;
@@ -754,7 +751,7 @@ namespace GTA.GangAndTurfMod
                             {
                                 if (modData.ModValue != -1)
                                 {
-                                    newVehicle.SetMod(modData.ModType, modData.ModValue, false);
+                                    newVehicle.Mods[modData.ModType].Index = modData.ModValue;
                                 }
                             }
                         }

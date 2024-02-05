@@ -251,7 +251,7 @@ namespace GTA.GangAndTurfMod
                         //if we took too long to get to the player and can't be currently seen by the player, lets just teleport close by
                         //...this should only happen with friendly vehicles, or else the player may be blitzkrieg-ed in a not funny way
                         if (!vehicleIAmDriving.IsOnScreen && ModOptions.instance.forceSpawnCars &&
-                            watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex)
+                            watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup)
                         {
                             Vector3 teleportDest = World.GetNextPositionOnStreet(MindControl.CurrentPlayerCharacter.Position, true);
                             if (vehicleType == VehicleType.heli)
@@ -285,7 +285,7 @@ namespace GTA.GangAndTurfMod
                             //teleport if we're failing to escort due to staying too far
                             //(should only happen with friendly vehicles and if forceSpawnCars is true)
                             if (vehicleType != VehicleType.heli && ModOptions.instance.forceSpawnCars &&
-                                watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relationGroupIndex &&
+                                watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup &&
                                 vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
                                 ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2 &&
                                 !vehicleIAmDriving.IsOnScreen)
@@ -305,7 +305,7 @@ namespace GTA.GangAndTurfMod
                                     //both allies and enemies should do it
                                     watchedPed.Task.DriveTo
                                         (vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival, MAX_SPEED,
-                                        GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
+                                        (DrivingStyle) GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                                 }
                                 else
                                 {
@@ -354,7 +354,7 @@ namespace GTA.GangAndTurfMod
                             else
                             {
                                 watchedPed.Task.DriveTo(vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival / 2, targetSpeed,
-                                    GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
+                                    (DrivingStyle) GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                             }
                         }
                     }
@@ -428,9 +428,9 @@ namespace GTA.GangAndTurfMod
         {
             if (vehicleIAmDriving != null)
             {
-                if (vehicleIAmDriving.CurrentBlip != null)
+                if (vehicleIAmDriving.AttachedBlip != null)
                 {
-                    vehicleIAmDriving.CurrentBlip.Remove();
+                    vehicleIAmDriving.AttachedBlip.Delete();
                 }
 
                 vehicleIAmDriving.MarkAsNoLongerNeeded();
@@ -443,7 +443,7 @@ namespace GTA.GangAndTurfMod
                 if (vehicleType != VehicleType.heli)
                 {
                     watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
-                        ModOptions.instance.wanderingDriverDrivingStyle);
+                        (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
                 }
                 else
                 {
@@ -527,7 +527,7 @@ namespace GTA.GangAndTurfMod
         public void SetWatchedPassengers()
         {
             myPassengers.Clear();
-            for (int i = 0; i < vehicleIAmDriving.PassengerSeats; i++)
+            for (int i = 0; i < vehicleIAmDriving.PassengerCapacity; i++)
             {
                 Ped memberInSeat = Function.Call<Ped>(Hash.GET_PED_IN_VEHICLE_SEAT, vehicleIAmDriving, i);
                 myPassengers.Add(memberInSeat);

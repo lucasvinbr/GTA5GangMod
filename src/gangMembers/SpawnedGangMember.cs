@@ -312,9 +312,9 @@ namespace GTA.GangAndTurfMod
                 {
                     GangWarManager.instance.focusedWar.DecrementSpawnedsFromGang(myGang);
                 }
-                if (watchedPed.CurrentBlip != null)
+                if (watchedPed.AttachedBlip != null)
                 {
-                    watchedPed.CurrentBlip.Remove();
+                    watchedPed.AttachedBlip.Delete();
                 }
 
                 if (alsoDelete)

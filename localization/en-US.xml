@@ -999,6 +999,14 @@
 			<Key>subtitle_zone_data_updated</Key>
 			<Value>Zone Data Updated!</Value>
 		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_specific_member_registration</Key>
+			<Value>Gang Member Registration</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_specific_vehicle_registration</Key>
+			<Value>Gang Vehicle Registration</Value>
+		</LocaleKey>
 <LocaleKey>
 			<Key>menu_listitem_member_aggressiveness</Key>
 			<Value>Member Aggressiveness</Value>

@@ -80,12 +80,12 @@ namespace GTA.GangAndTurfMod
             alliedNumText.Alignment = Alignment.Center;
             enemyNumText.Alignment = Alignment.Center;
 
-            float screenRatio = Screen.Width / Screen.Height;
+            //float screenRatio = Screen.Width / Screen.Height;
 
-            int proportionalScreenWidth = (int)(1080 * screenRatio);
+            //int proportionalScreenWidth = (int)(1080 * screenRatio);
 
-            alliedNumText.Position = new Point((proportionalScreenWidth / 2) - 120, 10);
-            enemyNumText.Position = new Point((proportionalScreenWidth / 2) + 120, 10);
+            alliedNumText.Position = new Point(((int)Screen.Width / 2) - 120, 10);
+            enemyNumText.Position = new Point(((int)Screen.Width / 2) + 120, 10);
 
             activeWars = new List<GangWar>();
             pooledWars = new List<GangWar>();

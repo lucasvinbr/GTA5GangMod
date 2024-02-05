@@ -15,20 +15,20 @@ namespace GTA.GangAndTurfMod
             colorsMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_car_colors_list", "Car Colors List"));
             menuPool.Add(colorsMenu);
             menuPool.Add(this);
+
+            SetupColorsMenu();
+
+            RecreateItems();
         }
 
         private readonly NativeMenu colorsMenu;
         private bool settingPrimaryColor = true;
         private readonly List<VehicleColor> vehicleColors = new List<VehicleColor>();
 
-        /// <summary>
-        /// adds all buttons and events to the menu
-        /// </summary>
         protected override void Setup()
         {
-            base.Setup();
-
-            SetupColorsMenu();
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
         }
 
         private void SetupColorsMenu()

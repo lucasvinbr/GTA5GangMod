@@ -34,6 +34,11 @@ namespace GTA.GangAndTurfMod
             areaRadius = DEFAULT_ZONE_RADIUS;
         }
 
+        public override string GetDisplayName()
+        {
+            return zoneName;
+        }
+
         public override bool IsLocationInside(string gameZoneName, Vector3 location)
         {
             return Vector3.Distance2D(location, zoneBlipPosition) <= areaRadius;

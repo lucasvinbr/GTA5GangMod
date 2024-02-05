@@ -20,6 +20,8 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(customZonesSubMenu);
 
             customZonesSubMenu.Setup();
+
+            RecreateItems();
         }
     
 
@@ -40,7 +42,7 @@ namespace GTA.GangAndTurfMod
 
             saveZoneBtn.Activated += (s, e) =>
             {
-                string curZoneName = World.GetZoneDisplayName(MindControl.CurrentPlayerCharacter.Position);
+                string curZoneName = ZoneManager.LegacyGetZoneName(World.GetZoneDisplayName(MindControl.CurrentPlayerCharacter.Position));
                 TurfZone curZone = ZoneManager.instance.GetZoneInLocation(curZoneName, MindControl.CurrentPlayerCharacter.Position);
                 if (curZone == null)
                 {
@@ -326,6 +328,15 @@ namespace GTA.GangAndTurfMod
             warLargeAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.large, defenderNumbers);
             warMassAtkBtn.Description = GetReinforcementsComparisonMsg(GangWarManager.AttackStrength.massive, defenderNumbers);
 
+        }
+
+        /// <summary>
+        /// create events. Should only be run once, usually
+        /// </summary>
+        protected override void Setup()
+        {
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
         }
 
         protected override void RecreateItems()

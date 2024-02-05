@@ -20,6 +20,7 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(gangBlipColorSubMenu);
             menuPool.Add(this);
 
+            RecreateItems();
         }
 
         public void UpdateUpgradeCosts()
@@ -63,6 +64,12 @@ namespace GTA.GangAndTurfMod
                     }
                 }
             };
+        }
+
+        protected override void Setup()
+        {
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
         }
 
         protected override void RecreateItems()

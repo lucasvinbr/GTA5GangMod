@@ -53,6 +53,8 @@ namespace GTA.GangAndTurfMod
             Name = Localization.GetTextByKey("mod_menu_title_" + menuTitleLocaleKeySuffix, fallbackMenuTitle);
             Localization.OnLanguageChanged += () => 
                 Name = Localization.GetTextByKey("mod_menu_title_" + menuTitleLocaleKeySuffix, fallbackMenuTitle);
+
+            Setup();
         }
 
         /// <summary>

@@ -1035,7 +1035,7 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool IsPositionInsideWarzone(Vector3 position)
         {
-            if (warZone.IsLocationInside(World.GetZoneDisplayName(position), position)) return true;
+            if (warZone.IsLocationInside(ZoneManager.LegacyGetZoneName(World.GetZoneDisplayName(position)), position)) return true;
 
             foreach (Blip warAreaBlip in warAreaBlips)
             {
