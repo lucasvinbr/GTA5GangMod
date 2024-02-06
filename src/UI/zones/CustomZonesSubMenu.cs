@@ -14,7 +14,7 @@ namespace GTA.GangAndTurfMod
 
         private bool editingZoneName = false;
 
-
+        private NativeSliderItem radiusEditor;
 
         //options:
         //create new zone here
@@ -32,7 +32,7 @@ namespace GTA.GangAndTurfMod
             NativeItem renameZoneBtn = new NativeItem(Localization.GetTextByKey("customzones_menu_button_edit_zone_name", "Edit this Custom Zone's Name"),
                 Localization.GetTextByKey("customzones_menu_button_desc_edit_zone_name", "If inside a custom zone, opens the input for setting a new name."));
 
-            NativeSliderItem radiusEditor = new NativeSliderItem
+            radiusEditor = new NativeSliderItem
                 (Localization.GetTextByKey("customzones_menu_button_edit_zone_radius", "Edit Zone Radius"),
                 Localization.GetTextByKey("customzones_menu_button_desc_edit_zone_radius", "Edit this zone's size radius."),
                 (int) CustomTurfZone.MAX_ZONE_RADIUS, (int) CustomTurfZone.DEFAULT_ZONE_RADIUS);
@@ -40,6 +40,8 @@ namespace GTA.GangAndTurfMod
             createZoneBtn.Activated += CreateZoneBtn_Activated;
             renameZoneBtn.Activated += RenameZoneBtn_Activated;
             radiusEditor.ValueChanged += RadiusEditor_ValueChanged;
+
+            Shown += CustomZonesSubMenu_Shown;
 
             MenuScript.instance.OnInputFieldDone += (desiredInputType, typedText) =>
             {
@@ -65,6 +67,16 @@ namespace GTA.GangAndTurfMod
             Add(renameZoneBtn);
 
             
+        }
+
+        private void CustomZonesSubMenu_Shown(object sender, System.EventArgs e)
+        {
+            // if inside a custom zone, set radius slider to zone's current radius
+            CustomTurfZone zone = GetLocalCustomZone();
+            if (zone != null)
+            {
+                radiusEditor.Value = (int) zone.areaRadius;
+            }
         }
 
         private void RadiusEditor_ValueChanged(object sender, System.EventArgs e)
