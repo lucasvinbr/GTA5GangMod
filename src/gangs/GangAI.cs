@@ -279,6 +279,7 @@ namespace GTA.GangAndTurfMod
                 int defenderStrength = GangCalculations.CalculateDefenderStrength(ownerGang, targetZone);
                 GangWarManager.AttackStrength requiredStrength =
                     GangCalculations.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
+
                 int atkCost = GangCalculations.CalculateAttackCost(watchedGang, requiredStrength);
 
                 if (watchedGang.moneyAvailable < atkCost)
@@ -301,7 +302,23 @@ namespace GTA.GangAndTurfMod
                     (ModOptions.instance.warAgainstPlayerEnabled && GangWarManager.instance.CanStartWarAgainstPlayer &&
                         targetZone.ownerGangName == GangManager.instance.PlayerGang.name))
                 {
-                    if(GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
+
+                    if (ModOptions.instance.survivorsBecomeZoneValueOnAttackerVictory)
+                    {
+                        // if spare attackers will be used as quick upgrades, it's worth considering bigger attacks
+                        if(requiredStrength != GangWarManager.AttackStrength.massive)
+                        {
+                            int massiveAtkCost = GangCalculations.CalculateAttackCost(watchedGang, GangWarManager.AttackStrength.massive);
+                            // but don't do it if it'll cost too much for us
+                            if(massiveAtkCost <= watchedGang.moneyAvailable / 3)
+                            {
+                                atkCost = massiveAtkCost;
+                                requiredStrength = GangWarManager.AttackStrength.massive;
+                            }
+                        }
+                    }
+
+                    if (GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
                     {
                         watchedGang.AddMoney(-atkCost);
                     }
