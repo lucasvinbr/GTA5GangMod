@@ -96,7 +96,9 @@ namespace GTA.GangAndTurfMod
         public bool gangMembersCanUseCover = true;
         public bool gangMembersCanWrithe = false;
         public bool gangMembersRagdollWhenShot = true;
+        public bool gangMembersAlwaysRagdollOnDeath = true;
         public bool gangMembersReactToFriendliesBeingShot = true;
+        public bool gangMembersFightArmedEnemiesWhenNotArmed = true;
         public bool gangHelicoptersEnabled = true;
 
         public bool emptyZoneDuringWar = true;
@@ -150,9 +152,9 @@ namespace GTA.GangAndTurfMod
 
         //special thanks to Eddlm for the driving style data! 
         //more info here: https://gtaforums.com/topic/822314-guide-driving-styles/
-        public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
-        public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
-        public int nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
+        public uint wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
+        public uint driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
+        public uint nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
 
         public int driverUpdateLimitWhileGoingToDest = 42;
         public int driverUpdateLimitWhileDroppingOffPassengers = 70;
@@ -556,6 +558,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Machete, 1050),
             new BuyableWeapon(WeaponHash.Nightstick, 700),
             new BuyableWeapon(WeaponHash.PoolCue, 730),
+            new BuyableWeapon(WeaponHash.StoneHatchet, 1100),
             new BuyableWeapon(WeaponHash.SwitchBlade, 1100),
             new BuyableWeapon(WeaponHash.Wrench, 560),
 			//--guns
@@ -577,6 +580,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
             new BuyableWeapon(WeaponHash.CombatShotgun, 216000),
             new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
+            new BuyableWeapon(WeaponHash.CompactEMPLauncher, 5000000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleActionRevolver, 120000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
@@ -604,13 +608,16 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Pistol, 30000),
             new BuyableWeapon(WeaponHash.Pistol50, 70000),
             new BuyableWeapon(WeaponHash.PistolMk2, 65000),
+            new BuyableWeapon(WeaponHash.PrecisionRifle, 400000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
             new BuyableWeapon(WeaponHash.PumpShotgunMk2, 135000),
             new BuyableWeapon(WeaponHash.Railgun, 5100000),
+            new BuyableWeapon(WeaponHash.RailgunXmas3, 6100000),
             new BuyableWeapon(WeaponHash.Revolver, 80000),
             new BuyableWeapon(WeaponHash.RevolverMk2, 100000),
             new BuyableWeapon(WeaponHash.RPG, 1200000),
             new BuyableWeapon(WeaponHash.SawnOffShotgun, 95000),
+            new BuyableWeapon(WeaponHash.ServiceCarbine, 250000),
             new BuyableWeapon(WeaponHash.SMG, 115000),
             new BuyableWeapon(WeaponHash.SMGMk2, 155000),
             new BuyableWeapon(WeaponHash.SniperRifle, 230000),
@@ -624,6 +631,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.UpNAtomizer, 4100000),
             new BuyableWeapon(WeaponHash.VintagePistol, 50000),
             new BuyableWeapon(WeaponHash.Widowmaker, 5100000),
+            new BuyableWeapon(WeaponHash.WM29Pistol, 50000),
         };
         }
 
