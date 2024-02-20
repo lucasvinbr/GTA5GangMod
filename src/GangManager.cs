@@ -110,7 +110,6 @@ namespace GTA.GangAndTurfMod
                 var gangRelationGroup = World.AddRelationshipGroup(gangData.gangs[i].name);
                 gangData.gangs[i].relGroup = gangRelationGroup;
 
-
                 //if the player owns this gang, we love him
                 if (gangData.gangs[i].isPlayerOwned)
                 {
@@ -452,10 +451,22 @@ namespace GTA.GangAndTurfMod
         {
             UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), aiWatchingTheGang.watchedGang.name));
 
+            foreach (var vehicle in aiWatchingTheGang.watchedGang.carVariations)
+            {
+                ModelCache.RemoveVehicleModelFromCache(vehicle.modelHash);
+            }
+
+            foreach (var pedVariation in aiWatchingTheGang.watchedGang.memberVariations)
+            {
+                ModelCache.RemovePedModelFromCache(pedVariation.modelHash);
+            }
+
             //save the fallen gang in a file
             AddGangToWipedOutList(aiWatchingTheGang.watchedGang);
             gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
+            aiWatchingTheGang.watchedGang.relGroup.Remove();
             enemyGangs.Remove(aiWatchingTheGang);
+
             if (enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)
             {
                 //create a new gang right away... but do it silently to not demotivate the player too much
@@ -483,6 +494,18 @@ namespace GTA.GangAndTurfMod
             WOList.Add(gangToAdd);
             PersistenceHandler.SaveToFile(WOList, "wipedOutGangsList");
         }
+
+        /// <summary>
+        /// called when aborting the mod. Attempts to call remove on all existing gangs' relationshipGroups
+        /// </summary>
+        public void RemoveAllGangRelationGroups()
+        {
+            foreach(var gang in gangData.gangs)
+            {
+                gang.relGroup.Remove();
+            }
+        }
+
 
         public void GiveTurfRewardToGang(Gang targetGang)
         {

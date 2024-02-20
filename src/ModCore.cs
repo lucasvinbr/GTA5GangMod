@@ -284,7 +284,7 @@ namespace GTA.GangAndTurfMod
                         {
                             if (playerGangMembers[i].IsInGroup)
                             {
-                                Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
+                                playerGangMembers[i].LeaveGroup();
                                 UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
                             }
                             else
@@ -349,6 +349,10 @@ namespace GTA.GangAndTurfMod
             SpawnManager.instance.RemoveAllDeadBodies();
 
             PotentialSpawnsForWars.ToggleBlips(false);
+
+            ModelCache.UnloadAllModels();
+
+            GangManager.instance.RemoveAllGangRelationGroups();
 
             Logger.Log("mod aborted!", 2);
 

@@ -82,6 +82,7 @@
     <Compile Include="src\AmbientGangMemberSpawner.cs" />
     <Compile Include="src\MindControl.cs" />
     <Compile Include="src\gangMembers\data\ExtendedPotentialGangMember.cs" />
+    <Compile Include="src\utils\ModelCache.cs" />
     <Compile Include="src\utils\Localization.cs" />
     <Compile Include="src\utils\persistence\PedExtension.cs" />
     <Compile Include="src\zones\CustomTurfZone.cs" />

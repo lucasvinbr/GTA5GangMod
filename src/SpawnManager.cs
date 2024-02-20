@@ -159,6 +159,8 @@ namespace GTA.GangAndTurfMod
             finalpos = outArgA.GetResult<Vector3>();
             if (sidewalk) finalpos = World.GetNextPositionOnSidewalk(finalpos);
 
+            outArgA.Dispose();
+
             return finalpos;
         }
 
@@ -180,6 +182,9 @@ namespace GTA.GangAndTurfMod
 
             finalpos = outCoords.GetResult<Vector3>();
             heading = outRoadheading.GetResult<float>();
+
+            outCoords.Dispose();
+            outRoadheading.Dispose();
 
             return finalpos;
         }
@@ -347,6 +352,29 @@ namespace GTA.GangAndTurfMod
             }
 
             return returnedList;
+        }
+
+        /// <summary>
+        /// returns the first found gang member who is not from the gang provided
+        /// </summary>
+        /// <param name="myGang"></param>
+        /// <returns></returns>
+        public Ped GetFirstMemberNotFromMyGang(Gang myGang, bool mustBeAlive = true)
+        {
+
+            for (int i = 0; i < memberAIs.Count; i++)
+            {
+                if (memberAIs[i].watchedPed != null)
+                {
+                    if ((!mustBeAlive || memberAIs[i].watchedPed.IsAlive) &&
+                        memberAIs[i].watchedPed.RelationshipGroup != myGang.relGroup)
+                    {
+                        return memberAIs[i].watchedPed;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public List<Ped> GetHostilePedsAround(Vector3 targetPos, Ped referencePed, float radius)
@@ -555,7 +583,7 @@ namespace GTA.GangAndTurfMod
                 Logger.Log(string.Concat("spawn member: begin (gang: ", ownerGang.name, ")"), 4);
                 PotentialGangMember chosenMember =
                     RandoMath.RandomElement(ownerGang.memberVariations);
-                Ped newPed = World.CreatePed(chosenMember.modelHash, spawnPos);
+                Ped newPed = World.CreatePed(ModelCache.GetPedModel(chosenMember.modelHash), spawnPos);
                 if (newPed != null)
                 {
                     chosenMember.SetPedAppearance(newPed);
@@ -619,12 +647,12 @@ namespace GTA.GangAndTurfMod
 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 0, ModOptions.instance.gangMembersCanUseCover);
 
-                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, true); // BF_CanFightArmedPedsWhenNotArmed 
+                    Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 46, ModOptions.instance.gangMembersFightArmedEnemiesWhenNotArmed); // BF_CanFightArmedPedsWhenNotArmed 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true); // BF_AlwaysFight 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 68, !ModOptions.instance.gangMembersReactToFriendliesBeingShot); // BF_DisableReactToBuddyShot
 
                     newPed.SetConfigFlag(107, !ModOptions.instance.gangMembersRagdollWhenShot); //CPED_CONFIG_FLAG_DontActivateRagdollFromBulletImpact 
-                    newPed.SetConfigFlag(227, true); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
+                    newPed.SetConfigFlag(227, ModOptions.instance.gangMembersAlwaysRagdollOnDeath); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
                     newPed.SetConfigFlag(237, false); //CPED_CONFIG_FLAG_BlocksPathingWhenDead  
 
                     newPed.DrownsInWater = false;
@@ -676,16 +704,17 @@ namespace GTA.GangAndTurfMod
                 Logger.Log("spawn car: start", 4);
                 PotentialGangVehicle potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
 
-                Vehicle newVehicle = World.CreateVehicle(potentialGangVehicle.modelHash, spawnPos);
-
-                if(!ModOptions.instance.gangHelicoptersEnabled && newVehicle.Model.IsHelicopter && (!playerIsDest && !isDeliveringCar))
-                {
-                    newVehicle.Delete();
-                    return null;
-                }
+                Vehicle newVehicle = World.CreateVehicle(ModelCache.GetVehicleModel(potentialGangVehicle.modelHash), spawnPos);
 
                 if (newVehicle != null)
                 {
+                    bool vehicleIsHeli = newVehicle.Model.IsHelicopter;
+                    if (!ModOptions.instance.gangHelicoptersEnabled && vehicleIsHeli && (!playerIsDest && !isDeliveringCar))
+                    {
+                        newVehicle.Delete();
+                        return null;
+                    }
+
                     newVehicle.Mods.PrimaryColor = ownerGang.vehicleColor;
                     newVehicle.Mods.SecondaryColor = ownerGang.secondaryVehicleColor;
 
@@ -722,7 +751,7 @@ namespace GTA.GangAndTurfMod
                             }
                         }
 
-                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, isDeliveringCar);
+                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, ownerGang, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, isDeliveringCar);
 
                         if (ModOptions.instance.showGangMemberBlips)
                         {
@@ -735,7 +764,7 @@ namespace GTA.GangAndTurfMod
                         newVehicle.IsRadioEnabled = false;
 
                         // extra handling to spawn flying helicopters
-                        if (newVehicle.Model.IsHelicopter)
+                        if (vehicleIsHeli)
                         {
                             newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
                             Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
@@ -745,7 +774,7 @@ namespace GTA.GangAndTurfMod
                         if (potentialGangVehicle.VehicleMods != null)
                         {
                             // Ensure the vehicle has a valid modkit ID
-                            Function.Call(Hash.SET_VEHICLE_MOD_KIT, newVehicle, 0);
+                            newVehicle.Mods.InstallModKit();
 
                             foreach (var modData in potentialGangVehicle.VehicleMods)
                             {
@@ -788,7 +817,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        private SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool deliveringCar = false)
+        private SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Gang ownerGang, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool deliveringCar = false)
         {
             SpawnedDrivingGangMember newDriverAI = null;
 
@@ -798,14 +827,14 @@ namespace GTA.GangAndTurfMod
                 if (livingDrivingMembers[i].watchedPed == null)
                 {
                     newDriverAI = livingDrivingMembers[i];
-                    livingDrivingMembers[i].AttachData(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
+                    livingDrivingMembers[i].AttachData(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
                     couldEnlistWithoutAdding = true;
                     break;
                 }
             }
             if (!couldEnlistWithoutAdding)
             {
-                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
+                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
                 livingDrivingMembers.Add(newDriverAI);
             }
 
@@ -837,6 +866,7 @@ namespace GTA.GangAndTurfMod
             }
 
             preservedDeadBodies.Add(deadPed);
+            Function.Call(Hash.RESET_PED_LAST_VEHICLE, deadPed);
         }
 
         #endregion
