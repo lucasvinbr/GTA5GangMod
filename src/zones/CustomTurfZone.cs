@@ -1,5 +1,6 @@
 ﻿using GTA.Math;
 using GTA.Native;
+using System.Drawing;
 using System.Xml.Serialization;
 
 
@@ -64,15 +65,16 @@ namespace GTA.GangAndTurfMod
                 else
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouse;
+                    
                     Function.Call(Hash.SET_BLIP_COLOUR, myBlip, ownerGang.blipColor);
 
                     if (ownerGang.isPlayerOwned)
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 0f, 255, 0f);
+                        myBlip.SecondaryColor = Color.Green;
                     }
                     else
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
+                        myBlip.SecondaryColor = Color.Red;
                     }
 
                     myBlip.NumberLabel = value;

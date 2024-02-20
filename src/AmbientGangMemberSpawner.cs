@@ -122,8 +122,7 @@ namespace GTA.GangAndTurfMod
                     else if (spawnedVehicle.Model.IsHelicopter)
                     {
                         // flee from player character!
-                        Function.Call(Hash.TASK_HELI_MISSION, driver, spawnedVehicleAI.vehicleIAmDriving, 0, MindControl.CurrentPlayerCharacter, 0, 0, 0, 8,
-                                    20.0f, 20.0f, 0.0f, -1, -1, -1, 32);
+                        driver.Task.StartHeliMission(spawnedVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, 15.0f, 1.0f, 20, 20);
                     }
                 }
             }

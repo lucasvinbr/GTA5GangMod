@@ -131,7 +131,7 @@ namespace GTA.GangAndTurfMod
                     CurrentPlayerCharacter.Weapons.Select(WeaponHash.Unarmed, true);
                     CurrentPlayerCharacter.Task.ClearAllImmediately();
                     CurrentPlayerCharacter.CanRagdoll = true;
-                    Function.Call((Hash)0xAE99FB955581844A, CurrentPlayerCharacter.Handle, -1, -1, 0, 0, 0, 0);
+                    CurrentPlayerCharacter.Ragdoll(-1, RagdollType.Relax);
                 }
                 else
                 {
@@ -145,10 +145,9 @@ namespace GTA.GangAndTurfMod
                     hasDiedWithChangedBody = true;
                     CurrentPlayerCharacter.Weapons.Select(WeaponHash.Unarmed, true);
                     //in a war, this counts as a casualty in our team
-
-                    Function.Call((Hash)0xAE99FB955581844A, CurrentPlayerCharacter.Handle, -1, -1, 0, 0, 0, 0);
                     
                     Game.Player.IgnoredByEveryone = true;
+                    CurrentPlayerCharacter.CanBeTargetted = false;
                 }
 
                 //RestorePlayerBody();
@@ -211,6 +210,7 @@ namespace GTA.GangAndTurfMod
             //UI.Notification.Show("our armor is " + targetPed.Armor.ToString());
             //UI.Notification.Show("max armor is " + Game.Player.MaxArmor.ToString());
             //UI.Notification.Show("calculation: " + (targetPed.Armor + targetPed.MaxHealth - 100).ToString());
+
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, targetPed, true, true);
             targetPed.MaxHealth = 5000;
             targetPed.Health = 5000;
@@ -306,6 +306,7 @@ namespace GTA.GangAndTurfMod
             hasDiedWithChangedBody = false;
             Game.Player.Money = moneyFromLastProtagonist;
             Game.Player.IgnoredByEveryone = false;
+            oldPed.CanBeTargetted = true;
             currentlyControlledMember = null;
         }
 

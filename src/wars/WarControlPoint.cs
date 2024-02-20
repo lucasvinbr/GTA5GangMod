@@ -1,6 +1,7 @@
 ﻿using GTA.Math;
 using GTA.Native;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Xml.Serialization;
 
 
@@ -48,11 +49,11 @@ namespace GTA.GangAndTurfMod
 
                     if (ownerGang.isPlayerOwned)
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 0f, 255, 0f);
+                        myBlip.SecondaryColor = Color.Green;
                     }
                     else
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
+                        myBlip.SecondaryColor = Color.Red;
                     }
 
                 }

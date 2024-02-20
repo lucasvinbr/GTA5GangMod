@@ -114,6 +114,11 @@ namespace GTA.GangAndTurfMod
                 return;
             }
 
+            if(ModOptions.instance.protagonistsAreSpectators && watchedPed.IsInCombatAgainst(MindControl.CurrentPlayerCharacter))
+            {
+                watchedPed.Task.ClearAll();
+            }
+
             if (curStatus != MemberStatus.inVehicle)
             {
                 watchedPed.BlockPermanentEvents = false;
@@ -352,9 +357,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void DoAnIdleAnim()
         {
-            Vector3 scenarioPos = World.GetNextPositionOnSidewalk(watchedPed.Position);
-            Function.Call(Hash.TASK_START_SCENARIO_AT_POSITION, watchedPed, RandoMath.RandomElement(idleAnims),
-                scenarioPos.X, scenarioPos.Y, scenarioPos.Z, RandoMath.RandomHeading(), 0, 0, 0);
+            watchedPed.Task.StartScenario(RandoMath.RandomElement(idleAnims), RandoMath.RandomHeading());
         }
 
         public override void ResetUpdateInterval()
@@ -398,9 +401,9 @@ namespace GTA.GangAndTurfMod
             watchedPed.AlwaysKeepTask = true;
             watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;
             //watchedPed.Task.LeaveVehicle();
-            //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
-            //watchedPed.Task.ParachuteTo(destination);
             watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
+            //watchedPed.Task.ParachuteTo(destination);
+            //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
             using (TaskSequence seq = new TaskSequence())
             {
                 //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);
