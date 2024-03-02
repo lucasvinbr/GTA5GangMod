@@ -708,7 +708,8 @@ namespace GTA.GangAndTurfMod
 
                 if (newVehicle != null)
                 {
-                    bool vehicleIsHeli = newVehicle.Model.IsHelicopter;
+                    bool vehicleIsHeli = newVehicle.IsHelicopter;
+                    bool vehicleIsPlane = newVehicle.IsPlane;
                     if (!ModOptions.instance.gangHelicoptersEnabled && vehicleIsHeli && (!playerIsDest && !isDeliveringCar))
                     {
                         newVehicle.Delete();
@@ -762,6 +763,7 @@ namespace GTA.GangAndTurfMod
                         }
 
                         newVehicle.IsRadioEnabled = false;
+                        newVehicle.IsEngineRunning = true;
 
                         // extra handling to spawn flying helicopters
                         if (vehicleIsHeli)
@@ -769,9 +771,18 @@ namespace GTA.GangAndTurfMod
                             newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
                             Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
                         }
+                        else if (vehicleIsPlane) // extra handling for planes
+                        {
+                            newVehicle.Position += Vector3.WorldUp * (300 + RandoMath.CachedRandom.Next(50));
+                            newVehicle.ForwardSpeed = 90.0f;
+                            newVehicle.LandingGearState = VehicleLandingGearState.Retracted;
+                        }else
+                        {
+                            newVehicle.ForwardSpeed = 20.0f;
+                        }
 
                         // Apply the stored mods to the newVehicle
-                        if (potentialGangVehicle.VehicleMods != null)
+                        if (potentialGangVehicle.VehicleMods != null && potentialGangVehicle.VehicleMods.Count > 0)
                         {
                             // Ensure the vehicle has a valid modkit ID
                             newVehicle.Mods.InstallModKit();
