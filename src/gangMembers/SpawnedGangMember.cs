@@ -109,7 +109,8 @@ namespace GTA.GangAndTurfMod
                     GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
                 OnKilled?.Invoke();
-                Die(allowPreserving: watchedPed.IsOnScreen || dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
+                Die(allowPreserving: (watchedPed.IsOnScreen && dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOnScreen) ||
+                    dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
                 Logger.Log("member update: end (dead)", 5);
                 return;
             }
@@ -270,7 +271,7 @@ namespace GTA.GangAndTurfMod
                                 {
                                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
 
-                                    if (curVehicle.Model.IsHelicopter)
+                                    if (curVehicle.IsHelicopter || curVehicle.IsPlane)
                                     {
                                         if(watchedPed.SeatIndex != VehicleSeat.Driver)
                                         {
