@@ -8,6 +8,7 @@ namespace GTA.GangAndTurfMod
     {
         car,
         heli,
+        plane,
         unsupported
     }
     public class SpawnedDrivingGangMember : UpdatedClass
@@ -76,8 +77,12 @@ namespace GTA.GangAndTurfMod
                 if (destination != Vector3.Zero)
                 {
                     //even if we are backup vehicles, we should despawn if TOO far
-                    if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
-                            ModOptions.instance.carWithDestinationDespawnDistanceFromPlayer)
+                    float despawnDist = ModOptions.instance.carWithDestinationDespawnDistanceFromPlayer;
+                    if(vehicleType == VehicleType.plane)
+                    {
+                        despawnDist *= 10.0f;
+                    }
+                    if (vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) > despawnDist)
                     {
                         DespawnProcedure();
                         return;
@@ -161,7 +166,7 @@ namespace GTA.GangAndTurfMod
                 destination = MindControl.SafePositionNearPlayer;
             }
 
-            if(vehicleType != VehicleType.heli)
+            if(vehicleType != VehicleType.heli && vehicleType != VehicleType.plane)
             {
                 distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
             }
@@ -196,6 +201,11 @@ namespace GTA.GangAndTurfMod
                                 DriverLeaveVehicle();
                             }
                         }
+                        else if(vehicleType == VehicleType.plane)
+                        {
+                            // don't try to land planes
+                            watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 80, 80);
+                        }
                     }
                     else
                     {
@@ -221,12 +231,20 @@ namespace GTA.GangAndTurfMod
                                     var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                     if(randomEnemy != null)
                                     {
-                                        watchedPed.Task.StartHeliMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 20.0f, 20, 20);
+                                        watchedPed.Task.StartHeliMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 100.0f, 30, 20);
                                     }
                                 }
                                 else
                                 {
                                     watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.LandAndWait, 5.0f, 100.0f, 0, 0, -1, 300, HeliMissionFlags.LandOnArrival);
+                                }
+                            }
+                            else if(vehicleType == VehicleType.plane)
+                            {
+                                var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
+                                if (randomEnemy != null)
+                                {
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 200.0f, 60, 60);
                                 }
                             }
 
@@ -272,9 +290,9 @@ namespace GTA.GangAndTurfMod
                             watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup)
                         {
                             Vector3 teleportDest = World.GetNextPositionOnStreet(MindControl.CurrentPlayerCharacter.Position, true);
-                            if (vehicleType == VehicleType.heli)
+                            if (vehicleType == VehicleType.heli || vehicleType == VehicleType.plane)
                             {
-                                vehicleIAmDriving.Position = teleportDest + Vector3.WorldUp * 80f;
+                                vehicleIAmDriving.Position = teleportDest + Vector3.WorldUp * 120f;
                             }
                             else
                             {
@@ -284,7 +302,7 @@ namespace GTA.GangAndTurfMod
 
                     }
                     //wherever we were going, if we intended to leave the car there, let's just leave it here
-                    if (deliveringCar && vehicleType != VehicleType.heli)
+                    if (deliveringCar && vehicleType != VehicleType.heli && vehicleType != VehicleType.plane)
                     {
                         DriverLeaveVehicle();
                     }
@@ -303,7 +321,7 @@ namespace GTA.GangAndTurfMod
 
                             //teleport if we're failing to escort due to staying too far
                             //(should only happen with friendly vehicles and if forceSpawnCars is true)
-                            if (vehicleType != VehicleType.heli && ModOptions.instance.forceSpawnCars &&
+                            if (vehicleType != VehicleType.heli && vehicleType != VehicleType.plane && ModOptions.instance.forceSpawnCars &&
                                 watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup &&
                                 vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
                                 ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2 &&
@@ -317,19 +335,23 @@ namespace GTA.GangAndTurfMod
 
                             watchedPed.Task.ClearAll();
                             if (MindControl.CurrentPlayerCharacter.IsInFlyingVehicle)
-                            {
-                                if(vehicleType != VehicleType.heli)
+                            {   
+                                if (vehicleType == VehicleType.heli)
+                                {
+                                    // hover over destination (hopefully this means "hover over player's heli")
+                                    watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.Escort, MAX_SPEED / 2, 20.0f, 20, 20);
+                                }
+                                else if(vehicleType == VehicleType.plane)
+                                {
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 80, 80);
+                                }
+                                else
                                 {
                                     //just keep following on the ground in this case;
                                     //both allies and enemies should do it
                                     watchedPed.Task.DriveTo
                                         (vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival, MAX_SPEED,
-                                        (DrivingStyle) GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
-                                }
-                                else
-                                {
-                                    // hover over destination (hopefully this means "hover over player's heli")
-                                    watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.Escort, MAX_SPEED / 2, 20.0f, 20, 20);
+                                        (DrivingStyle)GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
                                 }
                             }
                             else
@@ -369,12 +391,20 @@ namespace GTA.GangAndTurfMod
                                     var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                     if (randomEnemy != null)
                                     {
-                                        watchedPed.Task.StartHeliMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 20.0f, 20, 20);
+                                        watchedPed.Task.StartHeliMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 100.0f, 30, 20);
                                     }
                                 }
                                 else
                                 {
                                     watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.LandAndWait, 5.0f, 100.0f, 0, 0, -1, 300, HeliMissionFlags.LandOnArrival);
+                                }
+                            }
+                            else if(vehicleType == VehicleType.plane)
+                            {
+                                var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
+                                if (randomEnemy != null)
+                                {
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 200.0f, 60, 60);
                                 }
                             }
                             else
@@ -423,7 +453,8 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void DropOffPassengers()
         {
-            bool shouldParachute = (vehicleType == VehicleType.heli && !vehicleIAmDriving.IsOnAllWheels) || vehicleIAmDriving.HeightAboveGround > 15.0f;
+            bool shouldParachute = ((vehicleType == VehicleType.heli || vehicleType == VehicleType.plane) && !vehicleIAmDriving.IsOnAllWheels) ||
+                vehicleIAmDriving.HeightAboveGround > 15.0f;
             int numParachuting = 0;
             for (int i = myPassengers.Count - 1; i >= 0; i--)
             {
@@ -470,15 +501,20 @@ namespace GTA.GangAndTurfMod
             if (makeDriverRoamPostClear && watchedPed.IsInVehicle() && watchedPed.IsAlive && MindControl.CurrentPlayerCharacter != watchedPed)
             {
 
-                if (vehicleType != VehicleType.heli)
-                {
-                    watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
-                        (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
-                }
-                else
+                if (vehicleType == VehicleType.heli)
                 {
                     // flee from player character!
                     watchedPed.Task.StartHeliMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, 15.0f, 99.0f, 20, 20);
+                }
+                else if (vehicleType == VehicleType.plane)
+                {
+                    watchedPed.Task.StartPlaneMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, MAX_SPEED, 99.0f, 80, 80);
+                }
+                else
+                {
+                    watchedPed.VehicleDrivingFlags = (VehicleDrivingFlags) ModOptions.instance.wanderingDriverDrivingStyle;
+                    watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
+                        (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
                 }
                 
             }
@@ -527,6 +563,7 @@ namespace GTA.GangAndTurfMod
             this.deliveringCar = deliveringCar;
             this.isFriendlyToPlayer = isFriendlyToPlayer;
             targetPed.DrivingStyle = (DrivingStyle) GetAppropriateDrivingStyle(false, 100.0f);
+            targetPed.VehicleDrivingFlags = GetAppropriateDrivingStyle(false, 100.0f);
             updatesWhileGoingToDest = 0;
             updatesWhileDroppingPassengers = 0;
             attemptingUnstuckVehicle = false;
@@ -538,10 +575,14 @@ namespace GTA.GangAndTurfMod
 
             //UI.Screen.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
 
-            if (vehicleIAmDriving.Model.IsHelicopter)
+            if (vehicleIAmDriving.IsHelicopter)
             {
                 vehicleType = VehicleType.heli;
-            }else if(vehicleIAmDriving.Model.IsPlane || vehicleIAmDriving.Model.IsBoat)
+            }else if(vehicleIAmDriving.IsPlane)
+            {
+                vehicleType = VehicleType.plane;
+            }
+            else if (vehicleIAmDriving.IsBoat)
             {
                 vehicleType = VehicleType.unsupported;
             }
