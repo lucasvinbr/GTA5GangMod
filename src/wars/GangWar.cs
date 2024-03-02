@@ -890,6 +890,10 @@ namespace GTA.GangAndTurfMod
                         spawnedPassenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
                         spawnedPassenger.watchedPed.SetIntoVehicle(randomDriver.vehicleIAmDriving, VehicleSeat.Any);
                         randomDriver.myPassengers.Add(spawnedPassenger.watchedPed);
+                        if (spawnedPassenger.watchedPed.IsUsingAnyVehicleWeapon())
+                        {
+                            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, spawnedPassenger.watchedPed, 3, false); // BF_CanLeaveVehicle  
+                        }
                         return spawnedPassenger;
                     }
                 }
