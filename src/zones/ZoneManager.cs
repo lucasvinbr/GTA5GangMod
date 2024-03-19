@@ -88,28 +88,32 @@ namespace GTA.GangAndTurfMod
         /// this controls any zone-related actions that depend on some passing of time
         /// </summary>
         public void Tick()
-        {
-            var zones = zoneData.zoneList;
-            if (lastUpdatedZoneIndex >= zones.Count - 1)
+        {   
+            if(ModOptions.instance.msTimeBetweenZoneAutoUpgrades > 0)
             {
-                lastUpdatedZoneIndex = 0;
-            }
-            
-            int curTime = ModCore.curGameTime;
-            for (int i = lastUpdatedZoneIndex; i < zones.Count; i++)
-            {
-                lastUpdatedZoneIndex = i;
-                var zone = zones[i];
-                if (zone.timeNextUpgrade < curTime &&
-                zone.ownerGangName != "none" && zone.value != ModOptions.instance.maxTurfValue &&
-                !zone.IsBeingContested())
+                var zones = zoneData.zoneList;
+                if (lastUpdatedZoneIndex >= zones.Count - 1)
                 {
-                    Logger.Log($"auto upgrading zone {zone.GetDisplayName()} to level {zone.value + 1}", 3);
-                    Logger.Log($"lastUpdatedZoneIndex: {lastUpdatedZoneIndex}", 4);
-                    zone.ChangeValue(zone.value + 1);
-                    break;
+                    lastUpdatedZoneIndex = 0;
+                }
+
+                int curTime = ModCore.curGameTime;
+                for (int i = lastUpdatedZoneIndex; i < zones.Count; i++)
+                {
+                    lastUpdatedZoneIndex = i;
+                    var zone = zones[i];
+                    if (zone.timeNextUpgrade < curTime &&
+                    zone.ownerGangName != "none" && zone.value != ModOptions.instance.maxTurfValue &&
+                    !zone.IsBeingContested())
+                    {
+                        Logger.Log($"auto upgrading zone {zone.GetDisplayName()} to level {zone.value + 1}", 3);
+                        Logger.Log($"lastUpdatedZoneIndex: {lastUpdatedZoneIndex}", 4);
+                        zone.ChangeValue(zone.value + 1);
+                        break;
+                    }
                 }
             }
+            
         }
 
         /// <summary>
