@@ -231,9 +231,8 @@ namespace GTA.GangAndTurfMod
                        (memberVariations[i].torsoDrawableIndex == -1 || memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex) &&
                        (memberVariations[i].torsoTextureIndex == -1 || memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex))
                     {
-                        memberVariations.Remove(memberVariations[i]);
-
                         ModelCache.RemovePedModelFromCache(memberVariations[i].modelHash);
+                        memberVariations.Remove(memberVariations[i]);
 
                         //get new members if we have none now and we're AI-controlled
                         if (memberVariations.Count == 0 && !isPlayerOwned)
@@ -256,9 +255,8 @@ namespace GTA.GangAndTurfMod
                        memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex &&
                        memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex)
                     {
-                        memberVariations.Remove(memberVariations[i]);
-
                         ModelCache.RemovePedModelFromCache(memberVariations[i].modelHash);
+                        memberVariations.Remove(memberVariations[i]);
 
                         //get new members if we have none now and we're AI-controlled
                         if (memberVariations.Count == 0 && !isPlayerOwned)
@@ -297,9 +295,8 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    carVariations.Remove(carVariations[i]);
-
                     ModelCache.RemoveVehicleModelFromCache(carVariations[i].modelHash);
+                    carVariations.Remove(carVariations[i]);
 
                     //if we're AI and we're out of cars, get a replacement for this one
                     if (carVariations.Count == 0 && !isPlayerOwned)
