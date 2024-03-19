@@ -702,12 +702,32 @@ namespace GTA.GangAndTurfMod
             if (ownerGang.carVariations.Count > 0)
             {
                 Logger.Log("spawn car: start", 4);
-                PotentialGangVehicle potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
+
+                if (maxMembersToSpawnInVehicle == -1)
+                {
+                    maxMembersToSpawnInVehicle = ModOptions.instance.spawnedMemberLimit - livingMembersCount;
+                }
+
+                PotentialGangVehicle potentialGangVehicle = null;
+                if (maxMembersToSpawnInVehicle > 0)
+                {
+                    potentialGangVehicle = ownerGang.carVariations.FindAll(car => car.knownMaxPassengers <= maxMembersToSpawnInVehicle).RandomElement();
+                }
+                if(potentialGangVehicle == default)
+                {
+                    potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
+                }
 
                 Vehicle newVehicle = World.CreateVehicle(ModelCache.GetVehicleModel(potentialGangVehicle.modelHash), spawnPos);
 
                 if (newVehicle != null)
                 {
+                    if(potentialGangVehicle.knownMaxPassengers <= 0)
+                    {
+                        potentialGangVehicle.knownMaxPassengers = newVehicle.PassengerCapacity;
+                        GangManager.instance.SaveGangData(false);
+                    }
+
                     bool vehicleIsHeli = newVehicle.IsHelicopter;
                     bool vehicleIsPlane = newVehicle.IsPlane;
                     if (!ModOptions.instance.gangHelicoptersEnabled && vehicleIsHeli && (!playerIsDest && !isDeliveringCar))

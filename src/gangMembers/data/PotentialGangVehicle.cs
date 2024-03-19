@@ -12,6 +12,7 @@ namespace GTA.GangAndTurfMod
     public class PotentialGangVehicle
     {
         public int modelHash;
+        public int knownMaxPassengers;
 
         public List<VehicleModData> VehicleMods { get; set; }
 
@@ -48,6 +49,7 @@ namespace GTA.GangAndTurfMod
         public PotentialGangVehicle()
         {
             this.modelHash = -1;
+            this.knownMaxPassengers = 0;
         }
 
         public static bool AddVehicleAndSavePool(PotentialGangVehicle newCar)
