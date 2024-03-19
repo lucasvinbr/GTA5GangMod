@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GangAndTurfMod", "GangAndTurfMod.csproj", "{21CA7796-85B5-452C-8311-D189B26656D3}"
 EndProject
@@ -17,8 +17,8 @@ Global
 		{21CA7796-85B5-452C-8311-D189B26656D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21CA7796-85B5-452C-8311-D189B26656D3}.Debug|x64.ActiveCfg = Debug|x64
 		{21CA7796-85B5-452C-8311-D189B26656D3}.Debug|x64.Build.0 = Debug|x64
-		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|Any CPU.ActiveCfg = Release|x64
-		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|Any CPU.Build.0 = Release|x64
+		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|x64.ActiveCfg = Release|x64
 		{21CA7796-85B5-452C-8311-D189B26656D3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
