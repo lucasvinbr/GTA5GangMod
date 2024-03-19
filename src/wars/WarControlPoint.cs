@@ -119,6 +119,28 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool CheckIfHasBeenCaptured()
         {
+            if(!ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
+            {
+                if (GangManager.instance.PlayerGang != ownerGang &&
+                    World.GetDistance(position, MindControl.CurrentPlayerCharacter.Position) <= ModOptions.instance.distanceToCaptureWarControlPoint)
+                {
+                    //Capture!
+                    if (GangManager.instance.PlayerGang == warUsingThisPoint.defendingGang || GangManager.instance.PlayerGang == warUsingThisPoint.attackingGang)
+                    {
+                        ownerGang = GangManager.instance.PlayerGang;
+                    }
+                    else
+                    {
+                        //gangs "interfering" in the war should only neutralize points instead of capturing
+                        ownerGang = null;
+                    }
+
+                    warUsingThisPoint.ControlPointHasBeenCaptured(this);
+                    UpdateBlipAppearance();
+                    return true;
+                }
+            }
+
             foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
             {
                 if (member.watchedPed != null && member.watchedPed.IsAlive && member.myGang != ownerGang)
