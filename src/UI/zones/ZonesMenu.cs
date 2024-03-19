@@ -133,22 +133,24 @@ namespace GTA.GangAndTurfMod
             warAttackStrengthMenu.Add(warMassAtkBtn);
             warAttackStrengthMenu.Add(cancelBtn);
 
-            TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
-
             warLightAtkBtn.Activated += (e, s) =>
             {
+                TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
                 if (TryStartWar(warLightAtkCost, curZone, GangWarManager.AttackStrength.light)) warAttackStrengthMenu.Visible = false;
             };
             warMedAtkBtn.Activated += (e, s) =>
             {
+                TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
                 if (TryStartWar(warMedAtkCost, curZone, GangWarManager.AttackStrength.medium)) warAttackStrengthMenu.Visible = false;
             };
             warLargeAtkBtn.Activated += (e, s) =>
             {
+                TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
                 if (TryStartWar(warLargeAtkCost, curZone, GangWarManager.AttackStrength.large)) warAttackStrengthMenu.Visible = false;
             };
             warMassAtkBtn.Activated += (e, s) =>
             {
+                TurfZone curZone = ZoneManager.instance.GetZoneInLocation(MindControl.CurrentPlayerCharacter.Position);
                 if (TryStartWar(warMassAtkCost, curZone, GangWarManager.AttackStrength.massive)) warAttackStrengthMenu.Visible = false;
             };
             cancelBtn.Activated += (e, s) =>
