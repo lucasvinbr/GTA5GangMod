@@ -71,11 +71,14 @@ namespace GTA.GangAndTurfMod
 
         private void FillCarColorEntries()
         {
+            vehicleColors.Clear();
+
             foreach (ModOptions.GangColorTranslation colorList in ModOptions.instance.similarColors)
             {
                 for (int i = 0; i < colorList.vehicleColors.Count; i++)
                 {
-                    Add(new NativeItem(colorList.vehicleColors[i].ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
+                    colorsMenu.Add(new NativeItem(colorList.vehicleColors[i].ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
+                    vehicleColors.Add(colorList.vehicleColors[i]);
                 }
 
             }
@@ -88,7 +91,8 @@ namespace GTA.GangAndTurfMod
             //and the extra colors, only chooseable by the player!
             foreach (VehicleColor extraColor in ModOptions.instance.extraPlayerExclusiveColors)
             {
-                Add(new NativeItem(extraColor.ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
+                colorsMenu.Add(new NativeItem(extraColor.ToString(), Localization.GetTextByKey("menu_button_pick_car_color_desc", "Colors can be previewed if you are inside a vehicle. Click or press enter to confirm the gang color change.")));
+                vehicleColors.Add(extraColor);
             }
         }
 
@@ -97,10 +101,14 @@ namespace GTA.GangAndTurfMod
             Clear();
             colorsMenu.Clear();
 
-            NativeItem primaryBtn = new NativeSubmenuItem(colorsMenu, this);
-            primaryBtn.Title = Localization.GetTextByKey("menu_button_customize_primary_car_color", "Customize Primary Car Color");
-            NativeItem secondaryBtn = new NativeSubmenuItem(colorsMenu, this);
-            secondaryBtn.Title = Localization.GetTextByKey("menu_button_customize_secondary_car_color", "Customize Secondary Car Color");
+            NativeItem primaryBtn = new NativeSubmenuItem(colorsMenu, this)
+            {
+                Title = Localization.GetTextByKey("menu_button_customize_primary_car_color", "Customize Primary Car Color")
+            };
+            NativeItem secondaryBtn = new NativeSubmenuItem(colorsMenu, this)
+            {
+                Title = Localization.GetTextByKey("menu_button_customize_secondary_car_color", "Customize Secondary Car Color")
+            };
 
             primaryBtn.Activated += (sender, args) =>
             {
@@ -111,6 +119,9 @@ namespace GTA.GangAndTurfMod
             {
                 settingPrimaryColor = false;
             };
+
+            Add(primaryBtn);
+            Add(secondaryBtn);
 
             FillCarColorEntries();
         }
