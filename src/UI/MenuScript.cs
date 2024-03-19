@@ -78,6 +78,8 @@ namespace GTA.GangAndTurfMod
 
             menuPool.Add(memberMenu);
             menuPool.Add(carMenu);
+            menuPool.Add(specificCarRegSubMenu);
+            menuPool.Add(specificGangMemberRegSubMenu);
 
             SetupSubMenus();
 
