@@ -749,6 +749,22 @@ namespace GTA.GangAndTurfMod
             return pickedGang;
         }
 
+
+        public Gang GetMostPowerfulGang()
+        {
+            Gang pickedGang = null;
+
+            foreach(var gang in gangData.gangs)
+            {
+                if(pickedGang == null || gang.GetFixedStrengthValue() > pickedGang.GetFixedStrengthValue())
+                {
+                    pickedGang = gang;
+                }
+            }
+
+            return pickedGang;
+        }
+
         #endregion
 
     }

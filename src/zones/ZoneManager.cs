@@ -461,6 +461,40 @@ namespace GTA.GangAndTurfMod
 
         }
 
+        public List<TurfZone> GetClosestZonesToTargetZone(TurfZone targetZone, bool hostileOrNeutralZonesOnly = false, int numZonesToReturn = 5)
+        {
+            float smallestDistance = 0;
+            //we start our top closest zones list with only the zone we want to get the closest from and start replacing as we find better ones
+            //the result may not be the actual closest zones, but thats okay
+            List<TurfZone> returnedZones = new List<TurfZone> { };
+
+            // start with filled invalid list. we'll keep "ejecting" the bad entries whenever we find a better one
+            for(int i = 0; i < numZonesToReturn; i++)
+            {
+                returnedZones.Add(targetZone);
+            }
+
+            int timesFoundBetterZone = 0;
+            for (int i = 0; i < zoneData.zoneList.Count; i++)
+            {
+                float distanceToThisZone = World.GetDistance(targetZone.zoneBlipPosition, zoneData.zoneList[i].zoneBlipPosition);
+                if (distanceToThisZone != 0 &&
+                    (!hostileOrNeutralZonesOnly || targetZone.ownerGangName != zoneData.zoneList[i].ownerGangName))
+                {
+                    if (smallestDistance == 0 || smallestDistance > distanceToThisZone)
+                    {
+                        timesFoundBetterZone++;
+                        returnedZones.Insert(0, zoneData.zoneList[i]);
+                        returnedZones.RemoveAt(numZonesToReturn);
+                        smallestDistance = distanceToThisZone;
+                    }
+                }
+            }
+
+            return returnedZones;
+
+        }
+
         public TurfZone GetRandomZone(bool preferablyNeutralZone = false)
         {
             if (!preferablyNeutralZone)

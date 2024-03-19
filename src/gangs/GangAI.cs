@@ -87,9 +87,26 @@ namespace GTA.GangAndTurfMod
 
             if (myZones.Count > 0)
             {
+                // the AI should prefer to attack zones near their own zones, and preferably of the strongest gang, unless that gang is the player's
                 TurfZone chosenZone = RandoMath.RandomElement(myZones);
-                TurfZone closestZoneToChosen = ZoneManager.instance.GetClosestZoneToTargetZone(chosenZone, true);
-                TryTakeTurf(closestZoneToChosen);
+                var closestZones = ZoneManager.instance.GetClosestZonesToTargetZone(chosenZone, true, 8);
+
+                Gang strongestGang = GangManager.instance.GetMostPowerfulGang();
+                if(strongestGang == watchedGang || strongestGang.isPlayerOwned)
+                {
+                    TryTakeTurf(RandoMath.RandomElement(closestZones));
+                }
+                else{
+                    var strongestGangZone = closestZones.Find(z => z.ownerGangName == strongestGang.name);
+                    if(strongestGangZone == null)
+                    {
+                        TryTakeTurf(RandoMath.RandomElement(closestZones));
+                    }
+                    else
+                    {
+                        TryTakeTurf(strongestGangZone);
+                    }
+                }
             }
             else
             {
@@ -369,6 +386,7 @@ namespace GTA.GangAndTurfMod
             ticksSinceLastUpdate = ticksBetweenUpdates;
         }
 
+        
         public GangAI(Gang watchedGang)
         {
             this.watchedGang = watchedGang;
