@@ -146,6 +146,20 @@ namespace GTA.GangAndTurfMod
                         return;
                     }
 
+                    if (vehicleIAmDriving.HasBeenDamagedByAnyWeapon() || 
+                        watchedPed.HasBeenDamagedByAnyWeapon() ||
+                        watchedPed.HasReceivedEvent(EventType.ShotFired) ||
+                        watchedPed.HasReceivedEvent(EventType.ShotFiredBulletImpact) ||
+                        watchedPed.HasReceivedEvent(EventType.ShotFiredWhizzedBy))
+                    {
+                        // (I hope) this means we've been shot or heard action!
+                        // don't wander anymore, get close to the player. This should let flying vehicles actually engage in combat
+                        destination = MindControl.SafePositionNearPlayer;
+                        updatesWhileGoingToDest = 0;
+                        RideToDest();
+                        return;
+                    }
+
                     //stop tracking this driver/vehicle if he/she leaves the vehicle or something goes wrong
                     if (!watchedPed.IsInVehicle())
                     {
@@ -211,7 +225,7 @@ namespace GTA.GangAndTurfMod
                         else if(vehicleType == VehicleType.plane)
                         {
                             // don't try to land planes
-                            watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 80, 80);
+                            watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter.Position, VehicleMissionType.Land, MAX_SPEED * 10.0f, 200.0f, 80, 80, -1, false);
                         }
                     }
                     else
@@ -258,7 +272,7 @@ namespace GTA.GangAndTurfMod
                                     var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                     if (randomEnemy != null)
                                     {
-                                        watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 200.0f, 60, 60);
+                                        watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED * 10.0f, 200.0f, 120, 60, -1, false);
                                     }
                                 }
 
@@ -360,7 +374,7 @@ namespace GTA.GangAndTurfMod
                                 }
                                 else if(vehicleType == VehicleType.plane)
                                 {
-                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 80, 80);
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 120, 80);
                                 }
                                 else
                                 {
@@ -421,7 +435,7 @@ namespace GTA.GangAndTurfMod
                                 var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                 if (randomEnemy != null)
                                 {
-                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED, 200.0f, 60, 60);
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, randomEnemy, VehicleMissionType.Attack, MAX_SPEED * 10.0f, 200.0f, 120, 60, -1, false);
                                 }
                             }
                             else
@@ -472,6 +486,7 @@ namespace GTA.GangAndTurfMod
         {
             bool shouldParachute = ((vehicleType == VehicleType.heli || vehicleType == VehicleType.plane) && !vehicleIAmDriving.IsOnAllWheels) ||
                 vehicleIAmDriving.HeightAboveGround > 15.0f;
+
             // cancel dropping off if we should parachute but parachuting is disabled
             if(shouldParachute && !ModOptions.instance.gangMembersCanParachuteFromFlyingVehicles)
             {
@@ -531,7 +546,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else if (vehicleType == VehicleType.plane)
                 {
-                    watchedPed.Task.StartPlaneMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, MAX_SPEED, 99.0f, 80, 80);
+                    watchedPed.Task.StartPlaneMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, MAX_SPEED, 99.0f, 120, 80);
                 }
                 else
                 {
