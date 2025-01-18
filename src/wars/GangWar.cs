@@ -782,6 +782,13 @@ namespace GTA.GangAndTurfMod
 
             if (SpawnManager.instance.HasThinkingDriversLimitBeenReached()) return null;
 
+            // flip the spawning side if the target side has no registered vehicles, so we don't get stuck with no spawns
+            if((isDefender && defendingGang.carVariations.Count == 0) ||
+                (!isDefender && attackingGang.carVariations.Count == 0))
+            {
+                isDefender = !isDefender;
+            }
+
             Vector3 playerPos = MindControl.SafePositionNearPlayer;
             
             Vector3 spawnPos = SpawnManager.instance.FindGoodSpawnPointWithHeadingForCar(playerPos, isDefender?
@@ -820,6 +827,13 @@ namespace GTA.GangAndTurfMod
 
         public SpawnedGangMember SpawnMember(bool isDefender)
         {
+            // flip the spawning side if the target side has no registered members, so we don't get stuck with no spawns
+            if ((isDefender && defendingGang.memberVariations.Count == 0) ||
+                (!isDefender && attackingGang.memberVariations.Count == 0))
+            {
+                isDefender = !isDefender;
+            }
+
             Vector3 spawnPos = GetSpawnPositionForGang(isDefender ? defendingGang : attackingGang, out WarControlPoint pickedPoint);
 
             SpawnedGangMember spawnedGangMember = null;
@@ -1207,7 +1221,7 @@ namespace GTA.GangAndTurfMod
                         //control max spawns, so that a gang with 5 tickets won't spawn as much as before
                         defenderReinforcementsAdvantage = defenderReinforcements / (float)(attackerReinforcements + defenderReinforcements);
 
-                        maxSpawnedDefenders = RandoMath.ClampValue((int)(maxSpawns * defenderReinforcementsAdvantage),
+                        maxSpawnedDefenders = RandoMath.ClampValue((int)(allowedSpawnLimit * defenderReinforcementsAdvantage),
                             ModOptions.instance.minSpawnsForEachSideDuringWars,
                             RandoMath.ClampValue(defenderReinforcements, ModOptions.instance.minSpawnsForEachSideDuringWars, maxSpawns));
 
