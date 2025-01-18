@@ -547,7 +547,7 @@ namespace GTA.GangAndTurfMod
             buyableWeapons = new List<BuyableWeapon>()
         {
             //--melee
-			
+			new BuyableWeapon(WeaponHash.Unarmed, 1),
             new BuyableWeapon(WeaponHash.Bat, 1000),
             new BuyableWeapon(WeaponHash.BattleAxe, 4500),
             new BuyableWeapon(WeaponHash.Bottle, 500),
