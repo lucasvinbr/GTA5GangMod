@@ -359,7 +359,10 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void DoAnIdleAnim()
         {
-            watchedPed.Task.StartScenario(RandoMath.RandomElement(idleAnims), RandoMath.RandomHeading());
+            if (watchedPed.IsHuman)
+            {
+                watchedPed.Task.StartScenario(RandoMath.RandomElement(idleAnims), RandoMath.RandomHeading());
+            }
         }
 
         public override void ResetUpdateInterval()
