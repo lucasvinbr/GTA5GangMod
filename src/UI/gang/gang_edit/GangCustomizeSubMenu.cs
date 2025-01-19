@@ -20,6 +20,28 @@ namespace GTA.GangAndTurfMod
             menuPool.Add(gangBlipColorSubMenu);
             menuPool.Add(this);
 
+            MenuScript.instance.OnInputFieldDone += (inputType, typedText) =>
+            {
+                if (inputType == MenuScript.DesiredInputType.enterGangName)
+                {
+                    if (typedText != "none" && GangManager.instance.GetGangByName(typedText) == null)
+                    {
+                        ZoneManager.instance.GiveGangZonesToAnother(GangBeingEdited.name, typedText);
+                        GangBeingEdited.name = typedText;
+                        GangManager.instance.SaveGangData();
+
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_the_gang_now_known_as_the_", "The gang is now known as the ") + typedText);
+                    }
+                    else
+                    {
+                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_name_not_allowed", "That name is not allowed, sorry! (It may be in use already)"));
+                    }
+                }
+
+                Visible = !Visible;
+                RecreateItems();
+            };
+
             RecreateItems();
         }
 
@@ -59,24 +81,6 @@ namespace GTA.GangAndTurfMod
                 MenuScript.instance.OpenInputField(MenuScript.DesiredInputType.enterGangName, "FMMC_KEY_TIP12N", GangBeingEdited.name);
             };
 
-            MenuScript.instance.OnInputFieldDone += (inputType, typedText) =>
-            {
-                if (inputType == MenuScript.DesiredInputType.enterGangName)
-                {
-                    if (typedText != "none" && GangManager.instance.GetGangByName(typedText) == null)
-                    {
-                        ZoneManager.instance.GiveGangZonesToAnother(GangBeingEdited.name, typedText);
-                        GangBeingEdited.name = typedText;
-                        GangManager.instance.SaveGangData();
-
-                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_the_gang_now_known_as_the_", "The gang is now known as the ") + typedText);
-                    }
-                    else
-                    {
-                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_name_not_allowed", "That name is not allowed, sorry! (It may be in use already)"));
-                    }
-                }
-            };
         }
 
         private void AddSelectEditedGangButton()
@@ -87,12 +91,13 @@ namespace GTA.GangAndTurfMod
 
             newButton.Activated += (sender, args) =>
             {
-                Visible = !Visible;
+                //Visible = !Visible;
                 MenuScript.instance.OpenPickAGangMenu(this,
                     Localization.GetTextByKey("menu_subtitle_select_gang_to_edit", "Select Gang to edit"),
                     GangManager.instance.gangData.gangs,
                     (pickedGang) =>
                     {
+                        MenuScript.instance.ClosePickAGangMenu();
                         _gangBeingEdited = pickedGang;
                         RecreateItems();
                     });
@@ -108,6 +113,7 @@ namespace GTA.GangAndTurfMod
             if (GangBeingEdited.isPlayerOwned)
             {
                 newToggle.Enabled = false;
+                newToggle.Checked = true;
             }
 
             newToggle.CheckboxChanged += (sender, args) =>

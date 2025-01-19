@@ -152,6 +152,11 @@ namespace GTA.GangAndTurfMod
             callerMenu.Visible = false;
             pickAGangMenu.Open(callerMenu, menuSubtitle, options, onGangPicked);
         }
+
+        public void ClosePickAGangMenu()
+        {
+            pickAGangMenu.Visible = false;
+        }
         #endregion
 
         /// <summary>
