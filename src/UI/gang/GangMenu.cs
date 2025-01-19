@@ -115,9 +115,10 @@ namespace GTA.GangAndTurfMod
 
         private void EnemyBackupBtn_Activated(object sender, System.EventArgs e)
         {
-            MenuScript.instance.OpenPickAiGangMenu(
+            MenuScript.instance.OpenPickAGangMenu(
                         this,
                         Localization.GetTextByKey("menu_subtitle_select_gang_spawn_vehicle", "Select gang from which to spawn a vehicle"),
+                        GangManager.instance.GetAllAiGangs(),
                         (pickedGang) =>
                         {
                             Vector3 playerPos = MindControl.SafePositionNearPlayer;

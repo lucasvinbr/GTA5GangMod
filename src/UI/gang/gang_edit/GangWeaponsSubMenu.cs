@@ -27,25 +27,28 @@ namespace GTA.GangAndTurfMod
 
             ItemActivated += (sender, itemActivatedArgs) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 NativeCheckboxItem pickedItem = itemActivatedArgs.Item as NativeCheckboxItem;
                 
                 foreach (KeyValuePair<ModOptions.BuyableWeapon, NativeCheckboxItem> kvp in buyableWeaponCheckboxesDict)
                 {
                     if (kvp.Value == pickedItem)
                     {
-                        if (playerGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
+                        if (editedGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
                         {
-                            playerGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
-                            MindControl.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
+                            editedGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
+                            if (editedGang.isPlayerOwned)
+                            {
+                                MindControl.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
+                            }
                             GangManager.instance.SaveGangData();
                             UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_weapon_removed", "Weapon Removed!"));
                         }
                         else
                         {
-                            if (MindControl.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
+                            if (!editedGang.isPlayerOwned || MindControl.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
                             {
-                                playerGang.gangWeaponHashes.Add(kvp.Key.wepHash);
+                                editedGang.gangWeaponHashes.Add(kvp.Key.wepHash);
                                 GangManager.instance.SaveGangData();
                                 UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_weapon_bought", "Weapon Bought!"));
                             }

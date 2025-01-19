@@ -1,6 +1,7 @@
 ﻿using GTA.Math;
 using GTA.Native;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace GTA.GangAndTurfMod
 {
@@ -215,6 +216,42 @@ namespace GTA.GangAndTurfMod
             }
         }
 
+        public void SetGangAsPlayerOwned(Gang targetGang)
+        {
+            if (targetGang == null || targetGang == cachedPlayerGang) return;
+
+            cachedPlayerGang.isPlayerOwned = false;
+            cachedPlayerGang = targetGang;
+            cachedPlayerGang.isPlayerOwned = true;
+
+            // rebuild AI Gangs list
+            enemyGangs.Clear();
+            for (int i = 0; i < gangData.gangs.Count; i++)
+            {
+
+                if (!gangData.gangs[i].isPlayerOwned)
+                {
+                    //lets check if we don't have any member variation, which could be a problem
+                    if (gangData.gangs[i].memberVariations.Count == 0)
+                    {
+                        GetMembersForGang(gangData.gangs[i]);
+                    }
+
+                    //lets also see if their colors are consistent
+                    gangData.gangs[i].EnforceGangColorConsistency();
+
+
+                    //add this gang to the enemy gangs
+                    //and start the AI for it
+                    enemyGangs.Add(new GangAI(gangData.gangs[i]));
+                }
+
+            }
+
+            SetGangRelationsAccordingToAggrLevel();
+            SaveGangData();
+        }
+
         /// <summary>
         /// updates gangs' relation levels with the player character
         /// </summary>
@@ -255,6 +292,10 @@ namespace GTA.GangAndTurfMod
                     {
                         gangRelGroup.SetRelationshipBetweenGroups(playerCharRelGroup, Relationship.Hate, true);
                     }
+                }
+                else
+                {
+
                 }
             }
         }
@@ -763,6 +804,22 @@ namespace GTA.GangAndTurfMod
             }
 
             return pickedGang;
+        }
+
+        public List<Gang> GetAllAiGangs()
+        {
+
+            List<Gang> returnedList = new List<Gang>();
+
+            foreach (var gang in gangData.gangs)
+            {
+                if (!gang.isPlayerOwned)
+                {
+                    returnedList.Add(gang);
+                }
+            }
+
+            return returnedList;
         }
 
         #endregion

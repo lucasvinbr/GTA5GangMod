@@ -54,15 +54,15 @@ namespace GTA.GangAndTurfMod
 
             colorsMenu.ItemActivated += (sender, args) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
 
                 if (settingPrimaryColor)
                 {
-                    playerGang.vehicleColor = vehicleColors[curItemIndex];
+                    editedGang.vehicleColor = vehicleColors[curItemIndex];
                 }
                 else
                 {
-                    playerGang.secondaryVehicleColor = vehicleColors[curItemIndex];
+                    editedGang.secondaryVehicleColor = vehicleColors[curItemIndex];
                 }
 
                 GangManager.instance.SaveGangData(false);

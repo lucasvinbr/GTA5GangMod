@@ -19,11 +19,11 @@ namespace GTA.GangAndTurfMod
 
         public void UpdateUpgradeCosts()
         {
-            Gang playerGang = GangManager.instance.PlayerGang;
-            healthUpgradeCost = GangCalculations.CalculateHealthUpgradeCost(playerGang.memberHealth);
-            armorUpgradeCost = GangCalculations.CalculateArmorUpgradeCost(playerGang.memberArmor);
-            accuracyUpgradeCost = GangCalculations.CalculateAccuracyUpgradeCost(playerGang.memberAccuracyLevel);
-            gangValueUpgradeCost = GangCalculations.CalculateGangValueUpgradeCost(playerGang.baseTurfValue);
+            Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
+            healthUpgradeCost = GangCalculations.CalculateHealthUpgradeCost(editedGang.memberHealth);
+            armorUpgradeCost = GangCalculations.CalculateArmorUpgradeCost(editedGang.memberArmor);
+            accuracyUpgradeCost = GangCalculations.CalculateAccuracyUpgradeCost(editedGang.memberAccuracyLevel);
+            gangValueUpgradeCost = GangCalculations.CalculateGangValueUpgradeCost(editedGang.baseTurfValue);
 
             healthButton.Title = Localization.GetTextByKey("menu_button_upgrade_member_health", "Upgrade Member Health") + " - " + healthUpgradeCost.ToString();
             armorButton.Title = Localization.GetTextByKey("menu_button_upgrade_member_armor", "Upgrade Member Armor") + " - " + armorUpgradeCost.ToString();
@@ -49,15 +49,15 @@ namespace GTA.GangAndTurfMod
 
             healthButton.Activated += (sender, args) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 if (MindControl.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost, true))
                 {
-                    if (playerGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
+                    if (editedGang.memberHealth < ModOptions.instance.maxGangMemberHealth)
                     {
-                        playerGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
-                        if (playerGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
+                        editedGang.memberHealth += ModOptions.instance.GetHealthUpgradeIncrement();
+                        if (editedGang.memberHealth > ModOptions.instance.maxGangMemberHealth)
                         {
-                            playerGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
+                            editedGang.memberHealth = ModOptions.instance.maxGangMemberHealth;
                         }
                         MindControl.AddOrSubtractMoneyToProtagonist(-healthUpgradeCost);
                         GangManager.instance.SaveGangData();
@@ -77,15 +77,15 @@ namespace GTA.GangAndTurfMod
 
             armorButton.Activated += (sender, args) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 if (MindControl.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost, true))
                 {
-                    if (playerGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
+                    if (editedGang.memberArmor < ModOptions.instance.maxGangMemberArmor)
                     {
-                        playerGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
-                        if (playerGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
+                        editedGang.memberArmor += ModOptions.instance.GetArmorUpgradeIncrement();
+                        if (editedGang.memberArmor > ModOptions.instance.maxGangMemberArmor)
                         {
-                            playerGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
+                            editedGang.memberArmor = ModOptions.instance.maxGangMemberArmor;
                         }
                         MindControl.AddOrSubtractMoneyToProtagonist(-armorUpgradeCost);
                         GangManager.instance.SaveGangData();
@@ -105,15 +105,15 @@ namespace GTA.GangAndTurfMod
 
             accuracyButton.Activated += (sender, args) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 if (MindControl.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost, true))
                 {
-                    if (playerGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
+                    if (editedGang.memberAccuracyLevel < ModOptions.instance.maxGangMemberAccuracy)
                     {
-                        playerGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
-                        if (playerGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
+                        editedGang.memberAccuracyLevel += ModOptions.instance.GetAccuracyUpgradeIncrement();
+                        if (editedGang.memberAccuracyLevel > ModOptions.instance.maxGangMemberAccuracy)
                         {
-                            playerGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
+                            editedGang.memberAccuracyLevel = ModOptions.instance.maxGangMemberAccuracy;
                         }
                         MindControl.AddOrSubtractMoneyToProtagonist(-accuracyUpgradeCost);
                         GangManager.instance.SaveGangData();
@@ -133,15 +133,15 @@ namespace GTA.GangAndTurfMod
 
             upgradeGangValueBtn.Activated += (sender, args) =>
             {
-                Gang playerGang = GangManager.instance.PlayerGang;
+                Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 if (MindControl.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost, true))
                 {
-                    if (playerGang.baseTurfValue < ModOptions.instance.maxTurfValue)
+                    if (editedGang.baseTurfValue < ModOptions.instance.maxTurfValue)
                     {
-                        playerGang.baseTurfValue++;
-                        if (playerGang.baseTurfValue > ModOptions.instance.maxTurfValue)
+                        editedGang.baseTurfValue++;
+                        if (editedGang.baseTurfValue > ModOptions.instance.maxTurfValue)
                         {
-                            playerGang.baseTurfValue = ModOptions.instance.maxTurfValue;
+                            editedGang.baseTurfValue = ModOptions.instance.maxTurfValue;
                         }
                         MindControl.AddOrSubtractMoneyToProtagonist(-gangValueUpgradeCost);
                         GangManager.instance.SaveGangData();

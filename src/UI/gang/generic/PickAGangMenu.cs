@@ -7,24 +7,27 @@ using System.Linq;
 namespace GTA.GangAndTurfMod
 {
     /// <summary>
-    /// generic menu for selecting an AI gang and then doing something with it
+    /// generic menu for selecting a gang and then doing something with it
     /// </summary>
-    public class PickAiGangMenu : ModMenu
+    public class PickAGangMenu : ModMenu
     {
-        public PickAiGangMenu(ObjectPool menuPool) : base("pick_ai_gang", "Pick Ai Gang Menu")
+        public PickAGangMenu(ObjectPool menuPool) : base("pick_a_gang", "Pick a Gang Menu")
         {
             menuPool.Add(this);
         }
 
         private Action<Gang> OnGangPicked;
 
+        private List<Gang> gangOptions;
+
         private NativeMenu previousMenu;
 
-        public void Open(NativeMenu previousMenu, string menuSubtitle, Action<Gang> onGangPicked)
+        public void Open(NativeMenu previousMenu, string menuSubtitle, List<Gang> options, Action<Gang> onGangPicked)
         {
             Name = menuSubtitle;
             Clear();
-            AddGangsToMenu();
+            gangOptions = options;
+            AddGangsToMenu(options);
             OnGangPicked = onGangPicked;
             this.previousMenu = previousMenu;
             Visible = true;
@@ -59,24 +62,20 @@ namespace GTA.GangAndTurfMod
             };
         }
 
-        private void AddGangsToMenu()
+        private void AddGangsToMenu(List<Gang> options)
         {
 
-            foreach(Gang gang in GangManager.instance.gangData.gangs)
+            foreach(Gang gang in options)
             {
-                if (!gang.isPlayerOwned)
-                {
-                    Add(new NativeItem(gang.name));
-                }
+                Add(new NativeItem(gang.name));
             }
 
-            
         }
 
         protected override void RecreateItems()
         {
             Clear();
-            AddGangsToMenu();
+            AddGangsToMenu(gangOptions);
         }
     }
 }

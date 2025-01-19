@@ -15,7 +15,7 @@ namespace GTA.GangAndTurfMod
         {
         }
 
-        private int playerGangOriginalBlipColor = 0;
+        private int gangOriginalBlipColor = 0;
 
         private readonly Dictionary<string, int> blipColorEntries = new Dictionary<string, int>
         {
@@ -70,7 +70,7 @@ namespace GTA.GangAndTurfMod
 
             SelectedIndexChanged += (sender, eventData) =>
             {
-                GangManager.instance.PlayerGang.blipColor = colorCodesArray[eventData.Index];
+                GangCustomizeSubMenu.GangBeingEdited.blipColor = colorCodesArray[eventData.Index];
                 ZoneManager.instance.RefreshZoneBlips();
             };
 
@@ -85,8 +85,8 @@ namespace GTA.GangAndTurfMod
                 {
                     if (itemText == blipColorNamesArray[i])
                     {
-                        GangManager.instance.PlayerGang.blipColor = colorCodesArray[i];
-                        playerGangOriginalBlipColor = colorCodesArray[i];
+                        GangCustomizeSubMenu.GangBeingEdited.blipColor = colorCodesArray[i];
+                        gangOriginalBlipColor = colorCodesArray[i];
                         GangManager.instance.SaveGangData(false);
                         UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_blip_color_changed", "Gang blip color changed!"));
                         break;
@@ -98,13 +98,13 @@ namespace GTA.GangAndTurfMod
 
         private void RestoreColorsAndRefreshBlips(object sender, EventArgs _)
         {
-            GangManager.instance.PlayerGang.blipColor = playerGangOriginalBlipColor;
+            GangCustomizeSubMenu.GangBeingEdited.blipColor = gangOriginalBlipColor;
             ZoneManager.instance.RefreshZoneBlips();
         }
 
         private void StoreOriginalBlipColor(object sender, EventArgs _)
         {
-            playerGangOriginalBlipColor = GangManager.instance.PlayerGang.blipColor;
+            gangOriginalBlipColor = GangCustomizeSubMenu.GangBeingEdited.blipColor;
         }
 
         protected override void RecreateItems()

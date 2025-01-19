@@ -465,15 +465,43 @@
 		</LocaleKey>
                 <LocaleKey>
 			<Key>menu_button_rename_gang_desc</Key>
-			<Value>Opens the input prompt for resetting your gang's name.</Value>
+			<Value>Opens the input prompt for resetting the gang's name.</Value>
 		</LocaleKey>
 				<LocaleKey>
 			<Key>subtitle_your_gang_now_known_as_the_</Key>
 			<Value>Your gang is now known as the </Value>
 		</LocaleKey>
+		<LocaleKey>
+			<Key>subtitle_the_gang_now_known_as_the_</Key>
+			<Value>The gang is now known as the </Value>
+		</LocaleKey>
 				<LocaleKey>
 			<Key>subtitle_name_not_allowed</Key>
 			<Value>That name is not allowed, sorry! (It may be in use already)</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_select_gang_to_edit</Key>
+			<Value>Select Gang</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_prefix_selected_gang</Key>
+			<Value>Selected Gang: </Value>
+		</LocaleKey>
+                <LocaleKey>
+			<Key>menu_button_select_gang_to_edit_desc</Key>
+			<Value>Opens the input prompt for resetting the gang's name.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_select_gang_to_edit</Key>
+			<Value>Select Gang to edit</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_toggle_is_gang_player_owned</Key>
+			<Value>Is Player Owned?</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_toggle_is_gang_player_owned_desc</Key>
+			<Value>If the checkbox is marked, this is your current gang. If not marked, you can set it as your gang, but you will leave the gang previously marked as yours.</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_upgrades</Key>
@@ -481,7 +509,7 @@
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_upgrades_desc</Key>
-			<Value>Opens the Gang Upgrades menu, where it's possible to upgrade your members' attributes and general gang strength.</Value>
+			<Value>Opens the Gang Upgrades menu, where it's possible to upgrade the members' attributes and general gang strength.</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_weapons</Key>
@@ -489,7 +517,7 @@
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_weapons_desc</Key>
-			<Value>Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by your gang members.</Value>
+			<Value>Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by the gang members.</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_car_colors</Key>
@@ -497,7 +525,7 @@
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_car_colors_desc</Key>
-			<Value>Opens the Gang Car Colors menu, where it's possible to change the colors of your gang vehicles.</Value>
+			<Value>Opens the Gang Car Colors menu, where it's possible to change the colors of the gang vehicles.</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_blip_color</Key>
@@ -505,11 +533,15 @@
 		</LocaleKey>
 		<LocaleKey>
 			<Key>menu_button_submenu_gang_blip_color_desc</Key>
-			<Value>Opens the Gang Blip Color menu, where it's possible to change the color of your gang blips (members, vehicles and turf).</Value>
+			<Value>Opens the Gang Blip Color menu, where it's possible to change the color of the gang blips (members, vehicles and turf).</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>mod_menu_title_pick_ai_gang</Key>
 			<Value>Pick Ai Gang Menu</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_pick_a_gang</Key>
+			<Value>Pick a Gang Menu</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>subtitle_selected_gang_not_found</Key>
