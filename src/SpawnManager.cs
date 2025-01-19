@@ -839,7 +839,6 @@ namespace GTA.GangAndTurfMod
 
             if (potentialGangVehicle == null)
             {
-                UI.Screen.ShowSubtitle("good vehicle not found", 800);
                 Logger.Log("spawn car: end (fail, no good potential veh found)", 4);
                 return null;
             }
