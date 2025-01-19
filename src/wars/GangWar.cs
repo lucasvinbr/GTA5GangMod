@@ -686,8 +686,16 @@ namespace GTA.GangAndTurfMod
 
             if (targetPoint == null || (previousMoveTarget.HasValue && previousMoveTarget == targetPoint.position))
             {
-                return MindControl.SafePositionNearPlayer + RandoMath.RandomDirection(true) * 
-                    ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.distanceToCaptureWarControlPoint);
+                // try to make the attackers push towards the warzone's blip (which should be somewhere relevant, I think),
+                // and make the defenders push outwards, in the direction the attackers are coming from
+                Vector3 attackerMoveDir = (warZone.zoneBlipPosition - MindControl.SafePositionNearPlayer).Normalized;
+                if(gang == defendingGang)
+                {
+                    attackerMoveDir *= -1;
+                }
+
+                return MindControl.SafePositionNearPlayer + attackerMoveDir * 
+                    ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.GetAcceptableMemberSpawnDistance());
             }
 
             return targetPoint.position;
