@@ -11,8 +11,16 @@ namespace GTA.GangAndTurfMod
 
     public class PotentialGangVehicle
     {
+        /// <summary>
+        /// increase this number whenever we should re-run checks on the stored data, or add more data
+        /// </summary>
+        public const int DATA_VERSION = 1;
+
         public int modelHash;
         public int knownMaxPassengers;
+        public VehicleType knownVehicleType;
+        public bool knownHasWeapons;
+        public int dataVersion;
 
         public List<VehicleModData> VehicleMods { get; set; }
 
@@ -39,7 +47,10 @@ namespace GTA.GangAndTurfMod
 
         private static PotentialCarPool carPool;
 
-
+        public bool IsOutdatedData()
+        {
+            return dataVersion < DATA_VERSION;
+        }
 
         public PotentialGangVehicle(int modelHash)
         {

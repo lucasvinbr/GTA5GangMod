@@ -54,6 +54,36 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float profitMultiplier = 1.0f;
 
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" helicopters.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedHelicopters = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" planes.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedPlanes = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" cars.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedCars = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" armed vehicles.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedArmedVehicles = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" bikes.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedBikes = -1;
+
         public FiringPattern membersFiringPattern = FiringPattern.Default;
 
         //car stats - the models

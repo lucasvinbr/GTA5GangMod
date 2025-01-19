@@ -2,6 +2,7 @@
 using GTA.Native;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace GTA.GangAndTurfMod
@@ -75,7 +76,7 @@ namespace GTA.GangAndTurfMod
 
         public void RemoveAllDeadBodies()
         {
-            foreach(Ped deadPed in preservedDeadBodies)
+            foreach (Ped deadPed in preservedDeadBodies)
             {
                 deadPed.MarkAsNoLongerNeeded();
             }
@@ -367,9 +368,9 @@ namespace GTA.GangAndTurfMod
                 var memberPed = memberAIs[i].watchedPed;
                 if (memberPed != null)
                 {
-                    if((!mustBeAlive || memberPed.IsAlive))
+                    if ((!mustBeAlive || memberPed.IsAlive))
                     {
-                        if(MindControl.CurrentPlayerCharacter == memberPed)
+                        if (MindControl.CurrentPlayerCharacter == memberPed)
                         {
                             if ((!mustBeAlive || !MindControl.hasDiedWithChangedBody)
                                 && !myGang.isPlayerOwned)
@@ -602,13 +603,13 @@ namespace GTA.GangAndTurfMod
                 {
                     chosenMember.SetPedAppearance(newPed);
 
-                    newPed.Accuracy = (int) (ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
+                    newPed.Accuracy = (int)(ownerGang.memberAccuracyLevel * ownerGang.memberAccuracyMultiplier);
 
                     newPed.CanWrithe = ModOptions.instance.gangMembersCanWrithe; //no early dying?
                     int memberHealth = 100 + RandoMath.Max(1, (int)(ownerGang.memberHealth * ownerGang.memberHealthMultiplier));
                     newPed.MaxHealth = memberHealth;
                     newPed.Health = memberHealth;
-                    newPed.Armor = (int) (ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
+                    newPed.Armor = (int)(ownerGang.memberArmor * ownerGang.memberArmorMultiplier);
 
                     newPed.IsFireProof = ModOptions.instance.gangMembersAreFireproof;
 
@@ -656,7 +657,7 @@ namespace GTA.GangAndTurfMod
                             }
                         }
                     }
-                    
+
                     //set the relationship group
                     newPed.RelationshipGroup = ownerGang.relGroup;
 
@@ -708,6 +709,117 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
+        /// <summary>
+        /// tries to get a vehicle from the gang's list that respects the spawn limits specified in the gang's data. 
+        /// If it can't fail, will return a random entry if none are fitting
+        /// </summary>
+        /// <param name="ownerGang"></param>
+        /// <returns></returns>
+        public PotentialGangVehicle GetGoodVehicleToSpawnForGang(Gang ownerGang, int maxMembersToSpawnInVehicle = -1, bool canFail = true)
+        {
+            if (ownerGang.carVariations == null || ownerGang.carVariations.Count == 0) return null;
+
+            List<SpawnedDrivingGangMember> spawnedDrivers = GetSpawnedDriversOfGang(ownerGang);
+            int numHelis = -1;
+            int numPlanes = -1;
+            int numBikes = -1;
+            int numCars = -1;
+            int numArmedVehs = -1;
+            int attempts = 0;
+
+            List<PotentialGangVehicle> filteredVehs = ownerGang.carVariations;
+
+            if (maxMembersToSpawnInVehicle != -1)
+            {
+                filteredVehs = filteredVehs.FindAll(car => car.knownMaxPassengers <= maxMembersToSpawnInVehicle);
+                if (filteredVehs.Count == 0)
+                {
+                    filteredVehs = ownerGang.carVariations;
+                }
+            }
+
+            while (attempts < filteredVehs.Count && attempts < 5)
+            {
+                PotentialGangVehicle testVeh = filteredVehs.RandomElement();
+                if (testVeh.knownHasWeapons && ownerGang.maxSpawnedArmedVehicles >= 0)
+                {
+                    if (numArmedVehs == -1)
+                    {
+                        numArmedVehs = spawnedDrivers.Count(drv => drv.VehicleHasGuns);
+                    }
+
+                    if (numArmedVehs >= ownerGang.maxSpawnedArmedVehicles)
+                    {
+                        attempts++;
+                        continue;
+                    }
+                }
+
+                if (testVeh.knownVehicleType == VehicleType.heli && ownerGang.maxSpawnedHelicopters >= 0)
+                {
+                    if (numHelis == -1)
+                    {
+                        numHelis = spawnedDrivers.Count(drv => drv.VehType == VehicleType.heli);
+                    }
+
+                    if (numHelis >= ownerGang.maxSpawnedHelicopters)
+                    {
+                        attempts++;
+                        continue;
+                    }
+                }
+                else if (testVeh.knownVehicleType == VehicleType.plane && ownerGang.maxSpawnedPlanes >= 0)
+                {
+                    if (numPlanes == -1)
+                    {
+                        numPlanes = spawnedDrivers.Count(drv => drv.VehType == VehicleType.plane);
+                    }
+
+                    if (numPlanes >= ownerGang.maxSpawnedPlanes)
+                    {
+                        attempts++;
+                        continue;
+                    }
+                }
+                else if (testVeh.knownVehicleType == VehicleType.bike && ownerGang.maxSpawnedBikes >= 0)
+                {
+                    if (numBikes == -1)
+                    {
+                        numBikes = spawnedDrivers.Count(drv => drv.VehType == VehicleType.bike);
+                    }
+
+                    if (numBikes >= ownerGang.maxSpawnedBikes)
+                    {
+                        attempts++;
+                        continue;
+                    }
+                }
+                else if (testVeh.knownVehicleType == VehicleType.car && ownerGang.maxSpawnedCars >= 0)
+                {
+                    if (numCars == -1)
+                    {
+                        numCars = spawnedDrivers.Count(drv => drv.VehType == VehicleType.car);
+                    }
+
+                    if (numCars >= ownerGang.maxSpawnedCars)
+                    {
+                        attempts++;
+                        continue;
+                    }
+                }
+
+                return testVeh;
+            }
+
+
+            if (!canFail)
+            {
+                return filteredVehs.RandomElement();
+            }
+
+            return null;
+        }
+
         public SpawnedDrivingGangMember SpawnGangVehicle(Gang ownerGang, Vector3 spawnPos, Vector3 destPos, bool playerIsDest = false, bool isDeliveringCar = false, SuccessfulMemberSpawnDelegate onSuccessfulPassengerSpawn = null, int maxMembersToSpawnInVehicle = -1)
         {
             if (!ModCore.doneStarting || livingMembersCount >= ModOptions.instance.spawnedMemberLimit || spawnPos == Vector3.Zero || ownerGang.carVariations == null)
@@ -716,137 +828,165 @@ namespace GTA.GangAndTurfMod
                 return null;
             }
 
-            if (ownerGang.carVariations.Count > 0)
+            Logger.Log("spawn car: start", 4);
+
+            if (maxMembersToSpawnInVehicle == -1)
             {
-                Logger.Log("spawn car: start", 4);
+                maxMembersToSpawnInVehicle = ModOptions.instance.spawnedMemberLimit - livingMembersCount;
+            }
 
-                if (maxMembersToSpawnInVehicle == -1)
+            PotentialGangVehicle potentialGangVehicle = GetGoodVehicleToSpawnForGang(ownerGang, maxMembersToSpawnInVehicle, !(playerIsDest && isDeliveringCar));
+
+            if (potentialGangVehicle == null)
+            {
+                UI.Screen.ShowSubtitle("good vehicle not found", 800);
+                Logger.Log("spawn car: end (fail, no good potential veh found)", 4);
+                return null;
+            }
+
+            Vehicle newVehicle = World.CreateVehicle(ModelCache.GetVehicleModel(potentialGangVehicle.modelHash), spawnPos);
+
+            if (newVehicle != null)
+            {
+                if (potentialGangVehicle.knownMaxPassengers <= 0)
                 {
-                    maxMembersToSpawnInVehicle = ModOptions.instance.spawnedMemberLimit - livingMembersCount;
+                    potentialGangVehicle.knownMaxPassengers = newVehicle.PassengerCapacity;
+                    GangManager.instance.SaveGangData(false);
                 }
 
-                PotentialGangVehicle potentialGangVehicle = null;
-                if (maxMembersToSpawnInVehicle > 0)
+                if (potentialGangVehicle.IsOutdatedData())
                 {
-                    potentialGangVehicle = ownerGang.carVariations.FindAll(car => car.knownMaxPassengers <= maxMembersToSpawnInVehicle).RandomElement();
-                }
-                if(potentialGangVehicle == default)
-                {
-                    potentialGangVehicle = RandoMath.RandomElement(ownerGang.carVariations);
-                }
-
-                Vehicle newVehicle = World.CreateVehicle(ModelCache.GetVehicleModel(potentialGangVehicle.modelHash), spawnPos);
-
-                if (newVehicle != null)
-                {
-                    if(potentialGangVehicle.knownMaxPassengers <= 0)
+                    // fetch and store extra data from vehicle
+                    if (newVehicle.IsHelicopter)
                     {
-                        potentialGangVehicle.knownMaxPassengers = newVehicle.PassengerCapacity;
-                        GangManager.instance.SaveGangData(false);
+                        potentialGangVehicle.knownVehicleType = VehicleType.heli;
                     }
-
-                    bool vehicleIsHeli = newVehicle.IsHelicopter;
-                    bool vehicleIsPlane = newVehicle.IsPlane;
-                    if (!ModOptions.instance.gangHelicoptersEnabled && vehicleIsHeli && (!playerIsDest && !isDeliveringCar))
+                    else if (newVehicle.IsPlane)
                     {
-                        newVehicle.Delete();
-                        return null;
+                        potentialGangVehicle.knownVehicleType = VehicleType.plane;
                     }
-
-                    newVehicle.Mods.PrimaryColor = ownerGang.vehicleColor;
-                    newVehicle.Mods.SecondaryColor = ownerGang.secondaryVehicleColor;
-
-                    SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
-
-                    if (driver != null)
+                    else if (newVehicle.IsBike || newVehicle.IsBicycle || newVehicle.IsMotorcycle || newVehicle.IsQuadBike)
                     {
-                        driver.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
-                        driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
-
-                        int passengerCount = newVehicle.PassengerCapacity;
-
-                        if(destPos == Vector3.Zero)
-                        {
-                            passengerCount = RandoMath.Min(passengerCount, 4);//limit ambient passengers in order to have less impact in ambient spawning
-                        }
-                        else
-                        {
-                            if(maxMembersToSpawnInVehicle != -1)
-                            {
-                                passengerCount = RandoMath.Min(passengerCount, maxMembersToSpawnInVehicle - 1);
-                            }
-                        }
-
-
-
-                        for (int i = 0; i < passengerCount; i++)
-                        {
-                            SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
-                            if (passenger != null)
-                            {
-                                passenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
-                                passenger.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Any);
-                            }
-                        }
-
-                        SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, ownerGang, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, isDeliveringCar);
-
-                        if (ModOptions.instance.showGangMemberBlips)
-                        {
-                            newVehicle.AddBlip();
-                            newVehicle.AttachedBlip.IsShortRange = true;
-
-                            Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.AttachedBlip, ownerGang.blipColor);
-                        }
-
-                        newVehicle.IsRadioEnabled = false;
-                        newVehicle.IsEngineRunning = true;
-
-                        // extra handling to spawn flying helicopters
-                        if (vehicleIsHeli)
-                        {
-                            newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
-                            Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
-                        }
-                        else if (vehicleIsPlane) // extra handling for planes
-                        {
-                            newVehicle.Position += Vector3.WorldUp * (300 + RandoMath.CachedRandom.Next(50));
-                            newVehicle.ForwardSpeed = 90.0f;
-                            newVehicle.LandingGearState = VehicleLandingGearState.Retracted;
-                        }else
-                        {
-                            newVehicle.ForwardSpeed = 20.0f;
-                        }
-
-                        // Apply the stored mods to the newVehicle
-                        if (potentialGangVehicle.VehicleMods != null && potentialGangVehicle.VehicleMods.Count > 0)
-                        {
-                            // Ensure the vehicle has a valid modkit ID
-                            newVehicle.Mods.InstallModKit();
-
-                            foreach (var modData in potentialGangVehicle.VehicleMods)
-                            {
-                                if (modData.ModValue != -1)
-                                {
-                                    newVehicle.Mods[modData.ModType].Index = modData.ModValue;
-                                }
-                            }
-                        }
-
-                        thinkingDrivingMembersCount++;
-                        Logger.Log("spawn car: end (success)", 4);
-                        return driverAI;
+                        potentialGangVehicle.knownVehicleType = VehicleType.bike;
+                    }
+                    else if (newVehicle.IsBoat)
+                    {
+                        potentialGangVehicle.knownVehicleType = VehicleType.unsupported;
                     }
                     else
                     {
-                        newVehicle.Delete();
-                        Logger.Log("spawn car: end (fail: couldn't spawn driver)", 4);
-                        return null;
+                        potentialGangVehicle.knownVehicleType = VehicleType.car;
                     }
+
+                    potentialGangVehicle.knownHasWeapons = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, newVehicle);
+
+                    potentialGangVehicle.dataVersion = PotentialGangVehicle.DATA_VERSION;
+                    GangManager.instance.SaveGangData(false);
                 }
 
-                Logger.Log("spawn car: end (fail: car creation failed)", 4);
+                bool knownIsHeli = potentialGangVehicle.knownVehicleType == VehicleType.heli;
+                bool knownIsPlane = potentialGangVehicle.knownVehicleType == VehicleType.plane;
+                if (!ModOptions.instance.gangHelicoptersEnabled && knownIsHeli && (!playerIsDest && !isDeliveringCar))
+                {
+                    newVehicle.Delete();
+                    Logger.Log("spawn car: end (fail, veh was heli and helis are disabled)", 4);
+                    return null;
+                }
+
+                newVehicle.Mods.PrimaryColor = ownerGang.vehicleColor;
+                newVehicle.Mods.SecondaryColor = ownerGang.secondaryVehicleColor;
+
+                SpawnedGangMember driver = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
+
+                if (driver != null)
+                {
+                    driver.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
+                    driver.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Driver);
+
+                    int passengerCount = newVehicle.PassengerCapacity;
+
+                    if (destPos == Vector3.Zero)
+                    {
+                        passengerCount = RandoMath.Min(passengerCount, 4);//limit ambient passengers in order to have less impact in ambient spawning
+                    }
+                    else
+                    {
+                        if (maxMembersToSpawnInVehicle != -1)
+                        {
+                            passengerCount = RandoMath.Min(passengerCount, maxMembersToSpawnInVehicle - 1);
+                        }
+                    }
+
+
+
+                    for (int i = 0; i < passengerCount; i++)
+                    {
+                        SpawnedGangMember passenger = SpawnGangMember(ownerGang, spawnPos, onSuccessfulMemberSpawn: onSuccessfulPassengerSpawn, true);
+                        if (passenger != null)
+                        {
+                            passenger.curStatus = SpawnedGangMember.MemberStatus.inVehicle;
+                            passenger.watchedPed.SetIntoVehicle(newVehicle, VehicleSeat.Any);
+                        }
+                    }
+
+                    SpawnedDrivingGangMember driverAI = EnlistDrivingMember(driver.watchedPed, ownerGang, newVehicle, destPos, ownerGang == GangManager.instance.PlayerGang, playerIsDest, isDeliveringCar, potentialGangVehicle);
+
+                    if (ModOptions.instance.showGangMemberBlips)
+                    {
+                        newVehicle.AddBlip();
+                        newVehicle.AttachedBlip.IsShortRange = true;
+
+                        Function.Call(Hash.SET_BLIP_COLOUR, newVehicle.AttachedBlip, ownerGang.blipColor);
+                    }
+
+                    newVehicle.IsRadioEnabled = false;
+                    newVehicle.IsEngineRunning = true;
+
+                    // extra handling to spawn flying helicopters
+                    if (knownIsHeli)
+                    {
+                        newVehicle.Position += Vector3.WorldUp * (100 + RandoMath.CachedRandom.Next(50));
+                        Function.Call(Hash.SET_HELI_BLADES_FULL_SPEED, newVehicle);
+                    }
+                    else if (knownIsPlane) // extra handling for planes
+                    {
+                        newVehicle.Position += Vector3.WorldUp * (300 + RandoMath.CachedRandom.Next(50));
+                        newVehicle.ForwardSpeed = 90.0f;
+                        newVehicle.LandingGearState = VehicleLandingGearState.Retracted;
+                    }
+                    else
+                    {
+                        newVehicle.ForwardSpeed = 20.0f;
+                    }
+
+                    // Apply the stored mods to the newVehicle
+                    if (potentialGangVehicle.VehicleMods != null && potentialGangVehicle.VehicleMods.Count > 0)
+                    {
+                        // Ensure the vehicle has a valid modkit ID
+                        newVehicle.Mods.InstallModKit();
+
+                        foreach (var modData in potentialGangVehicle.VehicleMods)
+                        {
+                            if (modData.ModValue != -1)
+                            {
+                                newVehicle.Mods[modData.ModType].Index = modData.ModValue;
+                            }
+                        }
+                    }
+
+                    thinkingDrivingMembersCount++;
+                    Logger.Log("spawn car: end (success)", 4);
+                    return driverAI;
+                }
+                else
+                {
+                    newVehicle.Delete();
+                    Logger.Log("spawn car: end (fail: couldn't spawn driver)", 4);
+                    return null;
+                }
             }
+
+            Logger.Log("spawn car: end (fail: car creation failed)", 4);
 
             return null;
         }
@@ -865,7 +1005,7 @@ namespace GTA.GangAndTurfMod
             return null;
         }
 
-        private SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Gang ownerGang, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest = false, bool deliveringCar = false)
+        private SpawnedDrivingGangMember EnlistDrivingMember(Ped pedToEnlist, Gang ownerGang, Vehicle vehicleDriven, Vector3 destPos, bool friendlyToPlayer, bool playerIsDest, bool deliveringCar, PotentialGangVehicle extraVehicleData)
         {
             SpawnedDrivingGangMember newDriverAI = null;
 
@@ -875,14 +1015,14 @@ namespace GTA.GangAndTurfMod
                 if (livingDrivingMembers[i].watchedPed == null)
                 {
                     newDriverAI = livingDrivingMembers[i];
-                    livingDrivingMembers[i].AttachData(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
+                    livingDrivingMembers[i].AttachData(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar, extraVehicleData);
                     couldEnlistWithoutAdding = true;
                     break;
                 }
             }
             if (!couldEnlistWithoutAdding)
             {
-                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar);
+                newDriverAI = new SpawnedDrivingGangMember(pedToEnlist, ownerGang, vehicleDriven, destPos, friendlyToPlayer, playerIsDest, deliveringCar, extraVehicleData);
                 livingDrivingMembers.Add(newDriverAI);
             }
 
@@ -903,11 +1043,11 @@ namespace GTA.GangAndTurfMod
             {
                 //if the limit's at 0, this feature is disabled
                 deadPed.MarkAsNoLongerNeeded();
-                return; 
+                return;
             }
 
             //remove "old" bodies before adding this one
-            while(preservedDeadBodies.Count > ModOptions.instance.preservedDeadBodyLimit)
+            while (preservedDeadBodies.Count > ModOptions.instance.preservedDeadBodyLimit)
             {
                 preservedDeadBodies[0].MarkAsNoLongerNeeded();
                 preservedDeadBodies.RemoveAt(0);

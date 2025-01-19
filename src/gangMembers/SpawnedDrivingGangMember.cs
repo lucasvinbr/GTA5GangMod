@@ -29,7 +29,7 @@ namespace GTA.GangAndTurfMod
         public int updatesWhileGoingToDest;
         public int updatesWhileDroppingPassengers;
 
-        public VehicleType vehicleType;
+        public VehicleType VehType { get; private set; }
         public bool playerAsDest = false;
 
         public const float MAX_SPEED = 50, SLOW_DOWN_DIST = 120;
@@ -39,7 +39,7 @@ namespace GTA.GangAndTurfMod
         private float distToDest;
 
 
-        private bool vehicleHasGuns = false;
+        public bool VehicleHasGuns { get; private set; }
 
         private int stuckCounter = 0;
         /// <summary>
@@ -74,7 +74,7 @@ namespace GTA.GangAndTurfMod
 
             if (vehicleIAmDriving.IsAlive && watchedPed.IsAlive)
             {
-                if (deliveringCar || (vehicleType != VehicleType.car && vehicleType != VehicleType.bike))
+                if (deliveringCar || (VehType != VehicleType.car && VehType != VehicleType.bike))
                 {
                     //since we want this vehicle to arrive (and/or not crash),
                     //our driver shouldn't get distracted with fights and stuff
@@ -85,7 +85,7 @@ namespace GTA.GangAndTurfMod
                 {
                     //even if we are backup vehicles, we should despawn if TOO far
                     float despawnDist = ModOptions.instance.carWithDestinationDespawnDistanceFromPlayer;
-                    if(vehicleType == VehicleType.plane)
+                    if(VehType == VehicleType.plane)
                     {
                         despawnDist *= 10.0f;
                     }
@@ -125,7 +125,7 @@ namespace GTA.GangAndTurfMod
                     {
                         //leave the vehicle after arrival only if it's unarmed and the modOption is active...
                         // or if the enemy needs a vehicle spawn slot
-                        deliveringCar =  (!vehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival) ||
+                        deliveringCar =  (!VehicleHasGuns && ModOptions.instance.warSpawnedMembersLeaveGunlessVehiclesOnArrival) ||
                             GangWarManager.instance.focusedWar.IsOneOfTheSidesInNeedOfACarSpawn(); 
                         destination = GangWarManager.instance.focusedWar.GetMoveTargetForGang(GangWarManager.instance.focusedWar.attackingGang);
 
@@ -187,7 +187,7 @@ namespace GTA.GangAndTurfMod
                 destination = MindControl.SafePositionNearPlayer;
             }
 
-            if(vehicleType != VehicleType.heli && vehicleType != VehicleType.plane)
+            if(VehType != VehicleType.heli && VehType != VehicleType.plane)
             {
                 distToDest = vehicleIAmDriving.Position.DistanceTo(destination);
             }
@@ -205,11 +205,11 @@ namespace GTA.GangAndTurfMod
                 {
                     if (deliveringCar)
                     {
-                        if(vehicleType == VehicleType.car || vehicleType == VehicleType.bike)
+                        if(VehType == VehicleType.car || VehType == VehicleType.bike)
                         {
                             DriverLeaveVehicle();
                         } 
-                        else if(vehicleType == VehicleType.heli)
+                        else if(VehType == VehicleType.heli)
                         {
                             // land, then leave heli
 
@@ -222,7 +222,7 @@ namespace GTA.GangAndTurfMod
                                 DriverLeaveVehicle();
                             }
                         }
-                        else if(vehicleType == VehicleType.plane)
+                        else if(VehType == VehicleType.plane)
                         {
                             // don't try to land planes
                             watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter.Position, VehicleMissionType.Land, MAX_SPEED * 10.0f, 200.0f, 80, 80, -1, false);
@@ -236,7 +236,7 @@ namespace GTA.GangAndTurfMod
                         }
                         else
                         {
-                            if(vehicleType == VehicleType.bike)
+                            if(VehType == VehicleType.bike)
                             {
                                 // bikes should not act as spawn points
                                 DriverLeaveVehicle();
@@ -250,11 +250,11 @@ namespace GTA.GangAndTurfMod
 
                                 updatesWhileDroppingPassengers++;
 
-                                if (vehicleType == VehicleType.heli)
+                                if (VehType == VehicleType.heli)
                                 {
                                     // land heli if unarmed, keep attacking if armed
                                     // if our heli doesn't have guns, land on destination
-                                    if (vehicleHasGuns)
+                                    if (VehicleHasGuns)
                                     {
                                         var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                         if (randomEnemy != null)
@@ -267,7 +267,7 @@ namespace GTA.GangAndTurfMod
                                         watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.LandAndWait, 5.0f, 100.0f, 0, 0, -1, 300, HeliMissionFlags.LandOnArrival);
                                     }
                                 }
-                                else if (vehicleType == VehicleType.plane)
+                                else if (VehType == VehicleType.plane)
                                 {
                                     var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                     if (randomEnemy != null)
@@ -321,7 +321,7 @@ namespace GTA.GangAndTurfMod
                             watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup)
                         {
                             Vector3 teleportDest = World.GetNextPositionOnStreet(MindControl.CurrentPlayerCharacter.Position, true);
-                            if (vehicleType == VehicleType.heli || vehicleType == VehicleType.plane)
+                            if (VehType == VehicleType.heli || VehType == VehicleType.plane)
                             {
                                 vehicleIAmDriving.Position = teleportDest + Vector3.WorldUp * 120f;
                             }
@@ -333,7 +333,7 @@ namespace GTA.GangAndTurfMod
 
                     }
                     //wherever we were going, if we intended to leave the car there, let's just leave it here
-                    if (deliveringCar && vehicleType != VehicleType.heli && vehicleType != VehicleType.plane)
+                    if (deliveringCar && VehType != VehicleType.heli && VehType != VehicleType.plane)
                     {
                         DriverLeaveVehicle();
                     }
@@ -352,7 +352,7 @@ namespace GTA.GangAndTurfMod
 
                             //teleport if we're failing to escort due to staying too far
                             //(should only happen with friendly vehicles and if forceSpawnCars is true)
-                            if (vehicleType != VehicleType.heli && vehicleType != VehicleType.plane && ModOptions.instance.forceSpawnCars &&
+                            if (VehType != VehicleType.heli && VehType != VehicleType.plane && ModOptions.instance.forceSpawnCars &&
                                 watchedPed.RelationshipGroup == GangManager.instance.PlayerGang.relGroup &&
                                 vehicleIAmDriving.Position.DistanceTo2D(MindControl.CurrentPlayerCharacter.Position) >
                                 ModOptions.instance.maxDistanceCarSpawnFromPlayer * 2 &&
@@ -367,12 +367,12 @@ namespace GTA.GangAndTurfMod
                             watchedPed.Task.ClearAll();
                             if (MindControl.CurrentPlayerCharacter.IsInFlyingVehicle)
                             {   
-                                if (vehicleType == VehicleType.heli)
+                                if (VehType == VehicleType.heli)
                                 {
                                     // hover over destination (hopefully this means "hover over player's heli")
                                     watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.Escort, MAX_SPEED / 2, 20.0f, 20, 20);
                                 }
-                                else if(vehicleType == VehicleType.plane)
+                                else if(VehType == VehicleType.plane)
                                 {
                                     watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 120, 80);
                                 }
@@ -413,11 +413,11 @@ namespace GTA.GangAndTurfMod
                             watchedPed.Task.ClearAll();
                             
 
-                            if (vehicleType == VehicleType.heli)
+                            if (VehType == VehicleType.heli)
                             {
                                 // head towards location.
                                 // if our heli doesn't have guns, land on destination
-                                if (vehicleHasGuns)
+                                if (VehicleHasGuns)
                                 {
                                     var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                     if (randomEnemy != null)
@@ -430,7 +430,7 @@ namespace GTA.GangAndTurfMod
                                     watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.LandAndWait, 5.0f, 100.0f, 0, 0, -1, 300, HeliMissionFlags.LandOnArrival);
                                 }
                             }
-                            else if(vehicleType == VehicleType.plane)
+                            else if(VehType == VehicleType.plane)
                             {
                                 var randomEnemy = SpawnManager.instance.GetFirstMemberNotFromMyGang(myGang, true);
                                 if (randomEnemy != null)
@@ -484,7 +484,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void DropOffPassengers()
         {
-            bool shouldParachute = ((vehicleType == VehicleType.heli || vehicleType == VehicleType.plane) && !vehicleIAmDriving.IsOnAllWheels) ||
+            bool shouldParachute = ((VehType == VehicleType.heli || VehType == VehicleType.plane) && !vehicleIAmDriving.IsOnAllWheels) ||
                 vehicleIAmDriving.HeightAboveGround > 15.0f;
 
             // cancel dropping off if we should parachute but parachuting is disabled
@@ -539,12 +539,12 @@ namespace GTA.GangAndTurfMod
             if (makeDriverRoamPostClear && watchedPed.IsInVehicle() && watchedPed.IsAlive && MindControl.CurrentPlayerCharacter != watchedPed)
             {
 
-                if (vehicleType == VehicleType.heli)
+                if (VehType == VehicleType.heli)
                 {
                     // flee from player character!
                     watchedPed.Task.StartHeliMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, 15.0f, 99.0f, 20, 20);
                 }
-                else if (vehicleType == VehicleType.plane)
+                else if (VehType == VehicleType.plane)
                 {
                     watchedPed.Task.StartPlaneMission(watchedPed.CurrentVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, MAX_SPEED, 99.0f, 120, 80);
                 }
@@ -585,13 +585,13 @@ namespace GTA.GangAndTurfMod
             ClearAllRefs();
         }
 
-        public SpawnedDrivingGangMember(Ped watchedPed, Gang ownerGang, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest = false, bool deliveringCar = false)
+        public SpawnedDrivingGangMember(Ped watchedPed, Gang ownerGang, Vehicle vehicleIAmDriving, Vector3 destination, bool isFriendlyToPlayer, bool playerAsDest, bool deliveringCar, PotentialGangVehicle vehicleExtraData)
         {
             ResetUpdateInterval();
-            AttachData(watchedPed, ownerGang, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar);
+            AttachData(watchedPed, ownerGang, vehicleIAmDriving, destination, isFriendlyToPlayer, playerAsDest, deliveringCar, vehicleExtraData);
         }
 
-        public void AttachData(Ped targetPed, Gang ownerGang, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool deliveringCar)
+        public void AttachData(Ped targetPed, Gang ownerGang, Vehicle targetVehicle, Vector3 theDest, bool isFriendlyToPlayer, bool playerIsDest, bool deliveringCar, PotentialGangVehicle vehicleExtraData)
         {
             watchedPed = targetPed;
             vehicleIAmDriving = targetVehicle;
@@ -607,31 +607,12 @@ namespace GTA.GangAndTurfMod
             attemptingUnstuckVehicle = false;
             stuckCounter = 0;
 
-            vehicleHasGuns = Function.Call<bool>(Hash.DOES_VEHICLE_HAVE_WEAPONS, targetVehicle);
+            VehicleHasGuns = vehicleExtraData.knownHasWeapons;
 
             SetWatchedPassengers();
 
             //UI.Screen.ShowSubtitle(vehicleIAmDriving.FriendlyName + " has " + myPassengers.Count + " passengers", 800);
-
-            if(vehicleIAmDriving.IsBike || vehicleIAmDriving.IsBicycle || vehicleIAmDriving.IsMotorcycle || vehicleIAmDriving.IsQuadBike)
-            {
-                vehicleType = VehicleType.bike;
-            }
-            else if (vehicleIAmDriving.IsHelicopter)
-            {
-                vehicleType = VehicleType.heli;
-            }else if(vehicleIAmDriving.IsPlane)
-            {
-                vehicleType = VehicleType.plane;
-            }
-            else if (vehicleIAmDriving.IsBoat)
-            {
-                vehicleType = VehicleType.unsupported;
-            }
-            else
-            {
-                vehicleType = VehicleType.car;
-            }
+            VehType = vehicleExtraData.knownVehicleType;
         }
 
         /// <summary>
@@ -653,7 +634,7 @@ namespace GTA.GangAndTurfMod
 
                 }
 
-                if (vehicleHasGuns)
+                if (VehicleHasGuns)
                 {
                     if (memberInSeat.IsUsingAnyVehicleWeapon())
                     {
