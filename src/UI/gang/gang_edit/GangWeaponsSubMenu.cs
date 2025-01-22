@@ -17,6 +17,8 @@ namespace GTA.GangAndTurfMod
         private readonly Dictionary<ModOptions.BuyableWeapon, NativeCheckboxItem> buyableWeaponCheckboxesDict =
     new Dictionary<ModOptions.BuyableWeapon, NativeCheckboxItem>();
 
+        public static bool EditingPreferredWeapons = false;
+
         /// <summary>
         /// adds all buttons and events to the menu
         /// </summary>
@@ -29,15 +31,21 @@ namespace GTA.GangAndTurfMod
             {
                 Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
                 NativeCheckboxItem pickedItem = itemActivatedArgs.Item as NativeCheckboxItem;
+                List<WeaponHash> weaponList = editedGang.gangWeaponHashes;
+
+                if (EditingPreferredWeapons)
+                {
+                    weaponList = editedGang.preferredWeaponHashes;
+                }
                 
                 foreach (KeyValuePair<ModOptions.BuyableWeapon, NativeCheckboxItem> kvp in buyableWeaponCheckboxesDict)
                 {
                     if (kvp.Value == pickedItem)
                     {
-                        if (editedGang.gangWeaponHashes.Contains(kvp.Key.wepHash))
+                        if (weaponList.Contains(kvp.Key.wepHash))
                         {
-                            editedGang.gangWeaponHashes.Remove(kvp.Key.wepHash);
-                            if (editedGang.isPlayerOwned)
+                            weaponList.Remove(kvp.Key.wepHash);
+                            if (!EditingPreferredWeapons && editedGang.isPlayerOwned)
                             {
                                 MindControl.AddOrSubtractMoneyToProtagonist(kvp.Key.price);
                             }
@@ -46,11 +54,11 @@ namespace GTA.GangAndTurfMod
                         }
                         else
                         {
-                            if (!editedGang.isPlayerOwned || MindControl.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
+                            if (!editedGang.isPlayerOwned || EditingPreferredWeapons || MindControl.AddOrSubtractMoneyToProtagonist(-kvp.Key.price))
                             {
-                                editedGang.gangWeaponHashes.Add(kvp.Key.wepHash);
+                                weaponList.Add(kvp.Key.wepHash);
                                 GangManager.instance.SaveGangData();
-                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_weapon_bought", "Weapon Bought!"));
+                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_gang_weapon_bought", "Weapon Added!"));
                             }
                             else
                             {
@@ -81,13 +89,20 @@ namespace GTA.GangAndTurfMod
 
             List<ModOptions.BuyableWeapon> weaponsList = ModOptions.instance.buyableWeapons;
 
-            Gang playerGang = GangManager.instance.PlayerGang;
+            Gang editedGang = GangCustomizeSubMenu.GangBeingEdited;
+
+            List<WeaponHash> gangWeaponList = editedGang.gangWeaponHashes;
+
+            if (EditingPreferredWeapons)
+            {
+                gangWeaponList = editedGang.preferredWeaponHashes;
+            }
 
             for (int i = 0; i < weaponsList.Count; i++)
             {
                 NativeCheckboxItem weaponCheckBox = new NativeCheckboxItem
                         (string.Concat(weaponsList[i].wepHash.ToString(), " - ", weaponsList[i].price.ToString()),
-                        playerGang.gangWeaponHashes.Contains(weaponsList[i].wepHash));
+                        gangWeaponList.Contains(weaponsList[i].wepHash));
                 buyableWeaponCheckboxesDict.Add(weaponsList[i], weaponCheckBox);
                 Add(weaponCheckBox);
             }

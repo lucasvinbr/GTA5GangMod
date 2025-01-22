@@ -169,6 +169,10 @@ namespace GTA.GangAndTurfMod
                 Localization.GetTextByKey("menu_toggle_modoption_preventAIExpansion", "Prevent AI Gangs' Expansion?"),
                 Localization.GetTextByKey("menu_toggle_modoption_preventAIExpansion_desc", "If checked, AI Gangs won't start wars or take neutral zones."));
 
+            AddModOptionToggle(nameof(ModOptions.instance.gangsCanBeWipedOut),
+                Localization.GetTextByKey("menu_toggle_modoption_gangsCanBeWipedOut", "Gangs can be wiped out?"),
+                Localization.GetTextByKey("menu_toggle_modoption_gangsCanBeWipedOut_desc", "If checked, AI Gangs will be deleted if they run out of money and control zero zones. If unchecked, instead of being deleted, they will receive a small amount of money to keep fighting."));
+
             AddModOptionToggle(nameof(ModOptions.instance.showGangMemberBlips),
                 Localization.GetTextByKey("menu_toggle_modoption_showGangMemberBlips", "Show Member and Car Blips?"),
                 Localization.GetTextByKey("menu_toggle_modoption_showGangMemberBlips_desc", "If disabled, members and cars won't spawn with blips attached to them. (This option only affects those that spawn after the option is set)"));

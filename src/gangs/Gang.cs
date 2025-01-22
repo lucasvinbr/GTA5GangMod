@@ -23,6 +23,11 @@ namespace GTA.GangAndTurfMod
         [XmlIgnore]
         public RelationshipGroup relGroup;
 
+        /// <summary>
+        /// if this is true, we expect the player to add vehicles etc to this gang; we won't add them automatically
+        /// </summary>
+        public bool hasBeenCreatedByPlayer;
+
         public int memberAccuracyLevel = 1;
         public int memberHealth = 10;
         public int memberArmor = 0;
@@ -84,7 +89,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public int maxSpawnedBikes = -1;
 
-        public FiringPattern membersFiringPattern = FiringPattern.Default;
+        public FiringPattern membersFiringPattern = FiringPattern.FullAuto;
 
         //car stats - the models
         public List<PotentialGangVehicle> carVariations = new List<PotentialGangVehicle>();
@@ -102,6 +107,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public enum AIUpgradeTendency
         {
+            balanced,
             toughMembers,
             bigGuns,
             toughTurf,
@@ -124,16 +130,14 @@ namespace GTA.GangAndTurfMod
                 upgradeTendency = (AIUpgradeTendency)RandoMath.CachedRandom.Next(4);
             }
 
-            if (moneyAvailable <= 0)
+            int moneyToAdd = moneyAvailable;
+            
+            if (moneyToAdd <= 0)
             {
-                this.moneyAvailable = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
-            }
-            else
-            {
-                this.moneyAvailable = moneyAvailable;
+                moneyToAdd = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
             }
 
-
+            AddMoney(moneyToAdd);
         }
 
         public Gang()
@@ -166,6 +170,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void EnforceGangColorConsistency()
         {
+            if (isPlayerOwned || hasBeenCreatedByPlayer)
+            {
+                return;
+            }
+
             ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
             if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.MemberColor.white) ||
                 (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.MemberColor.black))
@@ -210,7 +219,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (preferredWeaponHashes.Count <= 2)
+            if (preferredWeaponHashes.Count <= 2 && !isPlayerOwned && !hasBeenCreatedByPlayer)
             {
                 SetPreferredWeapons();
             }
@@ -377,6 +386,11 @@ namespace GTA.GangAndTurfMod
             takenZone.ChangeValue(baseTurfValue);
             takenZone.ownerGangName = name;
             ZoneManager.instance.UpdateZoneData(takenZone);
+        }
+
+        public bool HasBeenWipedOut()
+        {
+            return !GangManager.instance.gangData.gangs.Contains(this);
         }
 
         /// <summary>

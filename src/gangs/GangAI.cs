@@ -45,6 +45,12 @@ namespace GTA.GangAndTurfMod
                     TryUpgradeMembers();
                     if (RandoMath.RandomBool()) TryUpgradeGuns(); //...with below average guns
                     break;
+                default:
+                    TryExpand();
+                    TryUpgradeZones();
+                    TryUpgradeGuns();
+                    TryUpgradeMembers();
+                    break;
             }
 
             //lets check our financial situation:
@@ -65,7 +71,7 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             //we get some money then, at least to keep trying to fight
-                            watchedGang.AddMoney((int)(ModOptions.instance.baseCostToTakeTurf * 5 * ModOptions.instance.extraProfitForAIGangsFactor));
+                            watchedGang.AddMoney((int)(ModOptions.instance.baseCostToTakeTurf * 20 * ModOptions.instance.extraProfitForAIGangsFactor));
                         }
 
                     }
@@ -120,8 +126,14 @@ namespace GTA.GangAndTurfMod
 
         private void TryUpgradeGuns()
         {
+            if(watchedGang.hasBeenCreatedByPlayer && watchedGang.preferredWeaponHashes.Count == 0)
+            {
+                // no weapons to buy
+                return;
+            }
+
             //try to buy the weapons we like
-            if (watchedGang.preferredWeaponHashes.Count == 0)
+            if (watchedGang.preferredWeaponHashes.Count == 0 && !watchedGang.hasBeenCreatedByPlayer)
             {
                 watchedGang.SetPreferredWeapons();
             }
@@ -396,7 +408,7 @@ namespace GTA.GangAndTurfMod
             DoInitialTakeover();
 
             //do we have vehicles?
-            if (this.watchedGang.carVariations.Count == 0)
+            if (this.watchedGang.carVariations.Count == 0 && !this.watchedGang.hasBeenCreatedByPlayer)
             {
                 //get some vehicles!
                 for (int i = 0; i < RandoMath.CachedRandom.Next(1, 4); i++)

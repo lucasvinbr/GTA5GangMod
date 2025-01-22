@@ -24,6 +24,7 @@ namespace GTA.GangAndTurfMod
         private readonly ZonesMenu zonesMenu;
         private readonly GangMenu gangMenu;
         private readonly PickAGangMenu pickAGangMenu;
+        private readonly YesNoConfirmationMenu yesNoConfirmationMenu;
 
         private Ped closestPed;
 
@@ -69,6 +70,7 @@ namespace GTA.GangAndTurfMod
             menuPool = new ObjectPool();
 
             pickAGangMenu = new PickAGangMenu(menuPool);
+            yesNoConfirmationMenu = new YesNoConfirmationMenu(menuPool);
             zonesMenu = new ZonesMenu(menuPool);
             memberMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_member_registration", "Gang Member Registration Controls"));
             carMenu = new NativeMenu("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_vehicle_registration", "Gang Vehicle Registration Controls"));
@@ -156,6 +158,12 @@ namespace GTA.GangAndTurfMod
         public void ClosePickAGangMenu()
         {
             pickAGangMenu.Visible = false;
+        }
+
+        public void OpenYesNoConfirmationMenu(NativeMenu callerMenu, string menuSubtitle, Action onYes, Action onNo)
+        {
+            callerMenu.Visible = false;
+            yesNoConfirmationMenu.Open(callerMenu, menuSubtitle, onYes, onNo);
         }
         #endregion
 

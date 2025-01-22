@@ -1,5 +1,6 @@
 ﻿using LemonUI;
 using LemonUI.Menus;
+using System;
 
 namespace GTA.GangAndTurfMod
 {
@@ -58,7 +59,7 @@ namespace GTA.GangAndTurfMod
         public static Gang GangBeingEdited {
             get
             {
-                if(_gangBeingEdited == null)
+                if(_gangBeingEdited == null || _gangBeingEdited.HasBeenWipedOut())
                 {
                     _gangBeingEdited = GangManager.instance.PlayerGang;
                 }
@@ -126,10 +127,108 @@ namespace GTA.GangAndTurfMod
             };
         }
 
+        private void AddKillGangButton()
+        {
+            NativeItem newButton = new NativeItem(Localization.GetTextByKey("menu_button_kill_gang", "Delete this Gang"),
+                Localization.GetTextByKey("menu_button_kill_gang_desc", "Removes this gang from the game and adds it to the WipedOutGangs xml file. All zones controlled by them will become neutral."));
+            Add(newButton);
+
+            newButton.Activated += (sender, args) =>
+            {
+                //Visible = !Visible;
+                MenuScript.instance.OpenYesNoConfirmationMenu(this,
+                    Localization.GetTextByKey("menu_subtitle_confirm_kill_gang", "Deleting gang. Are you sure?"),
+                    () => {
+                        GangManager.instance.KillGang(GangManager.instance.GetGangAI(GangBeingEdited));
+                        _gangBeingEdited = GangManager.instance.PlayerGang;
+                        RecreateItems();
+                        },
+                    null
+                    );
+            };
+        }
+
+        private void AddCreateNewAiGangButton()
+        {
+            NativeItem newButton = new NativeItem(Localization.GetTextByKey("menu_button_create_ai_gang", "Create new AI Gang"),
+                Localization.GetTextByKey("menu_button_create_ai_gang_desc", "Creates a new AI gang, with a random name and colors, and selects it for you to edit. Will not register members and vehicles, so you'll have to register them afterwards."));
+            Add(newButton);
+
+            newButton.Activated += (sender, args) =>
+            {
+                //Visible = !Visible;
+                var createdGang = GangManager.instance.CreateNewEnemyGang(true, false);
+                if (createdGang != null)
+                {
+                    createdGang.hasBeenCreatedByPlayer = true;
+                    _gangBeingEdited = createdGang;
+                    GangManager.instance.enemyGangs.Add(new GangAI(createdGang));
+                }
+                
+                RecreateItems();
+            };
+        }
+
+        private void AddMissingStuffButtons()
+        {
+            if (GangBeingEdited.memberVariations.Count == 0)
+            {
+                NativeItem newButton = new NativeItem(Localization.GetTextByKey("menu_button_warn_gang_has_no_members", "WARN: No member variations!"),
+                Localization.GetTextByKey("menu_button_warn_gang_has_no_members_desc", "Without member variations, no members of this gang will spawn! You can register a variation with the registration menu (Shift+B by default) while standing in front of a ped."));
+                Add(newButton);
+
+                newButton.Activated += (sender, args) =>
+                {
+                    MenuScript.instance.OpenYesNoConfirmationMenu(this,
+                    Localization.GetTextByKey("menu_subtitle_confirm_auto_add_gang_members", "Auto add some members?"),
+                    () => {
+                        GangManager.instance.GetMembersForGang(GangBeingEdited);
+                        RecreateItems();
+                    },
+                    null
+                    );
+                };
+            }
+
+            if (GangBeingEdited.carVariations.Count == 0)
+            {
+                NativeItem newButton = new NativeItem(Localization.GetTextByKey("menu_button_warn_gang_has_no_vehicles", "WARN: No vehicles!"),
+                Localization.GetTextByKey("menu_button_warn_gang_has_no_vehicles_desc", "Without registered vehicles, no cars of this gang will spawn! You can register a vehicle with the registration menu (Shift+B by default) while inside of it."));
+                Add(newButton);
+
+                newButton.Activated += (sender, args) =>
+                {
+                    MenuScript.instance.OpenYesNoConfirmationMenu(this,
+                    Localization.GetTextByKey("menu_subtitle_confirm_auto_add_gang_vehicles", "Auto add some vehicle variations?"),
+                    () => {
+                        for (int i = 0; i < RandoMath.CachedRandom.Next(1, 4); i++)
+                        {
+                            PotentialGangVehicle newVeh = PotentialGangVehicle.GetCarFromPool();
+                            if (newVeh != null)
+                            {
+                                GangBeingEdited.AddGangCar(newVeh);
+                            }
+                        }
+                        RecreateItems();
+                    },
+                    null
+                    );
+                };
+            }
+
+        }
+
         protected override void Setup()
         {
             Localization.OnLanguageChanged += OnLocalesChanged;
             Shown += RebuildItemsIfNeeded;
+        }
+
+        protected override void RebuildItemsIfNeeded(object sender, EventArgs _)
+        {
+            // always rebuild items!
+            shouldRebuildItemsWhenShown = false;
+            RecreateItems();
         }
 
         protected override void RecreateItems()
@@ -139,6 +238,8 @@ namespace GTA.GangAndTurfMod
             AddSelectEditedGangButton();
             AddIsPlayerOwnedToggle();
             AddRenameGangButton();
+
+            AddMissingStuffButtons();
 
             if (GangBeingEdited.isPlayerOwned)
             {
@@ -152,6 +253,22 @@ namespace GTA.GangAndTurfMod
             gangWeaponsBtn.Title = Localization.GetTextByKey("menu_button_submenu_gang_weapons", "Gang Weapons...");
             gangWeaponsBtn.Description = Localization.GetTextByKey("menu_button_submenu_gang_weapons_desc", "Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by the gang members.");
             Add(gangWeaponsBtn);
+            gangWeaponsBtn.Activated += (sender, args) =>
+            {
+                GangWeaponsSubMenu.EditingPreferredWeapons = false;
+            };
+
+            if (!GangBeingEdited.isPlayerOwned)
+            {
+                var gangPreferredWeaponsBtn = new NativeSubmenuItem(gangWeaponsSubMenu, this);
+                gangPreferredWeaponsBtn.Title = Localization.GetTextByKey("menu_button_submenu_gang_preferred_weapons", "Gang Desired Weapons...");
+                gangPreferredWeaponsBtn.Description = Localization.GetTextByKey("menu_button_submenu_gang_preferred_weapons_desc", "Opens the Gang Weapons menu, but for setting which weapons this gang should try to purchase.");
+                Add(gangPreferredWeaponsBtn);
+                gangPreferredWeaponsBtn.Activated += (sender, args) =>
+                {
+                    GangWeaponsSubMenu.EditingPreferredWeapons = true;
+                };
+            }
 
             var gangCarColorsBtn = new NativeSubmenuItem(gangCarColorsSubMenu, this);
             gangCarColorsBtn.Title = Localization.GetTextByKey("menu_button_submenu_gang_car_colors", "Gang Car Colors...");
@@ -163,7 +280,12 @@ namespace GTA.GangAndTurfMod
             gangBlipColorBtn.Description = Localization.GetTextByKey("menu_button_submenu_gang_blip_color_desc", "Opens the Gang Blip Color menu, where it's possible to change the color of the gang blips (members, vehicles and turf).");
             Add(gangBlipColorBtn);
 
-            
+            if (!GangBeingEdited.isPlayerOwned)
+            {
+                AddKillGangButton();
+            }
+
+            AddCreateNewAiGangButton();
         }
     }
 }

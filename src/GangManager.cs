@@ -120,7 +120,7 @@ namespace GTA.GangAndTurfMod
                 {
                     //since we're checking each gangs situation...
                     //lets check if we don't have any member variation, which could be a problem
-                    if (gangData.gangs[i].memberVariations.Count == 0)
+                    if (gangData.gangs[i].memberVariations.Count == 0 && !gangData.gangs[i].hasBeenCreatedByPlayer)
                     {
                         GetMembersForGang(gangData.gangs[i]);
                     }
@@ -232,7 +232,7 @@ namespace GTA.GangAndTurfMod
                 if (!gangData.gangs[i].isPlayerOwned)
                 {
                     //lets check if we don't have any member variation, which could be a problem
-                    if (gangData.gangs[i].memberVariations.Count == 0)
+                    if (gangData.gangs[i].memberVariations.Count == 0 && !gangData.gangs[i].hasBeenCreatedByPlayer)
                     {
                         GetMembersForGang(gangData.gangs[i]);
                     }
@@ -424,7 +424,13 @@ namespace GTA.GangAndTurfMod
             return playerGang;
         }
 
-        public Gang CreateNewEnemyGang(bool notifyMsg = true)
+        /// <summary>
+        /// does not create the gang AI! You must add it afterwards. Also check if the creation succeeded, as it can fail!
+        /// </summary>
+        /// <param name="notifyMsg"></param>
+        /// <param name="autoAddStuff"></param>
+        /// <returns></returns>
+        public Gang CreateNewEnemyGang(bool notifyMsg = true, bool autoAddStuff = true)
         {
             if (PotentialGangMember.MemberPool.memberList.Count <= 0)
             {
@@ -449,14 +455,17 @@ namespace GTA.GangAndTurfMod
                 blipColor = RandoMath.RandomElement(ModOptions.instance.GetGangColorTranslation(gangColor).blipColors)
             };
 
-            GetMembersForGang(newGang);
+            if (autoAddStuff)
+            {
+                GetMembersForGang(newGang);
+                newGang.GetPistolIfOptionsRequire();
+            }
 
             //relations...
             newGang.relGroup = World.AddRelationshipGroup(gangName);
 
             gangData.gangs.Add(newGang);
 
-            newGang.GetPistolIfOptionsRequire();
 
             SaveGangData();
             if (notifyMsg)
@@ -490,22 +499,30 @@ namespace GTA.GangAndTurfMod
 
         public void KillGang(GangAI aiWatchingTheGang)
         {
-            UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), aiWatchingTheGang.watchedGang.name));
+            Gang theGang = aiWatchingTheGang.watchedGang;
 
-            foreach (var vehicle in aiWatchingTheGang.watchedGang.carVariations)
+            UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), theGang.name));
+
+            foreach (var vehicle in theGang.carVariations)
             {
                 ModelCache.RemoveVehicleModelFromCache(vehicle.modelHash);
             }
 
-            foreach (var pedVariation in aiWatchingTheGang.watchedGang.memberVariations)
+            foreach (var pedVariation in theGang.memberVariations)
             {
                 ModelCache.RemovePedModelFromCache(pedVariation.modelHash);
             }
 
+            // end all wars involving this gang
+            foreach(var war in GangWarManager.instance.GetAllCurrentWarsInvolvingGang(theGang))
+            {
+                war.EndWar(theGang);
+            }
+
             //save the fallen gang in a file
-            AddGangToWipedOutList(aiWatchingTheGang.watchedGang);
-            gangData.gangs.Remove(aiWatchingTheGang.watchedGang);
-            aiWatchingTheGang.watchedGang.relGroup.Remove();
+            AddGangToWipedOutList(theGang);
+            gangData.gangs.Remove(theGang);
+            theGang.relGroup.Remove();
             enemyGangs.Remove(aiWatchingTheGang);
 
             if (enemyGangs.Count == 0 && ModOptions.instance.maxCoexistingGangs > 1)

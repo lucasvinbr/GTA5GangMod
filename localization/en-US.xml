@@ -225,7 +225,7 @@
 		</LocaleKey>
 		<LocaleKey>
 			<Key>subtitle_gang_weapon_bought</Key>
-			<Value>Weapon Bought!</Value>
+			<Value>Weapon Added!</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>subtitle_not_enough_money_to_buy_gang_weapon</Key>
@@ -307,6 +307,14 @@
 			<Key>menu_toggle_modoption_preventAIExpansion_desc</Key>
 			<Value>If checked, AI Gangs won't start wars or take neutral zones.</Value>
 		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_gangsCanBeWipedOut</Key>
+			<Value>Gangs can be wiped out?</Value>
+		</LocaleKey>
+<LocaleKey>
+			<Key>menu_toggle_modoption_gangsCanBeWipedOut_desc</Key>
+			<Value>If checked, AI Gangs will be deleted if they run out of money and control zero zones. If unchecked, instead of being deleted, they will receive a small amount of money to keep fighting.</Value>
+		</LocaleKey>		
 <LocaleKey>
 			<Key>menu_toggle_modoption_showGangMemberBlips</Key>
 			<Value>Show Member and Car Blips?</Value>
@@ -496,6 +504,50 @@
 			<Value>Select Gang to edit</Value>
 		</LocaleKey>
 		<LocaleKey>
+			<Key>menu_button_kill_gang</Key>
+			<Value>Delete this Gang</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_kill_gang_desc</Key>
+			<Value>Removes this gang from the game and adds it to the WipedOutGangs xml file. All zones controlled by them will become neutral.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_confirm_kill_gang</Key>
+			<Value>Deleting gang. Are you sure?</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_create_ai_gang</Key>
+			<Value>Create new AI Gang</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_create_ai_gang_desc</Key>
+			<Value>Creates a new AI gang, with a random name and colors, and selects it for you to edit. Will not register members and vehicles, so you'll have to register them afterwards.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_warn_gang_has_no_members</Key>
+			<Value>WARN: No member variations!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_warn_gang_has_no_members_desc</Key>
+			<Value>Without member variations, no members of this gang will spawn! You can register a variation with the registration menu (Shift+B by default) while standing in front of a ped.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_confirm_auto_add_gang_members</Key>
+			<Value>Auto add some members?</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_warn_gang_has_no_vehicles</Key>
+			<Value>WARN: No vehicles!</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_warn_gang_has_no_vehicles_desc</Key>
+			<Value>Without registered vehicles, no cars of this gang will spawn! You can register a vehicle with the registration menu (Shift+B by default) while inside of it.</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_subtitle_confirm_auto_add_gang_vehicles</Key>
+			<Value>Auto add some vehicle variations?</Value>
+		</LocaleKey>
+		<LocaleKey>
 			<Key>menu_toggle_is_gang_player_owned</Key>
 			<Value>Is Player Owned?</Value>
 		</LocaleKey>
@@ -520,6 +572,14 @@
 			<Value>Opens the Gang Weapons menu, where it's possible to purchase and sell weapons used by the gang members.</Value>
 		</LocaleKey>
 		<LocaleKey>
+			<Key>menu_button_submenu_gang_preferred_weapons</Key>
+			<Value>Gang Desired Weapons...</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>menu_button_submenu_gang_preferred_weapons_desc</Key>
+			<Value>Opens the Gang Weapons menu, but for setting which weapons this gang should try to purchase.</Value>
+		</LocaleKey>
+		<LocaleKey>
 			<Key>menu_button_submenu_gang_car_colors</Key>
 			<Value>Gang Car Colors...</Value>
 		</LocaleKey>
@@ -538,6 +598,18 @@
 		<LocaleKey>
 			<Key>mod_menu_title_pick_ai_gang</Key>
 			<Value>Pick Ai Gang Menu</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>mod_menu_title_yes_no</Key>
+			<Value>Confirmation Menu</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>button_confirmation_yes</Key>
+			<Value>Yes</Value>
+		</LocaleKey>
+		<LocaleKey>
+			<Key>button_confirmation_no</Key>
+			<Value>No</Value>
 		</LocaleKey>
 		<LocaleKey>
 			<Key>mod_menu_title_pick_a_gang</Key>

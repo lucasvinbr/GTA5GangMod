@@ -294,6 +294,11 @@ namespace GTA.GangAndTurfMod
             return defenderVictory;
         }
 
+        public void EndWar(Gang loserGang)
+        {
+            EndWar(loserGang != defendingGang);
+        }
+
         public void EndWar(bool defenderVictory)
         {
             Gang loserGang = defenderVictory ? attackingGang : defendingGang;
