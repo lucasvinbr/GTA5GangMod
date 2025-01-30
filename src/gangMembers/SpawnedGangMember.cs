@@ -81,7 +81,7 @@ namespace GTA.GangAndTurfMod
             {
                 if(!watchedPed.IsAlive || watchedPed.HeightAboveGround < 2.0f)
                 {
-                    //UI.ShowSubtitle("member no longer parachuting", 800);
+                    //UI.Screen.ShowSubtitle("member no longer parachuting", 800);
                     watchedPed.BlockPermanentEvents = false;
                     watchedPed.AlwaysKeepTask = false;
                     watchedPed.IsCollisionProof = false;
@@ -109,9 +109,15 @@ namespace GTA.GangAndTurfMod
                     GangWarManager.instance.focusedWar.MemberHasDiedNearWar(myGang);
                 }
                 OnKilled?.Invoke();
-                Die(allowPreserving: watchedPed.IsOnScreen || dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
+                Die(allowPreserving: (watchedPed.IsOnScreen && dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOnScreen) ||
+                    dist2DToPlyr < ModOptions.instance.maxDistanceToPreserveKilledOffscreen);
                 Logger.Log("member update: end (dead)", 5);
                 return;
+            }
+
+            if(ModOptions.instance.protagonistsAreSpectators && watchedPed.IsInCombatAgainst(MindControl.CurrentPlayerCharacter))
+            {
+                watchedPed.Task.ClearAll();
             }
 
             if (curStatus != MemberStatus.inVehicle)
@@ -219,7 +225,7 @@ namespace GTA.GangAndTurfMod
                         //if we were a driving member, we must be allowed to "be distracted" again
                         watchedPed.BlockPermanentEvents = false;
 
-                        if (curVehicle.IsSeatFree(VehicleSeat.Driver))
+                        if (curVehicle.IsSeatFree(VehicleSeat.Driver) || (curVehicle.Driver.Exists() && !curVehicle.Driver.IsAlive))
                         {
                             //possibly leave the vehicle if the driver has left already
                             if (!watchedPed.IsUsingAnyVehicleWeapon())
@@ -265,9 +271,10 @@ namespace GTA.GangAndTurfMod
                                 {
                                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, watchedPed, 3, true); // BF_CanLeaveVehicle  
 
-                                    if (curVehicle.Model.IsHelicopter)
+                                    if ((curVehicle.IsHelicopter || curVehicle.IsPlane) && !curVehicle.IsOnAllWheels)
                                     {
-                                        if(watchedPed.SeatIndex != VehicleSeat.Driver)
+                                        if(ModOptions.instance.gangMembersCanParachuteFromFlyingVehicles &&
+                                            watchedPed.SeatIndex != VehicleSeat.Driver)
                                         {
                                             StartParachuting(MindControl.SafePositionNearPlayer);
                                         }
@@ -312,9 +319,9 @@ namespace GTA.GangAndTurfMod
                 {
                     GangWarManager.instance.focusedWar.DecrementSpawnedsFromGang(myGang);
                 }
-                if (watchedPed.CurrentBlip != null)
+                if (watchedPed.AttachedBlip != null)
                 {
-                    watchedPed.CurrentBlip.Remove();
+                    watchedPed.AttachedBlip.Delete();
                 }
 
                 if (alsoDelete)
@@ -352,9 +359,10 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void DoAnIdleAnim()
         {
-            Vector3 scenarioPos = World.GetNextPositionOnSidewalk(watchedPed.Position);
-            Function.Call(Hash.TASK_START_SCENARIO_AT_POSITION, watchedPed, RandoMath.RandomElement(idleAnims),
-                scenarioPos.X, scenarioPos.Y, scenarioPos.Z, RandoMath.RandomHeading(), 0, 0, 0);
+            if (watchedPed.IsHuman)
+            {
+                watchedPed.Task.StartScenario(RandoMath.RandomElement(idleAnims), RandoMath.RandomHeading());
+            }
         }
 
         public override void ResetUpdateInterval()
@@ -393,14 +401,14 @@ namespace GTA.GangAndTurfMod
 
             if (destination == default || destination == Vector3.Zero) destination = MindControl.SafePositionNearPlayer;
 
-            //UI.ShowSubtitle("member is parachuting!", 800);
+            //UI.Screen.ShowSubtitle("member is parachuting!", 800);
             watchedPed.BlockPermanentEvents = true;
             watchedPed.AlwaysKeepTask = true;
             watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;
             //watchedPed.Task.LeaveVehicle();
-            //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
-            //watchedPed.Task.ParachuteTo(destination);
             watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
+            //watchedPed.Task.ParachuteTo(destination);
+            //watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);
             using (TaskSequence seq = new TaskSequence())
             {
                 //seq.AddTask.Wait(msWaitBeforeOpeningParachute / 2);

@@ -20,6 +20,7 @@ namespace GTA.GangAndTurfMod
         /// time in ms
         /// </summary>
         public static int curGameTime;
+        public static bool doneStarting = false;
 
         public ModCore()
         {
@@ -36,6 +37,8 @@ namespace GTA.GangAndTurfMod
             Localization.Initialize();
 
             menuScript = new MenuScript();
+
+            zoneManagerScript.SetupZoneUpgradeTimes();
 
             this.Aborted += OnAbort;
 
@@ -58,6 +61,10 @@ namespace GTA.GangAndTurfMod
                 Yield();
                 successfulInit = GangVehicleUpdater.Initialize();
             }
+
+            Logger.Log($"ped capacity: {World.PedCapacity}", 2);
+
+            doneStarting = true;
         }
 
         private void OnTick(object sender, EventArgs e)
@@ -66,6 +73,7 @@ namespace GTA.GangAndTurfMod
             gangManagerScript.Tick();
             MindControl.Tick();
             menuScript.Tick();
+            zoneManagerScript.Tick();
 
             //war stuff that should happen every frame
             if (GangWarManager.instance.shouldDisplayReinforcementsTexts)
@@ -84,21 +92,21 @@ namespace GTA.GangAndTurfMod
             //zix attempt controller recruit
             if (ModOptions.instance.joypadControls)
             {
-                if (Game.IsControlPressed(0, Control.Aim) || Game.IsControlPressed(0, Control.AccurateAim))
+                if (Game.IsControlPressed(Control.Aim) || Game.IsControlPressed(Control.AccurateAim))
                 {
-                    if (Game.IsControlJustPressed(0, Control.ScriptPadRight))
+                    if (Game.IsControlJustPressed(Control.ScriptPadRight))
                     {
                         RecruitGangMember();
                     }
 
-                    if (Game.IsControlJustPressed(0, Control.ScriptPadLeft))
+                    if (Game.IsControlJustPressed(Control.ScriptPadLeft))
                     {
                         GangManager.instance.CallCarBackup();
                     }
 
-                    if (Game.IsControlJustPressed(0, Control.ScriptPadUp))
+                    if (Game.IsControlJustReleased(Control.ScriptPadUp))
                     {
-                        zoneManagerScript.OutputCurrentZoneInfo();
+                        zoneManagerScript.OutputCurrentWarOrZoneInfo();
                     }
                 }
             }
@@ -135,14 +143,14 @@ namespace GTA.GangAndTurfMod
                         {
                             if (PotentialSpawnsForWars.RemovePositionAndSave(MindControl.SafePositionNearPlayer))
                             {
-                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_removed", "Potential Spawn Removed!"));
+                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_removed", "Potential Spawn Removed!"));
                             }
                         }
                         else
                         {
                             if (PotentialSpawnsForWars.AddPositionAndSave(MindControl.SafePositionNearPlayer))
                             {
-                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_added", "Potential Spawn Added!"));
+                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_potential_spawn_added", "Potential Spawn Added!"));
                             }
                         }
                     }
@@ -151,7 +159,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if (e.Modifiers == Keys.None)
                     {
-                        zoneManagerScript.OutputCurrentZoneInfo();
+                        zoneManagerScript.OutputCurrentWarOrZoneInfo();
                     }
                     else if (e.Modifiers == Keys.Shift)
                     {
@@ -198,12 +206,12 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit;
             if (MindControl.CurrentPlayerCharacter.IsInVehicle())
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds,
                     MindControl.CurrentPlayerCharacter.CurrentVehicle);
             }
             else
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds);
             }
 
             if (hit.HitEntity != null)
@@ -227,7 +235,7 @@ namespace GTA.GangAndTurfMod
                                 playerGangDrivers[i].deliveringCar = true;
                                 playerGangDrivers[i].destination = Math.Vector3.WorldEast; //just something that isn't zero will do to wake the driver up
                                 playerGangDrivers[i].Update();
-                                UI.Notify(Localization.GetTextByKey("notify_car_told_to_backup", "Car told to back you up!"));
+                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_car_told_to_backup", "Vehicle told to back you up!"));
                                 return;
                             }
                         }
@@ -244,7 +252,7 @@ namespace GTA.GangAndTurfMod
                                 if (playerGangMembers[i].IsInGroup)
                                 {
                                     Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
+                                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
                                 }
                                 else
                                 {
@@ -253,7 +261,7 @@ namespace GTA.GangAndTurfMod
                                     Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
                                     if (playerGangMembers[i].IsInGroup)
                                     {
-                                        UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
+                                        UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
                                     }
                                     else
                                     {
@@ -276,8 +284,8 @@ namespace GTA.GangAndTurfMod
                         {
                             if (playerGangMembers[i].IsInGroup)
                             {
-                                Function.Call(Hash.REMOVE_PED_FROM_GROUP, playerGangMembers[i]);
-                                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
+                                playerGangMembers[i].LeaveGroup();
+                                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_left_your_group", "A member has left your group"));
                             }
                             else
                             {
@@ -286,7 +294,7 @@ namespace GTA.GangAndTurfMod
                                 Function.Call(Hash.SET_PED_AS_GROUP_MEMBER, playerGangMembers[i], playergrp);
                                 if (playerGangMembers[i].IsInGroup)
                                 {
-                                    UI.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
+                                    UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_member_joined_your_group", "A member has joined your group"));
                                 }
                             }
                             break;
@@ -305,12 +313,12 @@ namespace GTA.GangAndTurfMod
             RaycastResult hit;
             if (MindControl.CurrentPlayerCharacter.IsInVehicle())
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything,
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds,
                     MindControl.CurrentPlayerCharacter.CurrentVehicle);
             }
             else
             {
-                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectOptions.Everything);
+                hit = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 250, IntersectFlags.Map | IntersectFlags.Vehicles | IntersectFlags.PedCapsules | IntersectFlags.Peds);
             }
 
             if (hit.HitEntity != null)
@@ -322,7 +330,7 @@ namespace GTA.GangAndTurfMod
                     SpawnedGangMember pedAI = SpawnManager.instance.GetTargetMemberAI((Ped) hit.HitEntity);
                     if(pedAI != null)
                     {
-                        UI.Notify(pedAI.ToString());
+                        UI.Notification.Show(pedAI.ToString());
                     }
                 }
             }
@@ -331,7 +339,7 @@ namespace GTA.GangAndTurfMod
 
         private void OnAbort(object sender, EventArgs e)
         {
-            UI.Notify(Localization.GetTextByKey("notify_mod_abort_removing_blips", "Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors."));
+            UI.Notification.Show(Localization.GetTextByKey("notify_mod_abort_removing_blips", "Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors."));
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
             if (MindControl.HasChangedBody)
             {
@@ -341,6 +349,10 @@ namespace GTA.GangAndTurfMod
             SpawnManager.instance.RemoveAllDeadBodies();
 
             PotentialSpawnsForWars.ToggleBlips(false);
+
+            ModelCache.UnloadAllModels();
+
+            GangManager.instance.RemoveAllGangRelationGroups();
 
             Logger.Log("mod aborted!", 2);
 

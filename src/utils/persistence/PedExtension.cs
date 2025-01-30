@@ -15,10 +15,7 @@ namespace GTA.GangAndTurfMod
     {
         public static bool IsUsingAnyVehicleWeapon(this Ped ped)
         {
-            using (OutputArgument outArgA = new OutputArgument())
-            {
-                return Function.Call<bool>(Hash.GET_CURRENT_PED_VEHICLE_WEAPON, ped, outArgA);
-            }
+            return ped.VehicleWeapon != VehicleWeaponHash.Invalid;
         }
 
     }

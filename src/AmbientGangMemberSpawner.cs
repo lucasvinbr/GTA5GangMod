@@ -31,7 +31,7 @@ namespace GTA.GangAndTurfMod
                 // also reduce police influence
                 if (enabled)
                 {
-                    Game.WantedMultiplier = (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf;
+                    Function.Call(Hash.SET_WANTED_LEVEL_MULTIPLIER, (1.0f / (curTurfZone.value + 1)) + ModOptions.instance.minWantedFactorWhenInGangTurf);
                     Game.MaxWantedLevel = RandoMath.Max(CalculateMaxWantedLevelInTurf(curTurfZone.value), ModOptions.instance.maxWantedLevelInMaxedGangTurf);
                 }
 
@@ -83,7 +83,7 @@ namespace GTA.GangAndTurfMod
                     }
                     else
                     {
-                        Game.WantedMultiplier = 1;
+                        Function.Call(Hash.SET_WANTED_LEVEL_MULTIPLIER, 1.0f);
                         Game.MaxWantedLevel = 6;
                     }
 
@@ -117,13 +117,12 @@ namespace GTA.GangAndTurfMod
                     if (spawnedVehicle.Model.IsCar)
                     {
                         SpawnManager.instance.TryPlaceVehicleOnStreet(spawnedVehicleAI.vehicleIAmDriving, vehSpawnPoint);
-                        driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, ModOptions.instance.wanderingDriverDrivingStyle);
+                        driver.Task.CruiseWithVehicle(spawnedVehicleAI.vehicleIAmDriving, 20, (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
                     }
                     else if (spawnedVehicle.Model.IsHelicopter)
                     {
                         // flee from player character!
-                        Function.Call(Hash.TASK_HELI_MISSION, driver, spawnedVehicleAI.vehicleIAmDriving, 0, MindControl.CurrentPlayerCharacter, 0, 0, 0, 8,
-                                    20.0f, 20.0f, 0.0f, -1, -1, -1, 32);
+                        driver.Task.StartHeliMission(spawnedVehicle, MindControl.CurrentPlayerCharacter, VehicleMissionType.Flee, 15.0f, 1.0f, 20, 20);
                     }
                 }
             }

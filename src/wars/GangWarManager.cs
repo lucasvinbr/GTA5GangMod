@@ -1,9 +1,12 @@
 ﻿using GTA.Math;
 using GTA.Native;
-using NativeUI;
+using GTA.UI;
+using LemonUI;
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Screen = GTA.UI.Screen;
 
 namespace GTA.GangAndTurfMod
 {
@@ -24,7 +27,7 @@ namespace GTA.GangAndTurfMod
             defendingFromEnemy
         }
 
-        public UIResText alliedNumText, enemyNumText;
+        public TextElement alliedNumText, enemyNumText;
 
         public bool shouldDisplayReinforcementsTexts = false;
 
@@ -68,21 +71,21 @@ namespace GTA.GangAndTurfMod
             this.Tick += OnTick;
             this.Aborted += OnAbort;
 
-            alliedNumText = new UIResText("400", new Point(), 0.5f, Color.CadetBlue);
-            enemyNumText = new UIResText("400", new Point(), 0.5f, Color.Red);
+            alliedNumText = new TextElement("400", new Point(), 0.5f, Color.CadetBlue);
+            enemyNumText = new TextElement("400", new Point(), 0.5f, Color.Red);
 
             alliedNumText.Outline = true;
             enemyNumText.Outline = true;
+            
+            alliedNumText.Alignment = Alignment.Center;
+            enemyNumText.Alignment = Alignment.Center;
 
-            alliedNumText.TextAlignment = UIResText.Alignment.Centered;
-            enemyNumText.TextAlignment = UIResText.Alignment.Centered;
+            //float screenRatio = Screen.Width / Screen.Height;
 
-            float screenRatio = (float)Game.ScreenResolution.Width / Game.ScreenResolution.Height;
+            //int proportionalScreenWidth = (int)(1080 * screenRatio);
 
-            int proportionalScreenWidth = (int)(1080 * screenRatio); //nativeUI UIResText works with 1080p height
-
-            alliedNumText.Position = new Point((proportionalScreenWidth / 2) - 120, 10);
-            enemyNumText.Position = new Point((proportionalScreenWidth / 2) + 120, 10);
+            alliedNumText.Position = new Point(((int)Screen.Width / 2) - 120, 10);
+            enemyNumText.Position = new Point(((int)Screen.Width / 2) + 120, 10);
 
             activeWars = new List<GangWar>();
             pooledWars = new List<GangWar>();
@@ -338,12 +341,14 @@ namespace GTA.GangAndTurfMod
                 //get the first war in the "wars nearby" list...
                 //unless there is another one in which the player gang is involved
                 focusedWar = warsNearPlayer[0];
+                bool playerGangInvolved = false;
 
-                foreach(GangWar war in warsNearPlayer)
+                foreach (GangWar war in warsNearPlayer)
                 {
                     if (war.IsPlayerGangInvolved())
                     {
                         focusedWar = war;
+                        playerGangInvolved = true;
                         break;
                     }
                 }
@@ -355,9 +360,18 @@ namespace GTA.GangAndTurfMod
                     AmbientGangMemberSpawner.instance.enabled = false;
                 }
 
-                if (focusedWar.IsPlayerGangInvolved() || ModOptions.instance.showReinforcementCountsForAIWars)
+                if (playerGangInvolved || ModOptions.instance.showReinforcementCountsForAIWars)
                 {
                     shouldDisplayReinforcementsTexts = true;
+                    if (playerGangInvolved)
+                    {
+                        alliedNumText.Color = Color.CadetBlue;
+                    }
+                    else
+                    {
+                        alliedNumText.Color = Color.PaleVioletRed;
+                    }
+
                     if (focusedWar.attackingGang.isPlayerOwned)
                     {
                         UpdateReinforcementsTexts(focusedWar.attackerReinforcements, focusedWar.defenderReinforcements);

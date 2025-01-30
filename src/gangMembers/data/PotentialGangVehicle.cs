@@ -3,9 +3,26 @@ using System.Xml.Serialization;
 
 namespace GTA.GangAndTurfMod
 {
+    public class VehicleModData
+    {
+        public VehicleModType ModType { get; set; } // Use the VehicleModType enum directly
+        public int ModValue { get; set; }
+    }
+
     public class PotentialGangVehicle
     {
+        /// <summary>
+        /// increase this number whenever we should re-run checks on the stored data, or add more data
+        /// </summary>
+        public const int DATA_VERSION = 1;
+
         public int modelHash;
+        public int knownMaxPassengers;
+        public VehicleType knownVehicleType;
+        public bool knownHasWeapons;
+        public int dataVersion;
+
+        public List<VehicleModData> VehicleMods { get; set; }
 
         [XmlIgnore]
         public static PotentialCarPool CarPool
@@ -30,7 +47,10 @@ namespace GTA.GangAndTurfMod
 
         private static PotentialCarPool carPool;
 
-
+        public bool IsOutdatedData()
+        {
+            return dataVersion < DATA_VERSION;
+        }
 
         public PotentialGangVehicle(int modelHash)
         {
@@ -40,6 +60,7 @@ namespace GTA.GangAndTurfMod
         public PotentialGangVehicle()
         {
             this.modelHash = -1;
+            this.knownMaxPassengers = 0;
         }
 
         public static bool AddVehicleAndSavePool(PotentialGangVehicle newCar)
@@ -76,13 +97,46 @@ namespace GTA.GangAndTurfMod
             if (CarPool.carList.Count <= 0)
             {
                 
-                UI.Notify(Localization.GetTextByKey("notify_warn_bad_carpool_file", "GTA5GangNTurfMod Warning: empty/bad carpool file! Enemy gangs won't have cars"));
+                UI.Notification.Show(Localization.GetTextByKey("notify_warn_bad_carpool_file", "GTA5GangNTurfMod Warning: empty/bad carpool file! Enemy gangs won't have cars"));
                 return null;
             }
 
             returnedVehicle = CarPool.carList[RandoMath.CachedRandom.Next(CarPool.carList.Count)];
 
             return returnedVehicle;
+        }
+
+        /// <summary>
+        /// true if both are the same model and have the same mods
+        /// </summary>
+        /// <param name="otherVehicle"></param>
+        /// <returns></returns>
+        public bool Equals(PotentialGangVehicle otherVehicle)
+        {
+            if(otherVehicle.modelHash == modelHash)
+            {
+                if(otherVehicle.VehicleMods == null && VehicleMods == null)
+                {
+                    return true;
+                }
+
+                if(otherVehicle.VehicleMods != null && VehicleMods != null &&
+                    otherVehicle.VehicleMods.Count == VehicleMods.Count)
+                {
+                    foreach (var vehMod in VehicleMods)
+                    {
+                        if (otherVehicle.VehicleMods.Find(vm => vm.ModValue == vehMod.ModValue && vm.ModType == vehMod.ModType) == null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+            }
+
+            return false;
         }
     }
 

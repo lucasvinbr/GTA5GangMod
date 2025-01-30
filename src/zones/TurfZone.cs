@@ -1,5 +1,6 @@
 ﻿using GTA.Math;
 using GTA.Native;
+using System.Drawing;
 using System.Xml.Serialization;
 
 
@@ -21,10 +22,14 @@ namespace GTA.GangAndTurfMod
         [XmlIgnore]
         protected Blip myBlip;
 
+        [XmlIgnore]
+        public int timeNextUpgrade;
+
         public TurfZone(string zoneName)
         {
             this.zoneName = zoneName;
             ownerGangName = "none";
+            timeNextUpgrade = GetTimeForNextUpgrade();
         }
 
         public TurfZone()
@@ -33,6 +38,25 @@ namespace GTA.GangAndTurfMod
             this.ownerGangName = "none";
         }
 
+        public int GetTimeForNextUpgrade()
+        {
+            return ModCore.curGameTime + ModOptions.instance.msTimeBetweenZoneAutoUpgrades + RandoMath.CachedRandom.Next(ModOptions.instance.msTimeBetweenZoneAutoUpgrades);
+        }
+
+        public void ChangeValue(int newValue)
+        {
+            value = RandoMath.ClampValue(newValue, 0, ModOptions.instance.maxTurfValue);
+            timeNextUpgrade = GetTimeForNextUpgrade();
+        }
+
+        /// <summary>
+        /// returns the zone's localized name
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetDisplayName()
+        {
+            return World.GetZoneLocalizedName(zoneBlipPosition);
+        }
 
         /// <summary>
         /// true if the provided ingame zone and/or location are considered to be "inside" this turf zone
@@ -64,7 +88,7 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.GTAOPlayerSafehouseDead;
                     myBlip.Color = BlipColor.White;
-                    myBlip.HideNumber();
+                    myBlip.RemoveNumberLabel();
                 }
                 else
                 {
@@ -73,27 +97,25 @@ namespace GTA.GangAndTurfMod
 
                     if (ownerGang.isPlayerOwned)
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 0f, 255, 0f);
+                        myBlip.SecondaryColor = Color.Green;
                     }
                     else
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
+                        myBlip.SecondaryColor = Color.Red;
                     }
 
-                    myBlip.ShowNumber(value);
+                    myBlip.NumberLabel = value;
                 }
 
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")"));
+                    myBlip.Name = string.Concat(zoneName, " (", ownerGangName, " turf, level ", value.ToString(), ")");
                 }
                 else
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat(zoneName, " (neutral territory)"));
+                    myBlip.Name = string.Concat(zoneName, " (neutral territory)");
                 }
 
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, myBlip);
             }
 
         }
@@ -119,7 +141,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
         }

@@ -1,5 +1,5 @@
 ﻿using GTA.Native;
-using NativeUI;
+using LemonUI.Menus;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,51 +7,129 @@ using System.Reflection;
 
 namespace GTA.GangAndTurfMod
 {
-    /// <summary>
-    /// UIMenu, but with some methods for easier setting up of options for this mod's stuff
-    /// </summary>
-    public class ModMenu: UIMenu
+    public class ModOptionCheckBox : NativeCheckboxItem
     {
-        public ModMenu() : base("Gang and Turf Mod", "")
+        public string modOptionName;
+        public Action<bool> extraActionOnChanged;
+
+        public ModOptionCheckBox(string modOptionName, string title, string description, bool initialValue, Action<bool> extraActionOnChanged = null) : base(title, description, initialValue)
         {
+            this.modOptionName = modOptionName;
+            this.extraActionOnChanged = extraActionOnChanged;
         }
 
-        public ModMenu(string menuTitle) : base("Gang and Turf Mod", menuTitle)
+        public void RefreshDisplay()
         {
+            bool valueAfterReload = (bool)typeof(ModOptions).GetField(modOptionName).GetValue(ModOptions.instance);
+            Checked = valueAfterReload;
+        }
+
+        /// <summary>
+        /// this should be run while clearing the menu, to make sure we don't end up with event hooks pointing to invalid ui elements
+        /// </summary>
+        public void DetachModOptionReloadEvent()
+        {
+            ModOptions.OnModOptionsReloaded -= RefreshDisplay;
+        }
+    }
+
+    /// <summary>
+    /// NativeMenu, but with some methods for easier setting up of localized options for this mod's stuff
+    /// </summary>
+    public abstract class ModMenu: NativeMenu
+    {
+
+        protected readonly List<ModOptionCheckBox> modOptionCheckBoxes = new List<ModOptionCheckBox>();
+        protected bool shouldRebuildItemsWhenShown = false;
+
+        public ModMenu() : base("Gang and Turf Mod", "")
+        {
+            Setup();
+        }
+
+        public ModMenu(string menuTitleLocaleKeySuffix, string fallbackMenuTitle) : 
+            base("Gang and Turf Mod", Localization.GetTextByKey("mod_menu_title_" + menuTitleLocaleKeySuffix, fallbackMenuTitle))
+        {
+            Name = Localization.GetTextByKey("mod_menu_title_" + menuTitleLocaleKeySuffix, fallbackMenuTitle);
+            Localization.OnLanguageChanged += () => 
+                Name = Localization.GetTextByKey("mod_menu_title_" + menuTitleLocaleKeySuffix, fallbackMenuTitle);
+
+            Setup();
         }
 
         /// <summary>
         /// adds a toggle UI item for a boolean modOption to this menu
         /// </summary>
         /// <param name="modOptionName"></param>
-        /// <param name="text"></param>
-        /// <param name="description"></param>
+        /// <param name="titleText"></param>
+        /// <param name="descriptionText"></param>
         /// <param name="extraActionOnChanged"></param>
         /// <returns></returns>
-        public UIMenuCheckboxItem AddModOptionToggle(string modOptionName, string text, string description, Action<bool> extraActionOnChanged = null)
+        public NativeCheckboxItem AddModOptionToggle(string modOptionName, string titleText, string descriptionText, Action<bool> extraActionOnChanged = null)
         {
             bool valueOnUICreation = (bool) typeof(ModOptions).GetField(modOptionName).GetValue(ModOptions.instance);
-            UIMenuCheckboxItem newToggle = new UIMenuCheckboxItem(text, valueOnUICreation, description);
+            var newToggle = new ModOptionCheckBox
+                (modOptionName,
+                titleText,
+                descriptionText,
+                valueOnUICreation,
+                extraActionOnChanged);
 
-            AddItem(newToggle);
-            OnCheckboxChange += (sender, item, checked_) =>
-            {
-                if (item == newToggle)
-                {
-                    typeof(ModOptions).GetField(modOptionName).SetValue(ModOptions.instance, checked_);
-                    ModOptions.instance.SaveOptions(false);
-                    extraActionOnChanged?.Invoke(checked_);
-                }
+            Add(newToggle);
 
-            };
+            newToggle.CheckboxChanged += ModOptionToggle_CheckboxChanged;
 
-            ModOptions.OnModOptionsReloaded += () =>
-            {
-                bool valueAfterReload = (bool)typeof(ModOptions).GetField(modOptionName).GetValue(ModOptions.instance);
-                newToggle.Checked = valueAfterReload;
-            };
+            ModOptions.OnModOptionsReloaded += newToggle.RefreshDisplay;
+
+            modOptionCheckBoxes.Add(newToggle);
 
             return newToggle;
         }
+
+        private void ModOptionToggle_CheckboxChanged(object sender, EventArgs _)
+        {
+            var senderCheckBox = (ModOptionCheckBox)sender;
+            typeof(ModOptions).GetField(senderCheckBox.modOptionName).SetValue(ModOptions.instance, senderCheckBox.Checked);
+            ModOptions.instance.SaveOptions(false);
+            senderCheckBox.extraActionOnChanged?.Invoke(senderCheckBox.Checked);
+        }
+
+        protected void DetachEventsForModOptionEntries()
+        {
+            foreach(var modoptionToggle in modOptionCheckBoxes)
+            {
+                modoptionToggle.DetachModOptionReloadEvent();
+            }
+        }
+
+        /// <summary>
+        /// create buttons, their events etc. Should only be run once, usually.
+        /// Base: add language changed hooks + recreate items
+        /// </summary>
+        protected virtual void Setup()
+        {
+            Localization.OnLanguageChanged += OnLocalesChanged;
+            Shown += RebuildItemsIfNeeded;
+
+            RecreateItems();
+        }
+
+        protected virtual void OnLocalesChanged()
+        {
+            shouldRebuildItemsWhenShown = true;
+            RebuildItemsIfNeeded(this, null);
+        }
+
+        protected virtual void RebuildItemsIfNeeded(object sender, EventArgs _)
+        {
+            if (shouldRebuildItemsWhenShown)
+            {
+                shouldRebuildItemsWhenShown = false;
+                RecreateItems();
+            }
+        }
+
+        protected abstract void RecreateItems();
+
     }
 }

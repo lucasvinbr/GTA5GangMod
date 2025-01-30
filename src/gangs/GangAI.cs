@@ -45,6 +45,12 @@ namespace GTA.GangAndTurfMod
                     TryUpgradeMembers();
                     if (RandoMath.RandomBool()) TryUpgradeGuns(); //...with below average guns
                     break;
+                default:
+                    TryExpand();
+                    TryUpgradeZones();
+                    TryUpgradeGuns();
+                    TryUpgradeMembers();
+                    break;
             }
 
             //lets check our financial situation:
@@ -65,7 +71,7 @@ namespace GTA.GangAndTurfMod
                         else
                         {
                             //we get some money then, at least to keep trying to fight
-                            watchedGang.AddMoney((int)(ModOptions.instance.baseCostToTakeTurf * 5 * ModOptions.instance.extraProfitForAIGangsFactor));
+                            watchedGang.AddMoney((int)(ModOptions.instance.baseCostToTakeTurf * 20 * ModOptions.instance.extraProfitForAIGangsFactor));
                         }
 
                     }
@@ -87,9 +93,26 @@ namespace GTA.GangAndTurfMod
 
             if (myZones.Count > 0)
             {
+                // the AI should prefer to attack zones near their own zones, and preferably of the strongest gang, unless that gang is the player's
                 TurfZone chosenZone = RandoMath.RandomElement(myZones);
-                TurfZone closestZoneToChosen = ZoneManager.instance.GetClosestZoneToTargetZone(chosenZone, true);
-                TryTakeTurf(closestZoneToChosen);
+                var closestZones = ZoneManager.instance.GetClosestZonesToTargetZone(chosenZone, true, 8);
+
+                Gang strongestGang = GangManager.instance.GetMostPowerfulGang();
+                if(strongestGang == watchedGang || strongestGang.isPlayerOwned)
+                {
+                    TryTakeTurf(RandoMath.RandomElement(closestZones));
+                }
+                else{
+                    var strongestGangZone = closestZones.Find(z => z.ownerGangName == strongestGang.name);
+                    if(strongestGangZone == null)
+                    {
+                        TryTakeTurf(RandoMath.RandomElement(closestZones));
+                    }
+                    else
+                    {
+                        TryTakeTurf(strongestGangZone);
+                    }
+                }
             }
             else
             {
@@ -103,8 +126,14 @@ namespace GTA.GangAndTurfMod
 
         private void TryUpgradeGuns()
         {
+            if(watchedGang.hasBeenCreatedByPlayer && watchedGang.preferredWeaponHashes.Count == 0)
+            {
+                // no weapons to buy
+                return;
+            }
+
             //try to buy the weapons we like
-            if (watchedGang.preferredWeaponHashes.Count == 0)
+            if (watchedGang.preferredWeaponHashes.Count == 0 && !watchedGang.hasBeenCreatedByPlayer)
             {
                 watchedGang.SetPreferredWeapons();
             }
@@ -204,10 +233,10 @@ namespace GTA.GangAndTurfMod
             {
                 if (myZones[i].value >= lastCheckedValue) continue; //we already know we can't afford upgrading from this turf level
                 upgradeCost = GangCalculations.CalculateTurfValueUpgradeCost(myZones[i].value);
-                if (watchedGang.moneyAvailable >= upgradeCost)
+                if (watchedGang.moneyAvailable >= upgradeCost && !myZones[i].IsBeingContested())
                 {
                     watchedGang.AddMoney(-upgradeCost);
-                    myZones[i].value++;
+                    myZones[i].ChangeValue(myZones[i].value + 1);
                     ZoneManager.instance.SaveZoneData(false);
                     return;
                 }
@@ -279,6 +308,7 @@ namespace GTA.GangAndTurfMod
                 int defenderStrength = GangCalculations.CalculateDefenderStrength(ownerGang, targetZone);
                 GangWarManager.AttackStrength requiredStrength =
                     GangCalculations.CalculateRequiredAttackStrength(watchedGang, defenderStrength);
+
                 int atkCost = GangCalculations.CalculateAttackCost(watchedGang, requiredStrength);
 
                 if (watchedGang.moneyAvailable < atkCost)
@@ -301,7 +331,23 @@ namespace GTA.GangAndTurfMod
                     (ModOptions.instance.warAgainstPlayerEnabled && GangWarManager.instance.CanStartWarAgainstPlayer &&
                         targetZone.ownerGangName == GangManager.instance.PlayerGang.name))
                 {
-                    if(GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
+
+                    if (ModOptions.instance.survivorsBecomeZoneValueOnAttackerVictory)
+                    {
+                        // if spare attackers will be used as quick upgrades, it's worth considering bigger attacks
+                        if(requiredStrength != GangWarManager.AttackStrength.massive)
+                        {
+                            int massiveAtkCost = GangCalculations.CalculateAttackCost(watchedGang, GangWarManager.AttackStrength.massive);
+                            // but don't do it if it'll cost too much for us
+                            if(massiveAtkCost <= watchedGang.moneyAvailable / 3)
+                            {
+                                atkCost = massiveAtkCost;
+                                requiredStrength = GangWarManager.AttackStrength.massive;
+                            }
+                        }
+                    }
+
+                    if (GangWarManager.instance.TryStartWar(watchedGang, targetZone, requiredStrength))
                     {
                         watchedGang.AddMoney(-atkCost);
                     }
@@ -352,6 +398,7 @@ namespace GTA.GangAndTurfMod
             ticksSinceLastUpdate = ticksBetweenUpdates;
         }
 
+        
         public GangAI(Gang watchedGang)
         {
             this.watchedGang = watchedGang;
@@ -361,7 +408,7 @@ namespace GTA.GangAndTurfMod
             DoInitialTakeover();
 
             //do we have vehicles?
-            if (this.watchedGang.carVariations.Count == 0)
+            if (this.watchedGang.carVariations.Count == 0 && !this.watchedGang.hasBeenCreatedByPlayer)
             {
                 //get some vehicles!
                 for (int i = 0; i < RandoMath.CachedRandom.Next(1, 4); i++)

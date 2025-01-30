@@ -39,7 +39,7 @@ namespace GTA.GangAndTurfMod
         {
             extraDrawableIndexes = new int[8];
             extraTextureIndexes = new int[8];
-
+            
             hairTextureIndex = Function.Call<int>(Hash.GET_PED_TEXTURE_VARIATION, targetPed, 2);
 
             //we've already got the model hash, torso indexes and stuff.
@@ -66,7 +66,7 @@ namespace GTA.GangAndTurfMod
         public override void SetPedAppearance(Ped targetPed)
         {
             int pedPalette = Function.Call<int>(Hash.GET_PED_PALETTE_VARIATION, targetPed, 1);
-
+            
             if(headDrawableIndex != -1)
             {
                 Function.Call(Hash.SET_PED_COMPONENT_VARIATION, targetPed, 0, headDrawableIndex, headTextureIndex, pedPalette);

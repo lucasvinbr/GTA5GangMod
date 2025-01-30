@@ -1,6 +1,7 @@
 ﻿using GTA.Math;
 using GTA.Native;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Xml.Serialization;
 
 
@@ -38,34 +39,34 @@ namespace GTA.GangAndTurfMod
                 {
                     myBlip.Sprite = BlipSprite.Bunker;
                     myBlip.Color = BlipColor.White;
+                    myBlip.ShowsOutlineIndicator = false;
                 }
                 else
                 {
                     myBlip.Sprite = BlipSprite.AdversaryBunker;
                     Function.Call(Hash.SET_BLIP_COLOUR, myBlip, ownerGang.blipColor);
+                    myBlip.ShowsOutlineIndicator = true;
 
                     if (ownerGang.isPlayerOwned)
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 0f, 255, 0f);
+                        myBlip.SecondaryColor = Color.Green;
                     }
                     else
                     {
-                        Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, myBlip, 255, 0f, 0f);
+                        myBlip.SecondaryColor = Color.Red;
                     }
 
                 }
 
-                Function.Call(Hash.BEGIN_TEXT_COMMAND_SET_BLIP_NAME, "STRING");
                 if (ownerGang != null)
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("War Control Point (under ", ownerGang.name, " control)"));
+                    myBlip.Name = string.Concat("War Control Point (under ", ownerGang.name, " control)");
                 }
                 else
                 {
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, string.Concat("War Control Point (neutral)"));
+                    myBlip.Name = string.Concat("War Control Point (neutral)");
                 }
 
-                Function.Call(Hash.END_TEXT_COMMAND_SET_BLIP_NAME, myBlip);
             }
 
         }
@@ -91,7 +92,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
 
@@ -107,7 +108,7 @@ namespace GTA.GangAndTurfMod
         {
             if (myBlip != null)
             {
-                myBlip.Remove();
+                myBlip.Delete();
                 myBlip = null;
             }
         }
@@ -118,6 +119,28 @@ namespace GTA.GangAndTurfMod
         /// <returns></returns>
         public bool CheckIfHasBeenCaptured()
         {
+            if(!ModOptions.instance.protagonistsAreSpectators && !MindControl.HasChangedBody)
+            {
+                if (GangManager.instance.PlayerGang != ownerGang &&
+                    World.GetDistance(position, MindControl.CurrentPlayerCharacter.Position) <= ModOptions.instance.distanceToCaptureWarControlPoint)
+                {
+                    //Capture!
+                    if (GangManager.instance.PlayerGang == warUsingThisPoint.defendingGang || GangManager.instance.PlayerGang == warUsingThisPoint.attackingGang)
+                    {
+                        ownerGang = GangManager.instance.PlayerGang;
+                    }
+                    else
+                    {
+                        //gangs "interfering" in the war should only neutralize points instead of capturing
+                        ownerGang = null;
+                    }
+
+                    warUsingThisPoint.ControlPointHasBeenCaptured(this);
+                    UpdateBlipAppearance();
+                    return true;
+                }
+            }
+
             foreach (SpawnedGangMember member in SpawnManager.instance.memberAIs)
             {
                 if (member.watchedPed != null && member.watchedPed.IsAlive && member.myGang != ownerGang)
@@ -153,6 +176,8 @@ namespace GTA.GangAndTurfMod
         /// <param name="member"></param>
         public void AttachDeathCheckEventToSpawnedMember(SpawnedGangMember member)
         {
+            if (member == null) return;
+
             member.OnKilled += () =>
             {
                 if(ownerGang == member.myGang &&

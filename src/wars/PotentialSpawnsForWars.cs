@@ -75,7 +75,7 @@ namespace GTA.GangAndTurfMod
             {
                 foreach (Blip blip in spawnBlips)
                 {
-                    blip.Remove();
+                    blip.Delete();
                 }
 
                 spawnBlips.Clear();
@@ -91,7 +91,7 @@ namespace GTA.GangAndTurfMod
 
             foreach (Blip blip in spawnBlips)
             {
-                blip.Remove();
+                blip.Delete();
             }
 
             spawnBlips.Clear();
@@ -145,7 +145,7 @@ namespace GTA.GangAndTurfMod
                 {
                     if(spawnBlips[i].Position == nearestPos)
                     {
-                        spawnBlips[i].Remove();
+                        spawnBlips[i].Delete();
                         spawnBlips.RemoveAt(i);
                         break;
                     }

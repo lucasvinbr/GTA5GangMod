@@ -33,6 +33,8 @@ namespace GTA.GangAndTurfMod
 
         public static List<CultureInfo> AvailableLanguageCultures;
 
+        public static Action OnLanguageChanged;
+
         /// <summary>
         /// sets up a starting locale file and prepares the available locales list.
         /// Should be run before anything else locale-related
@@ -120,6 +122,7 @@ namespace GTA.GangAndTurfMod
             if(fileData != null)
             {
                 CurrentlyUsedFile = fileData;
+                OnLanguageChanged?.Invoke();
                 return true;
             }
             else

@@ -93,10 +93,13 @@ namespace GTA.GangAndTurfMod
 
         public bool gangMembersAreFireproof = false;
         public bool gangMembersAreFallproofWhileParachuting = false;
+        public bool gangMembersCanParachuteFromFlyingVehicles = true;
         public bool gangMembersCanUseCover = true;
         public bool gangMembersCanWrithe = false;
         public bool gangMembersRagdollWhenShot = true;
+        public bool gangMembersAlwaysRagdollOnDeath = true;
         public bool gangMembersReactToFriendliesBeingShot = true;
+        public bool gangMembersFightArmedEnemiesWhenNotArmed = true;
         public bool gangHelicoptersEnabled = true;
 
         public bool emptyZoneDuringWar = true;
@@ -104,6 +107,7 @@ namespace GTA.GangAndTurfMod
         public bool lockCurWarReinforcementCount = false;
         public int maxDistToWarBlipBeforePlayerLeavesWar = 300;
         public int msTimeBetweenWarAutoResolveSteps = 25000;
+        public bool warPunishForNoSpawnsEvenIfNoSpawnsAvailable = false;
         public int msTimeBetweenWarPunishingForNoSpawns = 1500;
         public int msTimeBeforeEnemySpawnsCanBeCaptured = 12000;
         public float distanceToCaptureWarControlPoint = 5.0f;
@@ -126,6 +130,10 @@ namespace GTA.GangAndTurfMod
         public int maxRewardPerZoneOwned = 6000;
         public int maxTurfValue = 10;
 
+        public int msTimeBetweenZoneAutoUpgrades = 60000;
+        public bool zonesCanLoseValueOnDefenderVictory = true;
+        public bool survivorsBecomeZoneValueOnAttackerVictory = true;
+
         /// <summary>
         /// percentage sum, per zone owned, over the total reward received.
         /// for example, if the gang owns 2 zones and the multiplier is 0.2, the reward percentage will be 140%
@@ -146,9 +154,9 @@ namespace GTA.GangAndTurfMod
 
         //special thanks to Eddlm for the driving style data! 
         //more info here: https://gtaforums.com/topic/822314-guide-driving-styles/
-        public int wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
-        public int driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
-        public int nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
+        public uint wanderingDriverDrivingStyle = 1 + 2 + 8 + 32 + 128 + 256;
+        public uint driverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144;
+        public uint nearbyDriverWithDestinationDrivingStyle = 2 + 4 + 8 + 32 + 512 + 262144 + 4194304;
 
         public int driverUpdateLimitWhileGoingToDest = 42;
         public int driverUpdateLimitWhileDroppingOffPassengers = 70;
@@ -190,6 +198,7 @@ namespace GTA.GangAndTurfMod
         public float spawnLimitPercentToUseInAIOnlyWar = 0.8f;
         public int preservedDeadBodyLimit = 0;
         public int maxDistanceToPreserveKilledOffscreen = 80;
+        public int maxDistanceToPreserveKilledOnScreen = 120;
         public int minSpawnsForEachSideDuringWars = 5;
         public int minDistanceBetweenWarSpawns = 40;
         public int maxDistanceBetweenWarSpawns = 200;
@@ -197,6 +206,7 @@ namespace GTA.GangAndTurfMod
         public int warMinAvailableSpawnsBeforeSpawningVehicle = 0;
         public bool warSpawnedMembersLeaveGunlessVehiclesOnArrival = false;
         public bool warMemberCullingForBalancingEnabled = true;
+        public float maxThirdPartyMemberPercentIfCullingEnabled = 0.33f;
         public int minDistanceMemberSpawnFromPlayer = 50;
         public int maxDistanceMemberSpawnFromPlayer = 120;
         public int minDistanceCarSpawnFromPlayer = 80;
@@ -451,7 +461,7 @@ namespace GTA.GangAndTurfMod
             if (newKey == Keys.Escape || newKey == Keys.ShiftKey ||
                 newKey == Keys.Insert || newKey == Keys.ControlKey)
             {
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_cannot_be_used_due_to_conflicts", "That key can't be used because some settings would become unaccessible due to conflicts."));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_key_cannot_be_used_due_to_conflicts", "That key can't be used because some settings would become unaccessible due to conflicts."));
                 return;
             }
 
@@ -466,7 +476,7 @@ namespace GTA.GangAndTurfMod
 
             if (curKeys.Contains(newKey))
             {
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_already_being_used_by_mod", "That key is already being used by this mod's commands."));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_key_already_being_used_by_mod", "That key is already being used by this mod's commands."));
                 return;
             }
             else
@@ -488,7 +498,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 
-                UI.ShowSubtitle(Localization.GetTextByKey("subtitle_key_was_changed", "Key changed!"));
+                UI.Screen.ShowSubtitle(Localization.GetTextByKey("subtitle_key_was_changed", "Key changed!"));
                 SaveOptions();
             }
         }
@@ -537,10 +547,11 @@ namespace GTA.GangAndTurfMod
             buyableWeapons = new List<BuyableWeapon>()
         {
             //--melee
-			
+			new BuyableWeapon(WeaponHash.Unarmed, 1),
             new BuyableWeapon(WeaponHash.Bat, 1000),
             new BuyableWeapon(WeaponHash.BattleAxe, 4500),
             new BuyableWeapon(WeaponHash.Bottle, 500),
+            new BuyableWeapon(WeaponHash.CandyCane, 10000),
             new BuyableWeapon(WeaponHash.Crowbar, 800),
             new BuyableWeapon(WeaponHash.Dagger, 4000),
             new BuyableWeapon(WeaponHash.GolfClub, 3000),
@@ -551,6 +562,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Machete, 1050),
             new BuyableWeapon(WeaponHash.Nightstick, 700),
             new BuyableWeapon(WeaponHash.PoolCue, 730),
+            new BuyableWeapon(WeaponHash.StoneHatchet, 1100),
             new BuyableWeapon(WeaponHash.SwitchBlade, 1100),
             new BuyableWeapon(WeaponHash.Wrench, 560),
 			//--guns
@@ -560,6 +572,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.AssaultrifleMk2, 195000),
             new BuyableWeapon(WeaponHash.AssaultShotgun, 250000),
             new BuyableWeapon(WeaponHash.AssaultSMG, 190000),
+            new BuyableWeapon(WeaponHash.BattleRifle, 130000),
             new BuyableWeapon(WeaponHash.BullpupRifle, 230000),
             new BuyableWeapon(WeaponHash.BullpupRifleMk2, 285000),
             new BuyableWeapon(WeaponHash.BullpupShotgun, 265000),
@@ -572,6 +585,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.CombatPistol, 50000),
             new BuyableWeapon(WeaponHash.CombatShotgun, 216000),
             new BuyableWeapon(WeaponHash.CompactGrenadeLauncher, 1000000),
+            new BuyableWeapon(WeaponHash.CompactEMPLauncher, 5000000),
             new BuyableWeapon(WeaponHash.CompactRifle, 175000),
             new BuyableWeapon(WeaponHash.DoubleActionRevolver, 120000),
             new BuyableWeapon(WeaponHash.DoubleBarrelShotgun, 210000),
@@ -580,6 +594,7 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.GrenadeLauncher, 950000),
             new BuyableWeapon(WeaponHash.Gusenberg, 200000),
             new BuyableWeapon(WeaponHash.HeavyPistol, 55000),
+            new BuyableWeapon(WeaponHash.HeavyRifle, 250000),
             new BuyableWeapon(WeaponHash.HeavyShotgun, 180000),
             new BuyableWeapon(WeaponHash.HeavySniper, 300000),
             new BuyableWeapon(WeaponHash.HeavySniperMk2, 380000),
@@ -599,13 +614,16 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.Pistol, 30000),
             new BuyableWeapon(WeaponHash.Pistol50, 70000),
             new BuyableWeapon(WeaponHash.PistolMk2, 65000),
+            new BuyableWeapon(WeaponHash.PrecisionRifle, 400000),
             new BuyableWeapon(WeaponHash.PumpShotgun, 100000),
             new BuyableWeapon(WeaponHash.PumpShotgunMk2, 135000),
             new BuyableWeapon(WeaponHash.Railgun, 5100000),
+            new BuyableWeapon(WeaponHash.RailgunXmas3, 6100000),
             new BuyableWeapon(WeaponHash.Revolver, 80000),
             new BuyableWeapon(WeaponHash.RevolverMk2, 100000),
             new BuyableWeapon(WeaponHash.RPG, 1200000),
             new BuyableWeapon(WeaponHash.SawnOffShotgun, 95000),
+            new BuyableWeapon(WeaponHash.ServiceCarbine, 250000),
             new BuyableWeapon(WeaponHash.SMG, 115000),
             new BuyableWeapon(WeaponHash.SMGMk2, 155000),
             new BuyableWeapon(WeaponHash.SniperRifle, 230000),
@@ -615,10 +633,12 @@ namespace GTA.GangAndTurfMod
             new BuyableWeapon(WeaponHash.SpecialCarbineMk2, 290000),
             new BuyableWeapon(WeaponHash.StunGun, 45000),
             new BuyableWeapon(WeaponHash.SweeperShotgun, 230000),
+            new BuyableWeapon(WeaponHash.TacticalSMG, 150000),
             new BuyableWeapon(WeaponHash.UnholyHellbringer, 5100000),
             new BuyableWeapon(WeaponHash.UpNAtomizer, 4100000),
             new BuyableWeapon(WeaponHash.VintagePistol, 50000),
             new BuyableWeapon(WeaponHash.Widowmaker, 5100000),
+            new BuyableWeapon(WeaponHash.WM29Pistol, 50000),
         };
         }
 

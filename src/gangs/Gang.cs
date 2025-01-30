@@ -17,9 +17,16 @@ namespace GTA.GangAndTurfMod
         public int moneyAvailable;
         public bool isPlayerOwned = false;
 
-        //the gang's relationshipgroup
+        /// <summary>
+        /// the gang's relationshipGroup. Not saved in the xml
+        /// </summary>
         [XmlIgnore]
-        public int relationGroupIndex;
+        public RelationshipGroup relGroup;
+
+        /// <summary>
+        /// if this is true, we expect the player to add vehicles etc to this gang; we won't add them automatically
+        /// </summary>
+        public bool hasBeenCreatedByPlayer;
 
         public int memberAccuracyLevel = 1;
         public int memberHealth = 10;
@@ -52,7 +59,37 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public float profitMultiplier = 1.0f;
 
-        public FiringPattern membersFiringPattern = FiringPattern.Default;
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" helicopters.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedHelicopters = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" planes.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedPlanes = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" cars.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedCars = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" armed vehicles.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedArmedVehicles = -1;
+
+        /// <summary>
+        /// if not -1, limits the amount of "currently thinking" bikes.
+        /// There might be more than this, but some will be totally controlled by the game's AI
+        /// </summary>
+        public int maxSpawnedBikes = -1;
+
+        public FiringPattern membersFiringPattern = FiringPattern.FullAuto;
 
         //car stats - the models
         public List<PotentialGangVehicle> carVariations = new List<PotentialGangVehicle>();
@@ -70,6 +107,7 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public enum AIUpgradeTendency
         {
+            balanced,
             toughMembers,
             bigGuns,
             toughTurf,
@@ -92,16 +130,14 @@ namespace GTA.GangAndTurfMod
                 upgradeTendency = (AIUpgradeTendency)RandoMath.CachedRandom.Next(4);
             }
 
-            if (moneyAvailable <= 0)
+            int moneyToAdd = moneyAvailable;
+            
+            if (moneyToAdd <= 0)
             {
-                this.moneyAvailable = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
-            }
-            else
-            {
-                this.moneyAvailable = moneyAvailable;
+                moneyToAdd = RandoMath.CachedRandom.Next(5, 15) * ModOptions.instance.baseCostToTakeTurf; //this isnt used if this is the player's gang - he'll use his own money instead
             }
 
-
+            AddMoney(moneyToAdd);
         }
 
         public Gang()
@@ -134,6 +170,11 @@ namespace GTA.GangAndTurfMod
         /// </summary>
         public void EnforceGangColorConsistency()
         {
+            if (isPlayerOwned || hasBeenCreatedByPlayer)
+            {
+                return;
+            }
+
             ModOptions.GangColorTranslation ourColor = ModOptions.instance.GetGangColorTranslation(memberVariations[0].linkedColor);
             if ((blipColor == 0 && ourColor.baseColor != PotentialGangMember.MemberColor.white) ||
                 (vehicleColor == VehicleColor.MetallicBlack && ourColor.baseColor != PotentialGangMember.MemberColor.black))
@@ -178,7 +219,7 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (preferredWeaponHashes.Count <= 2)
+            if (preferredWeaponHashes.Count <= 2 && !isPlayerOwned && !hasBeenCreatedByPlayer)
             {
                 SetPreferredWeapons();
             }
@@ -229,6 +270,7 @@ namespace GTA.GangAndTurfMod
                        (memberVariations[i].torsoDrawableIndex == -1 || memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex) &&
                        (memberVariations[i].torsoTextureIndex == -1 || memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex))
                     {
+                        ModelCache.RemovePedModelFromCache(memberVariations[i].modelHash);
                         memberVariations.Remove(memberVariations[i]);
 
                         //get new members if we have none now and we're AI-controlled
@@ -252,6 +294,7 @@ namespace GTA.GangAndTurfMod
                        memberVariations[i].torsoDrawableIndex == sadMember.torsoDrawableIndex &&
                        memberVariations[i].torsoTextureIndex == sadMember.torsoTextureIndex)
                     {
+                        ModelCache.RemovePedModelFromCache(memberVariations[i].modelHash);
                         memberVariations.Remove(memberVariations[i]);
 
                         //get new members if we have none now and we're AI-controlled
@@ -272,16 +315,8 @@ namespace GTA.GangAndTurfMod
 
         public bool AddGangCar(PotentialGangVehicle newVehicleType)
         {
-            for (int i = 0; i < carVariations.Count; i++)
-            {
-                if (newVehicleType.modelHash != carVariations[i].modelHash)
-                {
-                    continue;
-                }
-                else
-                {
-                    return false;
-                }
+            if(carVariations.Find(veh => veh.Equals(newVehicleType)) != null){
+                return false;
             }
 
             carVariations.Add(newVehicleType);
@@ -299,6 +334,7 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
+                    ModelCache.RemoveVehicleModelFromCache(carVariations[i].modelHash);
                     carVariations.Remove(carVariations[i]);
 
                     //if we're AI and we're out of cars, get a replacement for this one
@@ -345,11 +381,16 @@ namespace GTA.GangAndTurfMod
                     notificationMsg = string.Format(Localization.GetTextByKey("notify_the_x_have_taken_y", "The {0} have taken {1}!"),
                     name, takenZone.zoneName);
                 }
-                UI.Notify(notificationMsg);
+                UI.Notification.Show(notificationMsg);
             }
-            takenZone.value = baseTurfValue;
+            takenZone.ChangeValue(baseTurfValue);
             takenZone.ownerGangName = name;
             ZoneManager.instance.UpdateZoneData(takenZone);
+        }
+
+        public bool HasBeenWipedOut()
+        {
+            return !GangManager.instance.gangData.gangs.Contains(this);
         }
 
         /// <summary>
