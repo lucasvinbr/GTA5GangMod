@@ -106,6 +106,7 @@ namespace GTA.GangAndTurfMod
             attackerSpawnPoints = new List<WarControlPoint>();
             defenderSpawnPoints = new List<WarControlPoint>();
 
+
             if (warAreaBlips[1] != null)
             {
                 warAreaBlips[1].Delete();
@@ -689,21 +690,36 @@ namespace GTA.GangAndTurfMod
                 }
             }
 
-            if (targetPoint == null || (previousMoveTarget.HasValue && previousMoveTarget == targetPoint.position))
+            if(targetPoint != null && (!previousMoveTarget.HasValue || previousMoveTarget != targetPoint.position))
             {
-                // try to make the attackers push towards the warzone's blip (which should be somewhere relevant, I think),
-                // and make the defenders push outwards, in the direction the attackers are coming from
-                Vector3 attackerMoveDir = (warZone.zoneBlipPosition - MindControl.SafePositionNearPlayer).Normalized;
-                if(gang == defendingGang)
-                {
-                    attackerMoveDir *= -1;
-                }
-
-                return MindControl.SafePositionNearPlayer + attackerMoveDir * 
-                    ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.GetAcceptableMemberSpawnDistance());
+                // targetPoint was found and it's a good candidate (not a repeated pick)
+                return targetPoint.position;
             }
 
-            return targetPoint.position;
+            // pick another option...
+            // move towards one of our enemies!
+            var enemies = SpawnManager.instance.GetSpawnedMembersOfGang(gang == attackingGang ? defendingGang : attackingGang);
+            foreach(var enemy in enemies)
+            {
+                // only head towards enemies on foot, because vehicles can move too fast
+                if(enemy.curStatus == SpawnedGangMember.MemberStatus.onFootThinking)
+                {
+                    return enemy.watchedPed.Position;
+                }
+            }
+
+            // final fallback:
+            // try to make the attackers push towards the warzone's blip (which should be somewhere relevant, I think),
+            // and make the defenders push outwards, in the direction the attackers are coming from
+            Vector3 attackerMoveDir = (warZone.zoneBlipPosition - MindControl.SafePositionNearPlayer).Normalized;
+            if (gang == defendingGang)
+            {
+                attackerMoveDir *= -1;
+            }
+
+            return MindControl.SafePositionNearPlayer + attackerMoveDir *
+                ((float)RandoMath.CachedRandom.NextDouble() * ModOptions.instance.GetAcceptableMemberSpawnDistance());
+
         }
 
         /// <summary>
