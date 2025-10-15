@@ -4,6 +4,7 @@ using GTA.Native;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace GTA.GangAndTurfMod
 {
@@ -698,11 +699,14 @@ namespace GTA.GangAndTurfMod
 
             // pick another option...
             // move towards one of our enemies!
-            var enemies = SpawnManager.instance.GetSpawnedMembersOfGang(gang == attackingGang ? defendingGang : attackingGang);
+            // only head towards enemies on foot, because vehicles can move too fast or be too far
+            var enemies = SpawnManager.instance.GetSpawnedMembersOfGang(gang == attackingGang ? defendingGang : attackingGang).
+                Where(e => e.curStatus == SpawnedGangMember.MemberStatus.onFootThinking);
             foreach(var enemy in enemies)
             {
-                // only head towards enemies on foot, because vehicles can move too fast
-                if(enemy.curStatus == SpawnedGangMember.MemberStatus.onFootThinking)
+                // better to randomize, to avoid cases where the first result is in a weird place and everyone stops
+                // because it's unreachable
+                if(RandoMath.RandomBool())
                 {
                     return enemy.watchedPed.Position;
                 }
