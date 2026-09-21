@@ -255,9 +255,9 @@ namespace GTA.GangAndTurfMod
 
                         if (ModOptions.instance.notificationsEnabled)
                         {
-                            UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_has_abandoned_zone_y", 
+                            UI.Notification.PostTicker(string.Format(Localization.GetTextByKey("notify_gang_x_has_abandoned_zone_y", 
                                 "The {0} have abandoned {1}. It has become a neutral zone again."),
-                                curZone.ownerGangName, curZone.zoneName));
+                                curZone.ownerGangName, curZone.zoneName), false);
                         }
                         curZone.ownerGangName = "none";
                         curZone.ChangeValue(0);

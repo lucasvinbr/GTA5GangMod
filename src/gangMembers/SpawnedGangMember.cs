@@ -83,7 +83,6 @@ namespace GTA.GangAndTurfMod
                 {
                     //UI.Screen.ShowSubtitle("member no longer parachuting", 800);
                     watchedPed.BlockPermanentEvents = false;
-                    watchedPed.AlwaysKeepTask = false;
                     watchedPed.IsCollisionProof = false;
                     curStatus = MemberStatus.none;
                 }
@@ -190,7 +189,7 @@ namespace GTA.GangAndTurfMod
                             curStatus = MemberStatus.onFootThinking;
                             if (RandoMath.RandomBool())
                             {
-                                watchedPed.Task.WanderAround();
+                                watchedPed.Task.Wander();
                             }
                             else
                             {
@@ -245,7 +244,7 @@ namespace GTA.GangAndTurfMod
                             }
                             else
                             {
-                                watchedPed.Task.FightAgainstHatedTargets(200);
+                                watchedPed.Task.CombatHatedTargetsAroundPed(200);
                             }
                         }
                         else
@@ -257,7 +256,7 @@ namespace GTA.GangAndTurfMod
 
                                 if (!watchedPed.IsInCombat)
                                 {
-                                    watchedPed.Task.FightAgainstHatedTargets(200);
+                                    watchedPed.Task.CombatHatedTargetsAroundPed(200);
                                 }
                                 else
                                 {
@@ -361,7 +360,7 @@ namespace GTA.GangAndTurfMod
         {
             if (watchedPed.IsHuman)
             {
-                watchedPed.Task.StartScenario(RandoMath.RandomElement(idleAnims), RandoMath.RandomHeading());
+                watchedPed.Task.StartScenarioInPlace(RandoMath.RandomElement(idleAnims));
             }
         }
 
@@ -403,7 +402,7 @@ namespace GTA.GangAndTurfMod
 
             //UI.Screen.ShowSubtitle("member is parachuting!", 800);
             watchedPed.BlockPermanentEvents = true;
-            watchedPed.AlwaysKeepTask = true;
+            watchedPed.KeepTaskWhenMarkedAsNoLongerNeeded = true;
             watchedPed.IsCollisionProof = ModOptions.instance.gangMembersAreFallproofWhileParachuting;
             //watchedPed.Task.LeaveVehicle();
             watchedPed.Weapons.Give(WeaponHash.Parachute, 1, true, true);

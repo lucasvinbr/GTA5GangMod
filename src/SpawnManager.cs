@@ -669,9 +669,11 @@ namespace GTA.GangAndTurfMod
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 5, true); // BF_AlwaysFight 
                     Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, newPed, 68, !ModOptions.instance.gangMembersReactToFriendliesBeingShot); // BF_DisableReactToBuddyShot
 
-                    newPed.SetConfigFlag(107, !ModOptions.instance.gangMembersRagdollWhenShot); //CPED_CONFIG_FLAG_DontActivateRagdollFromBulletImpact 
-                    newPed.SetConfigFlag(227, ModOptions.instance.gangMembersAlwaysRagdollOnDeath); //CPED_CONFIG_FLAG_ForceRagdollUponDeath 
-                    newPed.SetConfigFlag(237, false); //CPED_CONFIG_FLAG_BlocksPathingWhenDead  
+                    newPed.SetConfigFlag(PedConfigFlagToggles.DontActivateRagdollFromBulletImpact, !ModOptions.instance.gangMembersRagdollWhenShot);
+                    newPed.SetConfigFlag(PedConfigFlagToggles.ForceRagdollUponDeath, ModOptions.instance.gangMembersAlwaysRagdollOnDeath);
+                    
+                    // this one is an attempt to mitigate crashes caused by too many bodies around
+                    newPed.SetConfigFlag(PedConfigFlagToggles.BlocksPathingWhenDead, false);
 
                     newPed.DrownsInWater = false;
 

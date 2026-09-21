@@ -381,7 +381,7 @@ namespace GTA.GangAndTurfMod
                     notificationMsg = string.Format(Localization.GetTextByKey("notify_the_x_have_taken_y", "The {0} have taken {1}!"),
                     name, takenZone.zoneName);
                 }
-                UI.Notification.Show(notificationMsg);
+                UI.Notification.PostTicker(notificationMsg, false);
             }
             takenZone.ChangeValue(baseTurfValue);
             takenZone.ownerGangName = name;

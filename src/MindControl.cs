@@ -147,7 +147,8 @@ namespace GTA.GangAndTurfMod
                     CurrentPlayerCharacter.Weapons.Select(WeaponHash.Unarmed, true);
                     //in a war, this counts as a casualty in our team
                     
-                    Game.Player.IgnoredByEveryone = true;
+                    if(!Game.Player.Wanted.EverybodyBackOff)
+                        Game.Player.Wanted.SetEveryoneIgnorePlayer(true);
                     CurrentPlayerCharacter.CanBeTargetted = false;
                 }
 
@@ -234,7 +235,7 @@ namespace GTA.GangAndTurfMod
             targetPed.Health = 5000;
             currentlyControlledMember = SpawnManager.instance.GetTargetMemberAI(targetPed);
 
-            Game.Player.CanControlCharacter = true;
+            Game.Player.SetControlState(true);
             GangManager.instance.RefreshPlayerRelationsWithAiGangs();
 
             if (lastControlledPed != null && lastControlledPed.Exists())
@@ -340,7 +341,7 @@ namespace GTA.GangAndTurfMod
 
             hasDiedWithChangedBody = false;
             Game.Player.Money = moneyFromLastProtagonist;
-            Game.Player.IgnoredByEveryone = false;
+            Game.Player.Wanted.SetEveryoneIgnorePlayer(false);
             oldPed.CanBeTargetted = true;
             currentlyControlledMember = null;
         }

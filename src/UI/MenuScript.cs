@@ -93,7 +93,7 @@ namespace GTA.GangAndTurfMod
             {
                 var menu = (NativeMenu)poolItem;
 
-                menu.UseMouse = false;
+                menu.MouseBehavior = MenuMouseBehavior.Scrolling;
             }
 
         }

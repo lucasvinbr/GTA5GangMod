@@ -286,7 +286,7 @@ namespace GTA.GangAndTurfMod
                     }
                     break;
                 default:
-                    UI.Notification.Show("Invalid blip display type");
+                    UI.Notification.PostTicker("Invalid blip display type", false);
                     break;
             }
         }

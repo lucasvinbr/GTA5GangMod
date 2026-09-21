@@ -330,7 +330,7 @@ namespace GTA.GangAndTurfMod
                     SpawnedGangMember pedAI = SpawnManager.instance.GetTargetMemberAI((Ped) hit.HitEntity);
                     if(pedAI != null)
                     {
-                        UI.Notification.Show(pedAI.ToString());
+                        UI.Notification.PostTicker(pedAI.ToString(), false);
                     }
                 }
             }
@@ -339,7 +339,7 @@ namespace GTA.GangAndTurfMod
 
         private void OnAbort(object sender, EventArgs e)
         {
-            UI.Notification.Show(Localization.GetTextByKey("notify_mod_abort_removing_blips", "Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors."));
+            UI.Notification.PostTicker(Localization.GetTextByKey("notify_mod_abort_removing_blips", "Gang and Turf mod: removing blips. If you didn't press Insert, please check your log and report any errors."), false);
             zoneManagerScript.ChangeBlipDisplay(ZoneManager.ZoneBlipDisplay.none);
             if (MindControl.HasChangedBody)
             {

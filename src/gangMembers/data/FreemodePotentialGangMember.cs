@@ -195,9 +195,9 @@ namespace GTA.GangAndTurfMod
                 }
                 else
                 {
-                    UI.Notification.Show(string.Concat(
+                    UI.Notification.PostTicker(string.Concat(
                         Localization.GetTextByKey("notify_freemodemember_attempted_face_blending_invalid_ped_type", "attempted face blending for invalid ped type: "),
-                        targetPed.Model));
+                        targetPed.Model), false);
                 }
 
                 Function.Call(Hash.SET_PED_HEAD_BLEND_DATA, targetPed, GetRandomFaceIndex(pedGender), GetRandomFaceIndex(pedGender), 0, GetRandomFaceIndex(0),

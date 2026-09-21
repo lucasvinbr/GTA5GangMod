@@ -370,26 +370,26 @@ namespace GTA.GangAndTurfMod
                                 if (VehType == VehicleType.heli)
                                 {
                                     // hover over destination (hopefully this means "hover over player's heli")
-                                    watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.Escort, MAX_SPEED / 2, 20.0f, 20, 20);
+                                    watchedPed.Task.StartHeliMission(vehicleIAmDriving, destination, VehicleMissionType.HeliProtect, MAX_SPEED / 2, 20.0f, 20, 20, -1f, -1);
                                 }
                                 else if(VehType == VehicleType.plane)
                                 {
-                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Escort, MAX_SPEED, 200.0f, 120, 80);
+                                    watchedPed.Task.StartPlaneMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter, VehicleMissionType.Circle, MAX_SPEED, 200.0f, (int) World.GetApproxHeightForPoint(MindControl.CurrentPlayerCharacter.Position) + 120, 80);
                                 }
                                 else
                                 {
                                     //just keep following on the ground in this case;
                                     //both allies and enemies should do it
                                     watchedPed.Task.DriveTo
-                                        (vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival, MAX_SPEED,
-                                        (DrivingStyle)GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
+                                        (vehicleIAmDriving, destination, MAX_SPEED, GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), ModOptions.instance.driverDistanceToDestForArrival
+                                        );
                                 }
                             }
                             else
                             {
                                 if (isFriendlyToPlayer)
                                 {
-                                    watchedPed.Task.StartVehicleMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter.CurrentVehicle, VehicleMissionType.Escort, MAX_SPEED / 2.0f, GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), -1, -1);
+                                    watchedPed.Task.StartVehicleMission(vehicleIAmDriving, MindControl.CurrentPlayerCharacter.CurrentVehicle, VehicleMissionType.EscortRear, MAX_SPEED / 2.0f, GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), -1, -1);
                                 }
                                 else
                                 {
@@ -440,8 +440,8 @@ namespace GTA.GangAndTurfMod
                             }
                             else
                             {
-                                watchedPed.Task.DriveTo(vehicleIAmDriving, destination, ModOptions.instance.driverDistanceToDestForArrival / 2, targetSpeed,
-                                    (DrivingStyle) GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest));
+                                watchedPed.Task.DriveTo(vehicleIAmDriving, destination, targetSpeed, GetAppropriateDrivingStyle(attemptingUnstuckVehicle, distToDest), ModOptions.instance.driverDistanceToDestForArrival / 2
+                                    );
                             }
                         }
                     }
@@ -552,7 +552,7 @@ namespace GTA.GangAndTurfMod
                 {
                     watchedPed.VehicleDrivingFlags = (VehicleDrivingFlags) ModOptions.instance.wanderingDriverDrivingStyle;
                     watchedPed.Task.CruiseWithVehicle(watchedPed.CurrentVehicle, 15,
-                        (DrivingStyle)ModOptions.instance.wanderingDriverDrivingStyle);
+                        (VehicleDrivingFlags)ModOptions.instance.wanderingDriverDrivingStyle);
                 }
                 
             }
@@ -600,7 +600,6 @@ namespace GTA.GangAndTurfMod
             playerAsDest = playerIsDest;
             this.deliveringCar = deliveringCar;
             this.isFriendlyToPlayer = isFriendlyToPlayer;
-            targetPed.DrivingStyle = (DrivingStyle) GetAppropriateDrivingStyle(false, 100.0f);
             targetPed.VehicleDrivingFlags = GetAppropriateDrivingStyle(false, 100.0f);
             updatesWhileGoingToDest = 0;
             updatesWhileDroppingPassengers = 0;

@@ -37,7 +37,7 @@ namespace GTA.GangAndTurfMod
                 }
                 catch (Exception e)
                 {
-                    UI.Notification.Show("an error occurred when trying to load xml file " + fileName + "! error: " + e.ToString());
+                    UI.Notification.PostTicker("an error occurred when trying to load xml file " + fileName + "! error: " + e.ToString(), true);
                     Logger.Log("loading file " + fileName + " failed! error: " + e.ToString(), 1);
                     Logger.WriteDedicatedErrorFile("loading file " + fileName + " failed! error: " + e.ToString());
                     //backup the bad file! It's very sad to lose saved data, even if it's corrupted somehow
@@ -85,7 +85,7 @@ namespace GTA.GangAndTurfMod
             }
             catch (Exception e)
             {
-                UI.Notification.Show("an error occurred while trying to save gang mod data! error: " + e.ToString());
+                UI.Notification.PostTicker("an error occurred while trying to save gang mod data! error: " + e.ToString(), true);
                 Logger.Log("failed to save file: " + fileName + "! Error: " + e.ToString(), 1);
                 Logger.WriteDedicatedErrorFile("failed to save file: " + fileName + "! Error: " + e.ToString());
             }

@@ -148,10 +148,10 @@ namespace GTA.GangAndTurfMod
                         defenderReinforcements = RandoMath.Max(defenderReinforcements, spawnedDefenders);
                     }
 
-                    UI.Notification.Show(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
+                    UI.Notification.PostTicker(string.Concat("The ", attackerGang.name, " are attacking ", warZone.zoneName, "! They are ",
                     attackerReinforcements.ToString(),
                     " against our ",
-                    defenderReinforcements.ToString()));
+                    defenderReinforcements.ToString()), true);
                 }
                     
 
@@ -288,7 +288,7 @@ namespace GTA.GangAndTurfMod
                 }
 
                 if (ModOptions.instance.notificationsEnabled)
-                    UI.Notification.Show(battleReport);
+                    UI.Notification.PostTicker(battleReport, false);
             }
 
 
@@ -321,7 +321,7 @@ namespace GTA.GangAndTurfMod
                         (battleProfit);
 
                     if (ModOptions.instance.notificationsEnabled)
-                        UI.Notification.Show("Victory rewards: $" + battleProfit.ToString());
+                        UI.Notification.PostTicker("Victory rewards: $" + battleProfit.ToString(), false);
 
                     if (defenderVictory)
                     {

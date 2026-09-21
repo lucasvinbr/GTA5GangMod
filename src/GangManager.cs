@@ -418,7 +418,7 @@ namespace GTA.GangAndTurfMod
 
             if (notifyMsg && ModOptions.instance.notificationsEnabled)
             {
-                UI.Notification.Show(Localization.GetTextByKey("notify_created_gang_for_player", "Created new gang for the player!"));
+                UI.Notification.PostTicker(Localization.GetTextByKey("notify_created_gang_for_player", "Created new gang for the player!"), false);
             }
 
             return playerGang;
@@ -434,7 +434,7 @@ namespace GTA.GangAndTurfMod
         {
             if (PotentialGangMember.MemberPool.memberList.Count <= 0)
             {
-                UI.Notification.Show(Localization.GetTextByKey("notify_enemy_gang_creation_failed", "Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs"));
+                UI.Notification.PostTicker(Localization.GetTextByKey("notify_enemy_gang_creation_failed", "Enemy gang creation failed: bad/empty/not found memberPool file. Try adding peds as potential members for AI gangs"), false);
                 return null;
             }
             //set gang name from options
@@ -470,7 +470,7 @@ namespace GTA.GangAndTurfMod
             SaveGangData();
             if (notifyMsg)
             {
-                UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_has_entered", "The {0} have entered San Andreas!"), newGang.name));
+                UI.Notification.PostTicker(string.Format(Localization.GetTextByKey("notify_gang_x_has_entered", "The {0} have entered San Andreas!"), newGang.name), false);
             }
 
             SetGangRelationsAccordingToAggrLevel();
@@ -501,7 +501,7 @@ namespace GTA.GangAndTurfMod
         {
             Gang theGang = aiWatchingTheGang.watchedGang;
 
-            UI.Notification.Show(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), theGang.name));
+            UI.Notification.PostTicker(string.Format(Localization.GetTextByKey("notify_gang_x_wiped_out", "The {0} have been wiped out!"), theGang.name), false);
 
             foreach (var vehicle in theGang.carVariations)
             {
@@ -586,7 +586,7 @@ namespace GTA.GangAndTurfMod
                     MindControl.AddOrSubtractMoneyToProtagonist(rewardedCash);
                     Function.Call(Hash.PLAY_SOUND, -1, "Virus_Eradicated", "LESTER1A_SOUNDS", 0, 0, 1);
                     if (ModOptions.instance.notificationsEnabled)
-                        UI.Notification.Show(Localization.GetTextByKey("notify_money_won_from_zones", "Money won from controlled zones: ") + rewardedCash.ToString());
+                        UI.Notification.PostTicker(Localization.GetTextByKey("notify_money_won_from_zones", "Money won from controlled zones: ") + rewardedCash.ToString(), false);
                 }
             }
             else
