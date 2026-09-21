@@ -134,7 +134,11 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <GTAGameDestination>"F:\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\GangAndTurfMod.dll"</GTAGameDestination>
-    <PostBuildEvent>copy $(TargetPath) $(GTAGameDestination)</PostBuildEvent>
+    <PostBuildEvent>if EXIST $(GTAGameDestination) (
+copy $(TargetPath) $(GTAGameDestination)
+) ELSE (
+echo copy dll to game folder failed: GTAGameDestination does not seem to exist
+)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
